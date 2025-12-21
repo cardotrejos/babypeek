@@ -4,43 +4,14 @@ import { StructuredData } from "@/components/seo/structured-data"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 
-// SEO constants for the landing page
+// SEO constants - meta tags are in index.html for SPA
 const SEO = {
-  title: "3d-ultra | Transform Your 4D Ultrasound into a Baby Portrait",
+  siteUrl: "https://3d-ultra.com/",
   description: "See your baby before they're born. Upload your 4D ultrasound and get a beautiful AI-generated portrait in 60 seconds. Free preview, instant results.",
-  siteUrl: "https://3d-ultra.com/", // Trailing slash for canonical consistency
-  ogImage: "og-image.png", // PNG format required for Facebook/Twitter OG image support
 } as const
 
 export const Route = createFileRoute("/")({
   component: LandingPage,
-  head: () => ({
-    meta: [
-      // Page title (AC1)
-      { title: SEO.title },
-      // Meta description (AC1)
-      { name: "description", content: SEO.description },
-      // Open Graph tags (AC3)
-      { property: "og:title", content: SEO.title },
-      { property: "og:description", content: SEO.description },
-      { property: "og:type", content: "website" },
-      { property: "og:url", content: SEO.siteUrl },
-      { property: "og:image", content: `${SEO.siteUrl}${SEO.ogImage}` },
-      { property: "og:image:width", content: "1200" },
-      { property: "og:image:height", content: "630" },
-      { property: "og:site_name", content: "3d-ultra" },
-      { property: "og:locale", content: "en_US" },
-      // Twitter Card tags (AC3)
-      { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:title", content: SEO.title },
-      { name: "twitter:description", content: SEO.description },
-      { name: "twitter:image", content: `${SEO.siteUrl}${SEO.ogImage}` },
-    ],
-    links: [
-      // Canonical URL (AC4)
-      { rel: "canonical", href: SEO.siteUrl },
-    ],
-  }),
 })
 
 function LandingPage() {

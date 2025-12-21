@@ -1,7 +1,6 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { createRouter as createTanStackRouter } from "@tanstack/react-router"
 
-import "./index.css"
 import Loader from "./components/loader"
 import { routeTree } from "./routeTree.gen"
 import { initializePageLoadTracking } from "./lib/upload-session"
