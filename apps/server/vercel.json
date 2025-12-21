@@ -3,10 +3,5 @@
   "installCommand": "cd ../.. && bun install",
   "buildCommand": "cd ../.. && bun run build --filter=server",
   "outputDirectory": ".vercel/output",
-  "framework": null,
-  "functions": {
-    "**/*": {
-      "architecture": "x86_64"
-    }
-  }
+  "framework": null
 }
