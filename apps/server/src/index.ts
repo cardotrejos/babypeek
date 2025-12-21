@@ -1,73 +1,50 @@
-import "dotenv/config";
-import { createContext } from "@3d-ultra/api/context";
-import { appRouter } from "@3d-ultra/api/routers/index";
-import { OpenAPIHandler } from "@orpc/openapi/fetch";
-import { OpenAPIReferencePlugin } from "@orpc/openapi/plugins";
-import { onError } from "@orpc/server";
-import { RPCHandler } from "@orpc/server/fetch";
-import { ZodToJsonSchemaConverter } from "@orpc/zod/zod4";
-import { Hono } from "hono";
-import { cors } from "hono/cors";
-import { logger } from "hono/logger";
+import "dotenv/config"
+import { Hono } from "hono"
+import { cors } from "hono/cors"
+import { logger } from "hono/logger"
 
-const app = new Hono();
+import { healthRoutes } from "@3d-ultra/api"
 
-app.use(logger());
+const app = new Hono()
+
+// Middleware
+app.use(logger())
 app.use(
   "/*",
   cors({
-    origin: process.env.CORS_ORIGIN || "",
-    allowMethods: ["GET", "POST", "OPTIONS"],
-  }),
-);
+    origin: process.env.CORS_ORIGIN || "http://localhost:3001",
+    allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowHeaders: ["Content-Type", "X-Session-Token"],
+  })
+)
 
-export const apiHandler = new OpenAPIHandler(appRouter, {
-  plugins: [
-    new OpenAPIReferencePlugin({
-      schemaConverters: [new ZodToJsonSchemaConverter()],
-    }),
-  ],
-  interceptors: [
-    onError((error) => {
-      console.error(error);
-    }),
-  ],
-});
+// Routes
+app.route("/api/health", healthRoutes)
 
-export const rpcHandler = new RPCHandler(appRouter, {
-  interceptors: [
-    onError((error) => {
-      console.error(error);
-    }),
-  ],
-});
-
-app.use("/*", async (c, next) => {
-  const context = await createContext({ context: c });
-
-  const rpcResult = await rpcHandler.handle(c.req.raw, {
-    prefix: "/rpc",
-    context: context,
-  });
-
-  if (rpcResult.matched) {
-    return c.newResponse(rpcResult.response.body, rpcResult.response);
-  }
-
-  const apiResult = await apiHandler.handle(c.req.raw, {
-    prefix: "/api-reference",
-    context: context,
-  });
-
-  if (apiResult.matched) {
-    return c.newResponse(apiResult.response.body, apiResult.response);
-  }
-
-  await next();
-});
-
+// Root endpoint
 app.get("/", (c) => {
-  return c.text("OK");
-});
+  return c.json({
+    name: "3d-ultra API",
+    version: "1.0.0",
+    status: "running",
+  })
+})
 
-export default app;
+// 404 handler
+app.notFound((c) => {
+  return c.json({ error: "Not Found" }, 404)
+})
+
+// Error handler
+app.onError((err, c) => {
+  console.error("Server error:", err)
+  return c.json(
+    {
+      error: "Internal Server Error",
+      message: process.env.NODE_ENV === "development" ? err.message : undefined,
+    },
+    500
+  )
+})
+
+export default app

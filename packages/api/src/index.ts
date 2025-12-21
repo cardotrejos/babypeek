@@ -1,7 +1,8 @@
-import { ORPCError, os } from "@orpc/server";
+// Effect + Hono API Package
+// This is the main entry point for the API
 
-import type { Context } from "./context";
+export * from "./lib/errors"
+export * from "./lib/env"
 
-export const o = os.$context<Context>();
-
-export const publicProcedure = o;
+// Routes
+export { default as healthRoutes } from "./routes/health"

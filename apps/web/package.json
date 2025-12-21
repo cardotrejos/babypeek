@@ -28,12 +28,8 @@
     "tailwindcss": "^4.1.3",
     "tw-animate-css": "^1.2.5",
     "vite-tsconfig-paths": "^5.1.4",
-    "@orpc/tanstack-query": "^1.12.2",
-    "@orpc/client": "catalog:",
-    "@orpc/server": "catalog:",
     "dotenv": "catalog:",
-    "zod": "catalog:",
-    "@3d-ultra/api": "workspace:*"
+    "zod": "catalog:"
   },
   "devDependencies": {
     "@tanstack/react-router-devtools": "^1.141.1",

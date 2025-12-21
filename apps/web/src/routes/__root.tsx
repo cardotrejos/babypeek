@@ -1,18 +1,21 @@
-import type { QueryClient } from "@tanstack/react-query";
+import type { QueryClient } from "@tanstack/react-query"
 
-import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
-import { HeadContent, Outlet, Scripts, createRootRouteWithContext } from "@tanstack/react-router";
-import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools"
+import {
+  HeadContent,
+  Outlet,
+  Scripts,
+  createRootRouteWithContext,
+} from "@tanstack/react-router"
+import { TanStackRouterDevtools } from "@tanstack/react-router-devtools"
 
-import type { orpc } from "@/utils/orpc";
+import { Toaster } from "@/components/ui/sonner"
 
-import { Toaster } from "@/components/ui/sonner";
+import Header from "../components/header"
+import appCss from "../index.css?url"
 
-import Header from "../components/header";
-import appCss from "../index.css?url";
 export interface RouterAppContext {
-  orpc: typeof orpc;
-  queryClient: QueryClient;
+  queryClient: QueryClient
 }
 
 export const Route = createRootRouteWithContext<RouterAppContext>()({
@@ -26,7 +29,7 @@ export const Route = createRootRouteWithContext<RouterAppContext>()({
         content: "width=device-width, initial-scale=1",
       },
       {
-        title: "My App",
+        title: "3d-ultra | Meet your baby before they're born",
       },
     ],
     links: [
@@ -38,7 +41,7 @@ export const Route = createRootRouteWithContext<RouterAppContext>()({
   }),
 
   component: RootDocument,
-});
+})
 
 function RootDocument() {
   return (
@@ -57,5 +60,5 @@ function RootDocument() {
         <Scripts />
       </body>
     </html>
-  );
+  )
 }

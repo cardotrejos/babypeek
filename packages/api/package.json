@@ -11,11 +11,8 @@
   },
   "scripts": {},
   "dependencies": {
-    "@orpc/server": "catalog:",
-    "@orpc/client": "catalog:",
-    "@orpc/openapi": "catalog:",
-    "@orpc/zod": "catalog:",
     "hono": "catalog:",
+    "effect": "^3.19.13",
     "dotenv": "catalog:",
     "zod": "catalog:",
     "@3d-ultra/db": "workspace:*"
