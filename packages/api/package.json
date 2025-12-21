@@ -34,6 +34,12 @@
     "workflow": "^4.0.1-beta.35",
     "zod": "catalog:"
   },
+  "optionalDependencies": {
+    "@img/sharp-linux-arm64": "^0.34.5",
+    "@img/sharp-linux-x64": "^0.34.5",
+    "@img/sharp-libvips-linux-arm64": "^1.2.4",
+    "@img/sharp-libvips-linux-x64": "^1.2.4"
+  },
   "devDependencies": {
     "@3d-ultra/config": "workspace:*",
     "@types/sharp": "^0.32.0",
