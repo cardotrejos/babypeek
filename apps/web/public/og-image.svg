@@ -1,0 +1,47 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background: Cream color from design system -->
+  <rect width="1200" height="630" fill="#FDF8F5"/>
+  
+  <!-- Decorative gradient overlay -->
+  <defs>
+    <linearGradient id="coral-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#E8927C" stop-opacity="0.1"/>
+      <stop offset="100%" stop-color="#E8927C" stop-opacity="0.3"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#coral-gradient)"/>
+  
+  <!-- Brand name: 3d-ultra -->
+  <text x="600" y="260" 
+        font-family="Playfair Display, Georgia, serif" 
+        font-size="72" 
+        font-weight="600" 
+        fill="#2D2A26" 
+        text-anchor="middle">
+    3d-ultra
+  </text>
+  
+  <!-- Tagline -->
+  <text x="600" y="340" 
+        font-family="DM Sans, system-ui, sans-serif" 
+        font-size="32" 
+        fill="#8B7E74" 
+        text-anchor="middle">
+    Transform Your 4D Ultrasound into a Baby Portrait
+  </text>
+  
+  <!-- Call to action hint -->
+  <text x="600" y="420" 
+        font-family="DM Sans, system-ui, sans-serif" 
+        font-size="24" 
+        fill="#E8927C" 
+        text-anchor="middle">
+    Meet your baby before they're born
+  </text>
+  
+  <!-- Decorative elements: ultrasound-to-photo concept -->
+  <circle cx="400" cy="500" r="60" fill="#E8927C" opacity="0.2"/>
+  <circle cx="800" cy="500" r="60" fill="#E8927C" opacity="0.3"/>
+  <path d="M460 500 L740 500" stroke="#E8927C" stroke-width="3" stroke-dasharray="10,5"/>
+  <polygon points="740,490 760,500 740,510" fill="#E8927C"/>
+</svg>

@@ -1,3 +1,11 @@
-# https://www.robotstxt.org/robotstxt.html
+# 3d-ultra robots.txt
+# https://3d-ultra.com/robots.txt
+
 User-agent: *
-Disallow:
+Allow: /
+
+# Disallow API routes
+Disallow: /api/
+
+# Sitemap (will be added when sitemap generation is implemented)
+# Sitemap: https://3d-ultra.com/sitemap.xml
