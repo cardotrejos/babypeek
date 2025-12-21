@@ -7,8 +7,4 @@ export default defineConfig({
     "/**": "./src/index.ts",
   },
   preset: "vercel",
-  // Externalize sharp to avoid bundling native binaries
-  externals: {
-    external: ["sharp"],
-  },
 })
