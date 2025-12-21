@@ -30,13 +30,16 @@ import { RateLimitServiceLive } from "./RateLimitService"
 // AppServicesLive - Composed Layer with All Services
 // =============================================================================
 
+// ResultServiceLive depends on R2Service, so we need to provide it
+const ResultServiceWithDeps = ResultServiceLive.pipe(Layer.provide(R2ServiceLive))
+
 export const AppServicesLive = Layer.mergeAll(
   GeminiServiceLive,
   R2ServiceLive,
   StripeServiceLive,
   ResendServiceLive,
   UploadServiceLive,
-  ResultServiceLive,
+  ResultServiceWithDeps,
   PostHogServiceLive,
   RateLimitServiceLive
 )

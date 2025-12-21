@@ -4,6 +4,10 @@
  * Tests that verify Sentry breadcrumbs and PostHog analytics
  * are correctly called during retry operations.
  *
+ * NOTE: These tests verify the retry behavior by testing the actual
+ * GeminiServiceLive implementation with mocked external dependencies
+ * (Gemini client, PostHog, Sentry).
+ *
  * @see Story 4.3 - Retry Logic with Exponential Backoff
  * @see AC-4 - All retries are logged to Sentry with context
  * @see AC-5 - gemini_retry analytics event is fired on each retry
@@ -11,18 +15,95 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
 import { Effect, Layer } from "effect"
-import { GeminiService } from "./GeminiService"
+import { GeminiService, GeminiServiceLive } from "./GeminiService"
 import { PostHogService } from "./PostHogService"
 import { GeminiError } from "../lib/errors"
+
+// =============================================================================
+// Mock State - Using globalThis for cross-module access
+// =============================================================================
+
+// Extend globalThis to include our mock state
+declare global {
+  // eslint-disable-next-line no-var
+  var __geminiMockState: {
+    callAttempts: number
+    shouldFailCount: number
+    errorCause: GeminiError["cause"]
+  }
+}
+
+// Initialize global mock state
+globalThis.__geminiMockState = {
+  callAttempts: 0,
+  shouldFailCount: 0,
+  errorCause: "RATE_LIMITED",
+}
 
 // =============================================================================
 // Mock Setup
 // =============================================================================
 
+// Mock the gemini module to control API responses
+vi.mock("../lib/gemini", () => {
+  return {
+    getGeminiClient: vi.fn(() => ({
+      getGenerativeModel: vi.fn(() => ({
+        generateContent: vi.fn(async () => {
+          const state = globalThis.__geminiMockState
+          state.callAttempts++
+
+          if (state.callAttempts <= state.shouldFailCount) {
+            const error = new Error(`Attempt ${state.callAttempts} failed`)
+            // Add markers that mapGeminiError will recognize
+            if (state.errorCause === "RATE_LIMITED") {
+              ;(error as { message: string }).message = "429 resource_exhausted"
+            } else if (state.errorCause === "INVALID_IMAGE") {
+              ;(error as { message: string }).message = "invalid_argument: invalid image"
+            }
+            throw error
+          }
+          // Return successful response
+          return {
+            response: {
+              candidates: [
+                {
+                  content: {
+                    parts: [
+                      {
+                        inlineData: {
+                          data: Buffer.from("success").toString("base64"),
+                          mimeType: "image/png",
+                        },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          }
+        }),
+      })),
+    })),
+    IMAGEN_MODEL: "gemini-test-model",
+    SAFETY_SETTINGS: [],
+    GENERATION_CONFIG: {},
+    DEFAULT_IMAGE_CONFIG: {},
+    bufferToBase64: (buffer: Buffer) => buffer.toString("base64"),
+    inferMimeType: () => "image/jpeg",
+  }
+})
+
 // Mock Sentry module
 vi.mock("../lib/sentry-effect", () => ({
   addEffectBreadcrumb: vi.fn(() => Effect.void),
   captureEffectError: vi.fn(() => Effect.void),
+}))
+
+// Mock env to ensure Gemini is "configured"
+vi.mock("../lib/env", () => ({
+  env: { NODE_ENV: "test", GEMINI_API_KEY: "test-key" },
+  isGeminiConfigured: () => true,
 }))
 
 // Import mocked functions for assertions
@@ -57,44 +138,14 @@ function createMockPostHogService() {
 }
 
 /**
- * Create a GeminiService that fails N times then succeeds.
+ * Configure mock Gemini client to fail N times then succeed.
  */
-function createFailingGeminiService(
-  failCount: number,
-  errorCause: GeminiError["cause"] = "RATE_LIMITED"
-) {
-  let attempts = 0
-
-  return Layer.succeed(GeminiService, {
-    generateImage: () =>
-      Effect.gen(function* () {
-        yield* PostHogService // Satisfy interface requirement
-        attempts++
-        if (attempts <= failCount) {
-          return yield* Effect.fail(
-            new GeminiError({
-              cause: errorCause,
-              message: `Attempt ${attempts} failed`,
-            })
-          )
-        }
-        return { data: Buffer.from("success"), mimeType: "image/png" }
-      }),
-    generateImageFromUrl: () =>
-      Effect.gen(function* () {
-        yield* PostHogService
-        attempts++
-        if (attempts <= failCount) {
-          return yield* Effect.fail(
-            new GeminiError({
-              cause: errorCause,
-              message: `Attempt ${attempts} failed`,
-            })
-          )
-        }
-        return { data: Buffer.from("success"), mimeType: "image/png" }
-      }),
-  })
+function configureGeminiMock(failCount: number, errorCause: GeminiError["cause"] = "RATE_LIMITED") {
+  globalThis.__geminiMockState = {
+    callAttempts: 0,
+    shouldFailCount: failCount,
+    errorCause,
+  }
 }
 
 // =============================================================================
@@ -105,6 +156,12 @@ describe("GeminiService Retry Integration", () => {
   beforeEach(() => {
     vi.clearAllMocks()
     vi.useFakeTimers()
+    // Reset mock state
+    globalThis.__geminiMockState = {
+      callAttempts: 0,
+      shouldFailCount: 0,
+      errorCause: "RATE_LIMITED",
+    }
   })
 
   afterEach(() => {
@@ -114,19 +171,14 @@ describe("GeminiService Retry Integration", () => {
   describe("PostHog Analytics (AC-5)", () => {
     it("should fire gemini_retry event on each retry", async () => {
       const { layer: posthogLayer, getCapturedEvents } = createMockPostHogService()
-      const geminiLayer = createFailingGeminiService(2) // Fail 2 times, succeed on 3rd
+      configureGeminiMock(2) // Fail 2 times, succeed on 3rd
 
       const program = Effect.gen(function* () {
         const gemini = yield* GeminiService
-        return yield* gemini.generateImage(
-          Buffer.from("test"),
-          "test prompt",
-          { uploadId: "test-upload-123" }
-        )
-      }).pipe(
-        Effect.provide(geminiLayer),
-        Effect.provide(posthogLayer)
-      )
+        return yield* gemini.generateImage(Buffer.from("test"), "test prompt", {
+          uploadId: "test-upload-123",
+        })
+      }).pipe(Effect.provide(GeminiServiceLive), Effect.provide(posthogLayer))
 
       const resultPromise = Effect.runPromise(program)
       await vi.advanceTimersByTimeAsync(10000)
@@ -145,23 +197,17 @@ describe("GeminiService Retry Integration", () => {
 
     it("should fire gemini_exhausted when all retries fail", async () => {
       const { layer: posthogLayer, getCapturedEvents } = createMockPostHogService()
-      const geminiLayer = createFailingGeminiService(10) // Always fail
+      configureGeminiMock(10) // Always fail (more than max retries)
 
       const program = Effect.gen(function* () {
         const gemini = yield* GeminiService
-        return yield* gemini.generateImage(
-          Buffer.from("test"),
-          "test prompt",
-          { uploadId: "exhaust-test" }
-        )
-      }).pipe(
-        Effect.provide(geminiLayer),
-        Effect.provide(posthogLayer),
-        Effect.either
-      )
+        return yield* gemini.generateImage(Buffer.from("test"), "test prompt", {
+          uploadId: "exhaust-test",
+        })
+      }).pipe(Effect.provide(GeminiServiceLive), Effect.provide(posthogLayer), Effect.either)
 
       const resultPromise = Effect.runPromise(program)
-      await vi.advanceTimersByTimeAsync(15000)
+      await vi.advanceTimersByTimeAsync(60000)
       await resultPromise
 
       const events = getCapturedEvents()
@@ -174,16 +220,12 @@ describe("GeminiService Retry Integration", () => {
 
     it("should NOT fire gemini_exhausted for non-retryable errors", async () => {
       const { layer: posthogLayer, getCapturedEvents } = createMockPostHogService()
-      const geminiLayer = createFailingGeminiService(1, "INVALID_IMAGE")
+      configureGeminiMock(1, "INVALID_IMAGE")
 
       const program = Effect.gen(function* () {
         const gemini = yield* GeminiService
         return yield* gemini.generateImage(Buffer.from("test"), "test prompt")
-      }).pipe(
-        Effect.provide(geminiLayer),
-        Effect.provide(posthogLayer),
-        Effect.either
-      )
+      }).pipe(Effect.provide(GeminiServiceLive), Effect.provide(posthogLayer), Effect.either)
 
       await Effect.runPromise(program)
 
@@ -200,15 +242,12 @@ describe("GeminiService Retry Integration", () => {
   describe("Sentry Breadcrumbs (AC-4)", () => {
     it("should add breadcrumb on each retry attempt", async () => {
       const { layer: posthogLayer } = createMockPostHogService()
-      const geminiLayer = createFailingGeminiService(2)
+      configureGeminiMock(2) // Fail 2 times, succeed on 3rd
 
       const program = Effect.gen(function* () {
         const gemini = yield* GeminiService
         return yield* gemini.generateImage(Buffer.from("test"), "test prompt")
-      }).pipe(
-        Effect.provide(geminiLayer),
-        Effect.provide(posthogLayer)
-      )
+      }).pipe(Effect.provide(GeminiServiceLive), Effect.provide(posthogLayer))
 
       const resultPromise = Effect.runPromise(program)
       await vi.advanceTimersByTimeAsync(10000)
@@ -229,19 +268,15 @@ describe("GeminiService Retry Integration", () => {
 
     it("should capture error to Sentry on final failure", async () => {
       const { layer: posthogLayer } = createMockPostHogService()
-      const geminiLayer = createFailingGeminiService(10) // Always fail
+      configureGeminiMock(10) // Always fail
 
       const program = Effect.gen(function* () {
         const gemini = yield* GeminiService
         return yield* gemini.generateImage(Buffer.from("test"), "test prompt")
-      }).pipe(
-        Effect.provide(geminiLayer),
-        Effect.provide(posthogLayer),
-        Effect.either
-      )
+      }).pipe(Effect.provide(GeminiServiceLive), Effect.provide(posthogLayer), Effect.either)
 
       const resultPromise = Effect.runPromise(program)
-      await vi.advanceTimersByTimeAsync(15000)
+      await vi.advanceTimersByTimeAsync(60000)
       await resultPromise
 
       // Verify error was captured to Sentry
