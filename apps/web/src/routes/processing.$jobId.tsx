@@ -25,6 +25,15 @@ export const Route = createFileRoute("/processing/$jobId")({
 
 type ProcessingState = "idle" | "starting" | "processing" | "error" | "already-processing" | "timeout" | "retrying" | "complete"
 
+type PromptVersion = "v3" | "v3-json" | "v4" | "v4-json"
+
+const PROMPT_OPTIONS: { value: PromptVersion; label: string }[] = [
+  { value: "v4", label: "v4 - National Geographic Style (default)" },
+  { value: "v4-json", label: "v4-json - National Geographic (JSON)" },
+  { value: "v3", label: "v3 - Close-up In-utero Style" },
+  { value: "v3-json", label: "v3-json - Close-up (JSON)" },
+]
+
 interface ProcessingError {
   message: string
   code?: string
@@ -40,6 +49,7 @@ function ProcessingPage() {
   const [state, setState] = useState<ProcessingState>("idle")
   const [error, setError] = useState<ProcessingError | null>(null)
   const [workflowRunId, setWorkflowRunId] = useState<string | null>(null)
+  const [selectedPrompt, setSelectedPrompt] = useState<PromptVersion>("v4")
 
   // Story 5.7: Tab coordination - only leader tab polls (AC8)
   const shouldCoordinate = state === "processing" || state === "already-processing"
@@ -240,7 +250,11 @@ function ProcessingPage() {
           "Content-Type": "application/json",
           "X-Session-Token": sessionToken,
         },
-        body: JSON.stringify({ uploadId: jobId }),
+        body: JSON.stringify({ 
+          uploadId: jobId,
+          // Include promptVersion for testing (dev only)
+          ...(import.meta.env.DEV && { promptVersion: selectedPrompt }),
+        }),
       })
 
       const data = await response.json()
@@ -300,14 +314,18 @@ function ProcessingPage() {
       })
       setState("error")
     }
-  }, [jobId])
+  }, [jobId, selectedPrompt])
 
-  // Start processing on mount
+  // Start processing on mount (auto-start in prod, manual in dev for testing)
+  const [devManualStart, setDevManualStart] = useState(false)
   useEffect(() => {
+    // In dev mode, wait for manual start to allow prompt selection
+    if (import.meta.env.DEV && !devManualStart) return
+    
     if (state === "idle") {
       startProcessing()
     }
-  }, [state, startProcessing])
+  }, [state, startProcessing, devManualStart])
 
   // Handle retry by calling the retry endpoint first, then restarting processing
   const handleRetry = async () => {
@@ -369,6 +387,69 @@ function ProcessingPage() {
     navigate({ to: "/" })
   }
 
+  // Dev mode: Show prompt selector before starting
+  if (import.meta.env.DEV && state === "idle" && !devManualStart) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-cream">
+        <div className="max-w-md w-full text-center space-y-6">
+          <h1 className="font-display text-2xl text-charcoal">
+            Dev Mode: Select Prompt
+          </h1>
+          <p className="text-warm-gray">
+            Choose which prompt version to test before starting processing.
+          </p>
+          
+          <div className="space-y-3">
+            {PROMPT_OPTIONS.map((option) => (
+              <label
+                key={option.value}
+                className={`flex items-center gap-3 p-3 rounded-lg border-2 cursor-pointer transition-colors ${
+                  selectedPrompt === option.value
+                    ? "border-coral bg-coral/10"
+                    : "border-warm-gray/30 hover:border-coral/50"
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="promptVersion"
+                  value={option.value}
+                  checked={selectedPrompt === option.value}
+                  onChange={(e) => setSelectedPrompt(e.target.value as PromptVersion)}
+                  className="sr-only"
+                />
+                <div
+                  className={`size-5 rounded-full border-2 flex items-center justify-center ${
+                    selectedPrompt === option.value
+                      ? "border-coral"
+                      : "border-warm-gray/50"
+                  }`}
+                >
+                  {selectedPrompt === option.value && (
+                    <div className="size-3 rounded-full bg-coral" />
+                  )}
+                </div>
+                <span className="text-left text-sm font-medium text-charcoal">
+                  {option.label}
+                </span>
+              </label>
+            ))}
+          </div>
+          
+          <button
+            onClick={() => setDevManualStart(true)}
+            className="w-full px-6 py-3 bg-coral text-white font-body rounded-lg hover:bg-coral/90 transition-colors"
+          >
+            Start Processing with {selectedPrompt}
+          </button>
+          
+          <p className="text-xs text-warm-gray/70">
+            Job ID: {jobId}
+          </p>
+        </div>
+      </div>
+    )
+  }
+
   // Processing states use full-screen ProcessingScreen component
   if (state === "idle" || state === "starting" || state === "processing" || state === "already-processing") {
     return (
@@ -382,11 +463,12 @@ function ProcessingPage() {
         {/* Dev debug panel at bottom */}
         {import.meta.env.DEV && (
           <div className="fixed bottom-0 left-0 right-0 bg-charcoal/90 text-white p-2 text-xs font-mono z-50">
-            <div className="flex gap-4 justify-center">
+            <div className="flex gap-4 justify-center flex-wrap">
               <span>Job: {jobId}</span>
               <span>State: {state}</span>
               <span>Stage: {stage || "none"}</span>
               <span>Progress: {progress}%</span>
+              <span className="text-coral">Prompt: {selectedPrompt}</span>
               {workflowRunId && <span>Run: {workflowRunId.slice(0, 8)}</span>}
             </div>
           </div>
