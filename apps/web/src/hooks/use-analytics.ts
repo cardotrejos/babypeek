@@ -11,10 +11,20 @@ export type AnalyticsEvent =
   | "upload_failed"
   | "upload_validation_error"
   | "upload_file_selected"
+  | "upload_form_completed"
+  | "upload_progress"
+  | "upload_cancelled"
+  | "presigned_url_requested"
+  | "email_entered"
+  | "email_validation_error"
   | "heic_conversion_started"
   | "heic_conversion_completed"
   | "heic_conversion_error"
   | "heic_large_file_warning"
+  | "compression_started"
+  | "compression_completed"
+  | "compression_skipped"
+  | "compression_failed"
   | "processing_started"
   | "processing_completed"
   | "processing_failed"
@@ -54,12 +64,45 @@ export interface ShareEventProperties {
   platform?: "whatsapp" | "imessage" | "copy_link" | "instagram"
 }
 
+// =============================================================================
+// Compression Event Types (Story 3.3)
+// =============================================================================
+
+export interface CompressionStartedProperties {
+  fileSize: number
+  fileSizeMB: number
+  fileType: string
+}
+
+export interface CompressionCompletedProperties {
+  durationMs: number
+  originalSize: number
+  compressedSize: number
+  compressionRatio: number
+}
+
+export interface CompressionSkippedProperties {
+  reason: "under_threshold" | "gif_file" | "already_optimized"
+  fileSize: number
+  fileSizeMB?: number
+  compressionRatio?: number
+}
+
+export interface CompressionFailedProperties {
+  errorType: string
+  fileSize: number
+}
+
 type EventProperties =
   | UploadEventProperties
   | ProcessingEventProperties
   | CheckoutEventProperties
   | DownloadEventProperties
   | ShareEventProperties
+  | CompressionStartedProperties
+  | CompressionCompletedProperties
+  | CompressionSkippedProperties
+  | CompressionFailedProperties
   | Record<string, unknown>
 
 // =============================================================================

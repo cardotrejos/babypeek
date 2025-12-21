@@ -198,3 +198,13 @@
   0%, 100% { box-shadow: 0 0 20px rgba(232, 146, 124, 0.3); }
   50% { box-shadow: 0 0 30px rgba(232, 146, 124, 0.5); }
 }
+
+/* Progress bar shimmer animation */
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.animate-shimmer {
+  animation: shimmer 2s infinite linear;
+}

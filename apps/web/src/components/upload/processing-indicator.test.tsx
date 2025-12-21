@@ -45,4 +45,51 @@ describe("ProcessingIndicator", () => {
     const spinner = container.querySelector(".animate-spin")
     expect(spinner).toBeInTheDocument()
   })
+
+  describe("Progress Display", () => {
+    it("shows progress percentage when provided", () => {
+      render(<ProcessingIndicator message="Compressing image..." progress={45} />)
+      
+      expect(screen.getByText("Compressing image... 45%")).toBeInTheDocument()
+    })
+
+    it("shows progress bar when progress is provided", () => {
+      render(<ProcessingIndicator message="Compressing..." progress={50} />)
+      
+      const progressBar = screen.getByRole("progressbar")
+      expect(progressBar).toBeInTheDocument()
+      expect(progressBar).toHaveAttribute("aria-valuenow", "50")
+      expect(progressBar).toHaveAttribute("aria-valuemin", "0")
+      expect(progressBar).toHaveAttribute("aria-valuemax", "100")
+    })
+
+    it("does not show progress bar when progress is null", () => {
+      render(<ProcessingIndicator message="Preparing..." progress={null} />)
+      
+      expect(screen.queryByRole("progressbar")).not.toBeInTheDocument()
+    })
+
+    it("does not show progress bar when progress is undefined", () => {
+      render(<ProcessingIndicator message="Preparing..." />)
+      
+      expect(screen.queryByRole("progressbar")).not.toBeInTheDocument()
+    })
+
+    it("clamps progress bar width to 0-100", () => {
+      const { rerender } = render(<ProcessingIndicator progress={-10} />)
+      
+      let progressBar = screen.getByRole("progressbar")
+      expect(progressBar).toHaveStyle({ width: "0%" })
+      
+      rerender(<ProcessingIndicator progress={150} />)
+      progressBar = screen.getByRole("progressbar")
+      expect(progressBar).toHaveStyle({ width: "100%" })
+    })
+
+    it("includes progress in screen reader announcement", () => {
+      render(<ProcessingIndicator progress={75} />)
+      
+      expect(screen.getByText(/Progress: 75%/)).toBeInTheDocument()
+    })
+  })
 })
