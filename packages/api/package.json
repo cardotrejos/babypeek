@@ -25,11 +25,11 @@
     "drizzle-orm": "^0.45.1",
     "effect": "^3.19.13",
     "hono": "catalog:",
+    "jimp": "1",
     "nitro": "^3.0.1-alpha.1",
     "posthog-node": "^5.17.4",
     "resend": "^6.6.0",
     "rollup": "^4.54.0",
-    "sharp": "0.32.6",
     "stripe": "^20.1.0",
     "workflow": "^4.0.1-beta.35",
     "zod": "catalog:"
