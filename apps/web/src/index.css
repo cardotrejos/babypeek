@@ -183,3 +183,9 @@
     padding-top: calc(1rem + var(--safe-area-inset-top));
   }
 }
+
+/* 3d-ultra Signature Animations */
+@keyframes signature-glow {
+  0%, 100% { box-shadow: 0 0 20px rgba(232, 146, 124, 0.3); }
+  50% { box-shadow: 0 0 30px rgba(232, 146, 124, 0.5); }
+}

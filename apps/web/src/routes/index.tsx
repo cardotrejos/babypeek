@@ -1,5 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router"
-import { LandingLayout } from "@/components/landing"
+import { LandingLayout, HeroImage } from "@/components/landing"
+import { Button } from "@/components/ui/button"
+import { cn } from "@/lib/utils"
 
 export const Route = createFileRoute("/")({
   component: LandingPage,
@@ -7,31 +9,53 @@ export const Route = createFileRoute("/")({
 
 function LandingPage() {
   const handleCtaClick = () => {
-    // Scroll to upload section (Story 2.2+ will implement actual upload)
-    const uploadSection = document.getElementById("upload")
-    if (uploadSection) {
-      uploadSection.scrollIntoView({ behavior: "smooth" })
+    // For now, scroll to the gallery section as a preview of "see more"
+    // Will be updated in Epic 3 to navigate to upload section
+    const gallerySection = document.getElementById("gallery")
+    if (gallerySection) {
+      gallerySection.scrollIntoView({ behavior: "smooth" })
     }
   }
 
   return (
     <LandingLayout onCtaClick={handleCtaClick}>
-      {/* Hero Section - Placeholder for Story 2.2 */}
+      {/* Hero Section - Story 2.2 Implementation */}
       <section
         id="hero"
         className="min-h-[60vh] flex flex-col justify-center py-8"
       >
-        <h1 className="font-display text-3xl sm:text-4xl text-charcoal leading-tight">
+        {/* Headline - AC1 */}
+        <h1 className="font-display text-3xl sm:text-5xl text-charcoal leading-tight">
           Meet your baby before they're born
         </h1>
-        <p className="font-body text-warm-gray mt-4 text-lg">
+
+        {/* Value Proposition - AC1 */}
+        <p className="font-body text-warm-gray mt-4 text-lg sm:text-xl max-w-md">
           Transform your 4D ultrasound into a beautiful, photorealistic
           portrait in seconds.
         </p>
-        <div className="mt-8 aspect-video bg-coral-light rounded-xl flex items-center justify-center">
-          <span className="text-warm-gray font-body">
-            [Before/after example - Story 2.2]
-          </span>
+
+        {/* Inline CTA Button - AC3, AC4, AC7 */}
+        <Button
+          onClick={handleCtaClick}
+          aria-label="Try it free - Upload your ultrasound"
+          className={cn(
+            "mt-6 w-full sm:w-auto sm:min-w-[200px]",
+            "touch-target-lg",
+            "text-lg font-semibold",
+            "bg-coral hover:bg-coral-hover text-white",
+            "shadow-lg hover:shadow-xl",
+            "transition-all duration-200",
+            "hover:animate-[signature-glow_2s_ease-in-out_infinite]",
+            "focus-visible:ring-2 focus-visible:ring-coral focus-visible:ring-offset-2"
+          )}
+        >
+          Try it free
+        </Button>
+
+        {/* Before/After Example Image - AC2, AC6, AC7 */}
+        <div className="mt-8">
+          <HeroImage />
         </div>
       </section>
 
@@ -68,10 +92,11 @@ function LandingPage() {
         </div>
       </section>
 
-      {/* Footer placeholder */}
+      {/* Footer */}
       <footer className="py-8 text-center">
         <p className="text-warm-gray text-sm font-body">
-          © 2024 3d-ultra. Made with love for expecting parents.
+          © {new Date().getFullYear()} 3d-ultra. Made with love for expecting
+          parents.
         </p>
       </footer>
     </LandingLayout>

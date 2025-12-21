@@ -58,8 +58,8 @@ development_status:
   # EPIC 2: Landing Experience
   # ═══════════════════════════════════════════════════════════════════════════
   epic-2: in-progress
-  2-1-mobile-optimized-landing-layout: in-progress
-  2-2-hero-section-with-value-proposition: backlog
+  2-1-mobile-optimized-landing-layout: done
+  2-2-hero-section-with-value-proposition: done
   2-3-before-after-example-gallery: backlog
   2-4-trust-signals-section: backlog
   2-5-faq-accordion: backlog
