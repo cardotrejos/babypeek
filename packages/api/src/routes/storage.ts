@@ -1,6 +1,7 @@
 import { Hono } from "hono"
 import { Effect } from "effect"
-import { R2Service, R2ServiceLive, R2Error } from "../services/R2Service"
+import { R2Service, R2ServiceLive } from "../services/R2Service"
+import { R2Error } from "../lib/errors"
 import { z } from "zod"
 
 const app = new Hono()
@@ -19,10 +20,14 @@ const handleR2Error = (error: R2Error) => {
       return { status: 503 as const, body: { error: "Storage service not configured", code: error.cause } }
     case "INVALID_KEY":
       return { status: 400 as const, body: { error: error.message, code: error.cause } }
-    case "BUCKET_NOT_FOUND":
-      return { status: 404 as const, body: { error: "Storage bucket not found", code: error.cause } }
     case "PRESIGN_FAILED":
       return { status: 500 as const, body: { error: "Failed to generate signed URL", code: error.cause } }
+    case "UPLOAD_FAILED":
+      return { status: 500 as const, body: { error: "Failed to upload file", code: error.cause } }
+    case "DOWNLOAD_FAILED":
+      return { status: 500 as const, body: { error: "Failed to download file", code: error.cause } }
+    case "DELETE_FAILED":
+      return { status: 500 as const, body: { error: "Failed to delete file", code: error.cause } }
     default:
       return { status: 500 as const, body: { error: "Internal server error", code: "UNKNOWN" } }
   }

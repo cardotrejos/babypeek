@@ -32,7 +32,6 @@
 # - Stories can be worked in parallel if team capacity allows
 # - SM typically creates next story after previous one is 'done' to incorporate learnings
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
-# - Epics 3-8 have summaries but no detailed stories yet - complete epics.md workflow first
 
 generated: 2024-12-20
 project: 3d-ultra
@@ -42,9 +41,10 @@ story_location: _bmad-output/stories
 
 development_status:
   # ═══════════════════════════════════════════════════════════════════════════
-  # EPIC 1: Foundation & Observability
+  # EPIC 1: Foundation & Observability (9 stories)
+  # Priority: P0 core (1.1-1.4), P1 observability (1.5-1.7), P2 extras (1.8-1.9)
   # ═══════════════════════════════════════════════════════════════════════════
-  epic-1: done
+  epic-1: in-progress
   1-1-initialize-better-t-stack-project: done
   1-2-configure-neon-postgresql-connection: done
   1-3-configure-cloudflare-r2-storage: done
@@ -52,10 +52,14 @@ development_status:
   1-5-integrate-posthog-analytics: done
   1-6-integrate-sentry-error-tracking: done
   1-7-configure-ci-cd-pipeline: done
+  1-8-test-infrastructure-setup: done
+  1-9-effect-services-scaffold: done
   epic-1-retrospective: optional
 
   # ═══════════════════════════════════════════════════════════════════════════
-  # EPIC 2: Landing Experience
+  # EPIC 2: Landing Experience (6 stories)
+  # Priority: P1 essentials (2.1-2.2), P2 extras (2.3-2.6)
+  # Parallel: [2.2 ∥ 2.3 ∥ 2.4 ∥ 2.5 ∥ 2.6] after 2.1
   # ═══════════════════════════════════════════════════════════════════════════
   epic-2: done
   2-1-mobile-optimized-landing-layout: done
@@ -67,43 +71,92 @@ development_status:
   epic-2-retrospective: optional
 
   # ═══════════════════════════════════════════════════════════════════════════
-  # EPIC 3: Image Upload
-  # NOTE: Stories not yet defined - complete epics.md workflow (step 4)
+  # EPIC 3: Image Upload (9 stories)
+  # Priority: P0 core (3.1, 3.5-3.7), P1 polish (3.2-3.4, 3.9), P2 error handling (3.8)
+  # Parallel: [3.1 ∥ 3.4] → [3.2 ∥ 3.3] → 3.5 → 3.6 → 3.7 → [3.8 ∥ 3.9]
   # ═══════════════════════════════════════════════════════════════════════════
-  epic-3: backlog
+  epic-3: in-progress
+  3-1-image-picker-with-format-validation: done
+  3-2-client-side-heic-conversion: done
+  3-3-client-side-image-compression: backlog
+  3-4-email-capture: backlog
+  3-5-presigned-url-generation-and-r2-upload: backlog
+  3-6-session-token-and-job-creation: backlog
+  3-7-rate-limiting: backlog
+  3-8-upload-error-handling: backlog
+  3-9-upload-analytics: backlog
   epic-3-retrospective: optional
 
   # ═══════════════════════════════════════════════════════════════════════════
-  # EPIC 4: AI Processing
-  # NOTE: Stories not yet defined - complete epics.md workflow (step 4)
+  # EPIC 4: AI Processing (6 stories)
+  # Priority: P0 core (4.1, 4.2, 4.4), P1 reliability (4.3, 4.5, 4.6)
+  # Parallel: 4.1 → 4.2 → 4.3 → [4.4 ∥ 4.5] → 4.6
   # ═══════════════════════════════════════════════════════════════════════════
   epic-4: backlog
+  4-1-workflow-job-definition: backlog
+  4-2-gemini-imagen-3-integration: backlog
+  4-3-retry-logic-with-exponential-backoff: backlog
+  4-4-result-storage-in-r2: backlog
+  4-5-processing-status-updates: backlog
+  4-6-processing-timeout-handling: backlog
   epic-4-retrospective: optional
 
   # ═══════════════════════════════════════════════════════════════════════════
-  # EPIC 5: Reveal Experience
-  # NOTE: Stories not yet defined - complete epics.md workflow (step 4)
+  # EPIC 5: Reveal Experience (7 stories)
+  # Priority: P0 core (5.2, 5.3), P1 experience (5.1, 5.6), P2 extras (5.4, 5.5, 5.7)
+  # Parallel: [5.1 ∥ 5.2] → 5.3 → [5.4 ∥ 5.5 ∥ 5.6 ∥ 5.7]
   # ═══════════════════════════════════════════════════════════════════════════
   epic-5: backlog
+  5-1-processing-status-page: backlog
+  5-2-watermark-application: backlog
+  5-3-blur-to-sharp-reveal-animation: backlog
+  5-4-reduced-motion-support: backlog
+  5-5-before-after-comparison-slider: backlog
+  5-6-download-preview-button: backlog
+  5-7-mobile-session-recovery: backlog
   epic-5-retrospective: optional
 
   # ═══════════════════════════════════════════════════════════════════════════
-  # EPIC 6: Payment
-  # NOTE: Stories not yet defined - complete epics.md workflow (step 4)
+  # EPIC 6: Payment (7 stories)
+  # Priority: P0 core (6.1, 6.3, 6.4), P1 UX (6.2, 6.5, 6.6), P2 gift (6.7)
+  # Parallel: 6.1 → 6.2 → 6.3 → 6.4 → [6.5 ∥ 6.6 ∥ 6.7]
   # ═══════════════════════════════════════════════════════════════════════════
   epic-6: backlog
+  6-1-stripe-checkout-integration: backlog
+  6-2-apple-pay-and-google-pay-support: backlog
+  6-3-stripe-webhook-handler: backlog
+  6-4-purchase-record-creation: backlog
+  6-5-payment-receipt-email: backlog
+  6-6-payment-failure-handling: backlog
+  6-7-gift-purchase-option: backlog
   epic-6-retrospective: optional
 
   # ═══════════════════════════════════════════════════════════════════════════
-  # EPIC 7: Download & Delivery
-  # NOTE: Stories not yet defined - complete epics.md workflow (step 4)
+  # EPIC 7: Download & Delivery (6 stories)
+  # Priority: P0 core (7.1-7.3), P1 delivery (7.4-7.5), P2 tracking (7.6)
+  # Parallel: 7.1 → 7.2 → [7.3 ∥ 7.4] → [7.5 ∥ 7.6]
   # ═══════════════════════════════════════════════════════════════════════════
   epic-7: backlog
+  7-1-hd-image-retrieval: backlog
+  7-2-signed-download-url-generation: backlog
+  7-3-in-app-download-button: backlog
+  7-4-download-email-via-resend: backlog
+  7-5-re-download-support: backlog
+  7-6-download-tracking: backlog
   epic-7-retrospective: optional
 
   # ═══════════════════════════════════════════════════════════════════════════
-  # EPIC 8: Sharing & Viral Loop
-  # NOTE: Stories not yet defined - complete epics.md workflow (step 4)
+  # EPIC 8: Sharing & Viral Loop (8 stories)
+  # Priority: P1 core (8.1, 8.3-8.5), P2 extras (8.2, 8.6-8.8)
+  # Parallel: [8.1 ∥ 8.2 ∥ 8.3] → 8.4 → 8.5 → [8.6 ∥ 8.7 ∥ 8.8]
   # ═══════════════════════════════════════════════════════════════════════════
   epic-8: backlog
+  8-1-whatsapp-share-button: backlog
+  8-2-imessage-share-button: backlog
+  8-3-copy-link-button: backlog
+  8-4-share-page-with-watermarked-preview: backlog
+  8-5-gift-purchase-cta-on-share-page: backlog
+  8-6-delete-my-data-button-gdpr: backlog
+  8-7-auto-delete-after-30-days: backlog
+  8-8-expired-result-handling: backlog
   epic-8-retrospective: optional

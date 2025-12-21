@@ -17,6 +17,7 @@
   "type": "module",
   "scripts": {
     "check": "oxlint && oxfmt --write",
+    "lint": "oxlint",
     "ruler:apply": "bunx @intellectronica/ruler@latest apply --local-only",
     "dev": "turbo dev",
     "build": "turbo build",
@@ -30,7 +31,11 @@
     "db:start": "turbo -F @3d-ultra/db db:start",
     "db:watch": "turbo -F @3d-ultra/db db:watch",
     "db:stop": "turbo -F @3d-ultra/db db:stop",
-    "db:down": "turbo -F @3d-ultra/db db:down"
+    "db:down": "turbo -F @3d-ultra/db db:down",
+    "test": "turbo test",
+    "test:coverage": "turbo test:coverage",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui"
   },
   "dependencies": {
     "@effect/schema": "^0.75.5",
@@ -39,11 +44,14 @@
     "zod": "catalog:"
   },
   "devDependencies": {
-    "turbo": "^2.6.3",
-    "oxlint": "^1.34.0",
+    "@playwright/test": "^1.57.0",
+    "@types/bun": "catalog:",
+    "@vitest/coverage-v8": "^4.0.16",
     "oxfmt": "^0.19.0",
+    "oxlint": "^1.34.0",
+    "turbo": "^2.6.3",
     "typescript": "catalog:",
-    "@types/bun": "catalog:"
+    "vitest": "^4.0.16"
   },
   "packageManager": "bun@1.3.5"
 }

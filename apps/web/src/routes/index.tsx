@@ -9,7 +9,7 @@ const SEO = {
   title: "3d-ultra | Transform Your 4D Ultrasound into a Baby Portrait",
   description: "See your baby before they're born. Upload your 4D ultrasound and get a beautiful AI-generated portrait in 60 seconds. Free preview, instant results.",
   siteUrl: "https://3d-ultra.com/", // Trailing slash for canonical consistency
-  ogImage: "/og-image.png", // PNG format required for Facebook/Twitter OG image support
+  ogImage: "og-image.png", // PNG format required for Facebook/Twitter OG image support
 } as const
 
 export const Route = createFileRoute("/")({
