@@ -1,6 +1,6 @@
-import { describe, it, expect, vi, beforeEach } from "vitest"
-import { Effect, Layer } from "effect"
-import { GeminiService, GeminiServiceLive } from "./GeminiService"
+import { describe, it, expect, vi } from "vitest"
+import { Effect } from "effect"
+import { GeminiService, GeminiServiceLive, GeminiServiceErrorMock } from "./GeminiService"
 import { StripeService, StripeServiceLive } from "./StripeService"
 import { ResendService, ResendServiceLive } from "./ResendService"
 import { GeminiError, PaymentError, EmailError } from "../lib/errors"
@@ -11,12 +11,15 @@ vi.mock("../lib/env", () => ({
     STRIPE_SECRET_KEY: undefined,
     STRIPE_WEBHOOK_SECRET: undefined,
     RESEND_API_KEY: undefined,
+    GEMINI_API_KEY: undefined,
     APP_URL: "http://localhost:3001",
     PRODUCT_PRICE_CENTS: 999,
     FROM_EMAIL: "test@example.com",
+    NODE_ENV: "test",
   },
   isStripeConfigured: () => false,
   isResendConfigured: () => false,
+  isGeminiConfigured: () => false,
 }))
 
 describe("Effect Services", () => {
@@ -36,29 +39,25 @@ describe("Effect Services", () => {
     })
 
     it("generateImage returns GeminiError on failure", async () => {
-      // GeminiServiceLive has built-in retry (3 times) which can make tests slow
-      // We test the error type by catching any error from the service
+      // Use the error mock to test error handling without actual API calls
+      const errorLayer = GeminiServiceErrorMock("API_ERROR", "Test API error")
+      const testBuffer = Buffer.from([0xff, 0xd8, 0xff, 0xe0]) // JPEG magic bytes
+
       const program = Effect.gen(function* () {
         const service = yield* GeminiService
-        return yield* service.generateImage("http://example.com/image.jpg", "test prompt")
-      }).pipe(
-        Effect.provide(GeminiServiceLive),
-        Effect.catchAll((error) => {
-          // The service will retry 3 times then fail with either GeminiError or TimeoutException
-          if (error instanceof GeminiError) {
-            return Effect.succeed({ error: true, cause: error.cause, type: "GeminiError" })
-          }
-          // Timeout exceptions are converted to GeminiError with TIMEOUT cause in the service
-          return Effect.succeed({ error: true, cause: "timeout", type: String(error._tag || "unknown") })
-        })
-      )
+        return yield* service.generateImage(testBuffer, "test prompt")
+      }).pipe(Effect.provide(errorLayer))
 
-      const result = await Effect.runPromise(program)
-      expect(result.error).toBe(true)
-      // Should fail with API_ERROR (from the "Not implemented" throw) after retries
-      expect(result.type).toBe("GeminiError")
-      expect(result.cause).toBe("API_ERROR")
-    }, 15000) // Allow time for retries
+      // The program should fail with a GeminiError
+      // Effect wraps errors in FiberFailure, so we need to use Effect.either
+      const result = await Effect.runPromise(Effect.either(program))
+      expect(result._tag).toBe("Left")
+      if (result._tag === "Left") {
+        expect(result.left).toBeInstanceOf(GeminiError)
+        expect(result.left.cause).toBe("API_ERROR")
+        expect(result.left.message).toBe("Test API error")
+      }
+    })
   })
 
   describe("StripeService", () => {

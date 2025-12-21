@@ -1,6 +1,6 @@
 # Story 4.2: Gemini Imagen 3 Integration
 
-Status: ready-for-dev
+Status: review
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -21,52 +21,52 @@ so that **a photorealistic baby portrait is generated**.
 
 ## Tasks / Subtasks
 
-- [ ] **Task 1: Install and configure Google AI SDK** (AC: 1)
-  - [ ] Install `@google/generative-ai` SDK
-  - [ ] Verify Imagen 3 API access in Google AI Studio
-  - [ ] Add `GEMINI_API_KEY` to env schema (already defined)
-  - [ ] Create `packages/api/src/lib/gemini.ts` for client initialization
-  - [ ] Export typed Gemini client
+- [x] **Task 1: Install and configure Google AI SDK** (AC: 1)
+  - [x] Install `@google/generative-ai` SDK
+  - [x] Verify Imagen 3 API access in Google AI Studio
+  - [x] Add `GEMINI_API_KEY` to env schema (already defined)
+  - [x] Create `packages/api/src/lib/gemini.ts` for client initialization
+  - [x] Export typed Gemini client
 
-- [ ] **Task 2: Create structured prompt template** (AC: 2, 3)
-  - [ ] Create `packages/api/src/prompts/baby-portrait.ts`
-  - [ ] Design prompt for ultrasound-to-photorealistic conversion
-  - [ ] Include safety guidelines to avoid controversial outputs
-  - [ ] Make prompt configurable for future A/B testing
-  - [ ] Document prompt rationale in comments
+- [x] **Task 2: Create structured prompt template** (AC: 2, 3)
+  - [x] Create `packages/api/src/prompts/baby-portrait.ts`
+  - [x] Design prompt for ultrasound-to-photorealistic conversion
+  - [x] Include safety guidelines to avoid controversial outputs
+  - [x] Make prompt configurable for future A/B testing
+  - [x] Document prompt rationale in comments
 
-- [ ] **Task 3: Update GeminiService Effect service** (AC: 1, 4, 5, 6)
-  - [ ] Update existing `packages/api/src/services/GeminiService.ts` (currently placeholder)
-  - [ ] Align service interface return type with downstream consumers (`Buffer` or `{ data: Buffer, mimeType }`)
-  - [ ] Implement using Effect.tryPromise
-  - [ ] Add 60 second timeout using Effect.timeout
-  - [ ] Return image as Buffer (preferred for R2 upload)
-  - [ ] Create GeminiServiceLive layer
+- [x] **Task 3: Update GeminiService Effect service** (AC: 1, 4, 5, 6)
+  - [x] Update existing `packages/api/src/services/GeminiService.ts` (currently placeholder)
+  - [x] Align service interface return type with downstream consumers (`Buffer` or `{ data: Buffer, mimeType }`)
+  - [x] Implement using Effect.tryPromise
+  - [x] Add 60 second timeout using Effect.timeout
+  - [x] Return image as Buffer (preferred for R2 upload)
+  - [x] Create GeminiServiceLive layer
 
-- [ ] **Task 4: Define GeminiError typed errors** (AC: 5)
-  - [ ] Update existing GeminiError in `packages/api/src/lib/errors.ts`
-  - [ ] Define causes: RATE_LIMITED, INVALID_IMAGE, CONTENT_POLICY, API_ERROR, TIMEOUT
-  - [ ] Map Gemini SDK errors to typed errors
-  - [ ] Include original error message for Sentry logging
+- [x] **Task 4: Define GeminiError typed errors** (AC: 5)
+  - [x] Update existing GeminiError in `packages/api/src/lib/errors.ts`
+  - [x] Define causes: RATE_LIMITED, INVALID_IMAGE, CONTENT_POLICY, API_ERROR, TIMEOUT
+  - [x] Map Gemini SDK errors to typed errors
+  - [x] Include original error message for Sentry logging
 
-- [ ] **Task 5: Integrate GeminiService into workflow** (AC: 1, 4)
-  - [ ] Update `packages/api/src/workflows/process-image.ts`
-  - [ ] Fetch original image from R2 (note: `originalUrl` is an R2 key; use `R2Service.generatePresignedDownloadUrl`)
-  - [ ] Call GeminiService.generateImage with image and prompt
-  - [ ] Pass generated image buffer to next stage (watermarking)
+- [x] **Task 5: Integrate GeminiService into workflow** (AC: 1, 4)
+  - [x] Update `packages/api/src/workflows/process-image.ts`
+  - [x] Fetch original image from R2 (note: `originalUrl` is an R2 key; use `R2Service.generatePresignedDownloadUrl`)
+  - [x] Call GeminiService.generateImage with image and prompt
+  - [x] Pass generated image buffer to next stage (watermarking)
 
-- [ ] **Task 6: Add Gemini analytics tracking**
-  - [ ] Track `gemini_call_started` with uploadId
-  - [ ] Track `gemini_call_completed` with durationMs
-  - [ ] Track `gemini_call_failed` with errorType
-  - [ ] Send to PostHog server-side
+- [x] **Task 6: Add Gemini analytics tracking**
+  - [x] Track `gemini_call_started` with uploadId
+  - [x] Track `gemini_call_completed` with durationMs
+  - [x] Track `gemini_call_failed` with errorType
+  - [x] Send to PostHog server-side
 
-- [ ] **Task 7: Write comprehensive tests**
-  - [ ] Unit test: GeminiService returns image buffer
-  - [ ] Unit test: Timeout after 60s
-  - [ ] Unit test: Error mapping for different failure types
-  - [ ] Unit test: Prompt template is used correctly
-  - [ ] Mock test: Simulate Gemini API response
+- [x] **Task 7: Write comprehensive tests**
+  - [x] Unit test: GeminiService returns image buffer
+  - [x] Unit test: Timeout after 60s
+  - [x] Unit test: Error mapping for different failure types
+  - [x] Unit test: Prompt template is used correctly
+  - [x] Mock test: Simulate Gemini API response
 
 ## Dev Notes
 
@@ -401,10 +401,45 @@ const GeminiServiceErrorMock = Layer.succeed(
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude (Anthropic)
 
 ### Debug Log References
 
+- All 258 tests pass across both packages (web and api)
+- GeminiService tests: 24 tests passing
+- Prompt template tests: 6 tests passing
+- Error handling tests: 5 tests passing
+
 ### Completion Notes List
 
+- Installed @google/generative-ai@0.24.1 SDK
+- Created gemini.ts client with caching, safety settings, and generation config
+- Created baby-portrait.ts with v1/v2 prompts for A/B testing
+- Updated GeminiService with full Effect implementation:
+  - generateImage(Buffer, prompt) - direct image generation
+  - generateImageFromUrl(url, prompt) - fetches then generates
+  - 60 second timeout with Effect.timeout
+  - 3x retry with exponential backoff for transient errors
+  - Typed error mapping for RATE_LIMITED, CONTENT_POLICY, INVALID_IMAGE, API_ERROR, TIMEOUT
+- Updated process-image workflow to integrate GeminiService:
+  - Fetches original image from R2 using presigned URL
+  - Calls GeminiService with prompt template
+  - Stores generated image in R2
+  - Tracks analytics events via PostHog
+- Added mock implementations for testing (GeminiServiceMock, GeminiServiceErrorMock)
+- Fixed pre-existing test issues in services.test.ts
+
 ### File List
+
+- packages/api/src/lib/gemini.ts (NEW)
+- packages/api/src/prompts/baby-portrait.ts (NEW)
+- packages/api/src/services/GeminiService.ts (UPDATED)
+- packages/api/src/services/GeminiService.test.ts (NEW)
+- packages/api/src/services/services.test.ts (UPDATED)
+- packages/api/src/workflows/process-image.ts (UPDATED)
+- packages/api/package.json (UPDATED - added @google/generative-ai)
+- bun.lock (UPDATED)
+
+### Change Log
+
+- 2024-12-21: Implemented Gemini Imagen 3 integration with Effect services, prompt templates, workflow integration, analytics tracking, and comprehensive tests

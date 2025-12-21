@@ -22,6 +22,11 @@ export class RateLimitError extends Data.TaggedError("RateLimitError")<{
   retryAfter: number
 }> {}
 
+export class AlreadyProcessingError extends Data.TaggedError("AlreadyProcessingError")<{
+  uploadId: string
+  currentStatus: string
+}> {}
+
 // =============================================================================
 // External Service Errors
 // =============================================================================
@@ -65,6 +70,7 @@ export type AppError =
   | UnauthorizedError
   | ValidationError
   | RateLimitError
+  | AlreadyProcessingError
   | GeminiError
   | R2Error
   | UploadError

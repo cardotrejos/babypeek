@@ -18,6 +18,7 @@
     "@3d-ultra/db": "workspace:*",
     "@aws-sdk/client-s3": "^3.956.0",
     "@aws-sdk/s3-request-presigner": "^3.956.0",
+    "@google/generative-ai": "^0.24.1",
     "@paralleldrive/cuid2": "^3.0.4",
     "@sentry/node": "^10.32.1",
     "dotenv": "catalog:",

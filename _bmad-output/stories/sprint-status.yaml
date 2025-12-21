@@ -75,7 +75,7 @@ development_status:
   # Priority: P0 core (3.1, 3.5-3.7), P1 polish (3.2-3.4, 3.9), P2 error handling (3.8)
   # Parallel: [3.1 ∥ 3.4] → [3.2 ∥ 3.3] → 3.5 → 3.6 → 3.7 → [3.8 ∥ 3.9]
   # ═══════════════════════════════════════════════════════════════════════════
-  epic-3: in-progress
+  epic-3: done
   3-1-image-picker-with-format-validation: done
   3-2-client-side-heic-conversion: done
   3-3-client-side-image-compression: done
@@ -84,7 +84,7 @@ development_status:
   3-6-session-token-and-job-creation: done
   3-7-rate-limiting: done
   3-8-upload-error-handling: done
-  3-9-upload-analytics: review
+  3-9-upload-analytics: done
   epic-3-retrospective: optional
 
   # ═══════════════════════════════════════════════════════════════════════════
@@ -93,8 +93,8 @@ development_status:
   # Parallel: 4.1 → 4.2 → 4.3 → [4.4 ∥ 4.5] → 4.6
   # ═══════════════════════════════════════════════════════════════════════════
   epic-4: in-progress
-  4-1-workflow-job-definition: in-progress
-  4-2-gemini-imagen-3-integration: ready-for-dev
+  4-1-workflow-job-definition: done
+  4-2-gemini-imagen-3-integration: review
   4-3-retry-logic-with-exponential-backoff: ready-for-dev
   4-4-result-storage-in-r2: ready-for-dev
   4-5-processing-status-updates: ready-for-dev
