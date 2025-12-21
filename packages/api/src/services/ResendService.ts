@@ -36,96 +36,105 @@ const getResendClient = (): Effect.Effect<Resend, EmailError> => {
 // From email configuration using env
 const getFromEmail = () => `3d-ultra <${env.FROM_EMAIL}>`
 
-// Resend Service implementation
-export const ResendServiceLive = Layer.succeed(ResendService, {
-  sendResultEmail: (email, resultId) =>
-    getResendClient().pipe(
-      Effect.flatMap((resend) =>
-        Effect.tryPromise({
-          try: () =>
-            resend.emails.send({
-              from: getFromEmail(),
-              to: email,
-              subject: "Your 3d-ultra portrait is ready! 🎉",
-              html: `
+const sendResultEmail = Effect.fn("ResendService.sendResultEmail")(function* (email: string, resultId: string) {
+  const resend = yield* getResendClient()
+  yield* Effect.tryPromise({
+    try: () =>
+      resend.emails.send({
+        from: getFromEmail(),
+        to: email,
+        subject: "Your 3d-ultra portrait is ready! 🎉",
+        html: `
                 <h1>Your baby portrait is ready!</h1>
                 <p>View your result: <a href="${env.APP_URL}/result/${resultId}">Click here</a></p>
                 <p>This link will remain active for 30 days.</p>
               `,
-            }),
-          catch: (e) =>
-            new EmailError({
-              cause: "SEND_FAILED",
-              message: String(e),
-            }),
-        })
-      ),
-      Effect.asVoid,
-      Effect.retry({ times: 2, schedule: Schedule.exponential("500 millis") }),
-      Effect.timeout("30 seconds"),
-      Effect.catchTag("TimeoutException", () =>
-        Effect.fail(new EmailError({ cause: "SEND_FAILED", message: "Email send timed out" }))
-      )
-    ),
+      }),
+    catch: (e) =>
+      new EmailError({
+        cause: "SEND_FAILED",
+        message: String(e),
+      }),
+  }).pipe(
+    Effect.asVoid,
+    Effect.retry({ times: 2, schedule: Schedule.exponential("500 millis") }),
+    Effect.timeout("30 seconds"),
+    Effect.catchTag("TimeoutException", () =>
+      Effect.fail(new EmailError({ cause: "SEND_FAILED", message: "Email send timed out" }))
+    )
+  )
+})
 
-  sendReceiptEmail: (email, purchaseId, amount) =>
-    getResendClient().pipe(
-      Effect.flatMap((resend) =>
-        Effect.tryPromise({
-          try: () =>
-            resend.emails.send({
-              from: getFromEmail(),
-              to: email,
-              subject: "Your 3d-ultra purchase receipt",
-              html: `
+const sendReceiptEmail = Effect.fn("ResendService.sendReceiptEmail")(function* (
+  email: string,
+  purchaseId: string,
+  amount: number
+) {
+  const resend = yield* getResendClient()
+  yield* Effect.tryPromise({
+    try: () =>
+      resend.emails.send({
+        from: getFromEmail(),
+        to: email,
+        subject: "Your 3d-ultra purchase receipt",
+        html: `
                 <h1>Thank you for your purchase!</h1>
                 <p>Amount: $${(amount / 100).toFixed(2)}</p>
                 <p>Order ID: ${purchaseId}</p>
                 <p>You can now download your HD photo.</p>
               `,
-            }),
-          catch: (e) =>
-            new EmailError({
-              cause: "SEND_FAILED",
-              message: String(e),
-            }),
-        })
-      ),
-      Effect.asVoid,
-      Effect.retry({ times: 2, schedule: Schedule.exponential("500 millis") }),
-      Effect.timeout("30 seconds"),
-      Effect.catchTag("TimeoutException", () =>
-        Effect.fail(new EmailError({ cause: "SEND_FAILED", message: "Email send timed out" }))
-      )
-    ),
+      }),
+    catch: (e) =>
+      new EmailError({
+        cause: "SEND_FAILED",
+        message: String(e),
+      }),
+  }).pipe(
+    Effect.asVoid,
+    Effect.retry({ times: 2, schedule: Schedule.exponential("500 millis") }),
+    Effect.timeout("30 seconds"),
+    Effect.catchTag("TimeoutException", () =>
+      Effect.fail(new EmailError({ cause: "SEND_FAILED", message: "Email send timed out" }))
+    )
+  )
+})
 
-  sendDownloadEmail: (email, resultId, downloadUrl) =>
-    getResendClient().pipe(
-      Effect.flatMap((resend) =>
-        Effect.tryPromise({
-          try: () =>
-            resend.emails.send({
-              from: getFromEmail(),
-              to: email,
-              subject: "Your HD photo is ready to download! 📸",
-              html: `
+const sendDownloadEmail = Effect.fn("ResendService.sendDownloadEmail")(function* (
+  email: string,
+  resultId: string,
+  downloadUrl: string
+) {
+  const resend = yield* getResendClient()
+  yield* Effect.tryPromise({
+    try: () =>
+      resend.emails.send({
+        from: getFromEmail(),
+        to: email,
+        subject: "Your HD photo is ready to download! 📸",
+        html: `
                 <h1>Download your HD photo</h1>
                 <p><a href="${downloadUrl}">Download now</a></p>
                 <p>This link expires in 7 days.</p>
               `,
-            }),
-          catch: (e) =>
-            new EmailError({
-              cause: "SEND_FAILED",
-              message: String(e),
-            }),
-        })
-      ),
-      Effect.asVoid,
-      Effect.retry({ times: 2, schedule: Schedule.exponential("500 millis") }),
-      Effect.timeout("30 seconds"),
-      Effect.catchTag("TimeoutException", () =>
-        Effect.fail(new EmailError({ cause: "SEND_FAILED", message: "Email send timed out" }))
-      )
-    ),
+      }),
+    catch: (e) =>
+      new EmailError({
+        cause: "SEND_FAILED",
+        message: String(e),
+      }),
+  }).pipe(
+    Effect.asVoid,
+    Effect.retry({ times: 2, schedule: Schedule.exponential("500 millis") }),
+    Effect.timeout("30 seconds"),
+    Effect.catchTag("TimeoutException", () =>
+      Effect.fail(new EmailError({ cause: "SEND_FAILED", message: "Email send timed out" }))
+    )
+  )
+})
+
+// Resend Service implementation
+export const ResendServiceLive = Layer.succeed(ResendService, {
+  sendResultEmail,
+  sendReceiptEmail,
+  sendDownloadEmail,
 })

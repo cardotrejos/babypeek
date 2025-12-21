@@ -26,83 +26,96 @@ export class UploadService extends Context.Tag("UploadService")<
   }
 >() {}
 
+const create = Effect.fn("UploadService.create")(function* (params: CreateUploadParams) {
+  const result = yield* Effect.promise(async () => {
+    return db
+      .insert(uploads)
+      .values({
+        id: params.id, // Use pre-generated ID to match R2 key
+        email: params.email,
+        sessionToken: params.sessionToken,
+        originalUrl: params.originalUrl,
+        status: "pending",
+        expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
+      })
+      .returning()
+  })
+  // Result always returns at least the inserted row
+  return result[0]!
+})
+
+const getById = Effect.fn("UploadService.getById")(function* (id: string) {
+  const upload = yield* Effect.promise(async () => {
+    return db.query.uploads.findFirst({
+      where: eq(uploads.id, id),
+    })
+  })
+  if (!upload) {
+    return yield* Effect.fail(new NotFoundError({ resource: "upload", id }))
+  }
+  return upload
+})
+
+const getBySessionToken = Effect.fn("UploadService.getBySessionToken")(function* (token: string) {
+  const upload = yield* Effect.promise(async () => {
+    return db.query.uploads.findFirst({
+      where: eq(uploads.sessionToken, token),
+    })
+  })
+  if (!upload) {
+    return yield* Effect.fail(new NotFoundError({ resource: "upload", id: token }))
+  }
+  return upload
+})
+
+const updateStatus = Effect.fn("UploadService.updateStatus")(function* (
+  id: string,
+  status: UploadStatus,
+  errorMessage?: string
+) {
+  const result = yield* Effect.promise(async () => {
+    return db
+      .update(uploads)
+      .set({
+        status,
+        errorMessage,
+        updatedAt: new Date(),
+      })
+      .where(eq(uploads.id, id))
+      .returning()
+  })
+  if (!result[0]) {
+    return yield* Effect.fail(new NotFoundError({ resource: "upload", id }))
+  }
+})
+
+const updateResult = Effect.fn("UploadService.updateResult")(function* (
+  id: string,
+  resultUrl: string,
+  previewUrl: string
+) {
+  const result = yield* Effect.promise(async () => {
+    return db
+      .update(uploads)
+      .set({
+        resultUrl,
+        previewUrl,
+        status: "completed" as UploadStatus,
+        updatedAt: new Date(),
+      })
+      .where(eq(uploads.id, id))
+      .returning()
+  })
+  if (!result[0]) {
+    return yield* Effect.fail(new NotFoundError({ resource: "upload", id }))
+  }
+})
+
 // Upload Service implementation
 export const UploadServiceLive = Layer.succeed(UploadService, {
-  create: (params) =>
-    Effect.promise(async () => {
-      const result = await db
-        .insert(uploads)
-        .values({
-          id: params.id, // Use pre-generated ID to match R2 key
-          email: params.email,
-          sessionToken: params.sessionToken,
-          originalUrl: params.originalUrl,
-          status: "pending",
-          expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
-        })
-        .returning()
-      // Result always returns at least the inserted row
-      return result[0]!
-    }),
-
-  getById: (id) =>
-    Effect.promise(async () => {
-      const upload = await db.query.uploads.findFirst({
-        where: eq(uploads.id, id),
-      })
-      return upload
-    }).pipe(
-      Effect.flatMap((upload) =>
-        upload ? Effect.succeed(upload) : Effect.fail(new NotFoundError({ resource: "upload", id }))
-      )
-    ),
-
-  getBySessionToken: (token) =>
-    Effect.promise(async () => {
-      const upload = await db.query.uploads.findFirst({
-        where: eq(uploads.sessionToken, token),
-      })
-      return upload
-    }).pipe(
-      Effect.flatMap((upload) =>
-        upload ? Effect.succeed(upload) : Effect.fail(new NotFoundError({ resource: "upload", id: token }))
-      )
-    ),
-
-  updateStatus: (id, status, errorMessage) =>
-    Effect.promise(async () => {
-      const result = await db
-        .update(uploads)
-        .set({
-          status,
-          errorMessage,
-          updatedAt: new Date(),
-        })
-        .where(eq(uploads.id, id))
-        .returning()
-      return result[0]
-    }).pipe(
-      Effect.flatMap((upload) =>
-        upload ? Effect.void : Effect.fail(new NotFoundError({ resource: "upload", id }))
-      )
-    ),
-
-  updateResult: (id, resultUrl, previewUrl) =>
-    Effect.promise(async () => {
-      const result = await db
-        .update(uploads)
-        .set({
-          resultUrl,
-          previewUrl,
-          status: "completed" as UploadStatus,
-          updatedAt: new Date(),
-        })
-        .where(eq(uploads.id, id))
-        .returning()
-      return result[0]
-    }).pipe(
-      Effect.flatMap((upload) =>
-        upload ? Effect.void : Effect.fail(new NotFoundError({ resource: "upload", id }))
-      )
-    ),
+  create,
+  getById,
+  getBySessionToken,
+  updateStatus,
+  updateResult,
 })

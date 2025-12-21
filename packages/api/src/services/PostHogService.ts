@@ -72,48 +72,62 @@ const getClient = (): PostHog | null => {
 // PostHog Service Implementation
 // =============================================================================
 
+const capture = Effect.fn("PostHogService.capture")(function* (
+  event: string,
+  distinctId: string,
+  properties?: PostHogEventProperties
+) {
+  yield* Effect.sync(() => {
+    const client = getClient()
+    if (!client) {
+      if (env.NODE_ENV === "development") {
+        console.log(`📊 [PostHog Mock] ${event}:`, { distinctId, ...properties })
+      }
+      return
+    }
+
+    client.capture({
+      event,
+      distinctId,
+      properties,
+    })
+  })
+})
+
+const identify = Effect.fn("PostHogService.identify")(function* (
+  distinctId: string,
+  properties?: PostHogEventProperties
+) {
+  yield* Effect.sync(() => {
+    const client = getClient()
+    if (!client) {
+      if (env.NODE_ENV === "development") {
+        console.log(`📊 [PostHog Mock] identify:`, { distinctId, ...properties })
+      }
+      return
+    }
+
+    client.identify({
+      distinctId,
+      properties,
+    })
+  })
+})
+
+const shutdown = Effect.fn("PostHogService.shutdown")(function* () {
+  yield* Effect.promise(async () => {
+    const client = getClient()
+    if (client) {
+      await client.shutdown()
+      cachedClient = null
+    }
+  })
+})
+
 export const PostHogServiceLive = Layer.succeed(PostHogService, {
-  capture: (event, distinctId, properties) =>
-    Effect.sync(() => {
-      const client = getClient()
-      if (!client) {
-        if (env.NODE_ENV === "development") {
-          console.log(`📊 [PostHog Mock] ${event}:`, { distinctId, ...properties })
-        }
-        return
-      }
-
-      client.capture({
-        event,
-        distinctId,
-        properties,
-      })
-    }),
-
-  identify: (distinctId, properties) =>
-    Effect.sync(() => {
-      const client = getClient()
-      if (!client) {
-        if (env.NODE_ENV === "development") {
-          console.log(`📊 [PostHog Mock] identify:`, { distinctId, ...properties })
-        }
-        return
-      }
-
-      client.identify({
-        distinctId,
-        properties,
-      })
-    }),
-
-  shutdown: () =>
-    Effect.promise(async () => {
-      const client = getClient()
-      if (client) {
-        await client.shutdown()
-        cachedClient = null
-      }
-    }),
+  capture,
+  identify,
+  shutdown,
 })
 
 // =============================================================================

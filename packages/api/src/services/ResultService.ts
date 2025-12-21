@@ -36,51 +36,58 @@ const toResult = (upload: Upload): Result | null => {
   }
 }
 
+const getById = Effect.fn("ResultService.getById")(function* (id: string) {
+  const upload = yield* Effect.promise(async () => {
+    return db.query.uploads.findFirst({
+      where: eq(uploads.id, id),
+    })
+  })
+  const result = upload ? toResult(upload) : null
+  if (!result) {
+    return yield* Effect.fail(new NotFoundError({ resource: "result", id }))
+  }
+  return result
+})
+
+const getByIdWithAuth = Effect.fn("ResultService.getByIdWithAuth")(function* (
+  id: string,
+  sessionToken: string
+): Effect.Effect<Result, NotFoundError | UnauthorizedError> {
+  const upload = yield* Effect.promise(async () => {
+    return db.query.uploads.findFirst({
+      where: eq(uploads.id, id),
+    })
+  })
+
+  if (!upload) {
+    return yield* Effect.fail(new NotFoundError({ resource: "result", id }))
+  }
+  if (upload.sessionToken !== sessionToken) {
+    return yield* Effect.fail(new UnauthorizedError({ reason: "INVALID_TOKEN" }))
+  }
+  const result = toResult(upload)
+  if (!result) {
+    return yield* Effect.fail(new NotFoundError({ resource: "result", id }))
+  }
+  return result
+})
+
+const getByUploadId = Effect.fn("ResultService.getByUploadId")(function* (uploadId: string) {
+  const upload = yield* Effect.promise(async () => {
+    return db.query.uploads.findFirst({
+      where: eq(uploads.id, uploadId),
+    })
+  })
+  const result = upload ? toResult(upload) : null
+  if (!result) {
+    return yield* Effect.fail(new NotFoundError({ resource: "result", id: uploadId }))
+  }
+  return result
+})
+
 // Result Service implementation
 export const ResultServiceLive = Layer.succeed(ResultService, {
-  getById: (id) =>
-    Effect.promise(async () => {
-      const upload = await db.query.uploads.findFirst({
-        where: eq(uploads.id, id),
-      })
-      return upload ? toResult(upload) : null
-    }).pipe(
-      Effect.flatMap((result) =>
-        result ? Effect.succeed(result) : Effect.fail(new NotFoundError({ resource: "result", id }))
-      )
-    ),
-
-  getByIdWithAuth: (id, sessionToken) =>
-    Effect.promise(async () => {
-      const upload = await db.query.uploads.findFirst({
-        where: eq(uploads.id, id),
-      })
-      return upload
-    }).pipe(
-      Effect.flatMap((upload): Effect.Effect<Result, NotFoundError | UnauthorizedError> => {
-        if (!upload) {
-          return Effect.fail(new NotFoundError({ resource: "result", id }))
-        }
-        if (upload.sessionToken !== sessionToken) {
-          return Effect.fail(new UnauthorizedError({ reason: "INVALID_TOKEN" }))
-        }
-        const result = toResult(upload)
-        if (!result) {
-          return Effect.fail(new NotFoundError({ resource: "result", id }))
-        }
-        return Effect.succeed(result)
-      })
-    ),
-
-  getByUploadId: (uploadId) =>
-    Effect.promise(async () => {
-      const upload = await db.query.uploads.findFirst({
-        where: eq(uploads.id, uploadId),
-      })
-      return upload ? toResult(upload) : null
-    }).pipe(
-      Effect.flatMap((result) =>
-        result ? Effect.succeed(result) : Effect.fail(new NotFoundError({ resource: "result", id: uploadId }))
-      )
-    ),
+  getById,
+  getByIdWithAuth,
+  getByUploadId,
 })
