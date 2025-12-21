@@ -9,10 +9,16 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as CheckoutSuccessRouteImport } from './routes/checkout-success'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ResultResultIdRouteImport } from './routes/result.$resultId'
 import { Route as ProcessingJobIdRouteImport } from './routes/processing.$jobId'
 
+const CheckoutSuccessRoute = CheckoutSuccessRouteImport.update({
+  id: '/checkout-success',
+  path: '/checkout-success',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -31,36 +37,56 @@ const ProcessingJobIdRoute = ProcessingJobIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/checkout-success': typeof CheckoutSuccessRoute
   '/processing/$jobId': typeof ProcessingJobIdRoute
   '/result/$resultId': typeof ResultResultIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/checkout-success': typeof CheckoutSuccessRoute
   '/processing/$jobId': typeof ProcessingJobIdRoute
   '/result/$resultId': typeof ResultResultIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/checkout-success': typeof CheckoutSuccessRoute
   '/processing/$jobId': typeof ProcessingJobIdRoute
   '/result/$resultId': typeof ResultResultIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/processing/$jobId' | '/result/$resultId'
+  fullPaths:
+    | '/'
+    | '/checkout-success'
+    | '/processing/$jobId'
+    | '/result/$resultId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/processing/$jobId' | '/result/$resultId'
-  id: '__root__' | '/' | '/processing/$jobId' | '/result/$resultId'
+  to: '/' | '/checkout-success' | '/processing/$jobId' | '/result/$resultId'
+  id:
+    | '__root__'
+    | '/'
+    | '/checkout-success'
+    | '/processing/$jobId'
+    | '/result/$resultId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  CheckoutSuccessRoute: typeof CheckoutSuccessRoute
   ProcessingJobIdRoute: typeof ProcessingJobIdRoute
   ResultResultIdRoute: typeof ResultResultIdRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/checkout-success': {
+      id: '/checkout-success'
+      path: '/checkout-success'
+      fullPath: '/checkout-success'
+      preLoaderRoute: typeof CheckoutSuccessRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -87,6 +113,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  CheckoutSuccessRoute: CheckoutSuccessRoute,
   ProcessingJobIdRoute: ProcessingJobIdRoute,
   ResultResultIdRoute: ResultResultIdRoute,
 }

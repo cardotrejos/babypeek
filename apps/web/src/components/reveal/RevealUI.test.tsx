@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest"
 import { render, screen, fireEvent } from "@testing-library/react"
 import { RevealUI } from "./RevealUI"
 
-// Mock PostHog for DownloadPreviewButton
+// Mock PostHog for DownloadPreviewButton and CheckoutButton
 vi.mock("@/lib/posthog", () => ({
   posthog: {
     capture: vi.fn(),
@@ -10,11 +10,16 @@ vi.mock("@/lib/posthog", () => ({
   isPostHogConfigured: vi.fn(() => false),
 }))
 
+// Mock API config
+vi.mock("@/lib/api-config", () => ({
+  API_BASE_URL: "http://localhost:3000",
+}))
+
 describe("RevealUI", () => {
   const defaultProps = {
     resultId: "test-result-123",
+    uploadId: "test-upload-123",
     previewUrl: "https://example.com/preview.jpg",
-    onPurchase: vi.fn(),
     onShare: vi.fn(),
   }
 
@@ -23,7 +28,7 @@ describe("RevealUI", () => {
   })
 
   describe("Rendering", () => {
-    it("should render primary CTA button", () => {
+    it("should render primary CTA button (CheckoutButton)", () => {
       render(<RevealUI {...defaultProps} />)
 
       const purchaseButton = screen.getByRole("button", {
@@ -56,18 +61,6 @@ describe("RevealUI", () => {
   })
 
   describe("Interactions", () => {
-    it("should call onPurchase when HD button clicked", () => {
-      const onPurchase = vi.fn()
-      render(<RevealUI {...defaultProps} onPurchase={onPurchase} />)
-
-      const purchaseButton = screen.getByRole("button", {
-        name: /Get HD Version/i,
-      })
-      fireEvent.click(purchaseButton)
-
-      expect(onPurchase).toHaveBeenCalledTimes(1)
-    })
-
     it("should call onShare when share button clicked", () => {
       const onShare = vi.fn()
       render(<RevealUI {...defaultProps} onShare={onShare} />)

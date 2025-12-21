@@ -166,19 +166,9 @@ function ResultPage() {
     }
   }, [resultId, uploadId, revealStartTime])
 
-  // Action handlers
-  const handlePurchase = useCallback(() => {
-    if (isPostHogConfigured()) {
-      posthog.capture("purchase_clicked", {
-        result_id: resultId,
-        source: "reveal_ui",
-      })
-    }
-    // TODO: Navigate to checkout when Epic 6 is implemented
-    // Story 5.7: After successful payment, clear the session (AC7)
-    // clearSession(uploadId) should be called after payment completes in Epic 6
-    console.log("[result] Purchase clicked for result:", resultId)
-  }, [resultId])
+  // Note: Purchase is now handled directly by CheckoutButton in RevealUI (Story 6.1)
+  // Story 5.7: After successful payment, clear the session (AC7)
+  // clearSession(uploadId) should be called after payment completes in Epic 6
 
   const handleShare = useCallback(() => {
     if (isPostHogConfigured()) {
@@ -283,8 +273,8 @@ function ResultPage() {
           />
           <RevealUI
             resultId={resultId}
+            uploadId={uploadId!}
             previewUrl={previewUrl}
-            onPurchase={handlePurchase}
             onShare={handleShare}
             hasOriginalImage={!!originalUrl}
             showComparison={showComparison}
@@ -301,8 +291,8 @@ function ResultPage() {
         >
           <RevealUI
             resultId={resultId}
+            uploadId={uploadId!}
             previewUrl={previewUrl}
-            onPurchase={handlePurchase}
             onShare={handleShare}
             hasOriginalImage={!!originalUrl}
             showComparison={showComparison}

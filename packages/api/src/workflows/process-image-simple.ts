@@ -12,7 +12,7 @@ import { eq } from "drizzle-orm"
 import { S3Client, PutObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3"
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner"
 import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from "@google/generative-ai"
-import { Jimp } from "jimp"
+import { Jimp, intToRGBA, rgbaToInt } from "jimp"
 import { GEMINI_MODEL, BABY_PORTRAIT_PROMPT } from "./config"
 
 // =============================================================================
@@ -344,11 +344,11 @@ async function createAndStorePreview(
         const isStripe = (x + y) % 8 < 4
         if (isStripe) {
           // Get current pixel color and blend with white
-          const rgba = Jimp.intToRGBA(image.getPixelColor(x, y))
+          const rgba = intToRGBA(image.getPixelColor(x, y))
           const blendedR = Math.floor(rgba.r * 0.6 + 255 * 0.4)
           const blendedG = Math.floor(rgba.g * 0.6 + 255 * 0.4)
           const blendedB = Math.floor(rgba.b * 0.6 + 255 * 0.4)
-          const newColor = Jimp.rgbaToInt(blendedR, blendedG, blendedB, rgba.a)
+          const newColor = rgbaToInt(blendedR, blendedG, blendedB, rgba.a)
           image.setPixelColor(newColor, x, y)
         }
       }

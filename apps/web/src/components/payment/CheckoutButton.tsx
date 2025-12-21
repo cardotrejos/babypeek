@@ -1,5 +1,5 @@
-import { useState, useCallback } from "react"
-import { Button, type ButtonProps } from "@/components/ui/button"
+import { useState, useCallback, type ComponentPropsWithoutRef } from "react"
+import { Button } from "@/components/ui/button"
 import { API_BASE_URL } from "@/lib/api-config"
 import { posthog, isPostHogConfigured } from "@/lib/posthog"
 
@@ -7,7 +7,7 @@ import { posthog, isPostHogConfigured } from "@/lib/posthog"
 const PRICE_CENTS = Number(import.meta.env.VITE_PRODUCT_PRICE_CENTS) || 999
 const PRICE_DISPLAY = `$${(PRICE_CENTS / 100).toFixed(2)}`
 
-interface CheckoutButtonProps extends Omit<ButtonProps, "onClick"> {
+interface CheckoutButtonProps extends Omit<ComponentPropsWithoutRef<typeof Button>, "onClick"> {
   uploadId: string
   onCheckoutError?: (error: string) => void
 }
