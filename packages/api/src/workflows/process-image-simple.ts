@@ -13,10 +13,9 @@ import { S3Client, PutObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner"
 import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from "@google/generative-ai"
 import { Jimp, intToRGBA, rgbaToInt } from "jimp"
-import { GEMINI_MODEL } from "./config"
-import { getPrompt, DEFAULT_PROMPT_VERSION, type PromptVersion } from "../prompts/baby-portrait"
+import { GEMINI_MODEL, PROMPTS, DEFAULT_PROMPT, type PromptVersion } from "./config"
 
-// Re-export PromptVersion for use in route
+// Re-export for route
 export type { PromptVersion }
 
 // =============================================================================
@@ -410,11 +409,10 @@ export async function processImageWorkflowSimple(
 ): Promise<ProcessImageOutput> {
   "use workflow"
   
-  const { uploadId, promptVersion = DEFAULT_PROMPT_VERSION } = input
-  console.log(`[workflow] Starting for upload: ${uploadId}, prompt: ${promptVersion}`)
-  
-  // Resolve the prompt string here (workflow can use module imports, steps cannot)
-  const prompt = getPrompt(promptVersion)
+  const { uploadId, promptVersion } = input
+  // Get prompt from config (plain constants work in workflow)
+  const prompt = promptVersion ? PROMPTS[promptVersion] : DEFAULT_PROMPT
+  console.log(`[workflow] Starting for upload: ${uploadId}, prompt: ${promptVersion || "default (v4)"}`)
   
   try {
     // Stage 1: Validating
