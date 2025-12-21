@@ -82,9 +82,9 @@ development_status:
   3-4-email-capture: done
   3-5-presigned-url-generation-and-r2-upload: done
   3-6-session-token-and-job-creation: done
-  3-7-rate-limiting: ready-for-dev
-  3-8-upload-error-handling: ready-for-dev
-  3-9-upload-analytics: ready-for-dev
+  3-7-rate-limiting: done
+  3-8-upload-error-handling: done
+  3-9-upload-analytics: review
   epic-3-retrospective: optional
 
   # ═══════════════════════════════════════════════════════════════════════════
@@ -93,7 +93,7 @@ development_status:
   # Parallel: 4.1 → 4.2 → 4.3 → [4.4 ∥ 4.5] → 4.6
   # ═══════════════════════════════════════════════════════════════════════════
   epic-4: in-progress
-  4-1-workflow-job-definition: ready-for-dev
+  4-1-workflow-job-definition: in-progress
   4-2-gemini-imagen-3-integration: ready-for-dev
   4-3-retry-logic-with-exponential-backoff: ready-for-dev
   4-4-result-storage-in-r2: ready-for-dev

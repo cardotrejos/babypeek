@@ -32,7 +32,7 @@ export class GeminiError extends Data.TaggedError("GeminiError")<{
 }> {}
 
 export class R2Error extends Data.TaggedError("R2Error")<{
-  cause: "UPLOAD_FAILED" | "DOWNLOAD_FAILED" | "DELETE_FAILED" | "PRESIGN_FAILED" | "CONFIG_MISSING" | "INVALID_KEY" | "HEAD_FAILED"
+  cause: "UPLOAD_FAILED" | "DOWNLOAD_FAILED" | "DELETE_FAILED" | "PRESIGN_FAILED" | "CONFIG_MISSING" | "INVALID_KEY" | "HEAD_FAILED" | "LIST_FAILED"
   message: string
 }> {}
 

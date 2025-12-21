@@ -4,6 +4,7 @@ import { ArrowRightIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { EmailInput } from "@/components/upload/email-input"
 import { ImageUploader } from "@/components/upload/image-uploader"
+import { UploadError } from "@/components/upload/upload-error"
 import { UploadProgress } from "@/components/upload/upload-progress"
 import { useAnalytics } from "@/hooks/use-analytics"
 import { useUpload, type UploadResult } from "@/hooks/use-upload"
@@ -185,11 +186,20 @@ export function UploadForm({
         </p>
       )}
       
-      {/* Error message */}
+      {/* Error state with retry button */}
       {uploadState.status === "error" && uploadState.error && (
-        <p className="text-center text-sm text-red-500">
-          {uploadState.error}
-        </p>
+        <UploadError
+          message={uploadState.error}
+          onRetry={() => {
+            resetUpload()
+            // Re-trigger upload if file is still selected
+            if (selectedFile && emailValid) {
+              handleSubmit({ preventDefault: () => {} } as React.FormEvent)
+            }
+          }}
+          retrying={false}
+          retryable={true}
+        />
       )}
     </form>
   )

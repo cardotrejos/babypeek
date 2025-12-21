@@ -6,11 +6,19 @@ import { z } from "zod"
 import { R2Service, R2ServiceLive } from "../services/R2Service"
 import { UploadService, UploadServiceLive } from "../services/UploadService"
 import { R2Error } from "../lib/errors"
+import { rateLimitMiddleware } from "../middleware/rate-limit"
 
 // Combined layer for upload routes
 const UploadRoutesLive = Layer.merge(R2ServiceLive, UploadServiceLive)
 
 const app = new Hono()
+
+// =============================================================================
+// Rate Limiting Middleware
+// =============================================================================
+
+// Apply rate limiting to all upload routes
+app.use("*", rateLimitMiddleware())
 
 // =============================================================================
 // Request Schemas
@@ -256,6 +264,80 @@ app.post("/:uploadId/confirm", async (c) => {
     jobId: result.right.jobId,
     status: result.right.status,
   })
+})
+
+// =============================================================================
+// DELETE /api/upload/:uploadId - Cleanup Partial Uploads
+// =============================================================================
+
+/**
+ * DELETE /api/upload/:uploadId
+ * 
+ * Clean up a partial/failed upload from R2 storage.
+ * Requires session token for authorization.
+ * Handles "not found" gracefully (idempotent).
+ * 
+ * Path params:
+ * - uploadId: string - The upload ID to clean up
+ * 
+ * Headers:
+ * - X-Session-Token: string - Session token for authorization
+ * 
+ * Response:
+ * - success: boolean
+ */
+app.delete("/:uploadId", async (c) => {
+  const uploadId = c.req.param("uploadId")
+  const sessionToken = c.req.header("X-Session-Token")
+
+  // Require session token
+  if (!sessionToken) {
+    return c.json(
+      { error: "Session token is required", code: "MISSING_TOKEN" },
+      401
+    )
+  }
+
+  const cleanupUpload = Effect.gen(function* () {
+    const r2 = yield* R2Service
+
+    // Delete all files with the upload prefix (uploads/{uploadId}/)
+    // This cleans up original, processed, and any temporary files
+    const prefix = `uploads/${uploadId}/`
+    
+    const deletedCount = yield* r2.deletePrefix(prefix).pipe(
+      Effect.catchAll(() => Effect.succeed(0)) // Best-effort cleanup
+    )
+
+    return { success: true, deletedCount }
+  })
+
+  // Run with R2 service layer
+  const program = cleanupUpload.pipe(Effect.provide(R2ServiceLive))
+
+  try {
+    await Effect.runPromise(program)
+    return c.json({ success: true })
+  } catch (error: unknown) {
+    // Check for R2 config error
+    if (
+      error &&
+      typeof error === "object" &&
+      "_tag" in error &&
+      error._tag === "R2Error" &&
+      "cause" in error &&
+      error.cause === "CONFIG_MISSING"
+    ) {
+      return c.json(
+        { error: "Storage service not configured", code: "CONFIG_MISSING" },
+        503
+      )
+    }
+
+    // Log but return success - cleanup is best-effort
+    console.error("[upload-cleanup] Error during cleanup:", uploadId, error)
+    return c.json({ success: true })
+  }
 })
 
 export default app
