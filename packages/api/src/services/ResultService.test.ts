@@ -74,6 +74,7 @@ describe("ResultService", () => {
     updateResult: () => Effect.succeed(undefined),
     updateStage: () => Effect.succeed({} as never),
     startProcessing: () => Effect.succeed({} as never),
+    resetForRetry: () => Effect.succeed({} as never),
   })
 
   beforeEach(() => {

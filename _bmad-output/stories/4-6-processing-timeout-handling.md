@@ -1,6 +1,6 @@
 # Story 4.6: Processing Timeout Handling
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -47,8 +47,9 @@ so that **I'm not left waiting indefinitely**.
   - [x] Add `resetForRetry(jobId)` to UploadService (clear error/stage/progress/workflowRunId)
   - [x] Reset upload status to 'pending'
   - [x] Clear previous error state
-  - [x] Return success with pending status (user re-triggers processing)
+  - [x] Return success with pending status (frontend re-triggers processing via setState("idle"))
   - [x] Export route from `packages/api/src/index.ts` and mount in `apps/server/src/index.ts`
+  - Note: Workflow is re-triggered by frontend calling /api/process after retry resets state
 
 - [x] **Task 6: Update frontend for timeout display** (AC: 2, 3)
   - [x] Update processing page to detect 'failed' and 'timeout' status
@@ -546,10 +547,41 @@ N/A - Implementation completed without blocking issues.
 
 ### Change Log
 
-- **2024-12-21:** Implemented Story 4.6 - Processing Timeout Handling
+- **2025-12-21:** Code Review fixes
+  - Removed random endpoint selection (`Math.random()`) from frontend - was non-deterministic behavior
+  - Updated timeout message to match AC-2 exactly: "This is taking longer than expected. Let's try again!"
+  - Added PostHog configuration checks before `posthog.capture()` calls
+  - Fixed `ResultService.test.ts` mock to include `resetForRetry` method
+  - Rewrote `process-timeout.test.ts` with real behavior tests (not documentation tests)
+
+- **2025-12-21:** Implemented Story 4.6 - Processing Timeout Handling
   - Added 90-second timeout using Effect.timeout
   - Extended ProcessingError with context fields (uploadId, lastStage, lastProgress)
   - Created retry endpoint with session validation
   - Implemented frontend timeout UI with warm messaging and retry button
   - Added analytics tracking for timeout and retry events
   - Created comprehensive unit tests
+
+## Senior Developer Review (AI)
+
+**Reviewer:** Claude (claude-sonnet-4-20250514)  
+**Review Date:** 2025-12-21  
+**Review Type:** Adversarial Code Review
+
+### Issues Found & Fixed
+
+| Severity | Issue | Status |
+|----------|-------|--------|
+| HIGH | Random endpoint selection (`Math.random()`) in frontend - non-deterministic behavior | FIXED |
+| HIGH | Tests were mostly documentation tests (self-referential) | FIXED |
+| MEDIUM | Frontend timeout message didn't exactly match AC-2 wording | FIXED |
+| MEDIUM | PostHog calls without configuration check | FIXED |
+| MEDIUM | ResultService.test.ts mock missing `resetForRetry` method | FIXED |
+| LOW | Story file date said 2024 instead of 2025 | FIXED |
+
+### Verification
+
+- All 13 timeout tests pass
+- All 11 ResultService tests pass
+- TypeScript compiles without errors in processing page
+- Frontend timeout message now matches AC-2: "This is taking longer than expected. Let's try again!"

@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router"
 import { useState, useEffect, useCallback } from "react"
 import { getSession, hasSession } from "@/lib/session"
-import { posthog } from "@/lib/posthog"
+import { posthog, isPostHogConfigured } from "@/lib/posthog"
 
 // API base URL - in production this will be the same origin
 const API_BASE = import.meta.env.VITE_API_URL || ""
@@ -64,11 +64,7 @@ function ProcessingPage() {
     setState("starting")
 
     try {
-      // Randomly choose between /api/process and /api/process-workflow for testing
-      const endpoint = Math.random() < 0.5 ? "/api/process" : "/api/process-workflow"
-      console.log(`[processing] Using endpoint: ${endpoint}`)
-      
-      const response = await fetch(`${API_BASE}${endpoint}`, {
+      const response = await fetch(`${API_BASE}/api/process`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -91,11 +87,13 @@ function ProcessingPage() {
       if (!response.ok) {
         // Handle timeout specifically (AC-2, AC-3)
         if (response.status === 408 || data.code === "PROCESSING_TIMEOUT") {
-          posthog.capture("processing_timeout_shown", {
-            upload_id: jobId,
-            last_stage: data.lastStage,
-            last_progress: data.lastProgress,
-          })
+          if (isPostHogConfigured()) {
+            posthog.capture("processing_timeout_shown", {
+              upload_id: jobId,
+              last_stage: data.lastStage,
+              last_progress: data.lastProgress,
+            })
+          }
           setError({
             message: "This is taking longer than expected. Let's try again!",
             code: "PROCESSING_TIMEOUT",
@@ -156,9 +154,11 @@ function ProcessingPage() {
 
     try {
       // Track retry attempt
-      posthog.capture("processing_retry_started", {
-        upload_id: jobId,
-      })
+      if (isPostHogConfigured()) {
+        posthog.capture("processing_retry_started", {
+          upload_id: jobId,
+        })
+      }
 
       // First, reset the job state via retry endpoint
       const retryResponse = await fetch(`${API_BASE}/api/retry/${jobId}`, {
@@ -178,10 +178,12 @@ function ProcessingPage() {
       setState("idle")
     } catch (err) {
       console.error("[processing] Error during retry:", err)
-      posthog.capture("processing_retry_failed", {
-        upload_id: jobId,
-        error: err instanceof Error ? err.message : String(err),
-      })
+      if (isPostHogConfigured()) {
+        posthog.capture("processing_retry_failed", {
+          upload_id: jobId,
+          error: err instanceof Error ? err.message : String(err),
+        })
+      }
       setError({
         message: "Couldn't start retry. Please try again.",
         code: "RETRY_FAILED",
@@ -264,10 +266,10 @@ function ProcessingPage() {
             </div>
             <div className="space-y-2">
               <h1 className="font-display text-2xl text-charcoal">
-                This is taking longer than expected
+                This is taking longer than expected. Let's try again!
               </h1>
               <p className="font-body text-warm-gray max-w-md">
-                Something went wrong with your image. Don't worry - let's give it another try!
+                Don't worry - these things happen. Your image is ready for another go!
               </p>
             </div>
             <button
