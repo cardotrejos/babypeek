@@ -40,12 +40,3 @@ export const geminiRetryScheduleExact = Schedule.fromDelays(
   Duration.seconds(2),
   Duration.seconds(4)
 )
-
-/**
- * Quick retry schedule for less critical operations.
- * 3 retries with 500ms base delay.
- */
-export const quickRetrySchedule = Schedule.exponential(Duration.millis(500)).pipe(
-  Schedule.jittered,
-  Schedule.intersect(Schedule.recurs(3))
-)
