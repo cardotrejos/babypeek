@@ -11,7 +11,6 @@ This is a monorepo with the following structure:
 - **`apps/server/`** - Backend server (Hono)
 
 - **`packages/api/`** - Shared API logic and types
-- **`packages/auth/`** - Authentication logic and utilities
 - **`packages/db/`** - Database schema and utilities
 
 ## Available Scripts
@@ -35,13 +34,6 @@ Database schema files are located in `apps/server/src/db/schema/`
 
 - oRPC endpoints are in `apps/server/src/api/`
 - Client-side API utils are in `apps/web/src/utils/api.ts`
-
-## Authentication
-
-Authentication is enabled in this project:
-
-- Server auth logic is in `apps/server/src/lib/auth.ts`
-- Web app auth client is in `apps/web/src/lib/auth-client.ts`
 
 ## Adding More Features
 

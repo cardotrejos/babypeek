@@ -1,7 +1,6 @@
 import "dotenv/config";
 import { createContext } from "@3d-ultra/api/context";
 import { appRouter } from "@3d-ultra/api/routers/index";
-import { auth } from "@3d-ultra/auth";
 import { OpenAPIHandler } from "@orpc/openapi/fetch";
 import { OpenAPIReferencePlugin } from "@orpc/openapi/plugins";
 import { onError } from "@orpc/server";
@@ -19,12 +18,8 @@ app.use(
   cors({
     origin: process.env.CORS_ORIGIN || "",
     allowMethods: ["GET", "POST", "OPTIONS"],
-    allowHeaders: ["Content-Type", "Authorization"],
-    credentials: true,
   }),
 );
-
-app.on(["POST", "GET"], "/api/auth/*", (c) => auth.handler(c.req.raw));
 
 export const apiHandler = new OpenAPIHandler(appRouter, {
   plugins: [

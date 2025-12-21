@@ -10,5 +10,13 @@
     }
   },
   "scripts": {},
-  "devDependencies": {}
+  "devDependencies": {
+    "typescript": "catalog:",
+    "@3d-ultra/config": "workspace:*"
+  },
+  "dependencies": {
+    "dotenv": "catalog:",
+    "zod": "catalog:",
+    "@3d-ultra/db": "workspace:*"
+  }
 }

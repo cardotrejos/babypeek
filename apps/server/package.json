@@ -10,13 +10,19 @@
     "start": "bun run dist/index.js"
   },
   "dependencies": {
-    "hono": "^4.8.2",
-    "@orpc/server": "^1.12.2",
-    "@orpc/openapi": "^1.12.2",
-    "@orpc/zod": "^1.12.2",
-    "better-auth": "^1.4.7"
+    "hono": "catalog:",
+    "@orpc/server": "catalog:",
+    "@orpc/openapi": "catalog:",
+    "@orpc/zod": "catalog:",
+    "dotenv": "catalog:",
+    "zod": "catalog:",
+    "@3d-ultra/api": "workspace:*",
+    "@3d-ultra/db": "workspace:*"
   },
   "devDependencies": {
-    "@types/bun": "^1.3.4"
+    "@types/bun": "catalog:",
+    "typescript": "catalog:",
+    "tsdown": "^0.16.5",
+    "@3d-ultra/config": "workspace:*"
   }
 }
