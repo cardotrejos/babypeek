@@ -48,6 +48,7 @@ function ProcessingPage() {
     isComplete, 
     isFailed, 
     resultId,
+    resultUrl,
     errorMessage: polledErrorMessage 
   } = useStatus(shouldPoll ? jobId : null)
 
@@ -311,30 +312,45 @@ function ProcessingPage() {
         {/* Complete state */}
         {state === "complete" && (
           <>
-            <div className="flex justify-center">
-              <div className="size-16 rounded-full bg-green-100 flex items-center justify-center">
-                <svg
-                  className="size-8 text-green-500"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M5 13l4 4L19 7"
-                  />
-                </svg>
-              </div>
-            </div>
-            <div className="space-y-2">
+            <div className="space-y-4">
               <h1 className="font-display text-2xl text-charcoal">
                 Your portrait is ready!
               </h1>
-              <p className="font-body text-warm-gray">
-                Processing complete. Result ID: {resultId}
-              </p>
+              {resultUrl ? (
+                <div className="rounded-xl overflow-hidden shadow-lg border-4 border-white">
+                  <img 
+                    src={resultUrl} 
+                    alt="Your AI-generated portrait" 
+                    className="w-full h-auto"
+                  />
+                </div>
+              ) : (
+                <div className="flex justify-center">
+                  <div className="size-16 rounded-full bg-green-100 flex items-center justify-center">
+                    <svg
+                      className="size-8 text-green-500"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M5 13l4 4L19 7"
+                      />
+                    </svg>
+                  </div>
+                </div>
+              )}
+            </div>
+            <div className="flex flex-col gap-3">
+              <button
+                onClick={handleStartOver}
+                className="px-6 py-3 bg-coral text-white font-body rounded-lg hover:bg-coral/90 transition-colors"
+              >
+                Create Another Portrait
+              </button>
             </div>
           </>
         )}

@@ -18,6 +18,7 @@ interface StatusApiResponse {
   stage: ProcessingStage
   progress: number
   resultId: string | null
+  resultUrl: string | null
   errorMessage: string | null
   updatedAt: string
   error?: {
@@ -35,6 +36,8 @@ export interface UseStatusResult {
   progress: number
   /** Result ID when processing is complete */
   resultId: string | null
+  /** Signed URL for the result image when processing is complete */
+  resultUrl: string | null
   /** Error message if processing failed */
   errorMessage: string | null
   /** Whether the initial fetch is loading */
@@ -221,6 +224,7 @@ export function useStatus(jobId: string | null): UseStatusResult {
     stage: data?.stage ?? null,
     progress: data?.progress ?? 0,
     resultId: data?.resultId ?? null,
+    resultUrl: data?.resultUrl ?? null,
     errorMessage: data?.errorMessage ?? null,
     isLoading,
     isComplete,

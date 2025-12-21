@@ -2,6 +2,7 @@ import { Hono } from "hono"
 import { Effect } from "effect"
 
 import { UploadService, UploadServiceLive } from "../services/UploadService"
+import { R2Service, R2ServiceLive } from "../services/R2Service"
 
 const app = new Hono()
 
@@ -70,16 +71,26 @@ app.get("/:jobId", async (c) => {
 
   const getStatus = Effect.gen(function* () {
     const uploadService = yield* UploadService
+    const r2Service = yield* R2Service
 
     // Get upload with session token verification
     const upload = yield* uploadService.getByIdWithAuth(jobId, sessionToken)
 
-    // Determine resultId - only include if status is completed and we have a result URL
+    // Determine resultId and generate signed URL if completed
     let resultId: string | null = null
+    let resultUrl: string | null = null
+    
     if (upload.status === "completed" && upload.resultUrl) {
       // Extract resultId from resultUrl path: results/{resultId}/full.jpg
       const match = upload.resultUrl.match(/results\/([^/]+)\//)
       resultId = match?.[1] ?? upload.id
+      
+      // Generate a signed URL for the result image (valid for 1 hour)
+      const r2Key = `results/${resultId}/full.jpg`
+      const signedUrlResult = yield* r2Service.getDownloadUrl(r2Key, 60 * 60).pipe(
+        Effect.catchAll(() => Effect.succeed(null as string | null))
+      )
+      resultUrl = signedUrlResult
     }
 
     return {
@@ -88,12 +99,13 @@ app.get("/:jobId", async (c) => {
       stage: upload.stage,
       progress: upload.progress ?? 0,
       resultId,
+      resultUrl,
       errorMessage: upload.status === "failed" ? (upload.errorMessage ?? "Processing failed. Please try again.") : null,
       updatedAt: upload.updatedAt.toISOString(),
     }
   })
 
-  const program = getStatus.pipe(Effect.provide(UploadServiceLive))
+  const program = getStatus.pipe(Effect.provide(UploadServiceLive), Effect.provide(R2ServiceLive))
   const result = await Effect.runPromise(Effect.either(program))
 
   if (result._tag === "Left") {
