@@ -87,6 +87,23 @@ async function updateUploadStage(
     .where(eq(uploads.id, uploadId))
 }
 
+async function savePromptVersion(
+  uploadId: string,
+  promptVersion: string
+): Promise<void> {
+  "use step"
+  
+  await db
+    .update(uploads)
+    .set({
+      promptVersion: promptVersion as "v3" | "v3-json" | "v4" | "v4-json",
+      updatedAt: new Date(),
+    })
+    .where(eq(uploads.id, uploadId))
+  
+  console.log(`[workflow] Saved promptVersion: ${promptVersion} for upload: ${uploadId}`)
+}
+
 async function getOriginalImageUrl(uploadId: string): Promise<string | null> {
   "use step"
   
@@ -417,6 +434,10 @@ export async function processImageWorkflowSimple(
   try {
     // Stage 1: Validating
     await updateUploadStage(uploadId, "validating", 10, "processing")
+    
+    // Save which prompt version is being used (for tracking/analytics)
+    const usedPromptVersion = promptVersion || 'none'
+    await savePromptVersion(uploadId, usedPromptVersion)
     
     // Get original image URL
     const imageUrl = await getOriginalImageUrl(uploadId)
