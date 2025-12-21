@@ -1,5 +1,4 @@
 import { Hono } from "hono"
-import { Effect } from "effect"
 
 const app = new Hono()
 
