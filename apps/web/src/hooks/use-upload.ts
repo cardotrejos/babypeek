@@ -3,6 +3,7 @@ import { toast } from "sonner"
 import * as Sentry from "@sentry/react"
 
 import { useAnalytics } from "@/hooks/use-analytics"
+import { storeSession } from "@/lib/session"
 
 // =============================================================================
 // Constants
@@ -36,6 +37,7 @@ export interface UploadState {
 export interface UploadResult {
   uploadId: string
   key: string
+  sessionToken: string
 }
 
 export interface UseUploadResult {
@@ -50,6 +52,13 @@ interface PresignedUrlResponse {
   uploadId: string
   key: string
   expiresAt: string
+  sessionToken: string
+}
+
+interface ConfirmUploadResponse {
+  success: boolean
+  jobId: string
+  status: string
 }
 
 // =============================================================================
@@ -106,6 +115,31 @@ export function useUpload(): UseUploadResult {
       }
 
       return response.json()
+    },
+    [trackEvent]
+  )
+
+  /**
+   * Confirm upload completion with the server
+   */
+  const confirmUpload = useCallback(
+    async (uploadId: string, signal: AbortSignal): Promise<ConfirmUploadResponse> => {
+      const response = await fetch(`${API_BASE_URL}/api/upload/${uploadId}/confirm`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        signal,
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.error || `Confirmation failed: ${response.status}`)
+      }
+
+      const data = await response.json()
+      trackEvent("upload_confirmed", { upload_id: uploadId })
+      return data
     },
     [trackEvent]
   )
@@ -229,13 +263,28 @@ export function useUpload(): UseUploadResult {
           }))
         })
 
+        // Check if cancelled before confirmation
+        if (abortController.signal.aborted) {
+          return null
+        }
+
+        // Phase 3: Confirm upload with server
+        await confirmUpload(presignedData.uploadId, abortController.signal)
+
+        // Phase 4: Store session in localStorage
+        storeSession(presignedData.uploadId, presignedData.sessionToken)
+
+        // Track session creation
+        trackEvent("session_created", { upload_id: presignedData.uploadId })
+
         // Upload complete
         const durationMs = Math.round(performance.now() - startTime)
 
         trackEvent("upload_completed", {
-          durationMs,
+          upload_id: presignedData.uploadId,
           file_size: file.size,
-          uploadId: presignedData.uploadId,
+          file_type: file.type,
+          duration_ms: durationMs,
         })
 
         setState({
@@ -248,6 +297,7 @@ export function useUpload(): UseUploadResult {
         return {
           uploadId: presignedData.uploadId,
           key: presignedData.key,
+          sessionToken: presignedData.sessionToken,
         }
       } catch (error) {
         // Handle cancellation separately (no error toast)

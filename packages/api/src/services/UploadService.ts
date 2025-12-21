@@ -8,6 +8,7 @@ export type UploadStage = "validating" | "generating" | "watermarking" | "comple
 
 // Create upload parameters
 export interface CreateUploadParams {
+  id: string // Pre-generated ID to match R2 key
   email: string
   sessionToken: string
   originalUrl: string
@@ -32,6 +33,7 @@ export const UploadServiceLive = Layer.succeed(UploadService, {
       const result = await db
         .insert(uploads)
         .values({
+          id: params.id, // Use pre-generated ID to match R2 key
           email: params.email,
           sessionToken: params.sessionToken,
           originalUrl: params.originalUrl,

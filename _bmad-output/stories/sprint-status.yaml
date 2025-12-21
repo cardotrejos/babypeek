@@ -81,7 +81,7 @@ development_status:
   3-3-client-side-image-compression: done
   3-4-email-capture: done
   3-5-presigned-url-generation-and-r2-upload: done
-  3-6-session-token-and-job-creation: ready-for-dev
+  3-6-session-token-and-job-creation: done
   3-7-rate-limiting: ready-for-dev
   3-8-upload-error-handling: ready-for-dev
   3-9-upload-analytics: ready-for-dev
