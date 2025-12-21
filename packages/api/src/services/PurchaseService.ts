@@ -74,8 +74,13 @@ const createCheckout = (stripeService: StripeService["Type"]) =>
     }
 
     // Build success/cancel URLs
+    // Extract resultId from resultUrl path: results/{resultId}/full.jpg
+    // Result page uses resultId, not uploadId, for the URL
+    const resultIdMatch = upload.resultUrl?.match(/results\/([^/]+)\//)
+    const resultId = resultIdMatch?.[1] ?? uploadId
+    
     const successUrl = `${env.APP_URL}/checkout-success?session_id={CHECKOUT_SESSION_ID}`
-    const cancelUrl = `${env.APP_URL}/result/${uploadId}`
+    const cancelUrl = `${env.APP_URL}/result/${resultId}`
 
     // Create Stripe checkout session
     const session = yield* stripeService.createCheckoutSession({

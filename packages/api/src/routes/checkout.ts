@@ -4,12 +4,17 @@ import { z } from "zod"
 
 import { PurchaseService, PurchaseServiceLive } from "../services/PurchaseService"
 import { StripeServiceLive } from "../services/StripeService"
+import { UploadService, UploadServiceLive } from "../services/UploadService"
 import { NotFoundError, PaymentError, ValidationError } from "../lib/errors"
+import { rateLimitMiddleware } from "../middleware/rate-limit"
 
 // Composed layer: PurchaseService needs StripeService
 const CheckoutRoutesLive = PurchaseServiceLive.pipe(Layer.provide(StripeServiceLive))
 
 const app = new Hono()
+
+// Apply rate limiting to prevent abuse
+app.use("*", rateLimitMiddleware())
 
 // Request schema
 const checkoutSchema = z.object({
@@ -21,6 +26,10 @@ const checkoutSchema = z.object({
  * POST /api/checkout
  * 
  * Create a Stripe Checkout session for purchasing an HD image.
+ * Requires session token for authentication.
+ * 
+ * Headers:
+ * - X-Session-Token: string - Session token for authorization
  * 
  * Request body:
  * - uploadId: string - The upload ID to purchase
@@ -31,6 +40,15 @@ const checkoutSchema = z.object({
  * - sessionId: string - Stripe session ID
  */
 app.post("/", async (c) => {
+  // Require session token for authentication
+  const sessionToken = c.req.header("X-Session-Token")
+  if (!sessionToken) {
+    return c.json(
+      { error: "Session token required", code: "MISSING_TOKEN" },
+      401
+    )
+  }
+
   // Parse and validate request body
   const body = await c.req.json().catch(() => ({}))
   const parsed = checkoutSchema.safeParse(body)
@@ -47,12 +65,21 @@ app.post("/", async (c) => {
 
   const { uploadId, type } = parsed.data
 
-  const createCheckout = Effect.fn("routes.checkout.create")(function* () {
+  // Verify session token matches upload before proceeding
+  const verifyAndCheckout = Effect.fn("routes.checkout.verifyAndCreate")(function* () {
+    const uploadService = yield* UploadService
+    
+    // This throws NotFoundError if upload doesn't exist or token doesn't match
+    yield* uploadService.getByIdWithAuth(uploadId, sessionToken)
+    
     const purchaseService = yield* PurchaseService
     return yield* purchaseService.createCheckout(uploadId, type)
   })
 
-  const program = createCheckout().pipe(Effect.provide(CheckoutRoutesLive))
+  const program = verifyAndCheckout().pipe(
+    Effect.provide(CheckoutRoutesLive),
+    Effect.provide(UploadServiceLive)
+  )
 
   const result = await Effect.runPromise(Effect.either(program))
 
