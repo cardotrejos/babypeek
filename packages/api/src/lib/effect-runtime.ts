@@ -36,6 +36,17 @@ export const errorToResponse = (c: Context, error: AppError) => {
         { status: 429, headers: { "Retry-After": String(error.retryAfter) } }
       )
 
+    case "AlreadyProcessingError":
+      return c.json(
+        {
+          error: "Already Processing",
+          message: `Upload ${error.uploadId} is already ${error.currentStatus}`,
+          uploadId: error.uploadId,
+          currentStatus: error.currentStatus,
+        },
+        409
+      )
+
     case "UploadError":
       return c.json({ error: "Upload Error", cause: error.cause, message: error.message }, 400)
 
