@@ -338,8 +338,17 @@ const generateImageWithRetry = (
     // Create a retry schedule that logs each retry
     const retryScheduleWithLogging = pipe(
       geminiRetrySchedule,
+      // Only retry on retryable errors (AC-1, AC-3)
+      Schedule.whileInput(isRetryableGeminiError),
+      // Log each retry attempt - check retryable INSIDE tapInput since whileInput
+      // only controls whether to continue, not whether tapInput runs
       Schedule.tapInput((error: GeminiError) =>
         Effect.gen(function* () {
+          // Only log/track for retryable errors
+          if (!isRetryableGeminiError(error)) {
+            return
+          }
+
           const attemptNumber = yield* Ref.updateAndGet(attemptRef, (n) => n + 1)
           const timeSinceStart = Date.now() - startTime
 
@@ -365,9 +374,7 @@ const generateImageWithRetry = (
             time_since_start_ms: timeSinceStart,
           })
         })
-      ),
-      // Only retry on retryable errors (AC-1, AC-3)
-      Schedule.whileInput(isRetryableGeminiError)
+      )
     )
 
     // Execute with retry

@@ -87,6 +87,13 @@ export class EmailError extends Data.TaggedError("EmailError")<{
   message: string
 }> {}
 
+export class ResultError extends Data.TaggedError("ResultError")<{
+  cause: "STORAGE_FAILED" | "DB_FAILED" | "NOT_FOUND"
+  message: string
+  uploadId?: string
+  resultId?: string
+}> {}
+
 // =============================================================================
 // Union of all errors
 // =============================================================================
@@ -103,3 +110,4 @@ export type AppError =
   | ProcessingError
   | PaymentError
   | EmailError
+  | ResultError

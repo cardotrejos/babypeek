@@ -97,7 +97,7 @@ development_status:
   4-2-gemini-imagen-3-integration: done
   4-2-1-prompt-optimization-nano-banana-style: done
   4-3-retry-logic-with-exponential-backoff: done
-  4-4-result-storage-in-r2: ready-for-dev
+  4-4-result-storage-in-r2: done
   4-5-processing-status-updates: ready-for-dev
   4-6-processing-timeout-handling: ready-for-dev
   epic-4-retrospective: optional

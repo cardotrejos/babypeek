@@ -21,6 +21,7 @@ import type { ProcessImageStage } from "../lib/workflow"
 import { GeminiService, type GeneratedImage } from "../services/GeminiService"
 import { R2Service } from "../services/R2Service"
 import { PostHogService } from "../services/PostHogService"
+import { ResultService, type CreatedResult } from "../services/ResultService"
 import { AppServicesLive } from "../services/index"
 import { getPrompt, type PromptVersion } from "../prompts/baby-portrait"
 import type { GeminiError } from "../lib/errors"
@@ -66,7 +67,7 @@ interface GenerateResult {
  * Used to execute Effect-based service calls within workflow steps.
  */
 async function runWithServices<A, E>(
-  effect: Effect.Effect<A, E, GeminiService | R2Service | PostHogService>
+  effect: Effect.Effect<A, E, GeminiService | R2Service | PostHogService | ResultService>
 ): Promise<{ success: true; data: A } | { success: false; error: E }> {
   const program = effect.pipe(Effect.provide(AppServicesLive))
 
@@ -218,40 +219,86 @@ async function generateImage(
 }
 
 /**
- * Store the generated result image in R2.
+ * Store result in internal result type
+ */
+interface StoreResultOutput {
+  resultKey: string | null
+  resultId?: string
+  fileSizeBytes?: number
+  error?: string
+}
+
+/**
+ * Store the generated result image in R2 using ResultService.
  *
- * Note: Full implementation in Story 4.4
+ * Story 4.4: Result Storage in R2
+ * - Stores full-resolution image at results/{resultId}/full.jpg
+ * - Creates/updates result record in database (via uploads table)
+ * - Tracks result_stored analytics event
  */
 async function storeResult(
   uploadId: string,
   imageData: GeneratedImage | undefined
-): Promise<{ resultKey: string | null; error?: string }> {
+): Promise<StoreResultOutput> {
   "use step"
 
   console.log(`[workflow:store] Storing result for upload: ${uploadId}`)
 
   if (!imageData) {
+    // Track failure - no image data
+    await trackEvent("result_storage_failed", uploadId, {
+      upload_id: uploadId,
+      error_type: "NO_IMAGE_DATA",
+      error_message: "No image data to store",
+    })
     return { resultKey: null, error: "No image data to store" }
   }
 
-  // Store the generated image in R2
-  const resultKey = `uploads/${uploadId}/generated.jpg`
-
+  // Use ResultService to store the generated image in R2 and update database
   const effect = Effect.gen(function* () {
-    const r2 = yield* R2Service
-    yield* r2.upload(resultKey, imageData.data, imageData.mimeType)
-    return resultKey
+    const resultService = yield* ResultService
+    return yield* resultService.create({
+      uploadId,
+      fullImageBuffer: imageData.data,
+      mimeType: imageData.mimeType,
+    })
   })
 
   const result = await runWithServices(effect)
 
   if (result.success) {
-    console.log(`[workflow:store] Stored generated image at: ${result.data}`)
-    return { resultKey: result.data }
+    const createdResult = result.data as CreatedResult
+
+    // Track success analytics event (AC-5)
+    await trackEvent("result_stored", uploadId, {
+      upload_id: uploadId,
+      result_id: createdResult.resultId,
+      file_size_bytes: createdResult.fileSizeBytes,
+      r2_key: createdResult.resultUrl,
+    })
+
+    console.log(`[workflow:store] Stored result at: ${createdResult.resultUrl}, resultId: ${createdResult.resultId}`)
+    return {
+      resultKey: createdResult.resultUrl,
+      resultId: createdResult.resultId,
+      fileSizeBytes: createdResult.fileSizeBytes,
+    }
   }
 
-  console.error(`[workflow:store] Failed to store result:`, result.error)
-  return { resultKey: null, error: `Failed to store result: ${String(result.error)}` }
+  // Handle storage failure
+  const error = result.error as { cause?: string; message?: string }
+  const errorType = error?.cause || "UNKNOWN"
+  const errorMessage = error?.message || String(result.error)
+
+  // Track failure analytics event
+  await trackEvent("result_storage_failed", uploadId, {
+    upload_id: uploadId,
+    error_type: errorType,
+    error_message: errorMessage,
+  })
+
+  console.error(`[workflow:store] Failed to store result:`, errorMessage)
+  return { resultKey: null, error: `Failed to store result: ${errorMessage}` }
 }
 
 /**
