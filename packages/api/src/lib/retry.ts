@@ -40,3 +40,9 @@ export const geminiRetryScheduleExact = Schedule.fromDelays(
   Duration.seconds(2),
   Duration.seconds(4)
 )
+
+/**
+ * Zero-delay schedule for unit testing.
+ * Same retry count as production but no delays.
+ */
+export const geminiRetryScheduleTest = Schedule.recurs(3)
