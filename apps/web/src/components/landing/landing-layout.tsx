@@ -1,3 +1,4 @@
+import type React from "react"
 import { cn } from "@/lib/utils"
 import { LandingHeader } from "./landing-header"
 import { Button } from "@/components/ui/button"
@@ -22,6 +23,7 @@ export function LandingLayout({
       <LandingHeader />
       
       <main
+        id="main-content"
         className={cn(
           "px-4 sm:px-6",
           "sm:max-w-[560px] sm:mx-auto",
@@ -44,6 +46,7 @@ export function LandingLayout({
           <div className="sm:max-w-[560px] sm:mx-auto">
             <Button
               onClick={onCtaClick}
+              aria-label={ctaText}
               className={cn(
                 "w-full touch-target-lg",
                 "text-lg font-semibold",
