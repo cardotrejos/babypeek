@@ -1,5 +1,5 @@
 import { Hono } from "hono"
-import { Effect } from "effect"
+import { Effect, Duration } from "effect"
 import { z } from "zod"
 
 import { UploadService } from "../services/UploadService"
@@ -8,9 +8,13 @@ import { GeminiService } from "../services/GeminiService"
 import { R2Service } from "../services/R2Service"
 import { ResultService } from "../services/ResultService"
 import { AppServicesLive } from "../services"
-import { UnauthorizedError, NotFoundError, AlreadyProcessingError } from "../lib/errors"
+import { UnauthorizedError, NotFoundError, AlreadyProcessingError, ProcessingError } from "../lib/errors"
 import { rateLimitMiddleware } from "../middleware/rate-limit"
 import { getPrompt } from "../prompts/baby-portrait"
+import { captureEffectError } from "../lib/sentry-effect"
+
+// Processing timeout constant (FR-2.3: Complete processing in <90 seconds)
+const PROCESSING_TIMEOUT_MS = 90_000
 
 const app = new Hono()
 
@@ -91,7 +95,8 @@ app.post("/", async (c) => {
 
   const { uploadId } = parsed.data
 
-  const processImage = Effect.gen(function* () {
+  // Core processing logic
+  const processImageCore = Effect.gen(function* () {
     const uploadService = yield* UploadService
     const posthog = yield* PostHogService
     const gemini = yield* GeminiService
@@ -189,6 +194,57 @@ app.post("/", async (c) => {
     }
   })
 
+  // Apply 90-second timeout (AC-5: Effect.timeout is used for the 90s limit)
+  const processImage = processImageCore.pipe(
+    Effect.timeout(Duration.millis(PROCESSING_TIMEOUT_MS)),
+    // Handle timeout - mark job as failed and log to Sentry (AC-1, AC-4)
+    Effect.catchTag("TimeoutException", () =>
+      Effect.gen(function* () {
+        const uploadService = yield* UploadService
+        const posthog = yield* PostHogService
+
+        // Get current upload state to preserve last stage/progress
+        const upload = yield* uploadService.getById(uploadId).pipe(
+          Effect.catchAll(() => Effect.succeed(null))
+        )
+
+        const lastStage = upload?.stage ?? "unknown"
+        const lastProgress = upload?.progress ?? 0
+
+        // Mark job as failed in database (AC-1)
+        yield* uploadService.updateStage(uploadId, "failed", lastProgress)
+        yield* uploadService.updateStatus(uploadId, "failed", "Processing timed out after 90 seconds")
+
+        // Create timeout error with context
+        const timeoutError = new ProcessingError({
+          cause: "TIMEOUT",
+          message: "Processing timed out after 90 seconds",
+          uploadId,
+          lastStage,
+          lastProgress,
+        })
+
+        // Log to Sentry with full context (AC-4)
+        yield* captureEffectError(timeoutError, {
+          uploadId,
+          lastStage,
+          lastProgress,
+          durationMs: PROCESSING_TIMEOUT_MS,
+        })
+
+        // Track timeout analytics
+        yield* posthog.capture("processing_timeout", uploadId, {
+          upload_id: uploadId,
+          last_stage: lastStage,
+          last_progress: lastProgress,
+          duration_ms: PROCESSING_TIMEOUT_MS,
+        })
+
+        return yield* Effect.fail(timeoutError)
+      })
+    )
+  )
+
   const program = processImage.pipe(Effect.provide(AppServicesLive))
 
   const result = await Effect.runPromise(Effect.either(program))
@@ -225,6 +281,35 @@ app.post("/", async (c) => {
           currentStatus: error.currentStatus,
         },
         409
+      )
+    }
+
+    // Handle timeout error specifically (AC-2: warm error message)
+    if (error instanceof ProcessingError && error.cause === "TIMEOUT") {
+      return c.json(
+        {
+          error: "This is taking longer than expected. Let's try again!",
+          code: "PROCESSING_TIMEOUT",
+          canRetry: true,
+          jobId: uploadId,
+          lastStage: error.lastStage,
+          lastProgress: error.lastProgress,
+        },
+        408 // Request Timeout
+      )
+    }
+
+    // Handle other processing errors
+    if (error instanceof ProcessingError) {
+      return c.json(
+        {
+          error: "Something went wrong. We'll give you a fresh start.",
+          code: "PROCESSING_ERROR",
+          cause: error.cause,
+          canRetry: true,
+          jobId: uploadId,
+        },
+        500
       )
     }
 
