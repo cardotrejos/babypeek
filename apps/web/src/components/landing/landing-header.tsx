@@ -14,9 +14,10 @@ export function LandingHeader({ className }: LandingHeaderProps) {
         className
       )}
     >
-      <div className="sm:max-w-[560px] sm:mx-auto">
+      <div className="sm:max-w-[560px] sm:mx-auto flex items-center gap-2">
+        <img src="/logo.svg" alt="BabyPeek" className="h-8 w-8" />
         <span className="font-display text-xl text-charcoal font-semibold">
-          3d-ultra
+          BabyPeek
         </span>
       </div>
     </header>

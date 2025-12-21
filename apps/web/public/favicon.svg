@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
+  <!-- Simplified baby peek for favicon -->
+  
+  <!-- Peek line -->
+  <rect x="2" y="18" width="28" height="2" rx="1" fill="#F87171"/>
+  
+  <!-- Baby head -->
+  <circle cx="16" cy="13" r="10" fill="#F87171"/>
+  <!-- Left ear -->
+  <circle cx="6" cy="12" r="3" fill="#F87171"/>
+  <!-- Right ear -->
+  <circle cx="26" cy="12" r="3" fill="#F87171"/>
+  
+  <!-- Eyes (white) -->
+  <circle cx="12" cy="11" r="3" fill="white"/>
+  <circle cx="20" cy="11" r="3" fill="white"/>
+  
+  <!-- Pupils -->
+  <circle cx="12" cy="10" r="1.5" fill="#F87171"/>
+  <circle cx="20" cy="10" r="1.5" fill="#F87171"/>
+</svg>
