@@ -98,7 +98,7 @@ development_status:
   4-2-1-prompt-optimization-nano-banana-style: done
   4-3-retry-logic-with-exponential-backoff: done
   4-4-result-storage-in-r2: done
-  4-5-processing-status-updates: review
+  4-5-processing-status-updates: done
   4-6-processing-timeout-handling: ready-for-dev
   epic-4-retrospective: optional
 
