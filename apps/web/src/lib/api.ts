@@ -1,7 +1,7 @@
 // Simple fetch-based API client for 3d-ultra
 // Will be enhanced with Hono RPC types as we build features
 
-const API_URL = import.meta.env.VITE_SERVER_URL || "http://localhost:3000"
+import { API_BASE_URL } from "./api-config"
 
 type RequestOptions = {
   method?: "GET" | "POST" | "PUT" | "DELETE"
@@ -23,7 +23,7 @@ async function request<T>(
     headers["X-Session-Token"] = sessionToken
   }
 
-  const response = await fetch(`${API_URL}${endpoint}`, {
+  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
     method,
     headers,
     body: body ? JSON.stringify(body) : undefined,

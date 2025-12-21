@@ -22,7 +22,7 @@
  * @see https://ai.google.dev/gemini-api/docs/image-generation
  */
 
-import { Effect, Context, Layer, Schedule, Duration, pipe } from "effect"
+import { Effect, Context, Layer, Schedule, Duration, pipe, Ref } from "effect"
 import { GeminiError, isRetryableGeminiError } from "../lib/errors"
 import { geminiRetrySchedule } from "../lib/retry"
 import { addEffectBreadcrumb, captureEffectError } from "../lib/sentry-effect"
@@ -329,7 +329,8 @@ const generateImageWithRetry = (
 ): Effect.Effect<GeneratedImage, GeminiError, PostHogService> =>
   Effect.gen(function* () {
     const startTime = Date.now()
-    let attemptNumber = 0
+    // Use Ref for thread-safe attempt tracking (fixes race condition)
+    const attemptRef = yield* Ref.make(0)
     const posthog = yield* PostHogService
     const uploadId = options?.uploadId
     const distinctId = uploadId ?? `unknown-${Date.now()}`
@@ -339,7 +340,7 @@ const generateImageWithRetry = (
       geminiRetrySchedule,
       Schedule.tapInput((error: GeminiError) =>
         Effect.gen(function* () {
-          attemptNumber++
+          const attemptNumber = yield* Ref.updateAndGet(attemptRef, (n) => n + 1)
           const timeSinceStart = Date.now() - startTime
 
           // Log retry to Sentry as breadcrumb (AC-4)
@@ -372,22 +373,26 @@ const generateImageWithRetry = (
     // Execute with retry
     const result = yield* callGeminiApi(imageBuffer, prompt, options).pipe(
       Effect.retry(retryScheduleWithLogging),
-      // 60 second timeout per attempt (total workflow timeout in Story 4.6)
+      // 60 second timeout for entire retry chain (Story 4.6 handles workflow timeout)
       Effect.timeout(Duration.seconds(60)),
       // Map timeout to GeminiError
       Effect.catchTag("TimeoutException", () =>
-        Effect.fail(
-          new GeminiError({
-            cause: "TIMEOUT",
-            message: "Gemini API timed out after 60 seconds",
-            attempt: attemptNumber + 1,
-          })
-        )
+        Effect.gen(function* () {
+          const attemptNumber = yield* Ref.get(attemptRef)
+          return yield* Effect.fail(
+            new GeminiError({
+              cause: "TIMEOUT",
+              message: "Gemini API timed out after 60 seconds",
+              attempt: attemptNumber + 1,
+            })
+          )
+        })
       ),
       // On final failure, log to Sentry and track exhaustion
       Effect.tapError((finalError) =>
         Effect.gen(function* () {
           const totalDuration = Date.now() - startTime
+          const attemptNumber = yield* Ref.get(attemptRef)
           const totalAttempts = attemptNumber + 1
 
           // Only track exhaustion if we actually retried
@@ -461,27 +466,42 @@ export const GeminiServiceLive = Layer.succeed(GeminiService, {
 /**
  * Mock implementation for testing.
  * Returns a predictable response without calling the API.
+ * Note: Returns Effect that requires PostHogService to match interface signature.
  */
 export const GeminiServiceMock = Layer.succeed(GeminiService, {
   generateImage: (_imageBuffer: Buffer, _prompt: string, _options?: GenerateImageOptions) =>
-    Effect.succeed({
-      data: Buffer.from("mock-generated-image-data"),
-      mimeType: "image/png",
+    Effect.gen(function* () {
+      // Access PostHogService to satisfy type requirement (no-op in mock)
+      yield* PostHogService
+      return {
+        data: Buffer.from("mock-generated-image-data"),
+        mimeType: "image/png",
+      }
     }),
   generateImageFromUrl: (_imageUrl: string, _prompt: string, _options?: GenerateImageOptions) =>
-    Effect.succeed({
-      data: Buffer.from("mock-generated-image-data"),
-      mimeType: "image/png",
+    Effect.gen(function* () {
+      yield* PostHogService
+      return {
+        data: Buffer.from("mock-generated-image-data"),
+        mimeType: "image/png",
+      }
     }),
 })
 
 /**
  * Error mock for testing error scenarios.
+ * Properly requires PostHogService to match interface.
  */
 export const GeminiServiceErrorMock = (cause: GeminiError["cause"], message: string) =>
   Layer.succeed(GeminiService, {
     generateImage: (_imageBuffer?: Buffer, _prompt?: string, _options?: GenerateImageOptions) =>
-      Effect.fail(new GeminiError({ cause, message })),
+      Effect.gen(function* () {
+        yield* PostHogService
+        return yield* Effect.fail(new GeminiError({ cause, message }))
+      }),
     generateImageFromUrl: (_imageUrl?: string, _prompt?: string, _options?: GenerateImageOptions) =>
-      Effect.fail(new GeminiError({ cause, message })),
+      Effect.gen(function* () {
+        yield* PostHogService
+        return yield* Effect.fail(new GeminiError({ cause, message }))
+      }),
   })

@@ -4,6 +4,7 @@ import * as Sentry from "@sentry/react"
 
 import { useAnalytics } from "@/hooks/use-analytics"
 import { useOnlineStatus } from "@/hooks/use-online-status"
+import { API_BASE_URL } from "@/lib/api-config"
 import { storeSession } from "@/lib/session"
 import { categorizeError } from "@/lib/upload-errors"
 import { getAnalyticsContext } from "@/lib/analytics-context"
@@ -12,9 +13,6 @@ import { startUploadAttempt } from "@/lib/upload-session"
 // =============================================================================
 // Constants
 // =============================================================================
-
-/** API base URL */
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000"
 
 /** Upload timeout in milliseconds (30 seconds) */
 const UPLOAD_TIMEOUT = 30 * 1000

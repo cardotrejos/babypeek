@@ -373,10 +373,40 @@ describe('GeminiService retry', () => {
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude 3.5 Sonnet (Anthropic)
 
 ### Debug Log References
 
+N/A - No blocking issues encountered
+
 ### Completion Notes List
 
+- Implemented `isRetryableGeminiError` helper function in `errors.ts` to categorize errors for retry eligibility
+- Created `retry.ts` with `geminiRetrySchedule` (exponential backoff with jitter) and `geminiRetryScheduleExact` (for testing)
+- Updated `GeminiService.generateImageWithRetry` to use the retry schedule with Schedule.tapInput for logging
+- Integrated Sentry breadcrumbs via `addEffectBreadcrumb` for retry tracking (AC-4)
+- Integrated PostHog analytics for `gemini_retry` and `gemini_exhausted` events (AC-5)
+- Added `PostHogServiceMock` for testing
+- Updated service interface to require `PostHogService` dependency
+- Added optional `uploadId` to `GenerateImageOptions` for tracking
+- Added optional `attempt` field to `GeminiError` for context
+- Comprehensive unit tests: 54 tests passing (errors.test.ts, retry.test.ts, GeminiService.test.ts)
+
 ### File List
+
+- packages/api/src/lib/errors.ts (modified) - Added `isRetryableGeminiError` helper and `attempt` field to GeminiError
+- packages/api/src/lib/retry.ts (new) - Reusable retry schedules with exponential backoff
+- packages/api/src/lib/retry.test.ts (new) - Unit tests for retry logic
+- packages/api/src/lib/errors.test.ts (modified) - Added tests for `isRetryableGeminiError`
+- packages/api/src/services/GeminiService.ts (modified) - Updated retry logic with Sentry/PostHog integration
+- packages/api/src/services/GeminiService.test.ts (modified) - Updated to provide PostHogServiceMock
+- packages/api/src/services/PostHogService.ts (modified) - Added `PostHogServiceMock` for testing
+- packages/api/src/services/services.test.ts (modified) - Updated to provide PostHogServiceMock
+
+### Change Log
+
+- 2024-12-21: Implemented Story 4.3 - Retry Logic with Exponential Backoff
+  - Added error classification for retry eligibility
+  - Created reusable retry schedules with jitter
+  - Integrated Sentry breadcrumbs and PostHog analytics
+  - All acceptance criteria satisfied
