@@ -1,5 +1,5 @@
 import { Effect, Context, Layer } from "effect"
-import { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3"
+import { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand, HeadObjectCommand } from "@aws-sdk/client-s3"
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner"
 import { env, isR2Configured } from "../lib/env"
 import { R2Error } from "../lib/errors"
@@ -23,6 +23,7 @@ export class R2Service extends Context.Tag("R2Service")<
     generatePresignedDownloadUrl: (key: string, expiresIn?: number) => Effect.Effect<PresignedUrl, R2Error>
     upload: (key: string, body: Buffer, contentType: string) => Effect.Effect<string, R2Error>
     delete: (key: string) => Effect.Effect<void, R2Error>
+    headObject: (key: string) => Effect.Effect<boolean, R2Error>
     // Legacy aliases for backwards compatibility
     getUploadUrl: (key: string, contentType: string, expiresIn?: number) => Effect.Effect<string, R2Error>
     getDownloadUrl: (key: string, expiresIn?: number) => Effect.Effect<string, R2Error>
@@ -180,6 +181,39 @@ export const R2ServiceLive = Layer.succeed(R2Service, {
             message: `Failed to delete from R2: ${error}`,
           }),
       })
+    }),
+
+  headObject: (key) =>
+    Effect.gen(function* () {
+      const { client, bucketName } = yield* validateR2Request(key)
+
+      const result = yield* Effect.tryPromise({
+        try: async () => {
+          try {
+            await client.send(
+              new HeadObjectCommand({
+                Bucket: bucketName,
+                Key: key,
+              })
+            )
+            return true
+          } catch (error) {
+            // If the object doesn't exist, S3 returns a 404
+            if ((error as { name?: string }).name === "NotFound" || 
+                (error as { $metadata?: { httpStatusCode?: number } }).$metadata?.httpStatusCode === 404) {
+              return false
+            }
+            throw error
+          }
+        },
+        catch: (error) =>
+          new R2Error({
+            cause: "HEAD_FAILED",
+            message: `Failed to check object existence in R2: ${error}`,
+          }),
+      })
+
+      return result
     }),
 
   // Legacy aliases for backwards compatibility

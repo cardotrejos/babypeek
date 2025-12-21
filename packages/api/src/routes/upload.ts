@@ -1,10 +1,14 @@
 import { Hono } from "hono"
-import { Effect } from "effect"
+import { Effect, Layer } from "effect"
 import { createId } from "@paralleldrive/cuid2"
 import { z } from "zod"
 
 import { R2Service, R2ServiceLive } from "../services/R2Service"
+import { UploadService, UploadServiceLive } from "../services/UploadService"
 import { R2Error } from "../lib/errors"
+
+// Combined layer for upload routes
+const UploadRoutesLive = Layer.merge(R2ServiceLive, UploadServiceLive)
 
 const app = new Hono()
 
@@ -115,27 +119,139 @@ app.post("/", async (c) => {
   const extension = getExtensionFromContentType(contentType)
   const key = `uploads/${uploadId}/original.${extension}`
 
-  // Generate presigned upload URL
+  // Generate session token for this upload
+  const sessionToken = crypto.randomUUID()
+
+  // Generate presigned upload URL and create database record
   const program = Effect.gen(function* () {
     const r2 = yield* R2Service
-    return yield* r2.generatePresignedUploadUrl(key, contentType)
-  }).pipe(Effect.provide(R2ServiceLive))
+    const uploadService = yield* UploadService
+
+    // Generate presigned URL
+    const presignedResult = yield* r2.generatePresignedUploadUrl(key, contentType)
+
+    // Create database record with pending status
+    // Pass uploadId to ensure DB ID matches R2 key
+    const upload = yield* uploadService.create({
+      id: uploadId,
+      email,
+      sessionToken,
+      originalUrl: key, // Store R2 key, not full URL
+    })
+
+    return {
+      presignedResult,
+      upload,
+    }
+  }).pipe(Effect.provide(UploadRoutesLive))
 
   const result = await Effect.runPromise(Effect.either(program))
 
   if (result._tag === "Left") {
-    const { status, body } = handleR2Error(result.left)
-    return c.json(body, status)
+    // Check if it's an R2 error
+    if (result.left instanceof R2Error) {
+      const { status, body } = handleR2Error(result.left)
+      return c.json(body, status)
+    }
+    // Database or other error
+    return c.json({ error: "Failed to create upload record", code: "DB_ERROR" }, 500)
   }
 
-  // Return upload details
+  // Return upload details including session token
   return c.json({
-    uploadUrl: result.right.url,
-    uploadId,
+    uploadUrl: result.right.presignedResult.url,
+    uploadId: result.right.upload.id,
     key,
-    expiresAt: result.right.expiresAt.toISOString(),
-    // Note: email is accepted but not stored yet
-    // Story 3.6 will create the database record with session token
+    expiresAt: result.right.presignedResult.expiresAt.toISOString(),
+    sessionToken, // NEW: For authenticated access
+  })
+})
+
+// =============================================================================
+// POST /api/upload/:uploadId/confirm
+// =============================================================================
+
+/**
+ * POST /api/upload/:uploadId/confirm
+ * 
+ * Confirm that an upload has completed successfully.
+ * Verifies the file exists in R2 and updates the status.
+ * 
+ * Path params:
+ * - uploadId: string - The upload ID to confirm
+ * 
+ * Response:
+ * - success: boolean
+ * - jobId: string - Same as uploadId
+ * - status: string - Current upload status
+ */
+app.post("/:uploadId/confirm", async (c) => {
+  const uploadId = c.req.param("uploadId")
+
+  if (!uploadId) {
+    return c.json({ error: "Upload ID is required", code: "INVALID_REQUEST" }, 400)
+  }
+
+  const program = Effect.gen(function* () {
+    const r2 = yield* R2Service
+    const uploadService = yield* UploadService
+
+    // Get the upload record
+    const upload = yield* uploadService.getById(uploadId)
+
+    // Verify the file exists in R2 using HEAD request
+    const exists = yield* r2.headObject(upload.originalUrl)
+
+    if (!exists) {
+      return { success: false, error: "UPLOAD_NOT_FOUND_IN_STORAGE" }
+    }
+
+    // Upload is already confirmed if status is not pending
+    if (upload.status !== "pending") {
+      return { 
+        success: true, 
+        jobId: upload.id, 
+        status: upload.status,
+        alreadyConfirmed: true 
+      }
+    }
+
+    // Keep status as pending - processing will happen when workflow triggers
+    // (Story 4.x will update status to "processing")
+    return { 
+      success: true, 
+      jobId: upload.id, 
+      status: upload.status 
+    }
+  }).pipe(Effect.provide(UploadRoutesLive))
+
+  const result = await Effect.runPromise(Effect.either(program))
+
+  if (result._tag === "Left") {
+    const error = result.left
+    // Handle NotFoundError
+    if ("_tag" in error && error._tag === "NotFoundError") {
+      return c.json({ error: "Upload not found. Please try again.", code: "NOT_FOUND" }, 404)
+    }
+    // Handle R2 errors
+    if (error instanceof R2Error) {
+      return c.json({ error: "We couldn't verify your upload. Let's try again!", code: "R2_ERROR" }, 500)
+    }
+    return c.json({ error: "Internal server error", code: "UNKNOWN" }, 500)
+  }
+
+  // Check if upload wasn't found in storage
+  if (!result.right.success) {
+    return c.json({ 
+      error: "We couldn't verify your upload. Let's try again!", 
+      code: result.right.error 
+    }, 500)
+  }
+
+  return c.json({
+    success: true,
+    jobId: result.right.jobId,
+    status: result.right.status,
   })
 })
 

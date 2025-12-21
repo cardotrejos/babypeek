@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router"
-import { LandingLayout, HeroImage, ExampleGallery, TrustSignals, FaqSection } from "@/components/landing"
+import { LandingLayout, HeroImage, ExampleGallery, TrustSignals, FaqSection, UploadSection } from "@/components/landing"
 import { StructuredData } from "@/components/seo/structured-data"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
@@ -45,11 +45,10 @@ export const Route = createFileRoute("/")({
 
 function LandingPage() {
   const handleCtaClick = () => {
-    // For now, scroll to the gallery section as a preview of "see more"
-    // Will be updated in Epic 3 to navigate to upload section
-    const gallerySection = document.getElementById("gallery")
-    if (gallerySection) {
-      gallerySection.scrollIntoView({ behavior: "smooth" })
+    // Scroll to the upload section
+    const uploadSection = document.getElementById("upload")
+    if (uploadSection) {
+      uploadSection.scrollIntoView({ behavior: "smooth" })
     }
   }
 
@@ -111,6 +110,9 @@ function LandingPage() {
 
       {/* Trust Signals Section - Story 2.4 Implementation */}
       <TrustSignals id="trust" />
+
+      {/* Upload Section - Story 3.6 Implementation */}
+      <UploadSection id="upload" />
 
       {/* FAQ Section - Story 2.5 Implementation */}
       <FaqSection id="faq" />

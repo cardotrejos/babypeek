@@ -24,6 +24,12 @@ vi.mock("sonner", () => ({
   },
 }))
 
+// Mock session storage
+const mockStoreSession = vi.fn()
+vi.mock("@/lib/session", () => ({
+  storeSession: (...args: unknown[]) => mockStoreSession(...args),
+}))
+
 // =============================================================================
 // Test Helpers
 // =============================================================================
@@ -42,6 +48,13 @@ const mockPresignedResponse = {
   uploadId: "test-upload-id",
   key: "uploads/test-upload-id/original.jpg",
   expiresAt: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
+  sessionToken: "test-session-token-uuid",
+}
+
+const mockConfirmResponse = {
+  success: true,
+  jobId: "test-upload-id",
+  status: "pending",
 }
 
 // =============================================================================
@@ -274,6 +287,143 @@ describe("useUpload", () => {
       uploadId: null,
       error: null,
     })
+  })
+
+  // =============================================================================
+  // Session Token Tests (Story 3.6)
+  // =============================================================================
+
+  it("should store session token after successful upload and confirmation", async () => {
+    // Mock fetch for both presigned URL and confirm requests
+    globalThis.fetch = vi.fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve(mockPresignedResponse),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve(mockConfirmResponse),
+      })
+
+    class MockXHR {
+      upload = { onprogress: null }
+      onload: any = null
+      onerror = null
+      onabort = null
+      ontimeout = null
+      timeout = 0
+      status = 200
+      open = vi.fn()
+      setRequestHeader = vi.fn()
+      send = vi.fn().mockImplementation(function(this: any) {
+        setTimeout(() => {
+          if (this.onload) this.onload()
+        }, 10)
+      })
+      abort = vi.fn()
+    }
+    globalThis.XMLHttpRequest = MockXHR as any
+
+    const { result } = renderHook(() => useUpload())
+    const file = createMockFile("test.jpg", "image/jpeg")
+
+    await act(async () => {
+      await result.current.startUpload(file, "test@example.com")
+    })
+
+    expect(result.current.state.status).toBe("complete")
+    expect(mockStoreSession).toHaveBeenCalledWith("test-upload-id", "test-session-token-uuid")
+  })
+
+  it("should return sessionToken in upload result", async () => {
+    globalThis.fetch = vi.fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve(mockPresignedResponse),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve(mockConfirmResponse),
+      })
+
+    class MockXHR {
+      upload = { onprogress: null }
+      onload: any = null
+      onerror = null
+      onabort = null
+      ontimeout = null
+      timeout = 0
+      status = 200
+      open = vi.fn()
+      setRequestHeader = vi.fn()
+      send = vi.fn().mockImplementation(function(this: any) {
+        setTimeout(() => {
+          if (this.onload) this.onload()
+        }, 10)
+      })
+      abort = vi.fn()
+    }
+    globalThis.XMLHttpRequest = MockXHR as any
+
+    const { result } = renderHook(() => useUpload())
+    const file = createMockFile("test.jpg", "image/jpeg")
+
+    let uploadResult: any
+    await act(async () => {
+      uploadResult = await result.current.startUpload(file, "test@example.com")
+    })
+
+    expect(uploadResult).toEqual({
+      uploadId: "test-upload-id",
+      key: "uploads/test-upload-id/original.jpg",
+      sessionToken: "test-session-token-uuid",
+    })
+  })
+
+  it("should call confirm endpoint after R2 upload", async () => {
+    globalThis.fetch = vi.fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve(mockPresignedResponse),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve(mockConfirmResponse),
+      })
+
+    class MockXHR {
+      upload = { onprogress: null }
+      onload: any = null
+      onerror = null
+      onabort = null
+      ontimeout = null
+      timeout = 0
+      status = 200
+      open = vi.fn()
+      setRequestHeader = vi.fn()
+      send = vi.fn().mockImplementation(function(this: any) {
+        setTimeout(() => {
+          if (this.onload) this.onload()
+        }, 10)
+      })
+      abort = vi.fn()
+    }
+    globalThis.XMLHttpRequest = MockXHR as any
+
+    const { result } = renderHook(() => useUpload())
+    const file = createMockFile("test.jpg", "image/jpeg")
+
+    await act(async () => {
+      await result.current.startUpload(file, "test@example.com")
+    })
+
+    // Verify fetch was called twice: once for presigned URL, once for confirm
+    expect(globalThis.fetch).toHaveBeenCalledTimes(2)
+    expect(globalThis.fetch).toHaveBeenNthCalledWith(
+      2,
+      expect.stringContaining("/api/upload/test-upload-id/confirm"),
+      expect.objectContaining({ method: "POST" })
+    )
   })
 
   // =============================================================================
