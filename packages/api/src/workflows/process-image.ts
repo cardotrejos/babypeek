@@ -161,17 +161,25 @@ async function validateUpload(uploadId: string): Promise<{ valid: boolean; error
 /**
  * Fetch the original image from R2.
  * Returns a signed URL for the image.
+ * 
+ * Uses the originalUrl stored in the database (which includes the correct file extension)
+ * instead of hardcoding the extension.
  */
 async function fetchOriginalImage(uploadId: string): Promise<{ url: string | null; error?: string }> {
   "use step"
 
   console.log(`[workflow:fetch] Fetching original image for upload: ${uploadId}`)
 
-  // The original image key follows the pattern: uploads/{uploadId}/original.jpg
-  const imageKey = `uploads/${uploadId}/original.jpg`
-
   const effect = Effect.gen(function* () {
+    const uploadService = yield* UploadService
     const r2 = yield* R2Service
+    
+    // Get the actual image key from the database (includes correct extension)
+    const upload = yield* uploadService.getById(uploadId)
+    const imageKey = upload.originalUrl
+    
+    console.log(`[workflow:fetch] Using image key from database: ${imageKey}`)
+    
     const presigned = yield* r2.generatePresignedDownloadUrl(imageKey, 300) // 5 min expiry
     return presigned.url
   })
