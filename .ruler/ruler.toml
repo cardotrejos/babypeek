@@ -2,7 +2,7 @@
 # See https://okigu.com/ruler for documentation.
 
 # Default agents to run when --agents is not specified
-default_agents = []
+default_agents = ["claude", "codex", "cursor", "windsurf", "gemini-cli", "opencode"]
 
 # --- Global MCP Server Configuration ---
 [mcp]
@@ -26,8 +26,6 @@ args = ["shadcn@latest", "mcp"]
 
 
 
-[mcp_servers.better-auth]
-url = "https://mcp.chonkie.ai/better-auth/better-auth-builder/mcp"
 
 
 

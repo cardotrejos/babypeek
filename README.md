@@ -1,6 +1,6 @@
 # 3d-ultra
 
-This project was created with [Better-T-Stack](https://github.com/AmanVarshney01/create-better-t-stack), a modern TypeScript stack that combines React, TanStack Start, Elysia, ORPC, and more.
+This project was created with [Better-T-Stack](https://github.com/AmanVarshney01/create-better-t-stack), a modern TypeScript stack that combines React, TanStack Start, Hono, ORPC, and more.
 
 ## Features
 
@@ -8,12 +8,11 @@ This project was created with [Better-T-Stack](https://github.com/AmanVarshney01
 - **TanStack Start** - SSR framework with TanStack Router
 - **TailwindCSS** - Utility-first CSS for rapid UI development
 - **shadcn/ui** - Reusable UI components
-- **Elysia** - Type-safe, high-performance framework
+- **Hono** - Lightweight, performant server framework
 - **oRPC** - End-to-end type-safe APIs with OpenAPI integration
 - **Bun** - Runtime environment
 - **Drizzle** - TypeScript-first ORM
 - **PostgreSQL** - Database engine
-- **Authentication** - Better-Auth
 - **Turborepo** - Optimized monorepo build system
 - **Oxlint** - Oxlint + Oxfmt (linting & formatting)
 
@@ -58,10 +57,9 @@ The API is running at [http://localhost:3000](http://localhost:3000).
 3d-ultra/
 ├── apps/
 │   ├── web/         # Frontend application (React + TanStack Start)
-│   └── server/      # Backend API (Elysia, ORPC)
+│   └── server/      # Backend API (Hono, ORPC)
 ├── packages/
 │   ├── api/         # API layer / business logic
-│   ├── auth/        # Authentication configuration & logic
 │   └── db/          # Database schema & queries
 ```
 

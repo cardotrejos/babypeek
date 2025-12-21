@@ -1,17 +1,13 @@
 import type { Context as HonoContext } from "hono";
 
-import { auth } from "@3d-ultra/auth";
-
 export type CreateContextOptions = {
   context: HonoContext;
 };
 
 export async function createContext({ context }: CreateContextOptions) {
-  const session = await auth.api.getSession({
-    headers: context.req.raw.headers,
-  });
+  // No auth configured
   return {
-    session,
+    session: null,
   };
 }
 
