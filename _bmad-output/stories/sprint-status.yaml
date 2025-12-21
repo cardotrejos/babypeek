@@ -99,7 +99,7 @@ development_status:
   4-3-retry-logic-with-exponential-backoff: done
   4-4-result-storage-in-r2: done
   4-5-processing-status-updates: done
-  4-6-processing-timeout-handling: in-progress
+  4-6-processing-timeout-handling: review
   epic-4-retrospective: optional
 
   # ═══════════════════════════════════════════════════════════════════════════
