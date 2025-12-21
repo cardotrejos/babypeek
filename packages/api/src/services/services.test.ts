@@ -3,6 +3,7 @@ import { Effect } from "effect"
 import { GeminiService, GeminiServiceLive, GeminiServiceErrorMock } from "./GeminiService"
 import { StripeService, StripeServiceLive } from "./StripeService"
 import { ResendService, ResendServiceLive } from "./ResendService"
+import { PostHogServiceMock } from "./PostHogService"
 import { GeminiError, PaymentError, EmailError } from "../lib/errors"
 
 // Mock env module
@@ -32,7 +33,10 @@ describe("Effect Services", () => {
       const program = Effect.gen(function* () {
         const service = yield* GeminiService
         return typeof service.generateImage
-      }).pipe(Effect.provide(GeminiServiceLive))
+      }).pipe(
+        Effect.provide(GeminiServiceLive),
+        Effect.provide(PostHogServiceMock)
+      )
 
       const result = await Effect.runPromise(program)
       expect(result).toBe("function")
@@ -46,7 +50,10 @@ describe("Effect Services", () => {
       const program = Effect.gen(function* () {
         const service = yield* GeminiService
         return yield* service.generateImage(testBuffer, "test prompt")
-      }).pipe(Effect.provide(errorLayer))
+      }).pipe(
+        Effect.provide(errorLayer),
+        Effect.provide(PostHogServiceMock)
+      )
 
       // The program should fail with a GeminiError
       // Effect wraps errors in FiberFailure, so we need to use Effect.either

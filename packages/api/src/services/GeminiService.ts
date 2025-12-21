@@ -22,8 +22,11 @@
  * @see https://ai.google.dev/gemini-api/docs/image-generation
  */
 
-import { Effect, Context, Layer, Schedule } from "effect"
-import { GeminiError } from "../lib/errors"
+import { Effect, Context, Layer, Schedule, Duration, pipe } from "effect"
+import { GeminiError, isRetryableGeminiError } from "../lib/errors"
+import { geminiRetrySchedule } from "../lib/retry"
+import { addEffectBreadcrumb, captureEffectError } from "../lib/sentry-effect"
+import { PostHogService } from "./PostHogService"
 import {
   getGeminiClient,
   IMAGEN_MODEL,
@@ -59,11 +62,16 @@ export interface GeneratedImage {
 export interface GenerateImageOptions {
   /** Image configuration (aspect ratio, size) */
   imageConfig?: ImageGenerationConfig
+  /** Upload ID for tracking retries in analytics (Story 4.3) */
+  uploadId?: string
 }
 
 /**
  * Gemini Service interface.
  * Provides image generation capabilities using Google's Gemini API.
+ *
+ * Requirements:
+ * - PostHogService: For analytics tracking (gemini_retry, gemini_exhausted events)
  */
 export class GeminiService extends Context.Tag("GeminiService")<
   GeminiService,
@@ -80,7 +88,7 @@ export class GeminiService extends Context.Tag("GeminiService")<
       imageBuffer: Buffer,
       prompt: string,
       options?: GenerateImageOptions
-    ) => Effect.Effect<GeneratedImage, GeminiError>
+    ) => Effect.Effect<GeneratedImage, GeminiError, PostHogService>
 
     /**
      * Generate an image from a URL (fetches the image first).
@@ -94,7 +102,7 @@ export class GeminiService extends Context.Tag("GeminiService")<
       imageUrl: string,
       prompt: string,
       options?: GenerateImageOptions
-    ) => Effect.Effect<GeneratedImage, GeminiError>
+    ) => Effect.Effect<GeneratedImage, GeminiError, PostHogService>
   }
 >() {}
 
@@ -298,33 +306,115 @@ const callGeminiApi = (
   })
 
 /**
- * Generate image with retry logic and timeout.
+ * Generate image with retry logic, Sentry logging, and PostHog analytics.
+ *
+ * Retry behavior (per AC-1, AC-2, AC-3):
+ * - Max 3 retries (4 total attempts)
+ * - Exponential backoff: 1s -> 2s -> 4s with jitter
+ * - Only retries on RATE_LIMITED, API_ERROR, TIMEOUT
+ * - INVALID_IMAGE and CONTENT_POLICY fail immediately
+ *
+ * Observability (per AC-4, AC-5):
+ * - Sentry breadcrumb on each retry attempt
+ * - PostHog `gemini_retry` event on each retry
+ * - PostHog `gemini_exhausted` when all retries fail
+ * - Final failure captured to Sentry with full context
+ *
+ * @see Story 4.3 - Retry Logic with Exponential Backoff
  */
 const generateImageWithRetry = (
   imageBuffer: Buffer,
   prompt: string,
   options?: GenerateImageOptions
-): Effect.Effect<GeneratedImage, GeminiError> =>
-  callGeminiApi(imageBuffer, prompt, options).pipe(
-    // Retry up to 3 times with exponential backoff for transient errors
-    Effect.retry({
-      times: 3,
-      schedule: Schedule.exponential("1 second"),
-      // Only retry on rate limiting or transient API errors
-      while: (error) => error.cause === "RATE_LIMITED" || error.cause === "API_ERROR",
-    }),
-    // 60 second timeout (Nano Banana Pro may take longer due to thinking mode)
-    Effect.timeout("60 seconds"),
-    // Map timeout to GeminiError
-    Effect.catchTag("TimeoutException", () =>
-      Effect.fail(
-        new GeminiError({
-          cause: "TIMEOUT",
-          message: "Gemini API timed out after 60 seconds",
+): Effect.Effect<GeneratedImage, GeminiError, PostHogService> =>
+  Effect.gen(function* () {
+    const startTime = Date.now()
+    let attemptNumber = 0
+    const posthog = yield* PostHogService
+    const uploadId = options?.uploadId
+    const distinctId = uploadId ?? `unknown-${Date.now()}`
+
+    // Create a retry schedule that logs each retry
+    const retryScheduleWithLogging = pipe(
+      geminiRetrySchedule,
+      Schedule.tapInput((error: GeminiError) =>
+        Effect.gen(function* () {
+          attemptNumber++
+          const timeSinceStart = Date.now() - startTime
+
+          // Log retry to Sentry as breadcrumb (AC-4)
+          yield* addEffectBreadcrumb(
+            `Gemini API retry attempt ${attemptNumber}`,
+            "gemini",
+            {
+              attempt: attemptNumber,
+              error_type: error.cause,
+              error_message: error.message,
+              time_since_start_ms: timeSinceStart,
+              upload_id: uploadId,
+            }
+          )
+
+          // Track retry in PostHog (AC-5)
+          yield* posthog.capture("gemini_retry", distinctId, {
+            upload_id: uploadId,
+            attempt: attemptNumber + 1, // Next attempt number
+            error_type: error.cause,
+            previous_error_message: error.message,
+            time_since_start_ms: timeSinceStart,
+          })
+        })
+      ),
+      // Only retry on retryable errors (AC-1, AC-3)
+      Schedule.whileInput(isRetryableGeminiError)
+    )
+
+    // Execute with retry
+    const result = yield* callGeminiApi(imageBuffer, prompt, options).pipe(
+      Effect.retry(retryScheduleWithLogging),
+      // 60 second timeout per attempt (total workflow timeout in Story 4.6)
+      Effect.timeout(Duration.seconds(60)),
+      // Map timeout to GeminiError
+      Effect.catchTag("TimeoutException", () =>
+        Effect.fail(
+          new GeminiError({
+            cause: "TIMEOUT",
+            message: "Gemini API timed out after 60 seconds",
+            attempt: attemptNumber + 1,
+          })
+        )
+      ),
+      // On final failure, log to Sentry and track exhaustion
+      Effect.tapError((finalError) =>
+        Effect.gen(function* () {
+          const totalDuration = Date.now() - startTime
+          const totalAttempts = attemptNumber + 1
+
+          // Only track exhaustion if we actually retried
+          if (totalAttempts > 1 && isRetryableGeminiError(finalError)) {
+            yield* posthog.capture("gemini_exhausted", distinctId, {
+              upload_id: uploadId,
+              total_attempts: totalAttempts,
+              final_error_type: finalError.cause,
+              final_error_message: finalError.message,
+              total_duration_ms: totalDuration,
+            })
+          }
+
+          // Capture final failure to Sentry with full context
+          yield* captureEffectError(finalError, {
+            service: "gemini",
+            upload_id: uploadId,
+            total_attempts: totalAttempts,
+            total_duration_ms: totalDuration,
+            is_retryable: isRetryableGeminiError(finalError),
+          })
         })
       )
     )
-  )
+
+    return result
+  })
 
 /**
  * Implementation of generateImage.

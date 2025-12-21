@@ -1,6 +1,6 @@
 # Story 4.3: Retry Logic with Exponential Backoff
 
-Status: ready-for-dev
+Status: review
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -20,45 +20,45 @@ so that **temporary API issues don't cause user failures**.
 
 ## Tasks / Subtasks
 
-- [ ] **Task 1: Categorize Gemini errors for retry eligibility** (AC: 1, 3)
-  - [ ] Prefer helper `isRetryableGeminiError` (no schema change) **or** add `retryable: boolean` to GeminiError
-  - [ ] RATE_LIMITED: retryable
-  - [ ] API_ERROR: retryable (network issues)
-  - [ ] TIMEOUT: retryable
-  - [ ] INVALID_IMAGE: not retryable
-  - [ ] CONTENT_POLICY: not retryable
+- [x] **Task 1: Categorize Gemini errors for retry eligibility** (AC: 1, 3)
+  - [x] Prefer helper `isRetryableGeminiError` (no schema change) **or** add `retryable: boolean` to GeminiError
+  - [x] RATE_LIMITED: retryable
+  - [x] API_ERROR: retryable (network issues)
+  - [x] TIMEOUT: retryable
+  - [x] INVALID_IMAGE: not retryable
+  - [x] CONTENT_POLICY: not retryable
 
-- [ ] **Task 2: Create retry schedule with exponential backoff** (AC: 2)
-  - [ ] Create `packages/api/src/lib/retry.ts` with reusable retry schedules
-  - [ ] Define `geminiRetrySchedule` using Effect.Schedule
-  - [ ] Exponential backoff: 1s → 2s → 4s
-  - [ ] Max 3 retries (4 total attempts)
-  - [ ] Add jitter to prevent thundering herd
+- [x] **Task 2: Create retry schedule with exponential backoff** (AC: 2)
+  - [x] Create `packages/api/src/lib/retry.ts` with reusable retry schedules
+  - [x] Define `geminiRetrySchedule` using Effect.Schedule
+  - [x] Exponential backoff: 1s → 2s → 4s
+  - [x] Max 3 retries (4 total attempts)
+  - [x] Add jitter to prevent thundering herd
 
-- [ ] **Task 3: Update GeminiService with retry logic** (AC: 1, 2, 3)
-  - [ ] Wrap `generateImage` with `Effect.retry` using a `Schedule` + predicate (`Schedule.whileInput`)
-  - [ ] Only retry on retryable errors (invalid image/content policy must fail immediately)
-  - [ ] Preserve original error for final failure
-  - [ ] Track attempt number in context
+- [x] **Task 3: Update GeminiService with retry logic** (AC: 1, 2, 3)
+  - [x] Wrap `generateImage` with `Effect.retry` using a `Schedule` + predicate (`Schedule.whileInput`)
+  - [x] Only retry on retryable errors (invalid image/content policy must fail immediately)
+  - [x] Preserve original error for final failure
+  - [x] Track attempt number in context
 
-- [ ] **Task 4: Add Sentry logging for retries** (AC: 4)
-  - [ ] Log each retry attempt as breadcrumb via `addEffectBreadcrumb` in `packages/api/src/lib/sentry-effect.ts`
-  - [ ] Include: attempt number, error type, time since first attempt
-  - [ ] Log final failure with all retry context
-  - [ ] No PII in logs (uploadId is ok)
+- [x] **Task 4: Add Sentry logging for retries** (AC: 4)
+  - [x] Log each retry attempt as breadcrumb via `addEffectBreadcrumb` in `packages/api/src/lib/sentry-effect.ts`
+  - [x] Include: attempt number, error type, time since first attempt
+  - [x] Log final failure with all retry context
+  - [x] No PII in logs (uploadId is ok)
 
-- [ ] **Task 5: Add retry analytics** (AC: 5)
-  - [ ] Track `gemini_retry` event with: uploadId, attempt, errorType using `PostHogService.capture`
-  - [ ] Track `gemini_exhausted` when all retries fail
-  - [ ] Send to PostHog server-side
+- [x] **Task 5: Add retry analytics** (AC: 5)
+  - [x] Track `gemini_retry` event with: uploadId, attempt, errorType using `PostHogService.capture`
+  - [x] Track `gemini_exhausted` when all retries fail
+  - [x] Send to PostHog server-side
 
-- [ ] **Task 6: Write comprehensive tests**
-  - [ ] Unit test: Retryable errors trigger retry
-  - [ ] Unit test: Non-retryable errors fail immediately
-  - [ ] Unit test: Max 3 retries
-  - [ ] Unit test: Backoff timing (1s, 2s, 4s)
-  - [ ] Unit test: Success after retry returns result
-  - [ ] Integration test: Retry flow end-to-end
+- [x] **Task 6: Write comprehensive tests**
+  - [x] Unit test: Retryable errors trigger retry
+  - [x] Unit test: Non-retryable errors fail immediately
+  - [x] Unit test: Max 3 retries
+  - [x] Unit test: Backoff timing (1s, 2s, 4s)
+  - [x] Unit test: Success after retry returns result
+  - [x] Integration test: Retry flow end-to-end
 
 ## Dev Notes
 

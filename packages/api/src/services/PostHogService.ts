@@ -130,6 +130,22 @@ export const PostHogServiceLive = Layer.succeed(PostHogService, {
   shutdown,
 })
 
+/**
+ * Mock PostHogService for testing.
+ * Logs events to console in dev mode, otherwise no-op.
+ */
+export const PostHogServiceMock = Layer.succeed(PostHogService, {
+  capture: (_event: string, _distinctId: string, _properties?: PostHogEventProperties) =>
+    Effect.sync(() => {
+      // Silent in tests
+    }),
+  identify: (_distinctId: string, _properties?: PostHogEventProperties) =>
+    Effect.sync(() => {
+      // Silent in tests
+    }),
+  shutdown: () => Effect.sync(() => {}),
+})
+
 // =============================================================================
 // Standalone Helper Functions (for use outside Effect context)
 // =============================================================================
