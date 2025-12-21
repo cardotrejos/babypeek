@@ -12,7 +12,7 @@ import { eq } from "drizzle-orm"
 import { S3Client, PutObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3"
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner"
 import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from "@google/generative-ai"
-import sharp from "sharp"
+import { Jimp } from "jimp"
 import { GEMINI_MODEL, BABY_PORTRAIT_PROMPT } from "./config"
 
 // =============================================================================
@@ -297,76 +297,53 @@ async function createAndStorePreview(
   console.log(`[workflow] Creating watermarked preview for result: ${resultId}`)
   
   try {
-    // Get image metadata
-    const metadata = await sharp(fullImageData).metadata()
-    if (!metadata.width || !metadata.height) {
+    // Load image with Jimp
+    const image = await Jimp.read(fullImageData)
+    
+    if (!image.width || !image.height) {
       console.error("[workflow] Image has no dimensions for watermarking")
       return null
     }
     
     // Step 1: Resize to 800px max (smaller = faster watermark)
-    const resized = await sharp(fullImageData)
-      .resize(800, 800, {
-        fit: "inside",
-        withoutEnlargement: true,
-      })
-      .jpeg({ quality: 85 })
-      .toBuffer()
+    if (image.width > 800 || image.height > 800) {
+      image.scaleToFit({ w: 800, h: 800 })
+    }
     
-    // Get resized dimensions
-    const resizedMetadata = await sharp(resized).metadata()
-    const imageWidth = resizedMetadata.width || 800
-    const imageHeight = resizedMetadata.height || 600
+    const imageWidth = image.width
+    const imageHeight = image.height
     
     // Watermark config
-    const text = "3d-ultra.com"
     const opacity = 0.4
     const widthPercent = 0.15
     const marginPercent = 0.03
     
     // Calculate watermark size (15% of width)
-    const watermarkWidth = Math.floor(imageWidth * widthPercent)
-    const fontSize = Math.max(12, Math.floor(watermarkWidth / 6))
-    const watermarkHeight = Math.ceil(fontSize * 1.5)
+    const rectWidth = Math.floor(imageWidth * widthPercent)
+    const rectHeight = Math.floor(rectWidth * 0.2)
     
     // Calculate margin (3% from edges)
     const margin = Math.floor(Math.min(imageWidth, imageHeight) * marginPercent)
     
-    // Generate watermark SVG
-    const watermarkSvg = Buffer.from(`
-      <svg width="${watermarkWidth}" height="${watermarkHeight}">
-        <text
-          x="50%"
-          y="50%"
-          dominant-baseline="middle"
-          text-anchor="middle"
-          font-family="Arial, Helvetica, sans-serif"
-          font-size="${fontSize}px"
-          font-weight="600"
-          fill="rgba(255, 255, 255, ${opacity})"
-          stroke="rgba(0, 0, 0, ${opacity * 0.3})"
-          stroke-width="1"
-        >
-          ${text}
-        </text>
-      </svg>
-    `)
-    
     // Calculate position for bottom-right with margin
-    const top = imageHeight - watermarkHeight - margin
-    const left = imageWidth - watermarkWidth - margin
+    const startX = imageWidth - rectWidth - margin
+    const startY = imageHeight - rectHeight - margin
     
-    // Step 2: Apply watermark
-    const preview = await sharp(resized)
-      .composite([
-        {
-          input: watermarkSvg,
-          top: Math.max(0, top),
-          left: Math.max(0, left),
-        },
-      ])
-      .jpeg({ quality: 85 })
-      .toBuffer()
+    // Step 2: Apply watermark (semi-transparent white overlay)
+    for (let y = startY; y < startY + rectHeight && y < imageHeight; y++) {
+      for (let x = startX; x < startX + rectWidth && x < imageWidth; x++) {
+        if (x >= 0 && y >= 0) {
+          const currentColor = image.getPixelColor(x, y)
+          // Blend with white at given opacity
+          const blended = blendColorsSimple(currentColor, opacity)
+          image.setPixelColor(blended, x, y)
+        }
+      }
+    }
+    
+    // Convert to JPEG buffer
+    const previewBuffer = await image.getBuffer("image/jpeg", { quality: 85 })
+    const preview = Buffer.from(previewBuffer)
     
     console.log(`[workflow] Preview created, size: ${preview.length} bytes`)
     
@@ -390,6 +367,24 @@ async function createAndStorePreview(
     // Non-fatal: continue without preview
     return null
   }
+}
+
+// Helper to blend colors with white at given opacity
+function blendColorsSimple(bgColor: number, opacity: number): number {
+  // Extract RGBA from bgColor (Jimp uses RGBA format)
+  const bgR = (bgColor >> 24) & 0xff
+  const bgG = (bgColor >> 16) & 0xff
+  const bgB = (bgColor >> 8) & 0xff
+  const bgA = bgColor & 0xff
+
+  // Blend with white (255, 255, 255)
+  const r = Math.floor(bgR * (1 - opacity) + 255 * opacity)
+  const g = Math.floor(bgG * (1 - opacity) + 255 * opacity)
+  const b = Math.floor(bgB * (1 - opacity) + 255 * opacity)
+  const a = bgA
+
+  // Pack back into integer
+  return ((r & 0xff) << 24) | ((g & 0xff) << 16) | ((b & 0xff) << 8) | (a & 0xff)
 }
 
 // =============================================================================

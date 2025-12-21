@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest"
 import { Effect, Layer } from "effect"
-import sharp from "sharp"
+import { Jimp } from "jimp"
 import { WatermarkService, WatermarkServiceLive } from "./WatermarkService"
 import { WatermarkError } from "../lib/errors"
 
@@ -13,21 +13,15 @@ import { WatermarkError } from "../lib/errors"
  * - AC-3: Watermark is 15% of image width
  * - AC-4: Watermark text is "3d-ultra.com"
  * - AC-5: Preview resized to 800px max dimension
- * - AC-7: Uses Sharp library
+ * - AC-7: Uses Jimp library (pure JS, serverless compatible)
  */
 
 // Create a valid test image buffer
 async function createTestImage(width = 1200, height = 900): Promise<Buffer> {
-  return sharp({
-    create: {
-      width,
-      height,
-      channels: 3,
-      background: { r: 128, g: 128, b: 128 },
-    },
-  })
-    .jpeg()
-    .toBuffer()
+  // Create a new image with gray background using Jimp
+  const image = new Jimp({ width, height, color: 0x808080ff })
+  const buffer = await image.getBuffer("image/jpeg", { quality: 85 })
+  return Buffer.from(buffer)
 }
 
 describe("WatermarkService", () => {
@@ -46,9 +40,9 @@ describe("WatermarkService", () => {
       expect(Buffer.isBuffer(result)).toBe(true)
       expect(result.length).toBeGreaterThan(0)
 
-      // Verify output is valid JPEG
-      const metadata = await sharp(result).metadata()
-      expect(metadata.format).toBe("jpeg")
+      // Verify output is valid JPEG (check magic bytes)
+      expect(result[0]).toBe(0xff)
+      expect(result[1]).toBe(0xd8)
     })
 
     it("uses default watermark text '3d-ultra.com' (AC-4)", async () => {
@@ -143,11 +137,11 @@ describe("WatermarkService", () => {
       }).pipe(Effect.provide(WatermarkServiceLive))
 
       const result = await Effect.runPromise(program)
-      const metadata = await sharp(result).metadata()
+      const image = await Jimp.read(result)
 
       // Should fit within 800x800
-      expect(metadata.width).toBeLessThanOrEqual(800)
-      expect(metadata.height).toBeLessThanOrEqual(800)
+      expect(image.width).toBeLessThanOrEqual(800)
+      expect(image.height).toBeLessThanOrEqual(800)
     })
 
     it("preserves aspect ratio when resizing", async () => {
@@ -160,10 +154,10 @@ describe("WatermarkService", () => {
       }).pipe(Effect.provide(WatermarkServiceLive))
 
       const result = await Effect.runPromise(program)
-      const metadata = await sharp(result).metadata()
+      const image = await Jimp.read(result)
 
       // Should maintain 4:3 ratio
-      const aspectRatio = (metadata.width || 0) / (metadata.height || 1)
+      const aspectRatio = image.width / image.height
       expect(aspectRatio).toBeCloseTo(4 / 3, 1)
     })
 
@@ -176,11 +170,11 @@ describe("WatermarkService", () => {
       }).pipe(Effect.provide(WatermarkServiceLive))
 
       const result = await Effect.runPromise(program)
-      const metadata = await sharp(result).metadata()
+      const image = await Jimp.read(result)
 
       // Should stay at original size
-      expect(metadata.width).toBe(400)
-      expect(metadata.height).toBe(300)
+      expect(image.width).toBe(400)
+      expect(image.height).toBe(300)
     })
 
     it("outputs JPEG at 85% quality", async () => {
@@ -192,12 +186,13 @@ describe("WatermarkService", () => {
       }).pipe(Effect.provide(WatermarkServiceLive))
 
       const result = await Effect.runPromise(program)
-      const metadata = await sharp(result).metadata()
 
-      expect(metadata.format).toBe("jpeg")
+      // Verify output is valid JPEG (check magic bytes)
+      expect(result[0]).toBe(0xff)
+      expect(result[1]).toBe(0xd8)
     })
 
-    it("fails with WatermarkError RESIZE_FAILED for invalid data", async () => {
+    it("fails with WatermarkError JIMP_FAILED for invalid data", async () => {
       const invalidBuffer = Buffer.from("not an image")
 
       const program = Effect.gen(function* () {
@@ -210,7 +205,7 @@ describe("WatermarkService", () => {
       expect(result._tag).toBe("Left")
       if (result._tag === "Left") {
         expect(result.left).toBeInstanceOf(WatermarkError)
-        expect((result.left as WatermarkError).cause).toBe("RESIZE_FAILED")
+        expect((result.left as WatermarkError).cause).toBe("JIMP_FAILED")
       }
     })
   })
@@ -225,12 +220,13 @@ describe("WatermarkService", () => {
       }).pipe(Effect.provide(WatermarkServiceLive))
 
       const result = await Effect.runPromise(program)
-      const metadata = await sharp(result).metadata()
+      const image = await Jimp.read(result)
 
       // Verify preview constraints
-      expect(metadata.format).toBe("jpeg")
-      expect(metadata.width).toBeLessThanOrEqual(800)
-      expect(metadata.height).toBeLessThanOrEqual(800)
+      expect(result[0]).toBe(0xff) // JPEG magic byte
+      expect(result[1]).toBe(0xd8)
+      expect(image.width).toBeLessThanOrEqual(800)
+      expect(image.height).toBeLessThanOrEqual(800)
     })
 
     it("applies resize before watermark (optimization)", async () => {
@@ -257,11 +253,11 @@ describe("WatermarkService", () => {
       }).pipe(Effect.provide(WatermarkServiceLive))
 
       const result = await Effect.runPromise(program)
-      const metadata = await sharp(result).metadata()
+      const image = await Jimp.read(result)
 
       // Height should be capped at 800
-      expect(metadata.height).toBeLessThanOrEqual(800)
-      expect(metadata.width).toBeLessThanOrEqual(800)
+      expect(image.height).toBeLessThanOrEqual(800)
+      expect(image.width).toBeLessThanOrEqual(800)
     })
 
     it("handles square images correctly", async () => {
@@ -273,11 +269,11 @@ describe("WatermarkService", () => {
       }).pipe(Effect.provide(WatermarkServiceLive))
 
       const result = await Effect.runPromise(program)
-      const metadata = await sharp(result).metadata()
+      const image = await Jimp.read(result)
 
       // Should be 800x800
-      expect(metadata.width).toBe(800)
-      expect(metadata.height).toBe(800)
+      expect(image.width).toBe(800)
+      expect(image.height).toBe(800)
     })
   })
 

@@ -104,7 +104,7 @@ export class UploadStatusError extends Data.TaggedError("UploadStatusError")<{
 }> {}
 
 export class WatermarkError extends Data.TaggedError("WatermarkError")<{
-  cause: "SHARP_FAILED" | "INVALID_IMAGE" | "COMPOSITE_FAILED" | "RESIZE_FAILED"
+  cause: "JIMP_FAILED" | "INVALID_IMAGE" | "COMPOSITE_FAILED" | "RESIZE_FAILED"
   message: string
 }> {}
 
