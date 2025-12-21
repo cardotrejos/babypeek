@@ -8,44 +8,44 @@
 
 ## Status
 
-**Status:** Draft  
+**Status:** Done  
 **Priority:** 🟢 P2  
 **Epic:** Epic 5 - Reveal Experience  
 **Parallel:** [5.4 ∥ 5.5 ∥ 5.6 ∥ 5.7]
 
 ## Acceptance Criteria
 
-- [ ] **AC1:** Given I'm on the processing page and I background the app, when I return to the app, then the app detects visibility change and re-fetches status
-- [ ] **AC2:** If processing completed while backgrounded, I'm shown the reveal immediately
-- [ ] **AC3:** If still processing, I see updated progress (stage indicator, percentage)
-- [ ] **AC4:** Current jobId is persisted in localStorage on job creation
-- [ ] **AC5:** On app load/navigation, saved jobId is checked and if incomplete, resume polling
-- [ ] **AC6:** If job completed but user navigated away, redirect to result page on return
-- [ ] **AC7:** localStorage entry is cleared after successful payment or after 24h TTL
-- [ ] **AC8:** Works across browser tabs (only one tab polls at a time to avoid duplicate requests)
+- [x] **AC1:** Given I'm on the processing page and I background the app, when I return to the app, then the app detects visibility change and re-fetches status
+- [x] **AC2:** If processing completed while backgrounded, I'm shown the reveal immediately
+- [x] **AC3:** If still processing, I see updated progress (stage indicator, percentage)
+- [x] **AC4:** Current jobId is persisted in localStorage on job creation
+- [x] **AC5:** On app load/navigation, saved jobId is checked and if incomplete, resume polling
+- [x] **AC6:** If job completed but user navigated away, redirect to result page on return
+- [x] **AC7:** localStorage entry is cleared after successful payment or after 24h TTL
+- [x] **AC8:** Works across browser tabs (only one tab polls at a time to avoid duplicate requests)
 
 ## Tasks
 
-- [ ] **Task 1:** Create `useVisibilityChange` hook that listens to `document.visibilityState`
-- [ ] **Task 2:** Implement session persistence in `apps/web/src/lib/session.ts`
-  - [ ] Save jobId to localStorage on job creation
-  - [ ] Include timestamp for TTL enforcement
-  - [ ] Add resultId when processing completes
-- [ ] **Task 3:** Update `processing.$jobId.tsx` to detect visibility change
-  - [ ] On `visibilitychange` to 'visible', trigger immediate status refetch
-  - [ ] If status is 'completed', navigate to result page
-  - [ ] If status is 'failed', show error state
-- [ ] **Task 4:** Implement job resume logic on app initialization
-  - [ ] Check localStorage for pending job on route mount
-  - [ ] If incomplete job exists, offer to resume or start fresh
-  - [ ] Clear stale entries (>24h old)
-- [ ] **Task 5:** Add tab coordination to prevent duplicate polling
-  - [ ] Use `BroadcastChannel` API for cross-tab communication
-  - [ ] Leader election: only one tab polls, others listen
-  - [ ] Fallback for browsers without BroadcastChannel support
-- [ ] **Task 6:** Update result page to handle direct navigation from session recovery
-- [ ] **Task 7:** Write unit tests for session persistence logic
-- [ ] **Task 8:** Write E2E test simulating backgrounding and returning
+- [x] **Task 1:** Create `useVisibilityChange` hook that listens to `document.visibilityState`
+- [x] **Task 2:** Implement session persistence in `apps/web/src/lib/session.ts`
+  - [x] Save jobId to localStorage on job creation
+  - [x] Include timestamp for TTL enforcement
+  - [x] Add resultId when processing completes
+- [x] **Task 3:** Update `processing.$jobId.tsx` to detect visibility change
+  - [x] On `visibilitychange` to 'visible', trigger immediate status refetch
+  - [x] If status is 'completed', navigate to result page
+  - [x] If status is 'failed', show error state
+- [x] **Task 4:** Implement job resume logic on app initialization
+  - [x] Check localStorage for pending job on route mount
+  - [x] If incomplete job exists, offer to resume or start fresh
+  - [x] Clear stale entries (>24h old)
+- [x] **Task 5:** Add tab coordination to prevent duplicate polling
+  - [x] Use `BroadcastChannel` API for cross-tab communication
+  - [x] Leader election: only one tab polls, others listen
+  - [x] Fallback for browsers without BroadcastChannel support
+- [x] **Task 6:** Update result page to handle direct navigation from session recovery
+- [x] **Task 7:** Write unit tests for session persistence logic
+- [x] **Task 8:** Write E2E test simulating backgrounding and returning
 
 ## Dev Notes
 
@@ -221,6 +221,69 @@ useVisibilityChange(() => {
 
 ---
 
+## Dev Agent Record
+
+### Implementation Plan
+
+Implemented mobile session recovery with the following architecture:
+1. **Visibility Change Hook** (`useVisibilityChange`) - Detects when user returns to app
+2. **Enhanced Session Storage** - Added TTL, status tracking, and resultId storage to existing session.ts
+3. **Session Recovery Hook** (`useSessionRecovery`) - Checks for pending jobs on app load
+4. **Tab Coordination** (`tab-coordinator.ts`) - BroadcastChannel-based leader election for polling
+5. **Recovery Prompt Component** - Modal UI for resuming or starting fresh
+
+### Debug Log
+
+- All web unit tests pass (479)
+- Session recovery E2E spec passes (20 tests across Desktop Chrome + Mobile Safari)
+- Code review fixes applied: refetch requests, API base URL unification, timer cleanup, added prompt component tests
+
+### Completion Notes
+
+✅ Story 5.7 implementation complete and code-reviewed:
+- Visibility return triggers immediate status refetch (leader refetches; non-leader requests leader refetch)
+- Session recovery checks cached + server status and redirects when completed
+- API base URL unified via `API_BASE_URL` fallback config
+- Added `SessionRecoveryPrompt` component tests
+- Added E2E that mocks API and validates background → return → redirect
+
+### File List
+
+| File | Action | Description |
+|------|--------|-------------|
+| `apps/web/src/hooks/use-visibility-change.ts` | Create | Hook for document.visibilityState changes |
+| `apps/web/src/hooks/use-visibility-change.test.ts` | Create | Tests for visibility hook |
+| `apps/web/src/hooks/use-session-recovery.ts` | Create | Session recovery hook (visibility + server check) |
+| `apps/web/src/hooks/use-session-recovery.test.ts` | Create | Tests for recovery: dismissal + visibility redirect |
+| `apps/web/src/hooks/use-tab-coordinator.ts` | Create | Tab coordination hook (status + refetch requests) |
+| `apps/web/src/hooks/use-status.ts` | Modify | Exposed `refetch()` for immediate status refresh |
+| `apps/web/src/lib/session.ts` | Modify | Added TTL, JobData, status tracking |
+| `apps/web/src/lib/session.test.ts` | Modify | Added 18 tests for session recovery |
+| `apps/web/src/lib/api-config.ts` | Modify | Unified API base URL fallback handling |
+| `apps/web/src/lib/tab-coordinator.ts` | Create | BroadcastChannel leader election + refetch requests |
+| `apps/web/src/lib/tab-coordinator.test.ts` | Create | Tests for coordinator (timeout cleanup + refetch) |
+| `apps/web/src/components/session-recovery-prompt.tsx` | Create | Recovery prompt UI component |
+| `apps/web/src/components/session-recovery-prompt.test.tsx` | Create | Tests for recovery prompt UI |
+| `apps/web/src/routes/processing.$jobId.tsx` | Modify | Visibility refetch via query + cross-tab refetch |
+| `apps/web/src/routes/result.$resultId.tsx` | Modify | Use `API_BASE_URL` + recovery tracking |
+| `apps/web/src/routes/__root.tsx` | Modify | Added SessionRecoveryPrompt component |
+| `e2e/session-recovery.spec.ts` | Create | E2E tests incl. API-mocked background/return flow |
+
+### Change Log
+
+| Date | Change | Author |
+|------|--------|--------|
+| 2024-12-21 | Initial implementation of Story 5.7 | AI Dev Agent |
+| 2024-12-21 | Added useVisibilityChange hook with tests | AI Dev Agent |
+| 2024-12-21 | Enhanced session.ts with TTL and status tracking | AI Dev Agent |
+| 2024-12-21 | Integrated visibility change into processing page | AI Dev Agent |
+| 2024-12-21 | Added session recovery prompt and hook | AI Dev Agent |
+| 2024-12-21 | Implemented BroadcastChannel tab coordination | AI Dev Agent |
+| 2024-12-21 | Added E2E tests for session recovery | AI Dev Agent |
+| 2024-12-21 | Code review fixes: refetch requests, timer cleanup, API base unification, prompt tests | AI Reviewer |
+
+---
+
 ## Chat Command Log
 
 | Timestamp | Command | Summary |
@@ -231,4 +294,5 @@ useVisibilityChange(() => {
 
 | Session | Date | Agent Type | Summary |
 |---------|------|------------|---------|
-| | | | |
+| 1 | 2024-12-21 | Dev Agent | Implemented full mobile session recovery with visibility change detection, session persistence (TTL, status, resultId), session recovery prompt, tab coordination, and comprehensive test suite |
+| 2 | 2024-12-21 | Senior Reviewer | Fixed review findings (timer cleanup, leader refetch requests, API base URL unification), added prompt UI tests, strengthened E2E coverage |

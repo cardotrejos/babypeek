@@ -103,6 +103,11 @@ export class UploadStatusError extends Data.TaggedError("UploadStatusError")<{
   uploadId?: string
 }> {}
 
+export class WatermarkError extends Data.TaggedError("WatermarkError")<{
+  cause: "SHARP_FAILED" | "INVALID_IMAGE" | "COMPOSITE_FAILED" | "RESIZE_FAILED"
+  message: string
+}> {}
+
 // =============================================================================
 // Union of all errors
 // =============================================================================
@@ -121,3 +126,4 @@ export type AppError =
   | EmailError
   | ResultError
   | UploadStatusError
+  | WatermarkError

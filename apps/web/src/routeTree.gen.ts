@@ -10,11 +10,17 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ResultResultIdRouteImport } from './routes/result.$resultId'
 import { Route as ProcessingJobIdRouteImport } from './routes/processing.$jobId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResultResultIdRoute = ResultResultIdRouteImport.update({
+  id: '/result/$resultId',
+  path: '/result/$resultId',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ProcessingJobIdRoute = ProcessingJobIdRouteImport.update({
@@ -26,27 +32,31 @@ const ProcessingJobIdRoute = ProcessingJobIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/processing/$jobId': typeof ProcessingJobIdRoute
+  '/result/$resultId': typeof ResultResultIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/processing/$jobId': typeof ProcessingJobIdRoute
+  '/result/$resultId': typeof ResultResultIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/processing/$jobId': typeof ProcessingJobIdRoute
+  '/result/$resultId': typeof ResultResultIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/processing/$jobId'
+  fullPaths: '/' | '/processing/$jobId' | '/result/$resultId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/processing/$jobId'
-  id: '__root__' | '/' | '/processing/$jobId'
+  to: '/' | '/processing/$jobId' | '/result/$resultId'
+  id: '__root__' | '/' | '/processing/$jobId' | '/result/$resultId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ProcessingJobIdRoute: typeof ProcessingJobIdRoute
+  ResultResultIdRoute: typeof ResultResultIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -56,6 +66,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/result/$resultId': {
+      id: '/result/$resultId'
+      path: '/result/$resultId'
+      fullPath: '/result/$resultId'
+      preLoaderRoute: typeof ResultResultIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/processing/$jobId': {
@@ -71,6 +88,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ProcessingJobIdRoute: ProcessingJobIdRoute,
+  ResultResultIdRoute: ResultResultIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

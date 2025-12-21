@@ -12,6 +12,7 @@ export * from "./UploadService"
 export * from "./ResultService"
 export * from "./PostHogService"
 export * from "./RateLimitService"
+export * from "./WatermarkService"
 
 // =============================================================================
 // Import Layers for Composition
@@ -25,6 +26,7 @@ import { UploadServiceLive } from "./UploadService"
 import { ResultServiceLive } from "./ResultService"
 import { PostHogServiceLive } from "./PostHogService"
 import { RateLimitServiceLive } from "./RateLimitService"
+import { WatermarkServiceLive } from "./WatermarkService"
 
 // =============================================================================
 // AppServicesLive - Composed Layer with All Services
@@ -41,5 +43,6 @@ export const AppServicesLive = Layer.mergeAll(
   UploadServiceLive,
   ResultServiceWithDeps,
   PostHogServiceLive,
-  RateLimitServiceLive
+  RateLimitServiceLive,
+  WatermarkServiceLive
 )

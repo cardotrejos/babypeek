@@ -5,6 +5,7 @@ import { Outlet, createRootRouteWithContext } from "@tanstack/react-router"
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools"
 
 import { Toaster } from "@/components/ui/sonner"
+import { SessionRecoveryPrompt } from "@/components/session-recovery-prompt"
 
 export interface RouterAppContext {
   queryClient: QueryClient
@@ -25,6 +26,8 @@ function RootDocument() {
         Skip to main content
       </a>
       <Outlet />
+      {/* Story 5.7: Session recovery prompt for mobile users */}
+      <SessionRecoveryPrompt />
       <Toaster richColors />
       <TanStackRouterDevtools position="bottom-left" />
       <ReactQueryDevtools position="bottom" buttonPosition="bottom-right" />
