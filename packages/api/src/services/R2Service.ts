@@ -1,0 +1,121 @@
+import { Effect, Context, Layer, Data } from "effect"
+import { S3Client, PutObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3"
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner"
+import { env, isR2Configured } from "../lib/env"
+
+// Typed errors for R2 operations
+export class R2Error extends Data.TaggedError("R2Error")<{
+  cause: "INVALID_KEY" | "BUCKET_NOT_FOUND" | "PRESIGN_FAILED" | "CONFIG_MISSING"
+  message: string
+}> {}
+
+// Default expiration times (in seconds)
+const DEFAULT_UPLOAD_EXPIRES = 15 * 60 // 15 minutes
+const DEFAULT_DOWNLOAD_EXPIRES = 7 * 24 * 60 * 60 // 7 days
+
+// R2 Service interface
+export class R2Service extends Context.Tag("R2Service")<
+  R2Service,
+  {
+    getUploadUrl: (key: string, contentType: string, expiresIn?: number) => Effect.Effect<string, R2Error>
+    getDownloadUrl: (key: string, expiresIn?: number) => Effect.Effect<string, R2Error>
+  }
+>() {}
+
+// Cached S3 client - created once and reused
+let cachedClient: S3Client | null = null
+
+const getR2Client = (): S3Client | null => {
+  if (cachedClient) return cachedClient
+
+  if (!isR2Configured()) return null
+
+  cachedClient = new S3Client({
+    region: "auto",
+    endpoint: `https://${env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
+    credentials: {
+      accessKeyId: env.R2_ACCESS_KEY_ID!,
+      secretAccessKey: env.R2_SECRET_ACCESS_KEY!,
+    },
+  })
+
+  return cachedClient
+}
+
+// Helper to validate R2 config and key
+const validateR2Request = (key: string) =>
+  Effect.gen(function* () {
+    const client = getR2Client()
+
+    if (!client) {
+      return yield* Effect.fail(
+        new R2Error({
+          cause: "CONFIG_MISSING",
+          message: "R2 credentials not configured. Set R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY in environment.",
+        })
+      )
+    }
+
+    const bucketName = env.R2_BUCKET_NAME
+    if (!bucketName) {
+      return yield* Effect.fail(
+        new R2Error({
+          cause: "CONFIG_MISSING",
+          message: "R2_BUCKET_NAME not configured in environment.",
+        })
+      )
+    }
+
+    if (!key || key.trim() === "") {
+      return yield* Effect.fail(
+        new R2Error({
+          cause: "INVALID_KEY",
+          message: "Object key cannot be empty.",
+        })
+      )
+    }
+
+    return { client, bucketName }
+  })
+
+// R2 Service implementation
+export const R2ServiceLive = Layer.succeed(R2Service, {
+  getUploadUrl: (key, contentType, expiresIn = DEFAULT_UPLOAD_EXPIRES) =>
+    Effect.gen(function* () {
+      const { client, bucketName } = yield* validateR2Request(key)
+
+      const command = new PutObjectCommand({
+        Bucket: bucketName,
+        Key: key,
+        ContentType: contentType,
+      })
+
+      return yield* Effect.tryPromise({
+        try: () => getSignedUrl(client, command, { expiresIn }),
+        catch: (error) =>
+          new R2Error({
+            cause: "PRESIGN_FAILED",
+            message: `Failed to generate upload URL: ${error}`,
+          }),
+      })
+    }),
+
+  getDownloadUrl: (key, expiresIn = DEFAULT_DOWNLOAD_EXPIRES) =>
+    Effect.gen(function* () {
+      const { client, bucketName } = yield* validateR2Request(key)
+
+      const command = new GetObjectCommand({
+        Bucket: bucketName,
+        Key: key,
+      })
+
+      return yield* Effect.tryPromise({
+        try: () => getSignedUrl(client, command, { expiresIn }),
+        catch: (error) =>
+          new R2Error({
+            cause: "PRESIGN_FAILED",
+            message: `Failed to generate download URL: ${error}`,
+          }),
+      })
+    }),
+})

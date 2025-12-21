@@ -26,9 +26,10 @@
     "@3d-ultra/config": "workspace:*"
   },
   "dependencies": {
+    "@paralleldrive/cuid2": "^3.0.4",
+    "dotenv": "catalog:",
     "drizzle-orm": "^0.45.1",
     "pg": "^8.16.3",
-    "dotenv": "catalog:",
     "zod": "catalog:"
   }
 }

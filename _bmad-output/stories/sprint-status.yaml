@@ -1,0 +1,109 @@
+# generated: 2024-12-20
+# project: 3d-ultra
+# project_key: 3d-ultra
+# tracking_system: file-system
+# story_location: _bmad-output/stories
+
+# STATUS DEFINITIONS:
+# ==================
+# Epic Status:
+#   - backlog: Epic not yet started
+#   - in-progress: Epic actively being worked on
+#   - done: All stories in epic completed
+#
+# Epic Status Transitions:
+#   - backlog → in-progress: Automatically when first story is created (via create-story)
+#   - in-progress → done: Manually when all stories reach 'done' status
+#
+# Story Status:
+#   - backlog: Story only exists in epic file
+#   - ready-for-dev: Story file created in stories folder
+#   - in-progress: Developer actively working on implementation
+#   - review: Ready for code review (via Dev's code-review workflow)
+#   - done: Story completed
+#
+# Retrospective Status:
+#   - optional: Can be completed but not required
+#   - done: Retrospective has been completed
+#
+# WORKFLOW NOTES:
+# ===============
+# - Epic transitions to 'in-progress' automatically when first story is created
+# - Stories can be worked in parallel if team capacity allows
+# - SM typically creates next story after previous one is 'done' to incorporate learnings
+# - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
+# - Epics 3-8 have summaries but no detailed stories yet - complete epics.md workflow first
+
+generated: 2024-12-20
+project: 3d-ultra
+project_key: 3d-ultra
+tracking_system: file-system
+story_location: _bmad-output/stories
+
+development_status:
+  # ═══════════════════════════════════════════════════════════════════════════
+  # EPIC 1: Foundation & Observability
+  # ═══════════════════════════════════════════════════════════════════════════
+  epic-1: in-progress
+  1-1-initialize-better-t-stack-project: done
+  1-2-configure-neon-postgresql-connection: done
+  1-3-configure-cloudflare-r2-storage: done
+  1-4-set-up-environment-configuration: ready-for-dev
+  1-5-integrate-posthog-analytics: ready-for-dev
+  1-6-integrate-sentry-error-tracking: ready-for-dev
+  1-7-configure-ci-cd-pipeline: ready-for-dev
+  epic-1-retrospective: optional
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # EPIC 2: Landing Experience
+  # ═══════════════════════════════════════════════════════════════════════════
+  epic-2: backlog
+  2-1-mobile-optimized-landing-layout: backlog
+  2-2-hero-section-with-value-proposition: backlog
+  2-3-before-after-example-gallery: backlog
+  2-4-trust-signals-section: backlog
+  2-5-faq-accordion: backlog
+  2-6-seo-optimization: backlog
+  epic-2-retrospective: optional
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # EPIC 3: Image Upload
+  # NOTE: Stories not yet defined - complete epics.md workflow (step 4)
+  # ═══════════════════════════════════════════════════════════════════════════
+  epic-3: backlog
+  epic-3-retrospective: optional
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # EPIC 4: AI Processing
+  # NOTE: Stories not yet defined - complete epics.md workflow (step 4)
+  # ═══════════════════════════════════════════════════════════════════════════
+  epic-4: backlog
+  epic-4-retrospective: optional
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # EPIC 5: Reveal Experience
+  # NOTE: Stories not yet defined - complete epics.md workflow (step 4)
+  # ═══════════════════════════════════════════════════════════════════════════
+  epic-5: backlog
+  epic-5-retrospective: optional
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # EPIC 6: Payment
+  # NOTE: Stories not yet defined - complete epics.md workflow (step 4)
+  # ═══════════════════════════════════════════════════════════════════════════
+  epic-6: backlog
+  epic-6-retrospective: optional
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # EPIC 7: Download & Delivery
+  # NOTE: Stories not yet defined - complete epics.md workflow (step 4)
+  # ═══════════════════════════════════════════════════════════════════════════
+  epic-7: backlog
+  epic-7-retrospective: optional
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # EPIC 8: Sharing & Viral Loop
+  # NOTE: Stories not yet defined - complete epics.md workflow (step 4)
+  # ═══════════════════════════════════════════════════════════════════════════
+  epic-8: backlog
+  epic-8-retrospective: optional
