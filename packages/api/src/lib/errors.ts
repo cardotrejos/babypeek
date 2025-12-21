@@ -36,7 +36,31 @@ export class GeminiError extends Data.TaggedError("GeminiError")<{
   message: string
   /** Original error for Sentry logging and debugging */
   originalError?: unknown
+  /** Attempt number when tracking retries */
+  attempt?: number
 }> {}
+
+/**
+ * Determine if a GeminiError should trigger a retry.
+ *
+ * Retryable errors (transient failures):
+ * - RATE_LIMITED: API quota exceeded, will likely succeed after backoff
+ * - API_ERROR: Network issues, server errors - transient
+ * - TIMEOUT: Request took too long, worth retrying
+ *
+ * Non-retryable errors (permanent failures):
+ * - INVALID_IMAGE: Bad input image won't magically become valid
+ * - CONTENT_POLICY: Safety filters blocked content, retrying won't help
+ *
+ * @see Story 4.3 - Retry Logic with Exponential Backoff
+ */
+export function isRetryableGeminiError(error: GeminiError): boolean {
+  return (
+    error.cause === "RATE_LIMITED" ||
+    error.cause === "API_ERROR" ||
+    error.cause === "TIMEOUT"
+  )
+}
 
 export class R2Error extends Data.TaggedError("R2Error")<{
   cause: "UPLOAD_FAILED" | "DOWNLOAD_FAILED" | "DELETE_FAILED" | "PRESIGN_FAILED" | "CONFIG_MISSING" | "INVALID_KEY" | "HEAD_FAILED" | "LIST_FAILED"

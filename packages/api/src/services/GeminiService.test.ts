@@ -16,6 +16,7 @@ import {
   type GeneratedImage,
 } from "./GeminiService"
 import { GeminiError } from "../lib/errors"
+import { PostHogService, PostHogServiceMock } from "./PostHogService"
 
 // =============================================================================
 // Test Helpers
@@ -23,12 +24,16 @@ import { GeminiError } from "../lib/errors"
 
 /**
  * Run a GeminiService effect with the given layer.
+ * Also provides PostHogServiceMock for retry analytics.
  */
 async function runWithLayer<A, E>(
-  effect: Effect.Effect<A, E, GeminiService>,
+  effect: Effect.Effect<A, E, GeminiService | PostHogService>,
   layer: Layer.Layer<GeminiService, never, never>
 ): Promise<Exit.Exit<A, E>> {
-  const program = effect.pipe(Effect.provide(layer))
+  const program = effect.pipe(
+    Effect.provide(layer),
+    Effect.provide(PostHogServiceMock)
+  )
   return Effect.runPromiseExit(program)
 }
 

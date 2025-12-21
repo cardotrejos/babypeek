@@ -11,6 +11,7 @@ import {
   GeminiError,
   R2Error,
   EmailError,
+  isRetryableGeminiError,
 } from "./errors"
 
 describe("Typed Errors", () => {
@@ -122,6 +123,42 @@ describe("Typed Errors", () => {
         const error = new GeminiError({ cause, message: "test" })
         expect(error.cause).toBe(cause)
       }
+    })
+
+    it("supports optional attempt field", () => {
+      const error = new GeminiError({
+        cause: "TIMEOUT",
+        message: "Timeout after retry",
+        attempt: 3,
+      })
+      expect(error.attempt).toBe(3)
+    })
+  })
+
+  describe("isRetryableGeminiError", () => {
+    it("returns true for RATE_LIMITED errors", () => {
+      const error = new GeminiError({ cause: "RATE_LIMITED", message: "Rate limit exceeded" })
+      expect(isRetryableGeminiError(error)).toBe(true)
+    })
+
+    it("returns true for API_ERROR errors", () => {
+      const error = new GeminiError({ cause: "API_ERROR", message: "Network error" })
+      expect(isRetryableGeminiError(error)).toBe(true)
+    })
+
+    it("returns true for TIMEOUT errors", () => {
+      const error = new GeminiError({ cause: "TIMEOUT", message: "Request timed out" })
+      expect(isRetryableGeminiError(error)).toBe(true)
+    })
+
+    it("returns false for INVALID_IMAGE errors", () => {
+      const error = new GeminiError({ cause: "INVALID_IMAGE", message: "Bad image" })
+      expect(isRetryableGeminiError(error)).toBe(false)
+    })
+
+    it("returns false for CONTENT_POLICY errors", () => {
+      const error = new GeminiError({ cause: "CONTENT_POLICY", message: "Content blocked" })
+      expect(isRetryableGeminiError(error)).toBe(false)
     })
   })
 
