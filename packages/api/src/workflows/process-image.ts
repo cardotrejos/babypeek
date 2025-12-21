@@ -152,7 +152,7 @@ async function fetchOriginalImage(uploadId: string): Promise<{ url: string | nul
 async function generateImage(
   uploadId: string,
   imageUrl: string,
-  promptVersion: PromptVersion = "v1"
+  promptVersion: PromptVersion = "v3"
 ): Promise<GenerateResult> {
   "use step"
 
@@ -298,9 +298,8 @@ async function finalizeProcessing(
     success,
   })
 
-  // TODO: In future stories:
-  // - Update upload status to 'completed' or 'failed'
-  // - Send notification if configured
+  // TODO (Story 4.5): Update database status to 'completed' or 'failed'
+  // TODO (Story 5.x): Send notification if configured
 
   if (!success) {
     console.error(`[workflow:finalize] Processing failed for upload: ${uploadId}`)
@@ -331,7 +330,7 @@ async function finalizeProcessing(
 export async function processImageWorkflow(input: ProcessImageInput): Promise<ProcessImageOutput> {
   "use workflow"
 
-  const { uploadId, promptVersion = "v1" } = input
+  const { uploadId, promptVersion = "v3" } = input
   console.log(`[workflow:start] Starting process-image workflow for upload: ${uploadId}`)
 
   // Stage 1: Validate

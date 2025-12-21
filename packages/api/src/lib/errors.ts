@@ -34,6 +34,8 @@ export class AlreadyProcessingError extends Data.TaggedError("AlreadyProcessingE
 export class GeminiError extends Data.TaggedError("GeminiError")<{
   cause: "RATE_LIMITED" | "INVALID_IMAGE" | "CONTENT_POLICY" | "API_ERROR" | "TIMEOUT"
   message: string
+  /** Original error for Sentry logging and debugging */
+  originalError?: unknown
 }> {}
 
 export class R2Error extends Data.TaggedError("R2Error")<{

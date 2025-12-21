@@ -58,7 +58,7 @@ describe("GeminiService", () => {
       if (Exit.isSuccess(exit)) {
         const result = exit.value as GeneratedImage
         expect(result.data).toBeInstanceOf(Buffer)
-        expect(result.mimeType).toBe("image/jpeg")
+        expect(result.mimeType).toBe("image/png") // Nano Banana Pro returns PNG
       }
     })
 
@@ -74,7 +74,7 @@ describe("GeminiService", () => {
       if (Exit.isSuccess(exit)) {
         const result = exit.value as GeneratedImage
         expect(result.data).toBeInstanceOf(Buffer)
-        expect(result.mimeType).toBe("image/jpeg")
+        expect(result.mimeType).toBe("image/png") // Nano Banana Pro returns PNG
       }
     })
   })
@@ -171,51 +171,85 @@ describe("GeminiService", () => {
 // =============================================================================
 
 describe("Prompt Templates", () => {
-  it("should export v1 prompt", async () => {
+  it("should export v3 prompt", async () => {
     const { PROMPTS } = await import("../prompts/baby-portrait")
-    expect(PROMPTS.v1).toBeDefined()
-    expect(typeof PROMPTS.v1).toBe("string")
-    expect(PROMPTS.v1.length).toBeGreaterThan(100)
+    expect(PROMPTS.v3).toBeDefined()
+    expect(typeof PROMPTS.v3).toBe("string")
+    expect(PROMPTS.v3.length).toBeGreaterThan(100)
   })
 
-  it("should export v2 prompt", async () => {
+  it("should export v3-json prompt", async () => {
     const { PROMPTS } = await import("../prompts/baby-portrait")
-    expect(PROMPTS.v2).toBeDefined()
-    expect(typeof PROMPTS.v2).toBe("string")
-    expect(PROMPTS.v2.length).toBeGreaterThan(50)
+    expect(PROMPTS["v3-json"]).toBeDefined()
+    expect(typeof PROMPTS["v3-json"]).toBe("string")
+    expect(PROMPTS["v3-json"].length).toBeGreaterThan(50)
   })
 
-  it("should return default v1 prompt via getPrompt()", async () => {
+  it("should return default v3 prompt via getPrompt()", async () => {
     const { getPrompt, PROMPTS } = await import("../prompts/baby-portrait")
-    expect(getPrompt()).toBe(PROMPTS.v1)
+    // Default is v3 (in-utero style) for highest quality
+    expect(getPrompt()).toBe(PROMPTS.v3)
   })
 
   it("should return specific version via getPrompt(version)", async () => {
     const { getPrompt, PROMPTS } = await import("../prompts/baby-portrait")
-    expect(getPrompt("v1")).toBe(PROMPTS.v1)
-    expect(getPrompt("v2")).toBe(PROMPTS.v2)
+    expect(getPrompt("v3")).toBe(PROMPTS.v3)
+    expect(getPrompt("v3-json")).toBe(PROMPTS["v3-json"])
   })
 
   it("should contain required prompt elements", async () => {
     const { PROMPTS } = await import("../prompts/baby-portrait")
 
-    // v1 should contain key instructions
-    expect(PROMPTS.v1).toContain("ultrasound")
-    expect(PROMPTS.v1).toContain("photorealistic")
-    expect(PROMPTS.v1).toContain("baby")
-    expect(PROMPTS.v1).toContain("Safety guidelines")
+    // v3 should contain in-utero specific elements
+    expect(PROMPTS.v3).toContain("ultrasound")
+    expect(PROMPTS.v3).toContain("in-utero")
+    expect(PROMPTS.v3).toContain("anatomy lock")
+    expect(PROMPTS.v3).toContain("subsurface scattering")
+    expect(PROMPTS.v3).toContain("amniotic fluid")
+    expect(PROMPTS.v3).toContain("Negative prompt")
 
-    // v2 should also contain key elements
-    expect(PROMPTS.v2).toContain("ultrasound")
-    expect(PROMPTS.v2).toContain("photorealistic")
-    expect(PROMPTS.v2).toContain("baby")
+    // v3-json should contain JSON structure
+    expect(PROMPTS["v3-json"]).toContain("edit_ultrasound_to_photoreal_inutero_photo")
+    expect(PROMPTS["v3-json"]).toContain("referencePriority")
+    expect(PROMPTS["v3-json"]).toContain("constraints")
+  })
+
+  it("should provide v3 JSON prompt as object and string", async () => {
+    const { getV3JsonPrompt, getV3JsonPromptAsString } = await import("../prompts/baby-portrait")
+    
+    const jsonObj = getV3JsonPrompt()
+    expect(jsonObj.task).toBe("edit_ultrasound_to_photoreal_inutero_photo")
+    expect(jsonObj.constraints.keepPose).toBe(true)
+    expect(jsonObj.negatives).toContain("plastic skin")
+    
+    const jsonStr = getV3JsonPromptAsString()
+    expect(jsonStr).toContain("edit_ultrasound_to_photoreal_inutero_photo")
+    expect(JSON.parse(jsonStr)).toEqual(jsonObj)
+  })
+
+  it("should provide upscale prompt", async () => {
+    const { getUpscalePrompt } = await import("../prompts/baby-portrait")
+    const upscale = getUpscalePrompt()
+    expect(upscale).toContain("Upscale")
+    expect(upscale).toContain("4K")
+    expect(upscale).toContain("Preserve")
+  })
+
+  it("should provide prompt metadata", async () => {
+    const { getPromptMetadata } = await import("../prompts/baby-portrait")
+    
+    // Check metadata - both are in-utero style
+    expect(getPromptMetadata("v3").style).toBe("in-utero")
+    expect(getPromptMetadata("v3").format).toBe("prose")
+    expect(getPromptMetadata("v3-json").style).toBe("in-utero")
+    expect(getPromptMetadata("v3-json").format).toBe("json")
   })
 
   it("should list available versions", async () => {
     const { getAvailableVersions } = await import("../prompts/baby-portrait")
     const versions = getAvailableVersions()
-    expect(versions).toContain("v1")
-    expect(versions).toContain("v2")
+    expect(versions).toContain("v3")
+    expect(versions).toContain("v3-json")
     expect(versions.length).toBe(2)
   })
 })
@@ -281,6 +315,28 @@ describe("GeminiError", () => {
     expect(error._tag).toBe("GeminiError")
     expect(error.cause).toBe("RATE_LIMITED")
     expect(error.message).toBe("Rate limit exceeded")
+  })
+
+  it("should preserve originalError for Sentry logging", () => {
+    const originalError = new Error("SDK error details")
+    const error = new GeminiError({
+      cause: "API_ERROR",
+      message: "Gemini API error",
+      originalError,
+    })
+    expect(error.originalError).toBe(originalError)
+  })
+
+  it("should create TIMEOUT error with expected message format", () => {
+    // Tests that the TIMEOUT cause works as expected
+    // The actual 60s timeout is tested via integration tests
+    const error = new GeminiError({
+      cause: "TIMEOUT",
+      message: "Gemini API timed out after 60 seconds",
+    })
+    expect(error._tag).toBe("GeminiError")
+    expect(error.cause).toBe("TIMEOUT")
+    expect(error.message).toContain("60 seconds")
   })
 
   it("should create CONTENT_POLICY error", () => {

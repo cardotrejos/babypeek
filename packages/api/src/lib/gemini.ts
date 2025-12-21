@@ -1,10 +1,15 @@
 /**
  * Gemini AI Client
  *
- * Initializes and exports the Google Generative AI client for Gemini Imagen 3.
+ * Initializes and exports the Google Generative AI client for Gemini native image generation.
  * Used for transforming 4D ultrasound images into photorealistic baby portraits.
  *
- * @see https://ai.google.dev/gemini-api/docs
+ * Models (from official Google docs - guide-nano-banana.md):
+ * - gemini-2.5-flash-preview-05-20: Fast image generation (Nano Banana)
+ * - gemini-2.0-flash-exp-image-generation: Experimental image generation
+ *
+ * @see https://ai.google.dev/gemini-api/docs/image-generation
+ * @see Story 4.2.1 - Prompt Optimization (Nano Banana Pro Style)
  */
 
 import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from "@google/generative-ai"
@@ -37,10 +42,34 @@ export const getGeminiClient = (): GoogleGenerativeAI | null => {
 // =============================================================================
 
 /**
- * Model name for Gemini Imagen 3 image generation.
- * Note: The exact model name may vary - verify with Google AI Studio.
+ * Available Gemini models for image generation.
+ *
+ * From official Google docs (guide-nano-banana.md):
+ * - gemini-3-pro-image-preview: Nano Banana Pro - Best quality, thinking mode, 4K, up to 14 refs
+ * - gemini-2.5-flash-image: Nano Banana - Fast generation, good quality
+ *
+ * @see https://ai.google.dev/gemini-api/docs/image-generation
  */
-export const IMAGEN_MODEL = "gemini-2.0-flash-exp" // Vision model with image understanding
+export const GEMINI_MODELS = {
+  /** Nano Banana Pro - Best quality, thinking mode, 4K output, up to 14 reference images */
+  PRO_IMAGE: "gemini-3-pro-image-preview",
+  /** Nano Banana - Fast image generation, good quality */
+  FLASH_IMAGE: "gemini-2.5-flash-image",
+} as const
+
+export type GeminiModel = (typeof GEMINI_MODELS)[keyof typeof GEMINI_MODELS]
+
+/**
+ * Default model for image generation.
+ * Using gemini-3-pro-image-preview (Nano Banana Pro) for highest quality output.
+ * 
+ * Features:
+ * - Up to 14 reference images (6 objects + 5 humans)
+ * - 1K/2K/4K resolution output
+ * - Thinking mode for complex prompts
+ * - Best-in-class image quality
+ */
+export const IMAGEN_MODEL: GeminiModel = GEMINI_MODELS.PRO_IMAGE
 
 /**
  * Safety settings for Gemini API calls.
@@ -65,8 +94,45 @@ export const SAFETY_SETTINGS = [
   },
 ]
 
+// =============================================================================
+// Image Generation Configuration
+// =============================================================================
+
 /**
- * Generation configuration for image generation.
+ * Supported aspect ratios for image generation.
+ * From official Google docs.
+ */
+export const ASPECT_RATIOS = ["1:1", "2:3", "3:2", "3:4", "4:3", "4:5", "5:4", "9:16", "16:9", "21:9"] as const
+export type AspectRatio = (typeof ASPECT_RATIOS)[number]
+
+/**
+ * Supported image sizes/resolutions.
+ * From official Google docs.
+ */
+export const IMAGE_SIZES = ["1K", "2K", "4K"] as const
+export type ImageSize = (typeof IMAGE_SIZES)[number]
+
+/**
+ * Image generation configuration options.
+ */
+export interface ImageGenerationConfig {
+  /** Aspect ratio for the generated image */
+  aspectRatio?: AspectRatio
+  /** Output resolution (1K, 2K, or 4K) */
+  imageSize?: ImageSize
+}
+
+/**
+ * Default image generation configuration.
+ */
+export const DEFAULT_IMAGE_CONFIG: ImageGenerationConfig = {
+  aspectRatio: "1:1",
+  imageSize: "1K",
+}
+
+/**
+ * Generation configuration for the model.
+ * Note: responseModalities is set at model initialization for image output.
  */
 export const GENERATION_CONFIG = {
   temperature: 0.4, // Lower for more consistent outputs
