@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router"
 import { useState, useEffect, useCallback } from "react"
 import { getSession, hasSession } from "@/lib/session"
 import { posthog, isPostHogConfigured } from "@/lib/posthog"
+import { useStatus, getStageLabel } from "@/hooks/use-status"
 
 // API base URL - in production this will be the same origin
 const API_BASE = import.meta.env.VITE_API_URL || ""
@@ -20,7 +21,7 @@ export const Route = createFileRoute("/processing/$jobId")({
   component: ProcessingPage,
 })
 
-type ProcessingState = "idle" | "starting" | "processing" | "error" | "already-processing" | "timeout" | "retrying"
+type ProcessingState = "idle" | "starting" | "processing" | "error" | "already-processing" | "timeout" | "retrying" | "complete"
 
 interface ProcessingError {
   message: string
@@ -37,6 +38,51 @@ function ProcessingPage() {
   const [state, setState] = useState<ProcessingState>("idle")
   const [error, setError] = useState<ProcessingError | null>(null)
   const [workflowRunId, setWorkflowRunId] = useState<string | null>(null)
+
+  // Poll for status updates after workflow is started
+  const shouldPoll = state === "processing" || state === "already-processing"
+  const { 
+    status: polledStatus, 
+    stage, 
+    progress, 
+    isComplete, 
+    isFailed, 
+    resultId,
+    errorMessage: polledErrorMessage 
+  } = useStatus(shouldPoll ? jobId : null)
+
+  // Handle completion - show success and navigate to home (or results when implemented)
+  useEffect(() => {
+    if (isComplete && resultId) {
+      setState("complete")
+      // Track completion
+      if (isPostHogConfigured()) {
+        posthog.capture("processing_complete", {
+          upload_id: jobId,
+          result_id: resultId,
+        })
+      }
+      // For now, navigate to home with the result ID as a query param
+      // In the future, this would navigate to a results/reveal page
+      setTimeout(() => {
+        // TODO: Navigate to results page when implemented
+        // For now, just log success
+        console.log("[processing] Complete! Result ID:", resultId)
+      }, 1000)
+    }
+  }, [isComplete, resultId, jobId])
+
+  // Handle failure from polling
+  useEffect(() => {
+    if (isFailed) {
+      setError({
+        message: polledErrorMessage || "Processing failed. Please try again.",
+        code: "PROCESSING_FAILED",
+        canRetry: true,
+      })
+      setState("error")
+    }
+  }, [isFailed, polledErrorMessage])
 
   const startProcessing = useCallback(async () => {
     // Check if we have a session for this job
@@ -76,7 +122,7 @@ function ProcessingPage() {
       const data = await response.json()
 
       if (response.status === 409) {
-        // Already processing - that's fine, just show status
+        // Already processing - that's fine, just poll for status
         setState("already-processing")
         if (data.workflowRunId) {
           setWorkflowRunId(data.workflowRunId)
@@ -116,7 +162,7 @@ function ProcessingPage() {
         return
       }
 
-      // Success - processing started
+      // Success - processing started, now poll for status
       setState("processing")
       setWorkflowRunId(data.workflowRunId)
     } catch (err) {
@@ -197,6 +243,14 @@ function ProcessingPage() {
     navigate({ to: "/" })
   }
 
+  // Get display text based on polling stage
+  const getProcessingText = () => {
+    if (stage) {
+      return getStageLabel(stage)
+    }
+    return "Our AI is working its magic. This usually takes about 60 seconds."
+  }
+
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-cream">
       <div className="max-w-md w-full text-center space-y-6">
@@ -228,14 +282,60 @@ function ProcessingPage() {
                 Creating your portrait...
               </h1>
               <p className="font-body text-warm-gray">
-                Our AI is working its magic. This usually takes about 60 seconds.
+                {getProcessingText()}
               </p>
             </div>
+            {/* Progress bar */}
+            {progress > 0 && (
+              <div className="w-full bg-charcoal/10 rounded-full h-2 overflow-hidden">
+                <div 
+                  className="bg-coral h-full rounded-full transition-all duration-500 ease-out"
+                  style={{ width: `${progress}%` }}
+                />
+              </div>
+            )}
             {state === "already-processing" && (
               <p className="text-sm text-warm-gray/70">
                 Your image is already being processed.
               </p>
             )}
+            {/* Polled status debug (development only) */}
+            {import.meta.env.DEV && polledStatus && (
+              <p className="text-xs text-warm-gray/50 font-mono">
+                Status: {polledStatus} | Stage: {stage || "none"} | Progress: {progress}%
+              </p>
+            )}
+          </>
+        )}
+
+        {/* Complete state */}
+        {state === "complete" && (
+          <>
+            <div className="flex justify-center">
+              <div className="size-16 rounded-full bg-green-100 flex items-center justify-center">
+                <svg
+                  className="size-8 text-green-500"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <h1 className="font-display text-2xl text-charcoal">
+                Your portrait is ready!
+              </h1>
+              <p className="font-body text-warm-gray">
+                Processing complete. Result ID: {resultId}
+              </p>
+            </div>
           </>
         )}
 
@@ -261,7 +361,7 @@ function ProcessingPage() {
           <>
             <div className="flex justify-center">
               <div className="size-20 text-6xl flex items-center justify-center">
-                😔
+                :(
               </div>
             </div>
             <div className="space-y-2">
