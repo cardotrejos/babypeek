@@ -123,7 +123,7 @@ development_status:
   # Parallel: 6.1 → 6.2 → 6.3 → 6.4 → [6.5 ∥ 6.6 ∥ 6.7]
   # ═══════════════════════════════════════════════════════════════════════════
   epic-6: in-progress
-  6-1-stripe-checkout-integration: ready-for-dev
+  6-1-stripe-checkout-integration: in-progress
   6-2-apple-pay-and-google-pay-support: ready-for-dev
   6-3-stripe-webhook-handler: ready-for-dev
   6-4-purchase-record-creation: ready-for-dev

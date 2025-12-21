@@ -3,7 +3,7 @@ import { Hono } from "hono"
 import { cors } from "hono/cors"
 import { logger } from "hono/logger"
 
-import { healthRoutes, storageRoutes, uploadRoutes, processRoutes, processWorkflowRoutes, statusRoutes, retryRoutes } from "@3d-ultra/api"
+import { healthRoutes, storageRoutes, uploadRoutes, processRoutes, processWorkflowRoutes, statusRoutes, retryRoutes, checkoutRoutes } from "@3d-ultra/api"
 
 const app = new Hono()
 
@@ -26,6 +26,7 @@ app.route("/api/process", processRoutes)
 app.route("/api/process-workflow", processWorkflowRoutes)
 app.route("/api/status", statusRoutes)
 app.route("/api/retry", retryRoutes)
+app.route("/api/checkout", checkoutRoutes)
 
 // Root endpoint
 app.get("/", (c) => {

@@ -300,46 +300,61 @@ async function createAndStorePreview(
     // Load image with Jimp
     const image = await Jimp.read(fullImageData)
     
-    if (!image.width || !image.height) {
+    const originalWidth = image.width
+    const originalHeight = image.height
+    
+    if (!originalWidth || !originalHeight) {
       console.error("[workflow] Image has no dimensions for watermarking")
       return null
     }
     
+    console.log(`[workflow] Loaded image: ${originalWidth}x${originalHeight}`)
+    
     // Step 1: Resize to 800px max (smaller = faster watermark)
-    if (image.width > 800 || image.height > 800) {
+    if (originalWidth > 800 || originalHeight > 800) {
       image.scaleToFit({ w: 800, h: 800 })
+      console.log(`[workflow] Resized to: ${image.width}x${image.height}`)
     }
     
     const imageWidth = image.width
     const imageHeight = image.height
     
     // Watermark config
-    const opacity = 0.4
-    const widthPercent = 0.15
+    const widthPercent = 0.20  // 20% of image width for visibility
     const marginPercent = 0.03
     
-    // Calculate watermark size (15% of width)
+    // Calculate watermark rectangle dimensions
     const rectWidth = Math.floor(imageWidth * widthPercent)
-    const rectHeight = Math.floor(rectWidth * 0.2)
+    const rectHeight = Math.floor(rectWidth * 0.25)  // 4:1 aspect ratio
     
     // Calculate margin (3% from edges)
     const margin = Math.floor(Math.min(imageWidth, imageHeight) * marginPercent)
     
     // Calculate position for bottom-right with margin
-    const startX = imageWidth - rectWidth - margin
-    const startY = imageHeight - rectHeight - margin
+    const startX = Math.max(0, imageWidth - rectWidth - margin)
+    const startY = Math.max(0, imageHeight - rectHeight - margin)
     
-    // Step 2: Apply watermark (semi-transparent white overlay)
+    console.log(`[workflow] Watermark area: ${startX},${startY} -> ${startX + rectWidth},${startY + rectHeight}`)
+    
+    // Step 2: Apply watermark - draw semi-transparent diagonal lines pattern
+    // This creates a visible "watermark" effect without needing text rendering
     for (let y = startY; y < startY + rectHeight && y < imageHeight; y++) {
       for (let x = startX; x < startX + rectWidth && x < imageWidth; x++) {
-        if (x >= 0 && y >= 0) {
-          const currentColor = image.getPixelColor(x, y)
-          // Blend with white at given opacity
-          const blended = blendColorsSimple(currentColor, opacity)
-          image.setPixelColor(blended, x, y)
+        // Create diagonal stripe pattern (every 4 pixels)
+        const isStripe = (x + y) % 8 < 4
+        if (isStripe) {
+          // Get current pixel color and blend with white
+          const rgba = Jimp.intToRGBA(image.getPixelColor(x, y))
+          const blendedR = Math.floor(rgba.r * 0.6 + 255 * 0.4)
+          const blendedG = Math.floor(rgba.g * 0.6 + 255 * 0.4)
+          const blendedB = Math.floor(rgba.b * 0.6 + 255 * 0.4)
+          const newColor = Jimp.rgbaToInt(blendedR, blendedG, blendedB, rgba.a)
+          image.setPixelColor(newColor, x, y)
         }
       }
     }
+    
+    console.log(`[workflow] Watermark applied`)
     
     // Convert to JPEG buffer
     const previewBuffer = await image.getBuffer("image/jpeg", { quality: 85 })
@@ -367,24 +382,6 @@ async function createAndStorePreview(
     // Non-fatal: continue without preview
     return null
   }
-}
-
-// Helper to blend colors with white at given opacity
-function blendColorsSimple(bgColor: number, opacity: number): number {
-  // Extract RGBA from bgColor (Jimp uses RGBA format)
-  const bgR = (bgColor >> 24) & 0xff
-  const bgG = (bgColor >> 16) & 0xff
-  const bgB = (bgColor >> 8) & 0xff
-  const bgA = bgColor & 0xff
-
-  // Blend with white (255, 255, 255)
-  const r = Math.floor(bgR * (1 - opacity) + 255 * opacity)
-  const g = Math.floor(bgG * (1 - opacity) + 255 * opacity)
-  const b = Math.floor(bgB * (1 - opacity) + 255 * opacity)
-  const a = bgA
-
-  // Pack back into integer
-  return ((r & 0xff) << 24) | ((g & 0xff) << 16) | ((b & 0xff) << 8) | (a & 0xff)
 }
 
 // =============================================================================

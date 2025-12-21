@@ -13,6 +13,7 @@ export * from "./ResultService"
 export * from "./PostHogService"
 export * from "./RateLimitService"
 export * from "./WatermarkService"
+export * from "./PurchaseService"
 
 // =============================================================================
 // Import Layers for Composition
@@ -27,6 +28,7 @@ import { ResultServiceLive } from "./ResultService"
 import { PostHogServiceLive } from "./PostHogService"
 import { RateLimitServiceLive } from "./RateLimitService"
 import { WatermarkServiceLive } from "./WatermarkService"
+import { PurchaseServiceLive } from "./PurchaseService"
 
 // =============================================================================
 // AppServicesLive - Composed Layer with All Services
@@ -34,6 +36,9 @@ import { WatermarkServiceLive } from "./WatermarkService"
 
 // ResultServiceLive depends on R2Service, so we need to provide it
 const ResultServiceWithDeps = ResultServiceLive.pipe(Layer.provide(R2ServiceLive))
+
+// PurchaseServiceLive depends on StripeService
+const PurchaseServiceWithDeps = PurchaseServiceLive.pipe(Layer.provide(StripeServiceLive))
 
 export const AppServicesLive = Layer.mergeAll(
   GeminiServiceLive,
@@ -44,5 +49,6 @@ export const AppServicesLive = Layer.mergeAll(
   ResultServiceWithDeps,
   PostHogServiceLive,
   RateLimitServiceLive,
-  WatermarkServiceLive
+  WatermarkServiceLive,
+  PurchaseServiceWithDeps
 )
