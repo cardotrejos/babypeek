@@ -50,10 +50,12 @@ app.post("/upload-url", async (c) => {
 
   const { key, contentType, expiresIn } = parsed.data
 
-  const program = Effect.gen(function* () {
+  const getUploadUrl = Effect.fn("routes.storage.getUploadUrl")(function* () {
     const r2 = yield* R2Service
     return yield* r2.getUploadUrl(key, contentType, expiresIn)
-  }).pipe(Effect.provide(R2ServiceLive))
+  })
+
+  const program = getUploadUrl().pipe(Effect.provide(R2ServiceLive))
 
   const result = await Effect.runPromise(Effect.either(program))
 
@@ -94,10 +96,12 @@ app.get("/download-url/*", async (c) => {
     return c.json({ error: "Key is required", code: "INVALID_KEY" }, 400)
   }
 
-  const program = Effect.gen(function* () {
+  const getDownloadUrl = Effect.fn("routes.storage.getDownloadUrl")(function* () {
     const r2 = yield* R2Service
     return yield* r2.getDownloadUrl(key, expiresIn)
-  }).pipe(Effect.provide(R2ServiceLive))
+  })
+
+  const program = getDownloadUrl().pipe(Effect.provide(R2ServiceLive))
 
   const result = await Effect.runPromise(Effect.either(program))
 

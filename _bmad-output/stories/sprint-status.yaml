@@ -92,13 +92,13 @@ development_status:
   # Priority: P0 core (4.1, 4.2, 4.4), P1 reliability (4.3, 4.5, 4.6)
   # Parallel: 4.1 → 4.2 → 4.3 → [4.4 ∥ 4.5] → 4.6
   # ═══════════════════════════════════════════════════════════════════════════
-  epic-4: backlog
-  4-1-workflow-job-definition: backlog
-  4-2-gemini-imagen-3-integration: backlog
-  4-3-retry-logic-with-exponential-backoff: backlog
-  4-4-result-storage-in-r2: backlog
-  4-5-processing-status-updates: backlog
-  4-6-processing-timeout-handling: backlog
+  epic-4: in-progress
+  4-1-workflow-job-definition: ready-for-dev
+  4-2-gemini-imagen-3-integration: ready-for-dev
+  4-3-retry-logic-with-exponential-backoff: ready-for-dev
+  4-4-result-storage-in-r2: ready-for-dev
+  4-5-processing-status-updates: ready-for-dev
+  4-6-processing-timeout-handling: ready-for-dev
   epic-4-retrospective: optional
 
   # ═══════════════════════════════════════════════════════════════════════════

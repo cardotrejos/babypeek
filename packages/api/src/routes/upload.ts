@@ -122,8 +122,7 @@ app.post("/", async (c) => {
   // Generate session token for this upload
   const sessionToken = crypto.randomUUID()
 
-  // Generate presigned upload URL and create database record
-  const program = Effect.gen(function* () {
+  const initiateUpload = Effect.fn("routes.upload.initiate")(function* () {
     const r2 = yield* R2Service
     const uploadService = yield* UploadService
 
@@ -143,7 +142,9 @@ app.post("/", async (c) => {
       presignedResult,
       upload,
     }
-  }).pipe(Effect.provide(UploadRoutesLive))
+  })
+
+  const program = initiateUpload().pipe(Effect.provide(UploadRoutesLive))
 
   const result = await Effect.runPromise(Effect.either(program))
 
@@ -192,7 +193,7 @@ app.post("/:uploadId/confirm", async (c) => {
     return c.json({ error: "Upload ID is required", code: "INVALID_REQUEST" }, 400)
   }
 
-  const program = Effect.gen(function* () {
+  const confirmUpload = Effect.fn("routes.upload.confirm")(function* () {
     const r2 = yield* R2Service
     const uploadService = yield* UploadService
 
@@ -223,7 +224,9 @@ app.post("/:uploadId/confirm", async (c) => {
       jobId: upload.id, 
       status: upload.status 
     }
-  }).pipe(Effect.provide(UploadRoutesLive))
+  })
+
+  const program = confirmUpload().pipe(Effect.provide(UploadRoutesLive))
 
   const result = await Effect.runPromise(Effect.either(program))
 

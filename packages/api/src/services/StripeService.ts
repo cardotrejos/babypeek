@@ -42,84 +42,89 @@ const getStripeClient = (): Effect.Effect<Stripe, PaymentError> => {
   return Effect.succeed(cachedStripe)
 }
 
+const createCheckoutSession = Effect.fn("StripeService.createCheckoutSession")(function* (
+  params: CheckoutSessionParams
+) {
+  const stripe = yield* getStripeClient()
+  return yield* Effect.tryPromise({
+    try: () =>
+      stripe.checkout.sessions.create({
+        payment_method_types: ["card"],
+        line_items: [
+          {
+            price_data: {
+              currency: "usd",
+              product_data: { name: "3d-ultra HD Photo" },
+              unit_amount: env.PRODUCT_PRICE_CENTS,
+            },
+            quantity: 1,
+          },
+        ],
+        mode: "payment",
+        success_url: params.successUrl,
+        cancel_url: params.cancelUrl,
+        customer_email: params.email,
+        metadata: {
+          uploadId: params.uploadId,
+          email: params.email,
+          type: params.type,
+        },
+      }),
+    catch: (e) =>
+      new PaymentError({
+        cause: "STRIPE_ERROR",
+        message: String(e),
+      }),
+  }).pipe(
+    Effect.retry({ times: 2, schedule: Schedule.exponential("500 millis") }),
+    Effect.timeout("30 seconds"),
+    Effect.catchTag("TimeoutException", () =>
+      Effect.fail(new PaymentError({ cause: "STRIPE_ERROR", message: "Stripe API timed out" }))
+    )
+  )
+})
+
+const constructWebhookEvent = Effect.fn("StripeService.constructWebhookEvent")(function* (
+  payload: string,
+  signature: string
+) {
+  const stripe = yield* getStripeClient()
+  if (!env.STRIPE_WEBHOOK_SECRET) {
+    return yield* Effect.fail(
+      new PaymentError({ cause: "WEBHOOK_INVALID", message: "Webhook secret not configured" })
+    )
+  }
+  return yield* Effect.try({
+    try: () => stripe.webhooks.constructEvent(payload, signature, env.STRIPE_WEBHOOK_SECRET!),
+    catch: () =>
+      new PaymentError({
+        cause: "WEBHOOK_INVALID",
+        message: "Invalid webhook signature",
+      }),
+  })
+})
+
+const retrieveSession = Effect.fn("StripeService.retrieveSession")(function* (sessionId: string) {
+  const stripe = yield* getStripeClient()
+  return yield* Effect.tryPromise({
+    try: () => stripe.checkout.sessions.retrieve(sessionId),
+    catch: (e) =>
+      new PaymentError({
+        cause: "STRIPE_ERROR",
+        message: String(e),
+      }),
+  }).pipe(
+    Effect.retry({ times: 2, schedule: Schedule.exponential("500 millis") }),
+    Effect.timeout("30 seconds"),
+    Effect.catchTag("TimeoutException", () =>
+      Effect.fail(new PaymentError({ cause: "STRIPE_ERROR", message: "Stripe API timed out" }))
+    )
+  )
+})
+
 // Stripe Service implementation
 export const StripeServiceLive = Layer.succeed(StripeService, {
-  createCheckoutSession: (params) =>
-    getStripeClient().pipe(
-      Effect.flatMap((stripe) =>
-        Effect.tryPromise({
-          try: () =>
-            stripe.checkout.sessions.create({
-              payment_method_types: ["card"],
-              line_items: [
-                {
-                  price_data: {
-                    currency: "usd",
-                    product_data: { name: "3d-ultra HD Photo" },
-                    unit_amount: env.PRODUCT_PRICE_CENTS,
-                  },
-                  quantity: 1,
-                },
-              ],
-              mode: "payment",
-              success_url: params.successUrl,
-              cancel_url: params.cancelUrl,
-              customer_email: params.email,
-              metadata: {
-                uploadId: params.uploadId,
-                email: params.email,
-                type: params.type,
-              },
-            }),
-          catch: (e) =>
-            new PaymentError({
-              cause: "STRIPE_ERROR",
-              message: String(e),
-            }),
-        })
-      ),
-      Effect.retry({ times: 2, schedule: Schedule.exponential("500 millis") }),
-      Effect.timeout("30 seconds"),
-      Effect.catchTag("TimeoutException", () =>
-        Effect.fail(new PaymentError({ cause: "STRIPE_ERROR", message: "Stripe API timed out" }))
-      )
-    ),
-
-  constructWebhookEvent: (payload, signature) =>
-    getStripeClient().pipe(
-      Effect.flatMap((stripe) => {
-        if (!env.STRIPE_WEBHOOK_SECRET) {
-          return Effect.fail(
-            new PaymentError({ cause: "WEBHOOK_INVALID", message: "Webhook secret not configured" })
-          )
-        }
-        return Effect.try({
-          try: () => stripe.webhooks.constructEvent(payload, signature, env.STRIPE_WEBHOOK_SECRET!),
-          catch: () =>
-            new PaymentError({
-              cause: "WEBHOOK_INVALID",
-              message: "Invalid webhook signature",
-            }),
-        })
-      })
-    ),
-
-  retrieveSession: (sessionId) =>
-    getStripeClient().pipe(
-      Effect.flatMap((stripe) =>
-        Effect.tryPromise({
-          try: () => stripe.checkout.sessions.retrieve(sessionId),
-          catch: (e) =>
-            new PaymentError({
-              cause: "STRIPE_ERROR",
-              message: String(e),
-            }),
-        })
-      ),
-      Effect.retry({ times: 2, schedule: Schedule.exponential("500 millis") }),
-      Effect.timeout("30 seconds"),
-      Effect.catchTag("TimeoutException", () =>
-        Effect.fail(new PaymentError({ cause: "STRIPE_ERROR", message: "Stripe API timed out" }))
-      )
-    ),
+  createCheckoutSession,
+  constructWebhookEvent,
+  retrieveSession,
 })

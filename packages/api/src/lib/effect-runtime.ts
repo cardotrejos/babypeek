@@ -45,6 +45,33 @@ export const errorToResponse = (c: Context, error: AppError) => {
     case "PaymentError":
       return c.json({ error: "Payment Error", cause: error.cause, message: error.message }, 402)
 
+    case "R2Error": {
+      switch (error.cause) {
+        case "CONFIG_MISSING":
+          return c.json({ error: "Storage service not configured", code: error.cause }, 503)
+        case "INVALID_KEY":
+          return c.json({ error: error.message, code: error.cause }, 400)
+        case "PRESIGN_FAILED":
+          return c.json({ error: "Failed to generate signed URL", code: error.cause }, 500)
+        case "UPLOAD_FAILED":
+          return c.json({ error: "Failed to upload file", code: error.cause }, 500)
+        case "DOWNLOAD_FAILED":
+          return c.json({ error: "Failed to download file", code: error.cause }, 500)
+        case "DELETE_FAILED":
+          return c.json({ error: "Failed to delete file", code: error.cause }, 500)
+        case "HEAD_FAILED":
+          return c.json({ error: "Failed to check object", code: error.cause }, 500)
+        default:
+          return c.json({ error: "Storage Error", code: "UNKNOWN" }, 500)
+      }
+    }
+
+    case "GeminiError":
+      return c.json({ error: "AI Processing Error", cause: error.cause, message: error.message }, 500)
+
+    case "EmailError":
+      return c.json({ error: "Email Error", cause: error.cause, message: error.message }, 502)
+
     default:
       // Exhaustive check - this should never happen if all error types are handled
       return c.json({ error: "Internal Server Error" }, 500)
