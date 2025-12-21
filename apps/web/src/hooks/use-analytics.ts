@@ -9,6 +9,12 @@ export type AnalyticsEvent =
   | "upload_started"
   | "upload_completed"
   | "upload_failed"
+  | "upload_validation_error"
+  | "upload_file_selected"
+  | "heic_conversion_started"
+  | "heic_conversion_completed"
+  | "heic_conversion_error"
+  | "heic_large_file_warning"
   | "processing_started"
   | "processing_completed"
   | "processing_failed"
@@ -24,6 +30,7 @@ export interface UploadEventProperties {
   file_size?: number
   duration_ms?: number
   error?: string
+  type?: "file_type" | "file_size"
 }
 
 export interface ProcessingEventProperties {

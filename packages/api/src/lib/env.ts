@@ -9,7 +9,7 @@ const envSchema = z.object({
   // Database (Required)
   // ─────────────────────────────────────────────────────────────────────────────
   DATABASE_URL: z
-    .string({ required_error: "DATABASE_URL is required" })
+    .string({ message: "DATABASE_URL is required" })
     .url("DATABASE_URL must be a valid PostgreSQL connection URL"),
 
   // ─────────────────────────────────────────────────────────────────────────────
@@ -62,6 +62,13 @@ const envSchema = z.object({
   CORS_ORIGIN: z.string().url("CORS_ORIGIN must be a valid URL").optional(),
 
   // ─────────────────────────────────────────────────────────────────────────────
+  // Application Config
+  // ─────────────────────────────────────────────────────────────────────────────
+  APP_URL: z.string().url("APP_URL must be a valid URL").default("http://localhost:3001"),
+  PRODUCT_PRICE_CENTS: z.coerce.number().int().positive().default(999), // $9.99 default
+  FROM_EMAIL: z.string().email().default("noreply@3d-ultra.com"),
+
+  // ─────────────────────────────────────────────────────────────────────────────
   // Environment
   // ─────────────────────────────────────────────────────────────────────────────
   NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
@@ -95,6 +102,9 @@ export const env = parsed.success
       DATABASE_URL: process.env.DATABASE_URL || "",
       NODE_ENV: "development" as const,
       CORS_ORIGIN: process.env.CORS_ORIGIN,
+      APP_URL: process.env.APP_URL || "http://localhost:3001",
+      PRODUCT_PRICE_CENTS: Number(process.env.PRODUCT_PRICE_CENTS) || 999,
+      FROM_EMAIL: process.env.FROM_EMAIL || "noreply@3d-ultra.com",
       // All optional fields default to undefined
       R2_ACCOUNT_ID: undefined,
       R2_ACCESS_KEY_ID: undefined,
