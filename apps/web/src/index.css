@@ -14,6 +14,7 @@
   --coral: #E8927C;
   --coral-hover: #D4806B;
   --coral-light: #FEF3F0;
+  --rose: #F5D6CE;
   --warm-gray: #8B7E74;
   --charcoal: #2D2A26;
   --success: #7DB88F;
@@ -106,6 +107,7 @@
   --color-coral: var(--coral);
   --color-coral-hover: var(--coral-hover);
   --color-coral-light: var(--coral-light);
+  --color-rose: var(--rose);
   --color-warm-gray: var(--warm-gray);
   --color-charcoal: var(--charcoal);
   --color-success: var(--success);
@@ -207,4 +209,90 @@
 
 .animate-shimmer {
   animation: shimmer 2s infinite linear;
+}
+
+/* Story 5.1: Processing screen animations */
+@keyframes pulse-slow {
+  0%, 100% { opacity: 0.3; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(1.05); }
+}
+
+@keyframes pulse-slower {
+  0%, 100% { opacity: 0.2; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(1.1); }
+}
+
+@keyframes bounce-subtle {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+.animate-pulse-slow {
+  animation: pulse-slow 4s ease-in-out infinite;
+}
+
+.animate-pulse-slower {
+  animation: pulse-slower 6s ease-in-out infinite;
+}
+
+.animate-bounce-subtle {
+  animation: bounce-subtle 0.5s ease-in-out;
+}
+
+/* Radial gradient backgrounds */
+.bg-gradient-radial {
+  background: radial-gradient(circle, var(--tw-gradient-from) 0%, var(--tw-gradient-to) 70%);
+}
+
+/* Story 5.3: Reveal animation styles */
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes reveal-blur {
+  from { filter: blur(20px); }
+  to { filter: blur(0px); }
+}
+
+@keyframes reveal-zoom {
+  from { transform: scale(1.05); }
+  to { transform: scale(1); }
+}
+
+@keyframes reveal-opacity {
+  from { opacity: 0.7; }
+  to { opacity: 1; }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.5s ease-out forwards;
+}
+
+/* CSS animation approach for reveal (alternative to JS transitions) */
+.reveal-css-animation {
+  animation: 
+    reveal-blur 2s cubic-bezier(0.33, 1, 0.68, 1) forwards,
+    reveal-zoom 2.5s cubic-bezier(0.33, 1, 0.68, 1) forwards,
+    reveal-opacity 2s ease-out forwards;
+  will-change: transform, filter, opacity;
+}
+
+/* Story 5.4: Reduced Motion Support (AC-2) */
+/* Global catch-all for users who prefer reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  /* Safe transitions - opacity fades don't cause vestibular issues (AC-3) */
+  .safe-transition {
+    transition-duration: 150ms !important;
+    transition-property: opacity !important;
+  }
 }

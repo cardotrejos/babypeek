@@ -108,13 +108,13 @@ development_status:
   # Parallel: [5.1 ∥ 5.2] → 5.3 → [5.4 ∥ 5.5 ∥ 5.6 ∥ 5.7]
   # ═══════════════════════════════════════════════════════════════════════════
   epic-5: in-progress
-  5-1-processing-status-page: in-progress
-  5-2-watermark-application: in-progress
-  5-3-blur-to-sharp-reveal-animation: ready-for-dev
-  5-4-reduced-motion-support: ready-for-dev
-  5-5-before-after-comparison-slider: ready-for-dev
-  5-6-download-preview-button: ready-for-dev
-  5-7-mobile-session-recovery: ready-for-dev
+  5-1-processing-status-page: done
+  5-2-watermark-application: done
+  5-3-blur-to-sharp-reveal-animation: done
+  5-4-reduced-motion-support: done
+  5-5-before-after-comparison-slider: review
+  5-6-download-preview-button: done
+  5-7-mobile-session-recovery: done
   epic-5-retrospective: optional
 
   # ═══════════════════════════════════════════════════════════════════════════

@@ -16,6 +16,10 @@ export const uploadStageValues = [
 ] as const
 export type UploadStage = typeof uploadStageValues[number]
 
+// Prompt version enum values (for tracking which prompt was used)
+export const promptVersionValues = ["v3", "v3-json", "v4", "v4-json"] as const
+export type PromptVersion = typeof promptVersionValues[number]
+
 // Purchase status enum values  
 export const purchaseStatusValues = ["pending", "completed", "failed", "refunded"] as const
 export type PurchaseStatus = typeof purchaseStatusValues[number]
@@ -40,6 +44,7 @@ export const uploads = pgTable("uploads", {
   stage: text("stage", { enum: uploadStageValues }), // Processing stage for progress UI
   progress: integer("progress").default(0), // Progress percentage 0-100
   workflowRunId: text("workflow_run_id"), // useworkflow.dev run ID
+  promptVersion: text("prompt_version", { enum: promptVersionValues }), // Which prompt version was used
   errorMessage: text("error_message"),
   
   // Timestamps

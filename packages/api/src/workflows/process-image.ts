@@ -113,6 +113,24 @@ async function trackEvent(event: string, uploadId: string, properties?: Record<s
   await runWithServices(effect)
 }
 
+/**
+ * Save the prompt version used for this upload.
+ * This enables tracking which prompt produced which results.
+ */
+async function savePromptVersion(uploadId: string, promptVersion: PromptVersion): Promise<void> {
+  const effect = Effect.gen(function* () {
+    const uploadService = yield* UploadService
+    // Cast to DB prompt version type (they should match)
+    yield* uploadService.updatePromptVersion(uploadId, promptVersion as "v3" | "v3-json" | "v4" | "v4-json")
+  })
+
+  const result = await runWithServices(effect)
+  if (!result.success) {
+    console.warn(`[workflow:savePromptVersion] Failed to save prompt version for ${uploadId}:`, result.error)
+    // Don't fail the workflow if this fails - it's not critical
+  }
+}
+
 // =============================================================================
 // Workflow Steps
 // =============================================================================
@@ -429,6 +447,10 @@ export async function processImageWorkflow(input: ProcessImageInput): Promise<Pr
 
   // Stage 2: Generate image using Gemini (30-70%)
   await updateStage(uploadId, "generating", 30)
+  
+  // Save which prompt version we're using for this generation
+  await savePromptVersion(uploadId, promptVersion)
+  
   const generation = await generateImage(uploadId, fetchResult.url, promptVersion)
   
   // Update progress mid-generation

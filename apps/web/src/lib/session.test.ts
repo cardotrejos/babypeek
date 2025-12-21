@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from "vitest"
+import { describe, it, expect, beforeEach, vi, afterEach } from "vitest"
 import {
   storeSession,
   getSession,
@@ -6,12 +6,20 @@ import {
   clearSession,
   hasSession,
   getSessionHeader,
+  getJobData,
+  updateJobStatus,
+  updateJobResult,
+  getPendingJob,
+  getCompletedJobNeedingRedirect,
+  clearStaleSessions,
   SESSION_PREFIX,
   CURRENT_JOB_KEY,
+  JOB_DATA_PREFIX,
+  SESSION_TTL_MS,
 } from "./session"
 
 // =============================================================================
-// Session Storage Tests (Story 3.6)
+// Session Storage Tests (Story 3.6 + Story 5.7)
 // =============================================================================
 
 describe("Session Storage Utilities", () => {
@@ -160,6 +168,207 @@ describe("Session Storage Utilities", () => {
       storeSession("job-2", "token-2")
 
       expect(getCurrentJob()).toBe("job-2")
+    })
+  })
+})
+
+// =============================================================================
+// Session Recovery Tests (Story 5.7)
+// =============================================================================
+
+describe("Session Recovery (Story 5.7)", () => {
+  beforeEach(() => {
+    localStorage.clear()
+    vi.clearAllMocks()
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  describe("getJobData", () => {
+    it("should return job data when stored", () => {
+      storeSession("job-123", "token-abc")
+
+      const data = getJobData("job-123")
+      expect(data).not.toBeNull()
+      expect(data?.jobId).toBe("job-123")
+      expect(data?.token).toBe("token-abc")
+      expect(data?.status).toBe("pending")
+      expect(data?.createdAt).toBeLessThanOrEqual(Date.now())
+    })
+
+    it("should return null for non-existent job", () => {
+      expect(getJobData("non-existent")).toBeNull()
+    })
+
+    it("should return null and clear expired job (TTL enforcement)", () => {
+      vi.useFakeTimers()
+      const now = Date.now()
+      vi.setSystemTime(now)
+
+      storeSession("job-123", "token-abc")
+
+      // Advance time past TTL
+      vi.setSystemTime(now + SESSION_TTL_MS + 1000)
+
+      const data = getJobData("job-123")
+      expect(data).toBeNull()
+
+      // Session should be cleared
+      expect(getSession("job-123")).toBeNull()
+    })
+  })
+
+  describe("updateJobStatus", () => {
+    it("should update job status", () => {
+      storeSession("job-123", "token-abc")
+
+      updateJobStatus("job-123", "processing")
+
+      const data = getJobData("job-123")
+      expect(data?.status).toBe("processing")
+    })
+
+    it("should not throw for non-existent job", () => {
+      expect(() => updateJobStatus("non-existent", "processing")).not.toThrow()
+    })
+  })
+
+  describe("updateJobResult", () => {
+    it("should store resultId and set status to completed", () => {
+      storeSession("job-123", "token-abc")
+
+      updateJobResult("job-123", "result-456")
+
+      const data = getJobData("job-123")
+      expect(data?.resultId).toBe("result-456")
+      expect(data?.status).toBe("completed")
+    })
+  })
+
+  describe("getPendingJob", () => {
+    it("should return pending job", () => {
+      storeSession("job-123", "token-abc")
+
+      const pending = getPendingJob()
+      expect(pending).not.toBeNull()
+      expect(pending?.jobId).toBe("job-123")
+      expect(pending?.status).toBe("pending")
+    })
+
+    it("should return processing job", () => {
+      storeSession("job-123", "token-abc")
+      updateJobStatus("job-123", "processing")
+
+      const pending = getPendingJob()
+      expect(pending?.status).toBe("processing")
+    })
+
+    it("should return completed job with resultId for redirect", () => {
+      storeSession("job-123", "token-abc")
+      updateJobResult("job-123", "result-456")
+
+      const pending = getPendingJob()
+      expect(pending?.status).toBe("completed")
+      expect(pending?.resultId).toBe("result-456")
+    })
+
+    it("should return null when no current job", () => {
+      expect(getPendingJob()).toBeNull()
+    })
+
+    it("should return null for failed job", () => {
+      storeSession("job-123", "token-abc")
+      updateJobStatus("job-123", "failed")
+
+      expect(getPendingJob()).toBeNull()
+    })
+  })
+
+  describe("getCompletedJobNeedingRedirect", () => {
+    it("should return completed job with resultId", () => {
+      storeSession("job-123", "token-abc")
+      updateJobResult("job-123", "result-456")
+
+      const completed = getCompletedJobNeedingRedirect()
+      expect(completed).not.toBeNull()
+      expect(completed?.resultId).toBe("result-456")
+    })
+
+    it("should return null for pending job", () => {
+      storeSession("job-123", "token-abc")
+
+      expect(getCompletedJobNeedingRedirect()).toBeNull()
+    })
+
+    it("should return null for processing job", () => {
+      storeSession("job-123", "token-abc")
+      updateJobStatus("job-123", "processing")
+
+      expect(getCompletedJobNeedingRedirect()).toBeNull()
+    })
+  })
+
+  describe("clearStaleSessions", () => {
+    it("should clear sessions older than TTL", () => {
+      vi.useFakeTimers()
+      const now = Date.now()
+      vi.setSystemTime(now)
+
+      // Create old session
+      storeSession("old-job", "old-token")
+
+      // Advance time past TTL
+      vi.setSystemTime(now + SESSION_TTL_MS + 1000)
+
+      // Create new session
+      storeSession("new-job", "new-token")
+
+      clearStaleSessions()
+
+      // Old session should be cleared
+      expect(getSession("old-job")).toBeNull()
+      expect(getJobData("old-job")).toBeNull()
+
+      // New session should remain
+      expect(getSession("new-job")).toBe("new-token")
+      expect(getJobData("new-job")).not.toBeNull()
+    })
+
+    it("should clear current job reference if it was stale", () => {
+      vi.useFakeTimers()
+      const now = Date.now()
+      vi.setSystemTime(now)
+
+      storeSession("stale-job", "token")
+
+      // Advance time past TTL
+      vi.setSystemTime(now + SESSION_TTL_MS + 1000)
+
+      clearStaleSessions()
+
+      expect(getCurrentJob()).toBeNull()
+    })
+
+    it("should handle invalid JSON gracefully", () => {
+      localStorage.setItem(`${JOB_DATA_PREFIX}bad-job`, "not-json")
+
+      expect(() => clearStaleSessions()).not.toThrow()
+
+      // Invalid entry should be removed
+      expect(localStorage.getItem(`${JOB_DATA_PREFIX}bad-job`)).toBeNull()
+    })
+  })
+
+  describe("clearSession (enhanced)", () => {
+    it("should clear job data along with session", () => {
+      storeSession("job-123", "token-abc")
+
+      clearSession("job-123")
+
+      expect(getSession("job-123")).toBeNull()
+      expect(getJobData("job-123")).toBeNull()
     })
   })
 })

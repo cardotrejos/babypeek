@@ -1,11 +1,13 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router"
-import { useState, useEffect, useCallback } from "react"
-import { getSession, hasSession } from "@/lib/session"
+import { useState, useEffect, useCallback, useRef } from "react"
+import { getSession, hasSession, updateJobStatus, updateJobResult } from "@/lib/session"
 import { posthog, isPostHogConfigured } from "@/lib/posthog"
-import { useStatus, getStageLabel } from "@/hooks/use-status"
-
-// API base URL - in production this will be the same origin
-const API_BASE = import.meta.env.VITE_API_URL || ""
+import { useStatus } from "@/hooks/use-status"
+import { usePreloadImage } from "@/hooks/use-preload-image"
+import { useVisibilityChange } from "@/hooks/use-visibility-change"
+import { useTabCoordinator } from "@/hooks/use-tab-coordinator"
+import { ProcessingScreen } from "@/components/processing"
+import { API_BASE_URL } from "@/lib/api-config"
 
 /**
  * Processing Page
@@ -39,20 +41,137 @@ function ProcessingPage() {
   const [error, setError] = useState<ProcessingError | null>(null)
   const [workflowRunId, setWorkflowRunId] = useState<string | null>(null)
 
-  // Poll for status updates after workflow is started
-  const shouldPoll = state === "processing" || state === "already-processing"
+  // Story 5.7: Tab coordination - only leader tab polls (AC8)
+  const shouldCoordinate = state === "processing" || state === "already-processing"
+  const { isLeader, statusUpdate, broadcast, requestRefetch, refetchRequested } = useTabCoordinator(
+    shouldCoordinate ? jobId : null,
+    { enabled: shouldCoordinate }
+  )
+
+  // Poll for status updates only if this tab is the leader
+  const shouldPoll = shouldCoordinate && isLeader
   const { 
-    status: polledStatus, 
-    stage, 
-    progress, 
-    isComplete, 
-    isFailed, 
-    resultId,
-    resultUrl,
-    errorMessage: polledErrorMessage 
+    stage: polledStage, 
+    progress: polledProgress, 
+    isComplete: polledIsComplete, 
+    isFailed: polledIsFailed, 
+    resultId: polledResultId,
+    resultUrl: polledResultUrl,
+    promptVersion: polledPromptVersion,
+    errorMessage: polledErrorMessage,
+    refetch: refetchStatus,
   } = useStatus(shouldPoll ? jobId : null)
 
-  // Handle completion - show success and navigate to home (or results when implemented)
+  // Story 5.7: Merge polled status with updates from leader tab (AC8)
+  // If we have a status update from another tab, use it; otherwise use polled data
+  const stage = statusUpdate?.stage !== undefined ? statusUpdate.stage : polledStage
+  const progress = statusUpdate?.progress ?? polledProgress
+  const isComplete = statusUpdate?.status === "completed" || polledIsComplete
+  const isFailed = statusUpdate?.status === "failed" || polledIsFailed
+  const resultId = statusUpdate?.resultId !== undefined ? statusUpdate.resultId : polledResultId
+  const resultUrl = statusUpdate?.resultUrl !== undefined ? statusUpdate.resultUrl : polledResultUrl
+  const promptVersion = polledPromptVersion // Only from polling
+
+  // Broadcast status updates to other tabs when we're the leader
+  const lastBroadcastRef = useRef<string | null>(null)
+  useEffect(() => {
+    if (isLeader && shouldCoordinate) {
+      const leaderStatus = polledIsComplete
+        ? "completed"
+        : polledIsFailed
+          ? "failed"
+          : "processing"
+
+      const payload = {
+        jobId,
+        status: leaderStatus,
+        stage: polledStage,
+        progress: polledProgress,
+        resultId: polledResultId,
+        resultUrl: polledResultUrl,
+        errorMessage: polledErrorMessage,
+      }
+
+      // Avoid redundant cross-tab spam when payload is unchanged
+      const serialized = JSON.stringify(payload)
+      if (lastBroadcastRef.current === serialized) return
+      lastBroadcastRef.current = serialized
+
+      broadcast(payload)
+    }
+  }, [
+    isLeader,
+    shouldCoordinate,
+    jobId,
+    polledStage,
+    polledProgress,
+    polledIsComplete,
+    polledIsFailed,
+    polledResultId,
+    polledResultUrl,
+    polledErrorMessage,
+    broadcast,
+  ])
+
+  // Story 5.7: If another tab asks for a refetch and we're leader, do it now (AC1, AC8)
+  useEffect(() => {
+    if (!shouldPoll) return
+    if (refetchRequested <= 0) return
+    void refetchStatus()
+  }, [shouldPoll, refetchRequested, refetchStatus])
+
+  // Preload image when progress >= 80% (AC-6: Story 5.3)
+  // Start preloading early to ensure smooth reveal experience
+  const shouldPreload = progress >= 80 && resultUrl
+  const { isLoaded: imagePreloaded } = usePreloadImage(shouldPreload ? resultUrl : null)
+
+  // Track preload completion
+  useEffect(() => {
+    if (imagePreloaded && isPostHogConfigured()) {
+      posthog.capture("image_preloaded", {
+        upload_id: jobId,
+        progress_at_preload: progress,
+      })
+    }
+  }, [imagePreloaded, jobId, progress])
+
+  // Story 5.7: Handle visibility change for session recovery (AC1, AC2, AC3)
+  // Ref to track if we've already handled a visibility change to prevent double-firing
+  const isRefetchingRef = useRef(false)
+
+  useVisibilityChange(
+    useCallback(async () => {
+      if (!shouldCoordinate) return
+      if (isRefetchingRef.current) return
+
+      isRefetchingRef.current = true
+
+      try {
+        if (isPostHogConfigured()) {
+          posthog.capture("visibility_returned", {
+            upload_id: jobId,
+            previous_state: state,
+            previous_progress: progress,
+            is_leader: isLeader,
+          })
+        }
+
+        // If we're the leader, refetch immediately. Otherwise ask the leader to refetch.
+        if (shouldPoll) {
+          await refetchStatus()
+        } else {
+          requestRefetch()
+        }
+      } catch (err) {
+        console.error("[processing] Error refetching status on visibility return:", err)
+      } finally {
+        isRefetchingRef.current = false
+      }
+    }, [shouldCoordinate, shouldPoll, refetchStatus, requestRefetch, jobId, state, progress, isLeader]),
+    { enabled: shouldCoordinate }
+  )
+
+  // Handle completion - navigate to reveal page (Story 5.3)
   useEffect(() => {
     if (isComplete && resultId) {
       setState("complete")
@@ -63,15 +182,17 @@ function ProcessingPage() {
           result_id: resultId,
         })
       }
-      // For now, navigate to home with the result ID as a query param
-      // In the future, this would navigate to a results/reveal page
+      // Store mapping of result -> upload for session token retrieval
+      localStorage.setItem(`3d-ultra-result-upload-${resultId}`, jobId)
+      // Story 5.7: Update session with result for recovery
+      updateJobResult(jobId, resultId)
+      
+      // Navigate to reveal page
       setTimeout(() => {
-        // TODO: Navigate to results page when implemented
-        // For now, just log success
-        console.log("[processing] Complete! Result ID:", resultId)
-      }, 1000)
+        navigate({ to: "/result/$resultId", params: { resultId } })
+      }, 500) // Brief delay for visual feedback
     }
-  }, [isComplete, resultId, jobId])
+  }, [isComplete, resultId, jobId, navigate])
 
   // Handle failure from polling
   useEffect(() => {
@@ -82,8 +203,10 @@ function ProcessingPage() {
         canRetry: true,
       })
       setState("error")
+      // Story 5.7: Update session status
+      updateJobStatus(jobId, "failed")
     }
-  }, [isFailed, polledErrorMessage])
+  }, [isFailed, polledErrorMessage, jobId])
 
   const startProcessing = useCallback(async () => {
     // Check if we have a session for this job
@@ -111,7 +234,7 @@ function ProcessingPage() {
     setState("starting")
 
     try {
-      const response = await fetch(`${API_BASE}/api/process-workflow`, {
+      const response = await fetch(`${API_BASE_URL}/api/process-workflow`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -166,6 +289,8 @@ function ProcessingPage() {
       // Success - processing started, now poll for status
       setState("processing")
       setWorkflowRunId(data.workflowRunId)
+      // Story 5.7: Update session status
+      updateJobStatus(jobId, "processing")
     } catch (err) {
       console.error("[processing] Error starting process:", err)
       setError({
@@ -208,7 +333,7 @@ function ProcessingPage() {
       }
 
       // First, reset the job state via retry endpoint
-      const retryResponse = await fetch(`${API_BASE}/api/retry/${jobId}`, {
+      const retryResponse = await fetch(`${API_BASE_URL}/api/retry/${jobId}`, {
         method: "POST",
         headers: {
           "X-Session-Token": sessionToken,
@@ -244,71 +369,36 @@ function ProcessingPage() {
     navigate({ to: "/" })
   }
 
-  // Get display text based on polling stage
-  const getProcessingText = () => {
-    if (stage) {
-      return getStageLabel(stage)
-    }
-    return "Our AI is working its magic. This usually takes about 60 seconds."
+  // Processing states use full-screen ProcessingScreen component
+  if (state === "idle" || state === "starting" || state === "processing" || state === "already-processing") {
+    return (
+      <>
+        <ProcessingScreen
+          stage={stage}
+          progress={state === "idle" || state === "starting" ? 0 : progress}
+          isComplete={isComplete}
+          isFailed={isFailed}
+        />
+        {/* Dev debug panel at bottom */}
+        {import.meta.env.DEV && (
+          <div className="fixed bottom-0 left-0 right-0 bg-charcoal/90 text-white p-2 text-xs font-mono z-50">
+            <div className="flex gap-4 justify-center">
+              <span>Job: {jobId}</span>
+              <span>State: {state}</span>
+              <span>Stage: {stage || "none"}</span>
+              <span>Progress: {progress}%</span>
+              {workflowRunId && <span>Run: {workflowRunId.slice(0, 8)}</span>}
+            </div>
+          </div>
+        )}
+      </>
+    )
   }
 
+  // Non-processing states (complete, retrying, timeout, error)
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-cream">
       <div className="max-w-md w-full text-center space-y-6">
-        {/* Loading states */}
-        {(state === "idle" || state === "starting") && (
-          <>
-            <div className="flex justify-center">
-              <div className="size-16 animate-spin rounded-full border-4 border-coral border-t-transparent" />
-            </div>
-            <div className="space-y-2">
-              <h1 className="font-display text-2xl text-charcoal">
-                Starting your transformation...
-              </h1>
-              <p className="font-body text-warm-gray">
-                Getting everything ready for your portrait.
-              </p>
-            </div>
-          </>
-        )}
-
-        {/* Processing state */}
-        {(state === "processing" || state === "already-processing") && (
-          <>
-            <div className="flex justify-center">
-              <div className="size-16 animate-spin rounded-full border-4 border-coral border-t-transparent" />
-            </div>
-            <div className="space-y-2">
-              <h1 className="font-display text-2xl text-charcoal">
-                Creating your portrait...
-              </h1>
-              <p className="font-body text-warm-gray">
-                {getProcessingText()}
-              </p>
-            </div>
-            {/* Progress bar */}
-            {progress > 0 && (
-              <div className="w-full bg-charcoal/10 rounded-full h-2 overflow-hidden">
-                <div 
-                  className="bg-coral h-full rounded-full transition-all duration-500 ease-out"
-                  style={{ width: `${progress}%` }}
-                />
-              </div>
-            )}
-            {state === "already-processing" && (
-              <p className="text-sm text-warm-gray/70">
-                Your image is already being processed.
-              </p>
-            )}
-            {/* Polled status debug (development only) */}
-            {import.meta.env.DEV && polledStatus && (
-              <p className="text-xs text-warm-gray/50 font-mono">
-                Status: {polledStatus} | Stage: {stage || "none"} | Progress: {progress}%
-              </p>
-            )}
-          </>
-        )}
-
         {/* Complete state */}
         {state === "complete" && (
           <>
@@ -341,6 +431,14 @@ function ProcessingPage() {
                       />
                     </svg>
                   </div>
+                </div>
+              )}
+              {/* Show prompt version badge */}
+              {promptVersion && (
+                <div className="flex justify-center">
+                  <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-charcoal/10 text-charcoal">
+                    Prompt: {promptVersion === "v4" ? "National Geographic Style" : promptVersion === "v3" ? "Close-up Style" : promptVersion}
+                  </span>
                 </div>
               )}
             </div>
@@ -456,7 +554,7 @@ function ProcessingPage() {
             {error?.code && <p>Error Code: {error.code}</p>}
           </div>
         )}
-      </div>
+        </div>
     </div>
   )
 }

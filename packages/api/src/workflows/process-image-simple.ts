@@ -12,6 +12,7 @@ import { eq } from "drizzle-orm"
 import { S3Client, PutObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3"
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner"
 import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from "@google/generative-ai"
+import sharp from "sharp"
 import { GEMINI_MODEL, BABY_PORTRAIT_PROMPT } from "./config"
 
 // =============================================================================
@@ -226,14 +227,11 @@ async function storeResult(
     })
   )
   
-  // Update database
+  // Update database with result URL (status update happens after watermarking)
   await db
     .update(uploads)
     .set({
       resultUrl: key,
-      status: "completed",
-      stage: "complete",
-      progress: 100,
       updatedAt: new Date(),
     })
     .where(eq(uploads.id, uploadId))
@@ -257,6 +255,141 @@ async function markFailed(uploadId: string, error: string): Promise<void> {
       updatedAt: new Date(),
     })
     .where(eq(uploads.id, uploadId))
+}
+
+async function updatePreviewUrl(uploadId: string, previewUrl: string): Promise<void> {
+  "use step"
+  
+  await db
+    .update(uploads)
+    .set({
+      previewUrl,
+      updatedAt: new Date(),
+    })
+    .where(eq(uploads.id, uploadId))
+}
+
+/**
+ * Create watermarked preview and store in R2.
+ * 
+ * Watermark Specs (from PRD):
+ * - Opacity: 40%
+ * - Position: Bottom-right corner
+ * - Size: 15% of image width
+ * - Text: "3d-ultra.com"
+ * - Margin: 3% from edges
+ * 
+ * Preview Specs:
+ * - Max dimension: 800px
+ * - Format: JPEG @ 85% quality
+ * 
+ * @see Story 5.2 - Watermark Application
+ */
+async function createAndStorePreview(
+  resultId: string,
+  fullImageData: Buffer
+): Promise<string | null> {
+  "use step"
+  
+  const env = getEnv()
+  const client = getR2Client()
+  
+  console.log(`[workflow] Creating watermarked preview for result: ${resultId}`)
+  
+  try {
+    // Get image metadata
+    const metadata = await sharp(fullImageData).metadata()
+    if (!metadata.width || !metadata.height) {
+      console.error("[workflow] Image has no dimensions for watermarking")
+      return null
+    }
+    
+    // Step 1: Resize to 800px max (smaller = faster watermark)
+    const resized = await sharp(fullImageData)
+      .resize(800, 800, {
+        fit: "inside",
+        withoutEnlargement: true,
+      })
+      .jpeg({ quality: 85 })
+      .toBuffer()
+    
+    // Get resized dimensions
+    const resizedMetadata = await sharp(resized).metadata()
+    const imageWidth = resizedMetadata.width || 800
+    const imageHeight = resizedMetadata.height || 600
+    
+    // Watermark config
+    const text = "3d-ultra.com"
+    const opacity = 0.4
+    const widthPercent = 0.15
+    const marginPercent = 0.03
+    
+    // Calculate watermark size (15% of width)
+    const watermarkWidth = Math.floor(imageWidth * widthPercent)
+    const fontSize = Math.max(12, Math.floor(watermarkWidth / 6))
+    const watermarkHeight = Math.ceil(fontSize * 1.5)
+    
+    // Calculate margin (3% from edges)
+    const margin = Math.floor(Math.min(imageWidth, imageHeight) * marginPercent)
+    
+    // Generate watermark SVG
+    const watermarkSvg = Buffer.from(`
+      <svg width="${watermarkWidth}" height="${watermarkHeight}">
+        <text
+          x="50%"
+          y="50%"
+          dominant-baseline="middle"
+          text-anchor="middle"
+          font-family="Arial, Helvetica, sans-serif"
+          font-size="${fontSize}px"
+          font-weight="600"
+          fill="rgba(255, 255, 255, ${opacity})"
+          stroke="rgba(0, 0, 0, ${opacity * 0.3})"
+          stroke-width="1"
+        >
+          ${text}
+        </text>
+      </svg>
+    `)
+    
+    // Calculate position for bottom-right with margin
+    const top = imageHeight - watermarkHeight - margin
+    const left = imageWidth - watermarkWidth - margin
+    
+    // Step 2: Apply watermark
+    const preview = await sharp(resized)
+      .composite([
+        {
+          input: watermarkSvg,
+          top: Math.max(0, top),
+          left: Math.max(0, left),
+        },
+      ])
+      .jpeg({ quality: 85 })
+      .toBuffer()
+    
+    console.log(`[workflow] Preview created, size: ${preview.length} bytes`)
+    
+    // Step 3: Store preview in R2
+    const previewKey = `results/${resultId}/preview.jpg`
+    
+    await client.send(
+      new PutObjectCommand({
+        Bucket: env.R2_BUCKET_NAME,
+        Key: previewKey,
+        Body: preview,
+        ContentType: "image/jpeg",
+      })
+    )
+    
+    console.log(`[workflow] Preview stored at: ${previewKey}`)
+    
+    return previewKey
+  } catch (error) {
+    console.error("[workflow] Failed to create preview:", error)
+    // Non-fatal: continue without preview
+    return null
+  }
 }
 
 // =============================================================================
@@ -292,13 +425,28 @@ export async function processImageWorkflowSimple(
     }
     
     // Stage 3: Storing
-    await updateUploadStage(uploadId, "storing", 80)
+    await updateUploadStage(uploadId, "storing", 70)
     
     const resultId = await storeResult(
       uploadId,
       generatedImage.data,
       generatedImage.mimeType
     )
+    
+    // Stage 4: Watermarking (AC: 5.2)
+    await updateUploadStage(uploadId, "watermarking", 90)
+    
+    const previewKey = await createAndStorePreview(resultId, generatedImage.data)
+    if (previewKey) {
+      // Update database with preview URL
+      await updatePreviewUrl(uploadId, previewKey)
+      console.log(`[workflow] Preview stored at: ${previewKey}`)
+    } else {
+      console.log(`[workflow] Preview creation skipped (non-fatal)`)
+    }
+    
+    // Mark complete
+    await updateUploadStage(uploadId, "complete", 100, "completed")
     
     console.log(`[workflow] Completed for upload: ${uploadId}, result: ${resultId}`)
     

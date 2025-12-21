@@ -79,6 +79,7 @@ app.get("/:jobId", async (c) => {
     // Determine resultId and generate signed URL if completed
     let resultId: string | null = null
     let resultUrl: string | null = null
+    let originalUrl: string | null = null
     
     if (upload.status === "completed" && upload.resultUrl) {
       // Extract resultId from resultUrl path: results/{resultId}/full.jpg
@@ -91,6 +92,14 @@ app.get("/:jobId", async (c) => {
         Effect.catchAll(() => Effect.succeed(null as string | null))
       )
       resultUrl = signedUrlResult
+
+      // Generate a signed URL for the original image (Story 5.5 - comparison slider)
+      if (upload.originalUrl) {
+        const originalSignedUrl = yield* r2Service.getDownloadUrl(upload.originalUrl, 60 * 60).pipe(
+          Effect.catchAll(() => Effect.succeed(null as string | null))
+        )
+        originalUrl = originalSignedUrl
+      }
     }
 
     return {
@@ -100,6 +109,8 @@ app.get("/:jobId", async (c) => {
       progress: upload.progress ?? 0,
       resultId,
       resultUrl,
+      originalUrl,
+      promptVersion: upload.promptVersion ?? null,
       errorMessage: upload.status === "failed" ? (upload.errorMessage ?? "Processing failed. Please try again.") : null,
       updatedAt: upload.updatedAt.toISOString(),
     }

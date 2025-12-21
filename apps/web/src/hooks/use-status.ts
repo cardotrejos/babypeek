@@ -12,6 +12,8 @@ import { getSession } from "@/lib/session"
 export type ProcessingStatus = "pending" | "processing" | "completed" | "failed"
 export type ProcessingStage = "validating" | "generating" | "storing" | "watermarking" | "complete" | "failed" | null
 
+export type PromptVersion = "v3" | "v3-json" | "v4" | "v4-json" | null
+
 interface StatusApiResponse {
   success: boolean
   status: ProcessingStatus
@@ -19,6 +21,7 @@ interface StatusApiResponse {
   progress: number
   resultId: string | null
   resultUrl: string | null
+  promptVersion: PromptVersion
   errorMessage: string | null
   updatedAt: string
   error?: {
@@ -38,8 +41,12 @@ export interface UseStatusResult {
   resultId: string | null
   /** Signed URL for the result image when processing is complete */
   resultUrl: string | null
+  /** Which prompt version was used for generation */
+  promptVersion: PromptVersion
   /** Error message if processing failed */
   errorMessage: string | null
+  /** Force an immediate status refetch */
+  refetch: () => Promise<unknown>
   /** Whether the initial fetch is loading */
   isLoading: boolean
   /** Whether processing has completed successfully */
@@ -111,7 +118,7 @@ export function useStatus(jobId: string | null): UseStatusResult {
   // Memoize trackEvent to prevent unnecessary effect re-runs
   const stableTrackEvent = useCallback(trackEvent, [trackEvent])
 
-  const { data, isLoading, error, isFetching } = useQuery<StatusApiResponse>({
+  const { data, isLoading, error, isFetching, refetch } = useQuery<StatusApiResponse>({
     queryKey: ["status", jobId],
     queryFn: async (): Promise<StatusApiResponse> => {
       if (!jobId || !sessionToken) {
@@ -225,7 +232,9 @@ export function useStatus(jobId: string | null): UseStatusResult {
     progress: data?.progress ?? 0,
     resultId: data?.resultId ?? null,
     resultUrl: data?.resultUrl ?? null,
+    promptVersion: data?.promptVersion ?? null,
     errorMessage: data?.errorMessage ?? null,
+    refetch,
     isLoading,
     isComplete,
     isFailed,

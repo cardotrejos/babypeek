@@ -1,7 +1,10 @@
 import { Effect, Context, Layer } from "effect"
 import { eq, and } from "drizzle-orm"
-import { db, uploads, type Upload, type UploadStatus, type UploadStage } from "@3d-ultra/db"
+import { db, uploads, type Upload, type UploadStatus, type UploadStage, type PromptVersion } from "@3d-ultra/db"
 import { NotFoundError, AlreadyProcessingError, UploadStatusError } from "../lib/errors"
+
+// Re-export PromptVersion for consumers
+export type { PromptVersion }
 
 // Re-export UploadStage for consumers
 export type { UploadStage }
@@ -87,6 +90,16 @@ export class UploadService extends Context.Tag("UploadService")<
      * @throws UploadStatusError if upload is not in "failed" status
      */
     resetForRetry: (uploadId: string) => Effect.Effect<Upload, NotFoundError | UploadStatusError>
+    /**
+     * Update the prompt version used for generating the result.
+     * This tracks which prompt was used for analytics and debugging.
+     *
+     * @param uploadId - The upload ID
+     * @param promptVersion - The prompt version used (e.g., "v3", "v4")
+     * @returns void
+     * @throws NotFoundError if upload doesn't exist
+     */
+    updatePromptVersion: (uploadId: string, promptVersion: PromptVersion) => Effect.Effect<void, NotFoundError>
   }
 >() {}
 
@@ -333,6 +346,25 @@ const resetForRetry = Effect.fn("UploadService.resetForRetry")(function* (upload
   return result[0]
 })
 
+const updatePromptVersion = Effect.fn("UploadService.updatePromptVersion")(function* (
+  uploadId: string,
+  promptVersion: PromptVersion
+) {
+  const result = yield* Effect.promise(async () => {
+    return db
+      .update(uploads)
+      .set({
+        promptVersion,
+        updatedAt: new Date(),
+      })
+      .where(eq(uploads.id, uploadId))
+      .returning()
+  })
+  if (!result[0]) {
+    return yield* Effect.fail(new NotFoundError({ resource: "upload", id: uploadId }))
+  }
+})
+
 // Upload Service implementation
 export const UploadServiceLive = Layer.succeed(UploadService, {
   create,
@@ -344,4 +376,5 @@ export const UploadServiceLive = Layer.succeed(UploadService, {
   updateStage,
   startProcessing,
   resetForRetry,
+  updatePromptVersion,
 })

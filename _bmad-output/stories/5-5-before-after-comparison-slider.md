@@ -1,6 +1,6 @@
 # Story 5.5: Before/After Comparison Slider
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -17,49 +17,49 @@ so that **I can appreciate the transformation**.
 
 ## Tasks / Subtasks
 
-- [ ] **Task 1: Create BeforeAfterSlider component** (AC: 1, 4)
-  - [ ] Create `apps/web/src/components/reveal/BeforeAfterSlider.tsx`
-  - [ ] Accept `beforeImage` (original ultrasound) and `afterImage` (AI result)
-  - [ ] Use CSS clip-path or width to reveal/hide portions
-  - [ ] Ensure both images fill container equally
+- [x] **Task 1: Create BeforeAfterSlider component** (AC: 1, 4)
+  - [x] Create `apps/web/src/components/reveal/BeforeAfterSlider.tsx`
+  - [x] Accept `beforeImage` (original ultrasound) and `afterImage` (AI result)
+  - [x] Use CSS clip-path or width to reveal/hide portions
+  - [x] Ensure both images fill container equally
 
-- [ ] **Task 2: Implement drag interaction** (AC: 1, 2)
-  - [ ] Track pointer position during drag (mouse + touch)
-  - [ ] Convert position to percentage (0-100)
-  - [ ] Apply percentage to reveal position
-  - [ ] Handle touchstart, touchmove, touchend for mobile
-  - [ ] Handle mousedown, mousemove, mouseup for desktop
+- [x] **Task 2: Implement drag interaction** (AC: 1, 2)
+  - [x] Track pointer position during drag (mouse + touch)
+  - [x] Convert position to percentage (0-100)
+  - [x] Apply percentage to reveal position
+  - [x] Handle touchstart, touchmove, touchend for mobile
+  - [x] Handle mousedown, mousemove, mouseup for desktop
 
-- [ ] **Task 3: Create slider handle** (AC: 2)
-  - [ ] Minimum 48px touch target (NFR-5.5)
-  - [ ] Visual handle with drag indicator (vertical bar with arrows)
-  - [ ] Add shadow/glow for visibility against image
-  - [ ] Cursor: grab/grabbing states
+- [x] **Task 3: Create slider handle** (AC: 2)
+  - [x] Minimum 48px touch target (NFR-5.5)
+  - [x] Visual handle with drag indicator (vertical bar with arrows)
+  - [x] Add shadow/glow for visibility against image
+  - [x] Cursor: grab/grabbing states
 
-- [ ] **Task 4: Add keyboard support** (AC: 3)
-  - [ ] Make slider focusable (tabIndex={0})
-  - [ ] Arrow keys: move slider 5% per press
-  - [ ] Home/End: move to 0% / 100%
-  - [ ] Add aria-label for screen readers
-  - [ ] Visual focus indicator
+- [x] **Task 4: Add keyboard support** (AC: 3)
+  - [x] Make slider focusable (tabIndex={0})
+  - [x] Arrow keys: move slider 5% per press
+  - [x] Home/End: move to 0% / 100%
+  - [x] Add aria-label for screen readers
+  - [x] Visual focus indicator
 
-- [ ] **Task 5: Normalize image dimensions** (AC: 4)
-  - [ ] Use object-fit: cover for both images
-  - [ ] Container maintains aspect ratio (e.g., 4:3)
-  - [ ] Both images resize together
-  - [ ] Handle different original/result aspect ratios
+- [x] **Task 5: Normalize image dimensions** (AC: 4)
+  - [x] Use object-fit: cover for both images
+  - [x] Container maintains aspect ratio (e.g., 4:3)
+  - [x] Both images resize together
+  - [x] Handle different original/result aspect ratios
 
-- [ ] **Task 6: Add comparison toggle** (AC: 1)
-  - [ ] Create "Compare" button in RevealUI
-  - [ ] Toggle between reveal view and comparison slider
-  - [ ] Default: show reveal (AI image only)
-  - [ ] On compare: show slider with both images
+- [x] **Task 6: Add comparison toggle** (AC: 1)
+  - [x] Create "Compare" button in RevealUI
+  - [x] Toggle between reveal view and comparison slider
+  - [x] Default: show reveal (AI image only)
+  - [x] On compare: show slider with both images
 
-- [ ] **Task 7: Write tests**
-  - [ ] Unit test: Slider position updates on drag
-  - [ ] Unit test: Keyboard controls work correctly
-  - [ ] Unit test: Touch interactions work
-  - [ ] Accessibility test: Focus and ARIA attributes
+- [x] **Task 7: Write tests**
+  - [x] Unit test: Slider position updates on drag
+  - [x] Unit test: Keyboard controls work correctly
+  - [x] Unit test: Touch interactions work
+  - [x] Accessibility test: Focus and ARIA attributes
 
 ## Dev Notes
 
@@ -242,48 +242,11 @@ export function BeforeAfterSlider({
 }
 ```
 
-### Integration with RevealUI
+### Integration with RevealUI / Result Page
 
-```typescript
-// apps/web/src/components/reveal/RevealUI.tsx (update)
-import { useState } from 'react'
-import { BeforeAfterSlider } from './BeforeAfterSlider'
-
-interface RevealUIProps {
-  resultPreviewUrl: string
-  originalImageUrl: string
-  // ... other props
-}
-
-export function RevealUI({ resultPreviewUrl, originalImageUrl, ...props }: RevealUIProps) {
-  const [showComparison, setShowComparison] = useState(false)
-  
-  return (
-    <div className="space-y-4">
-      {showComparison ? (
-        <BeforeAfterSlider
-          beforeImage={originalImageUrl}
-          afterImage={resultPreviewUrl}
-          beforeLabel="Your Ultrasound"
-          afterLabel="AI Portrait"
-        />
-      ) : (
-        <img src={resultPreviewUrl} alt="AI Portrait" className="w-full rounded-2xl" />
-      )}
-      
-      <div className="flex gap-3">
-        <Button
-          variant="outline"
-          onClick={() => setShowComparison(!showComparison)}
-        >
-          {showComparison ? 'Hide Comparison' : 'Compare'}
-        </Button>
-        {/* ... other buttons */}
-      </div>
-    </div>
-  )
-}
-```
+- Comparison toggle lives in the result route (`apps/web/src/routes/result.$resultId.tsx`).
+- When `showComparison` is true and `originalUrl` is available, the page swaps the reveal animation for `BeforeAfterSlider`.
+- `RevealUI` receives `resultId`, `previewUrl`, and the toggle props; it renders the Compare button only when `originalUrl` exists.
 
 ### UX Spec Reference (BeforeAfterSlider)
 
@@ -375,10 +338,39 @@ The result endpoint needs to return the original image URL:
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4.5
 
 ### Debug Log References
 
+None - implementation proceeded without blockers.
+
 ### Completion Notes List
 
+1. Created `BeforeAfterSlider` component with full drag, touch, and keyboard support
+2. Slider handle uses 48px (w-12) touch target per NFR-5.5
+3. Full ARIA support: role="slider", aria-valuemin/max/now/valuetext
+4. Keyboard controls: ArrowLeft/Right (±5%), Home (0%), End (100%)
+5. Both images use object-fit: cover with 4:3 aspect ratio container
+6. Added "Compare with Original" toggle button to RevealUI
+7. Updated status API to return signed `originalUrl` for comparison
+8. Result page toggles between RevealAnimation and BeforeAfterSlider views
+9. Added PostHog analytics for comparison_opened/comparison_closed events
+10. Comprehensive test coverage: 25 tests for BeforeAfterSlider, 6 tests for comparison toggle
+
 ### File List
+
+**New Files:**
+- `apps/web/src/components/reveal/BeforeAfterSlider.tsx` - Main slider component
+- `apps/web/src/components/reveal/BeforeAfterSlider.test.tsx` - 25 unit tests
+
+**Modified Files:**
+- `apps/web/src/components/reveal/index.ts` - Export BeforeAfterSlider and DownloadPreviewButton
+- `apps/web/src/components/reveal/RevealUI.tsx` - Comparison toggle props + DownloadPreviewButton integration
+- `apps/web/src/components/reveal/RevealUI.test.tsx` - Tests for comparison toggle
+- `apps/web/src/components/reveal/DownloadPreviewButton.tsx` - Shared download button used by RevealUI
+- `apps/web/src/routes/result.$resultId.tsx` - Integration with comparison slider toggle
+- `packages/api/src/routes/status.ts` - Return originalUrl in response
+
+## Change Log
+
+- 2024-12-21: Implemented Story 5.5 - Before/After Comparison Slider with all acceptance criteria met

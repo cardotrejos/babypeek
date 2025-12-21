@@ -22,6 +22,7 @@ const createMockUpload = (overrides: Partial<Upload> = {}): Upload => ({
   stage: null,
   progress: 0,
   workflowRunId: null,
+  promptVersion: null,
   errorMessage: null,
   createdAt: new Date("2024-12-21T10:00:00Z"),
   updatedAt: new Date("2024-12-21T10:00:00Z"),
@@ -63,6 +64,8 @@ function createStatusApp(mockUpload: Upload | null) {
       updateResult: () => Effect.succeed(undefined),
       updateStage: () => Effect.succeed({} as never),
       startProcessing: () => Effect.succeed({} as never),
+      resetForRetry: () => Effect.succeed({} as never),
+      updatePromptVersion: () => Effect.succeed(undefined),
     })
 
     const getStatus = Effect.gen(function* () {
