@@ -19,7 +19,7 @@
  */
 
 import { Effect, Context, Layer } from "effect"
-import { Jimp } from "jimp"
+import { Jimp, intToRGBA, rgbaToInt } from "jimp"
 import { WatermarkError } from "../lib/errors"
 
 // =============================================================================
@@ -113,12 +113,12 @@ const applyWatermark = Effect.fn("WatermarkService.apply")(function* (
       // Create diagonal stripe pattern
       const isStripe = (x + y) % 8 < 4
       if (isStripe) {
-        const rgba = Jimp.intToRGBA(image.getPixelColor(x, y))
+        const rgba = intToRGBA(image.getPixelColor(x, y))
         const blendFactor = 1 - opacity
         const blendedR = Math.floor(rgba.r * blendFactor + 255 * opacity)
         const blendedG = Math.floor(rgba.g * blendFactor + 255 * opacity)
         const blendedB = Math.floor(rgba.b * blendFactor + 255 * opacity)
-        const newColor = Jimp.rgbaToInt(blendedR, blendedG, blendedB, rgba.a)
+        const newColor = rgbaToInt(blendedR, blendedG, blendedB, rgba.a)
         image.setPixelColor(newColor, x, y)
       }
     }
