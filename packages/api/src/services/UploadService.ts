@@ -289,6 +289,50 @@ const startProcessing = Effect.fn("UploadService.startProcessing")(function* (
   return result[0]
 })
 
+const resetForRetry = Effect.fn("UploadService.resetForRetry")(function* (uploadId: string) {
+  // Use atomic UPDATE with WHERE clause to only reset failed uploads
+  const result = yield* Effect.promise(async () => {
+    return db
+      .update(uploads)
+      .set({
+        status: "pending" as UploadStatus,
+        stage: null,
+        progress: 0,
+        errorMessage: null,
+        workflowRunId: null,
+        updatedAt: new Date(),
+      })
+      .where(and(eq(uploads.id, uploadId), eq(uploads.status, "failed")))
+      .returning()
+  })
+
+  // If no rows returned, either upload doesn't exist or status wasn't "failed"
+  if (!result[0]) {
+    // Check if upload exists to determine correct error
+    const existingUpload = yield* Effect.promise(async () => {
+      return db.query.uploads.findFirst({
+        where: eq(uploads.id, uploadId),
+      })
+    })
+
+    if (!existingUpload) {
+      return yield* Effect.fail(new NotFoundError({ resource: "upload", id: uploadId }))
+    }
+
+    // Upload exists but wasn't updated - must not be in "failed" status
+    return yield* Effect.fail(
+      new UploadStatusError({
+        cause: "INVALID_TRANSITION",
+        message: `Can only retry failed uploads. Current status: ${existingUpload.status}`,
+        uploadId,
+      })
+    )
+  }
+
+  // Return the updated upload
+  return result[0]
+})
+
 // Upload Service implementation
 export const UploadServiceLive = Layer.succeed(UploadService, {
   create,
@@ -299,4 +343,5 @@ export const UploadServiceLive = Layer.succeed(UploadService, {
   updateResult,
   updateStage,
   startProcessing,
+  resetForRetry,
 })
