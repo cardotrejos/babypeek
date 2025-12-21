@@ -80,15 +80,25 @@ app.get("/:jobId", async (c) => {
     let resultId: string | null = null
     let resultUrl: string | null = null
     let originalUrl: string | null = null
+    let previewUrl: string | null = null
     
     if (upload.status === "completed" && upload.resultUrl) {
       // Extract resultId from resultUrl path: results/{resultId}/full.jpg
       const match = upload.resultUrl.match(/results\/([^/]+)\//)
       resultId = match?.[1] ?? upload.id
       
-      // Generate a signed URL for the result image (valid for 1 hour)
-      const r2Key = `results/${resultId}/full.jpg`
-      const signedUrlResult = yield* r2Service.getDownloadUrl(r2Key, 60 * 60).pipe(
+      // Generate signed URL for PREVIEW (watermarked) - this is what unpaid users see
+      // The frontend should show preview until payment, then show full
+      if (upload.previewUrl) {
+        const previewSignedUrl = yield* r2Service.getDownloadUrl(upload.previewUrl, 60 * 60).pipe(
+          Effect.catchAll(() => Effect.succeed(null as string | null))
+        )
+        previewUrl = previewSignedUrl
+      }
+      
+      // Also generate signed URL for FULL image (used after payment)
+      const fullR2Key = `results/${resultId}/full.jpg`
+      const signedUrlResult = yield* r2Service.getDownloadUrl(fullR2Key, 60 * 60).pipe(
         Effect.catchAll(() => Effect.succeed(null as string | null))
       )
       resultUrl = signedUrlResult
@@ -108,7 +118,8 @@ app.get("/:jobId", async (c) => {
       stage: upload.stage,
       progress: upload.progress ?? 0,
       resultId,
-      resultUrl,
+      resultUrl,        // Full unwatermarked image (for paid users)
+      previewUrl,       // Watermarked preview (for unpaid users)
       originalUrl,
       promptVersion: upload.promptVersion ?? null,
       errorMessage: upload.status === "failed" ? (upload.errorMessage ?? "Processing failed. Please try again.") : null,

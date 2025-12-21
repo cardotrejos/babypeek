@@ -74,12 +74,7 @@ const applyWatermark = Effect.fn("WatermarkService.apply")(function* (
   imageBuffer: Buffer,
   options: WatermarkOptions = {}
 ) {
-  const {
-    // text is preserved for future font rendering support
-    text: _text = "3d-ultra.com",
-    opacity = 0.4,
-    marginPercent = 0.03,
-  } = options
+  const { opacity = 0.4, marginPercent = 0.03 } = options
 
   // Load image with Jimp
   const image = yield* Effect.tryPromise({
@@ -106,31 +101,25 @@ const applyWatermark = Effect.fn("WatermarkService.apply")(function* (
   // Calculate margin (3% from edges)
   const margin = Math.floor(Math.min(imageWidth, imageHeight) * marginPercent)
 
-  // Create a simple text watermark by drawing semi-transparent pixels
-  // Since Jimp doesn't have built-in text rendering, we'll create a simple
-  // semi-transparent overlay pattern in the bottom-right corner
-  const watermarkColor = {
-    r: 255,
-    g: 255,
-    b: 255,
-    a: Math.floor(opacity * 255),
-  }
+  // Create a watermark pattern - diagonal stripes in bottom-right corner
+  const rectWidth = Math.floor(imageWidth * 0.20)
+  const rectHeight = Math.floor(rectWidth * 0.25)
+  const startX = Math.max(0, imageWidth - rectWidth - margin)
+  const startY = Math.max(0, imageHeight - rectHeight - margin)
 
-  // Draw a simple "watermark" indicator - a semi-transparent rectangle
-  // This is a simplified version; for actual text, you'd need a font bitmap
-  const rectWidth = Math.floor(imageWidth * 0.15)
-  const rectHeight = Math.floor(rectWidth * 0.2)
-  const startX = imageWidth - rectWidth - margin
-  const startY = imageHeight - rectHeight - margin
-
-  // Draw watermark rectangle with transparency
+  // Draw watermark with diagonal stripe pattern
   for (let y = startY; y < startY + rectHeight && y < imageHeight; y++) {
     for (let x = startX; x < startX + rectWidth && x < imageWidth; x++) {
-      if (x >= 0 && y >= 0) {
-        const currentColor = image.getPixelColor(x, y)
-        // Blend with white at given opacity
-        const blended = blendColors(currentColor, watermarkColor, opacity)
-        image.setPixelColor(blended, x, y)
+      // Create diagonal stripe pattern
+      const isStripe = (x + y) % 8 < 4
+      if (isStripe) {
+        const rgba = Jimp.intToRGBA(image.getPixelColor(x, y))
+        const blendFactor = 1 - opacity
+        const blendedR = Math.floor(rgba.r * blendFactor + 255 * opacity)
+        const blendedG = Math.floor(rgba.g * blendFactor + 255 * opacity)
+        const blendedB = Math.floor(rgba.b * blendFactor + 255 * opacity)
+        const newColor = Jimp.rgbaToInt(blendedR, blendedG, blendedB, rgba.a)
+        image.setPixelColor(newColor, x, y)
       }
     }
   }
@@ -150,28 +139,6 @@ const applyWatermark = Effect.fn("WatermarkService.apply")(function* (
 
   return watermarked
 })
-
-// Helper to blend colors
-function blendColors(
-  bgColor: number,
-  fgColor: { r: number; g: number; b: number; a: number },
-  opacity: number
-): number {
-  // Extract RGBA from bgColor (Jimp uses RGBA format)
-  const bgR = (bgColor >> 24) & 0xff
-  const bgG = (bgColor >> 16) & 0xff
-  const bgB = (bgColor >> 8) & 0xff
-  const bgA = bgColor & 0xff
-
-  // Blend
-  const r = Math.floor(bgR * (1 - opacity) + fgColor.r * opacity)
-  const g = Math.floor(bgG * (1 - opacity) + fgColor.g * opacity)
-  const b = Math.floor(bgB * (1 - opacity) + fgColor.b * opacity)
-  const a = bgA
-
-  // Pack back into integer
-  return ((r & 0xff) << 24) | ((g & 0xff) << 16) | ((b & 0xff) << 8) | (a & 0xff)
-}
 
 const resizeImage = Effect.fn("WatermarkService.resize")(function* (
   imageBuffer: Buffer,
