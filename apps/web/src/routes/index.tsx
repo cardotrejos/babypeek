@@ -1,58 +1,79 @@
-import { useQuery } from "@tanstack/react-query"
 import { createFileRoute } from "@tanstack/react-router"
-
-import { api } from "@/lib/api"
+import { LandingLayout } from "@/components/landing"
 
 export const Route = createFileRoute("/")({
-  component: HomeComponent,
+  component: LandingPage,
 })
 
-function HomeComponent() {
-  const healthCheck = useQuery({
-    queryKey: ["health"],
-    queryFn: () => api.health(),
-    refetchInterval: 30000, // Check every 30s
-  })
+function LandingPage() {
+  const handleCtaClick = () => {
+    // Scroll to upload section (Story 2.2+ will implement actual upload)
+    const uploadSection = document.getElementById("upload")
+    if (uploadSection) {
+      uploadSection.scrollIntoView({ behavior: "smooth" })
+    }
+  }
 
   return (
-    <div className="container mx-auto max-w-3xl px-4 py-8">
-      <div className="text-center mb-12">
-        <h1 className="text-4xl font-bold mb-4">3d-ultra</h1>
-        <p className="text-xl text-muted-foreground">
-          Transform your 4D ultrasound into a beautiful portrait
+    <LandingLayout onCtaClick={handleCtaClick}>
+      {/* Hero Section - Placeholder for Story 2.2 */}
+      <section
+        id="hero"
+        className="min-h-[60vh] flex flex-col justify-center py-8"
+      >
+        <h1 className="font-display text-3xl sm:text-4xl text-charcoal leading-tight">
+          Meet your baby before they're born
+        </h1>
+        <p className="font-body text-warm-gray mt-4 text-lg">
+          Transform your 4D ultrasound into a beautiful, photorealistic
+          portrait in seconds.
         </p>
-      </div>
+        <div className="mt-8 aspect-video bg-coral-light rounded-xl flex items-center justify-center">
+          <span className="text-warm-gray font-body">
+            [Before/after example - Story 2.2]
+          </span>
+        </div>
+      </section>
 
-      <div className="grid gap-6">
-        <section className="rounded-lg border p-4">
-          <h2 className="mb-2 font-medium">API Status</h2>
-          <div className="flex items-center gap-2">
-            <div
-              className={`h-2 w-2 rounded-full ${
-                healthCheck.data?.status === "ok"
-                  ? "bg-green-500"
-                  : healthCheck.isLoading
-                    ? "bg-yellow-500"
-                    : "bg-red-500"
-              }`}
-            />
-            <span className="text-muted-foreground text-sm">
-              {healthCheck.isLoading
-                ? "Checking..."
-                : healthCheck.data?.status === "ok"
-                  ? "Connected"
-                  : "Disconnected"}
-            </span>
-          </div>
-        </section>
+      {/* Gallery Section - Placeholder for Story 2.3 */}
+      <section id="gallery" className="py-12">
+        <h2 className="font-display text-2xl text-charcoal mb-6">
+          See the magic
+        </h2>
+        <div className="h-48 bg-muted rounded-xl flex items-center justify-center">
+          <span className="text-muted-foreground font-body">
+            [Example gallery - Story 2.3]
+          </span>
+        </div>
+      </section>
 
-        <section className="rounded-lg border p-6 text-center">
-          <h2 className="text-lg font-medium mb-4">Ready to build!</h2>
-          <p className="text-muted-foreground">
-            Epic 1 foundation is complete. Next: Epic 2 (Landing) or Story 1.2 (Neon DB).
-          </p>
-        </section>
-      </div>
-    </div>
+      {/* Trust Signals Section - Placeholder for Story 2.4 */}
+      <section id="trust" className="py-12">
+        <div className="h-32 bg-muted rounded-xl flex items-center justify-center">
+          <span className="text-muted-foreground font-body">
+            [Trust signals - Story 2.4]
+          </span>
+        </div>
+      </section>
+
+      {/* FAQ Section - Placeholder for Story 2.5 */}
+      <section id="faq" className="py-12">
+        <h2 className="font-display text-2xl text-charcoal mb-6">
+          Questions? We've got answers
+        </h2>
+        <div className="h-64 bg-muted rounded-xl flex items-center justify-center">
+          <span className="text-muted-foreground font-body">
+            [FAQ accordion - Story 2.5]
+          </span>
+        </div>
+      </section>
+
+      {/* Footer placeholder */}
+      <footer className="py-8 text-center">
+        <p className="text-warm-gray text-sm font-body">
+          © 2024 3d-ultra. Made with love for expecting parents.
+        </p>
+      </footer>
+    </LandingLayout>
   )
 }
