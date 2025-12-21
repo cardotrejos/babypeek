@@ -14,9 +14,11 @@
     "@3d-ultra/db": "workspace:*",
     "@aws-sdk/client-s3": "^3.956.0",
     "@aws-sdk/s3-request-presigner": "^3.956.0",
+    "@sentry/node": "^10.32.1",
     "dotenv": "catalog:",
     "effect": "^3.19.13",
     "hono": "catalog:",
+    "posthog-node": "^5.17.4",
     "zod": "catalog:"
   },
   "devDependencies": {

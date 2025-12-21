@@ -1,0 +1,176 @@
+import { usePostHog } from "posthog-js/react"
+import { useCallback } from "react"
+
+// =============================================================================
+// Analytics Event Types
+// =============================================================================
+
+export type AnalyticsEvent =
+  | "upload_started"
+  | "upload_completed"
+  | "upload_failed"
+  | "processing_started"
+  | "processing_completed"
+  | "processing_failed"
+  | "reveal_viewed"
+  | "checkout_started"
+  | "checkout_completed"
+  | "checkout_failed"
+  | "download_initiated"
+  | "share_clicked"
+
+export interface UploadEventProperties {
+  file_type?: string
+  file_size?: number
+  duration_ms?: number
+  error?: string
+}
+
+export interface ProcessingEventProperties {
+  job_id?: string
+  duration_ms?: number
+  stage?: string
+  error?: string
+}
+
+export interface CheckoutEventProperties {
+  price?: number
+  type?: "self" | "gift"
+  error?: string
+}
+
+export interface DownloadEventProperties {
+  purchase_id?: string
+}
+
+export interface ShareEventProperties {
+  platform?: "whatsapp" | "imessage" | "copy_link" | "instagram"
+}
+
+type EventProperties =
+  | UploadEventProperties
+  | ProcessingEventProperties
+  | CheckoutEventProperties
+  | DownloadEventProperties
+  | ShareEventProperties
+  | Record<string, unknown>
+
+// =============================================================================
+// Analytics Hook
+// =============================================================================
+
+export function useAnalytics() {
+  const posthog = usePostHog()
+
+  /**
+   * Identify user by session token
+   * Call this when a session is created (e.g., after upload)
+   */
+  const identify = useCallback(
+    (sessionToken: string, properties?: Record<string, unknown>) => {
+      posthog?.identify(sessionToken, properties)
+    },
+    [posthog]
+  )
+
+  /**
+   * Reset identity (e.g., when user starts fresh)
+   */
+  const reset = useCallback(() => {
+    posthog?.reset()
+  }, [posthog])
+
+  /**
+   * Track a custom event
+   */
+  const trackEvent = useCallback(
+    (event: AnalyticsEvent | string, properties?: EventProperties) => {
+      posthog?.capture(event, properties)
+    },
+    [posthog]
+  )
+
+  // =============================================================================
+  // Convenience Methods for Common Events
+  // =============================================================================
+
+  const trackUploadStarted = useCallback(
+    (properties: UploadEventProperties) => {
+      trackEvent("upload_started", properties)
+    },
+    [trackEvent]
+  )
+
+  const trackUploadCompleted = useCallback(
+    (properties: UploadEventProperties) => {
+      trackEvent("upload_completed", properties)
+    },
+    [trackEvent]
+  )
+
+  const trackUploadFailed = useCallback(
+    (error: string, properties?: UploadEventProperties) => {
+      trackEvent("upload_failed", { ...properties, error })
+    },
+    [trackEvent]
+  )
+
+  const trackProcessingStarted = useCallback(
+    (jobId: string) => {
+      trackEvent("processing_started", { job_id: jobId })
+    },
+    [trackEvent]
+  )
+
+  const trackProcessingCompleted = useCallback(
+    (jobId: string, durationMs: number) => {
+      trackEvent("processing_completed", { job_id: jobId, duration_ms: durationMs })
+    },
+    [trackEvent]
+  )
+
+  const trackRevealViewed = useCallback(
+    (jobId: string) => {
+      trackEvent("reveal_viewed", { job_id: jobId })
+    },
+    [trackEvent]
+  )
+
+  const trackCheckoutStarted = useCallback(
+    (price: number, type: "self" | "gift") => {
+      trackEvent("checkout_started", { price, type })
+    },
+    [trackEvent]
+  )
+
+  const trackDownloadInitiated = useCallback(
+    (purchaseId: string) => {
+      trackEvent("download_initiated", { purchase_id: purchaseId })
+    },
+    [trackEvent]
+  )
+
+  const trackShareClicked = useCallback(
+    (platform: ShareEventProperties["platform"]) => {
+      trackEvent("share_clicked", { platform })
+    },
+    [trackEvent]
+  )
+
+  return {
+    // Core methods
+    identify,
+    reset,
+    trackEvent,
+    // Convenience methods
+    trackUploadStarted,
+    trackUploadCompleted,
+    trackUploadFailed,
+    trackProcessingStarted,
+    trackProcessingCompleted,
+    trackRevealViewed,
+    trackCheckoutStarted,
+    trackDownloadInitiated,
+    trackShareClicked,
+  }
+}
