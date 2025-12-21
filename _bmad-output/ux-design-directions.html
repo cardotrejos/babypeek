@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>3d-ultra - Design Directions</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'DM Sans', system-ui, sans-serif;
+      background: #1a1a1a;
+      color: #fff;
+      min-height: 100vh;
+    }
+
+    .header {
+      text-align: center;
+      padding: 40px 20px;
+      background: linear-gradient(180deg, #2a2a2a 0%, #1a1a1a 100%);
+    }
+
+    .header h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: 2.5rem;
+      margin-bottom: 10px;
+    }
+
+    .header p {
+      color: #888;
+      font-size: 1.1rem;
+    }
+
+    .directions-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+      gap: 30px;
+      padding: 40px;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .direction-card {
+      border-radius: 16px;
+      overflow: hidden;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      cursor: pointer;
+    }
+
+    .direction-card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+    }
+
+    .direction-card.selected {
+      outline: 4px solid #E8927C;
+      outline-offset: 4px;
+    }
+
+    .card-content {
+      padding: 40px 30px;
+      min-height: 450px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .card-header {
+      margin-bottom: 30px;
+    }
+
+    .card-header .label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      opacity: 0.7;
+      margin-bottom: 8px;
+    }
+
+    .card-header h2 {
+      font-size: 1.75rem;
+      margin-bottom: 8px;
+    }
+
+    .card-header p {
+      opacity: 0.8;
+      font-size: 0.95rem;
+    }
+
+    .card-preview {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .preview-cta {
+      padding: 18px 32px;
+      border-radius: 12px;
+      font-size: 1rem;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-align: center;
+    }
+
+    .preview-text {
+      text-align: center;
+    }
+
+    .preview-text h3 {
+      font-size: 1.5rem;
+      margin-bottom: 8px;
+    }
+
+    .preview-text p {
+      font-size: 0.9rem;
+      opacity: 0.7;
+    }
+
+    /* Direction 1: Warm & Intimate */
+    .direction-1 {
+      background: #FDF8F5;
+      color: #2D2A26;
+    }
+
+    .direction-1 h2 {
+      font-family: 'Playfair Display', serif;
+      color: #2D2A26;
+    }
+
+    .direction-1 .preview-cta {
+      background: #E8927C;
+      color: white;
+    }
+
+    .direction-1 .preview-cta:hover {
+      background: #D4806B;
+      box-shadow: 0 0 20px rgba(232, 146, 124, 0.4);
+    }
+
+    .direction-1 .preview-text h3 {
+      font-family: 'Playfair Display', serif;
+    }
+
+    /* Direction 2: Modern Minimal */
+    .direction-2 {
+      background: #FFFFFF;
+      color: #1a1a1a;
+    }
+
+    .direction-2 h2 {
+      font-family: 'Space Grotesk', sans-serif;
+      color: #1a1a1a;
+    }
+
+    .direction-2 .preview-cta {
+      background: #1a1a1a;
+      color: white;
+    }
+
+    .direction-2 .preview-cta:hover {
+      background: #333;
+    }
+
+    .direction-2 .preview-text h3 {
+      font-family: 'Space Grotesk', sans-serif;
+    }
+
+    /* Direction 3: Soft & Dreamy */
+    .direction-3 {
+      background: linear-gradient(135deg, #F5E6F0 0%, #E6F0F5 100%);
+      color: #4A4A5A;
+    }
+
+    .direction-3 h2 {
+      font-family: 'Playfair Display', serif;
+      color: #4A4A5A;
+    }
+
+    .direction-3 .preview-cta {
+      background: linear-gradient(135deg, #A8B8D8 0%, #C8A8C8 100%);
+      color: white;
+    }
+
+    .direction-3 .preview-cta:hover {
+      box-shadow: 0 0 20px rgba(168, 184, 216, 0.5);
+    }
+
+    .direction-3 .preview-text h3 {
+      font-family: 'Playfair Display', serif;
+    }
+
+    /* Direction 4: Bold & Playful */
+    .direction-4 {
+      background: #FFF5E6;
+      color: #2D2D2D;
+    }
+
+    .direction-4 h2 {
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 700;
+      color: #FF6B4A;
+    }
+
+    .direction-4 .preview-cta {
+      background: #FF6B4A;
+      color: white;
+      border-radius: 50px;
+    }
+
+    .direction-4 .preview-cta:hover {
+      transform: scale(1.05);
+      background: #E85A3A;
+    }
+
+    .direction-4 .preview-text h3 {
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 700;
+      color: #FF6B4A;
+    }
+
+    /* Direction 5: Premium Dark */
+    .direction-5 {
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      color: #E8E8E8;
+    }
+
+    .direction-5 h2 {
+      font-family: 'Playfair Display', serif;
+      color: #C9A87C;
+    }
+
+    .direction-5 .preview-cta {
+      background: linear-gradient(135deg, #C9A87C 0%, #B8956B 100%);
+      color: #1a1a2e;
+    }
+
+    .direction-5 .preview-cta:hover {
+      box-shadow: 0 0 30px rgba(201, 168, 124, 0.4);
+    }
+
+    .direction-5 .preview-text h3 {
+      font-family: 'Playfair Display', serif;
+      color: #C9A87C;
+    }
+
+    /* Direction 6: Fresh & Organic */
+    .direction-6 {
+      background: #F8FAF5;
+      color: #3A4A3A;
+    }
+
+    .direction-6 h2 {
+      font-family: 'DM Sans', sans-serif;
+      color: #5A8A5A;
+    }
+
+    .direction-6 .preview-cta {
+      background: #5A8A5A;
+      color: white;
+      border-radius: 8px;
+    }
+
+    .direction-6 .preview-cta:hover {
+      background: #4A7A4A;
+    }
+
+    .direction-6 .preview-text h3 {
+      font-family: 'DM Sans', sans-serif;
+      color: #5A8A5A;
+    }
+
+    .selection-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: #2a2a2a;
+      padding: 20px 40px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-top: 1px solid #3a3a3a;
+    }
+
+    .selection-bar p {
+      color: #888;
+    }
+
+    .selection-bar strong {
+      color: #E8927C;
+    }
+
+    .confirm-btn {
+      background: #E8927C;
+      color: white;
+      border: none;
+      padding: 14px 32px;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .confirm-btn:hover {
+      background: #D4806B;
+    }
+
+    .confirm-btn:disabled {
+      background: #555;
+      cursor: not-allowed;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      margin-left: 8px;
+      background: #E8927C;
+      color: white;
+    }
+
+    @media (max-width: 768px) {
+      .directions-grid {
+        padding: 20px;
+        grid-template-columns: 1fr;
+      }
+
+      .header h1 {
+        font-size: 1.75rem;
+      }
+
+      .selection-bar {
+        flex-direction: column;
+        gap: 16px;
+        text-align: center;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>3d-ultra Design Directions</h1>
+    <p>Click a direction to select it. Direction 1 (Warm & Intimate) is recommended.</p>
+  </div>
+
+  <div class="directions-grid">
+    <!-- Direction 1: Warm & Intimate (Selected) -->
+    <div class="direction-card direction-1 selected" data-direction="1">
+      <div class="card-content">
+        <div class="card-header">
+          <div class="label">Direction 1</div>
+          <h2>Warm & Intimate <span class="badge">Selected</span></h2>
+          <p>Cozy, emotional, trustworthy. Perfect for expecting parents.</p>
+        </div>
+        <div class="card-preview">
+          <div class="preview-text">
+            <h3>Meet your baby</h3>
+            <p>Transform your ultrasound into a beautiful portrait</p>
+          </div>
+          <button class="preview-cta">Upload Your Ultrasound</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Direction 2: Modern Minimal -->
+    <div class="direction-card direction-2" data-direction="2">
+      <div class="card-content">
+        <div class="card-header">
+          <div class="label">Direction 2</div>
+          <h2>Modern Minimal</h2>
+          <p>Clean, sophisticated, tech-forward. Appeals to design-conscious users.</p>
+        </div>
+        <div class="card-preview">
+          <div class="preview-text">
+            <h3>Your baby, visualized</h3>
+            <p>AI-powered ultrasound transformation</p>
+          </div>
+          <button class="preview-cta">Get Started</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Direction 3: Soft & Dreamy -->
+    <div class="direction-card direction-3" data-direction="3">
+      <div class="card-content">
+        <div class="card-header">
+          <div class="label">Direction 3</div>
+          <h2>Soft & Dreamy</h2>
+          <p>Gentle, ethereal, magical. Emphasizes the wonder of new life.</p>
+        </div>
+        <div class="card-preview">
+          <div class="preview-text">
+            <h3>A glimpse of tomorrow</h3>
+            <p>See your little one before they arrive</p>
+          </div>
+          <button class="preview-cta">Begin the Magic</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Direction 4: Bold & Playful -->
+    <div class="direction-card direction-4" data-direction="4">
+      <div class="card-content">
+        <div class="card-header">
+          <div class="label">Direction 4</div>
+          <h2>Bold & Playful</h2>
+          <p>Energetic, fun, shareable. Great for viral social content.</p>
+        </div>
+        <div class="card-preview">
+          <div class="preview-text">
+            <h3>Baby reveal time! 🎉</h3>
+            <p>Upload your ultrasound, get the magic</p>
+          </div>
+          <button class="preview-cta">Let's Go!</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Direction 5: Premium Dark -->
+    <div class="direction-card direction-5" data-direction="5">
+      <div class="card-content">
+        <div class="card-header">
+          <div class="label">Direction 5</div>
+          <h2>Premium Dark</h2>
+          <p>Luxurious, exclusive, high-end. Justifies premium pricing.</p>
+        </div>
+        <div class="card-preview">
+          <div class="preview-text">
+            <h3>The Portrait Experience</h3>
+            <p>Exquisite AI artistry for your growing family</p>
+          </div>
+          <button class="preview-cta">Create Your Portrait</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Direction 6: Fresh & Organic -->
+    <div class="direction-card direction-6" data-direction="6">
+      <div class="card-content">
+        <div class="card-header">
+          <div class="label">Direction 6</div>
+          <h2>Fresh & Organic</h2>
+          <p>Natural, wholesome, eco-friendly. Appeals to health-conscious parents.</p>
+        </div>
+        <div class="card-preview">
+          <div class="preview-text">
+            <h3>Growing together</h3>
+            <p>A natural glimpse of your little one</p>
+          </div>
+          <button class="preview-cta">Start Your Journey</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="selection-bar">
+    <p>Selected: <strong id="selected-name">Warm & Intimate</strong></p>
+    <button class="confirm-btn" id="confirm-btn">Confirm Selection</button>
+  </div>
+
+  <script>
+    const directions = {
+      1: 'Warm & Intimate',
+      2: 'Modern Minimal',
+      3: 'Soft & Dreamy',
+      4: 'Bold & Playful',
+      5: 'Premium Dark',
+      6: 'Fresh & Organic'
+    };
+
+    let selectedDirection = 1;
+
+    document.querySelectorAll('.direction-card').forEach(card => {
+      card.addEventListener('click', () => {
+        document.querySelectorAll('.direction-card').forEach(c => {
+          c.classList.remove('selected');
+          const badge = c.querySelector('.badge');
+          if (badge) badge.remove();
+        });
+
+        card.classList.add('selected');
+        selectedDirection = parseInt(card.dataset.direction);
+        document.getElementById('selected-name').textContent = directions[selectedDirection];
+
+        const h2 = card.querySelector('h2');
+        if (!h2.querySelector('.badge')) {
+          const badge = document.createElement('span');
+          badge.className = 'badge';
+          badge.textContent = 'Selected';
+          h2.appendChild(badge);
+        }
+      });
+    });
+
+    document.getElementById('confirm-btn').addEventListener('click', () => {
+      alert(`Direction ${selectedDirection} (${directions[selectedDirection]}) confirmed!\n\nThis selection has been saved to the UX Design Specification.`);
+    });
+  </script>
+</body>
+</html>
