@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest"
 import { toast } from "sonner"
 import * as Sentry from "@sentry/react"
 
-import { useImageProcessor, isHeicFile } from "./use-image-processor"
+import { useImageProcessor, isHeicFile, isGifFile, needsCompression } from "./use-image-processor"
 
 // =============================================================================
 // Mocks
@@ -13,6 +13,12 @@ import { useImageProcessor, isHeicFile } from "./use-image-processor"
 const mockHeic2any = vi.fn()
 vi.mock("heic2any", () => ({
   default: (options: unknown) => mockHeic2any(options),
+}))
+
+// Mock browser-image-compression
+const mockImageCompression = vi.fn()
+vi.mock("browser-image-compression", () => ({
+  default: (file: File, options: { onProgress?: (p: number) => void }) => mockImageCompression(file, options),
 }))
 
 // =============================================================================
@@ -45,6 +51,13 @@ function createMockHeicFile(sizeInMB: number = 1): File {
  */
 function createMockJpegFile(sizeInMB: number = 1): File {
   return createMockFile("test.jpg", "image/jpeg", sizeInMB)
+}
+
+/**
+ * Create a mock GIF file
+ */
+function createMockGifFile(sizeInMB: number = 1): File {
+  return createMockFile("test.gif", "image/gif", sizeInMB)
 }
 
 // =============================================================================
@@ -101,6 +114,48 @@ describe("isHeicFile", () => {
 })
 
 // =============================================================================
+// Tests: isGifFile helper
+// =============================================================================
+
+describe("isGifFile", () => {
+  it("detects GIF by MIME type", () => {
+    const file = createMockGifFile(0.1)
+    expect(isGifFile(file)).toBe(true)
+  })
+
+  it("returns false for JPEG files", () => {
+    const file = createMockJpegFile(0.1)
+    expect(isGifFile(file)).toBe(false)
+  })
+
+  it("returns false for PNG files", () => {
+    const file = createMockFile("photo.png", "image/png", 0.1)
+    expect(isGifFile(file)).toBe(false)
+  })
+})
+
+// =============================================================================
+// Tests: needsCompression helper
+// =============================================================================
+
+describe("needsCompression", () => {
+  it("returns true for files >2MB", () => {
+    const file = createMockJpegFile(3) // 3MB
+    expect(needsCompression(file)).toBe(true)
+  })
+
+  it("returns false for files <2MB", () => {
+    const file = createMockJpegFile(1) // 1MB
+    expect(needsCompression(file)).toBe(false)
+  })
+
+  it("returns false for files exactly 2MB", () => {
+    const file = createMockJpegFile(2) // 2MB exactly
+    expect(needsCompression(file)).toBe(false)
+  })
+})
+
+// =============================================================================
 // Tests: useImageProcessor hook
 // =============================================================================
 
@@ -111,12 +166,18 @@ describe("useImageProcessor", () => {
     mockHeic2any.mockResolvedValue(
       new Blob(["mock jpeg content"], { type: "image/jpeg" })
     )
+    // Default compression mock - returns a smaller file
+    mockImageCompression.mockImplementation(async (file: File) => {
+      // Simulate compression by returning a smaller file
+      const compressedSize = Math.floor(file.size * 0.5)
+      return new File([new ArrayBuffer(compressedSize)], file.name, { type: file.type })
+    })
   })
 
   describe("non-HEIC files", () => {
-    it("passes through JPEG files unchanged", async () => {
+    it("passes through small JPEG files unchanged", async () => {
       const { result } = renderHook(() => useImageProcessor())
-      const jpegFile = createMockJpegFile(1)
+      const jpegFile = createMockJpegFile(1) // 1MB - under threshold
 
       let processResult: Awaited<ReturnType<typeof result.current.processImage>>
 
@@ -126,10 +187,12 @@ describe("useImageProcessor", () => {
 
       expect(processResult!.file).toBe(jpegFile)
       expect(processResult!.wasConverted).toBe(false)
+      expect(processResult!.wasCompressed).toBe(false)
       expect(mockHeic2any).not.toHaveBeenCalled()
+      expect(mockImageCompression).not.toHaveBeenCalled()
     })
 
-    it("passes through PNG files unchanged", async () => {
+    it("passes through small PNG files unchanged", async () => {
       const { result } = renderHook(() => useImageProcessor())
       const pngFile = createMockFile("photo.png", "image/png", 1)
 
@@ -141,6 +204,7 @@ describe("useImageProcessor", () => {
 
       expect(processResult!.file).toBe(pngFile)
       expect(processResult!.wasConverted).toBe(false)
+      expect(processResult!.wasCompressed).toBe(false)
     })
   })
 
@@ -234,8 +298,175 @@ describe("useImageProcessor", () => {
     })
   })
 
+  describe("compression", () => {
+    it("compresses large JPEG files", async () => {
+      const { result } = renderHook(() => useImageProcessor())
+      const largeJpegFile = createMockJpegFile(5) // 5MB
+
+      let processResult: Awaited<ReturnType<typeof result.current.processImage>>
+
+      await act(async () => {
+        processResult = await result.current.processImage(largeJpegFile)
+      })
+
+      expect(mockImageCompression).toHaveBeenCalledWith(
+        largeJpegFile,
+        expect.objectContaining({
+          maxSizeMB: 2,
+          maxWidthOrHeight: 2048,
+          useWebWorker: true,
+        })
+      )
+      expect(processResult!.wasCompressed).toBe(true)
+    })
+
+    it("skips compression for small files", async () => {
+      const { result } = renderHook(() => useImageProcessor())
+      const smallJpegFile = createMockJpegFile(1) // 1MB
+
+      await act(async () => {
+        await result.current.processImage(smallJpegFile)
+      })
+
+      expect(mockImageCompression).not.toHaveBeenCalled()
+    })
+
+    it("skips compression for GIF files", async () => {
+      const { result } = renderHook(() => useImageProcessor())
+      const largeGifFile = createMockGifFile(5) // 5MB GIF
+
+      let processResult: Awaited<ReturnType<typeof result.current.processImage>>
+
+      await act(async () => {
+        processResult = await result.current.processImage(largeGifFile)
+      })
+
+      expect(mockImageCompression).not.toHaveBeenCalled()
+      expect(processResult!.wasCompressed).toBe(false)
+      expect(processResult!.file).toBe(largeGifFile)
+    })
+
+    it("shows warning for very large GIF files", async () => {
+      const { result } = renderHook(() => useImageProcessor())
+      const veryLargeGifFile = createMockGifFile(5) // 5MB GIF (>4MB threshold)
+
+      await act(async () => {
+        await result.current.processImage(veryLargeGifFile)
+      })
+
+      expect(toast.warning).toHaveBeenCalledWith(
+        "This GIF is quite large. Upload may take a moment.",
+        { duration: 4000 }
+      )
+    })
+
+    it("calls onProgress during compression", async () => {
+      const { result } = renderHook(() => useImageProcessor())
+      const largeJpegFile = createMockJpegFile(5)
+
+      // Mock compression with progress callbacks
+      mockImageCompression.mockImplementation(async (file: File, options: { onProgress?: (p: number) => void }) => {
+        if (options.onProgress) {
+          options.onProgress(25)
+          options.onProgress(50)
+          options.onProgress(75)
+          options.onProgress(100)
+        }
+        return new File([new ArrayBuffer(1024 * 1024)], file.name, { type: file.type })
+      })
+
+      await act(async () => {
+        await result.current.processImage(largeJpegFile)
+      })
+
+      expect(mockImageCompression).toHaveBeenCalled()
+    })
+
+    it("converts HEIC then compresses if result is large", async () => {
+      const { result } = renderHook(() => useImageProcessor())
+      const largeHeicFile = createMockHeicFile(5) // 5MB HEIC
+
+      // Mock HEIC conversion to return a large JPEG
+      const largeJpegBlob = new Blob([new ArrayBuffer(4 * 1024 * 1024)], { type: "image/jpeg" })
+      mockHeic2any.mockResolvedValue(largeJpegBlob)
+
+      let processResult: Awaited<ReturnType<typeof result.current.processImage>>
+
+      await act(async () => {
+        processResult = await result.current.processImage(largeHeicFile)
+      })
+
+      expect(mockHeic2any).toHaveBeenCalled()
+      expect(mockImageCompression).toHaveBeenCalled()
+      expect(processResult!.wasConverted).toBe(true)
+      expect(processResult!.wasCompressed).toBe(true)
+    })
+
+    it("handles compression failure gracefully", async () => {
+      const { result } = renderHook(() => useImageProcessor())
+      const largeJpegFile = createMockJpegFile(5)
+
+      mockImageCompression.mockRejectedValue(new Error("Compression failed"))
+
+      let processResult: Awaited<ReturnType<typeof result.current.processImage>>
+
+      await act(async () => {
+        processResult = await result.current.processImage(largeJpegFile)
+      })
+
+      // Should fall back to original file
+      expect(processResult!.file).toBe(largeJpegFile)
+      expect(processResult!.wasCompressed).toBe(false)
+      expect(toast.warning).toHaveBeenCalledWith(
+        "We had trouble optimizing your image, but we'll try uploading it anyway.",
+        { duration: 4000 }
+      )
+    })
+
+    it("reports compression errors to Sentry", async () => {
+      const { result } = renderHook(() => useImageProcessor())
+      const largeJpegFile = createMockJpegFile(5)
+      const error = new Error("Memory limit exceeded")
+
+      mockImageCompression.mockRejectedValue(error)
+
+      await act(async () => {
+        await result.current.processImage(largeJpegFile)
+      })
+
+      expect(Sentry.captureException).toHaveBeenCalledWith(
+        error,
+        expect.objectContaining({
+          tags: {
+            component: "image-processor",
+            action: "compression",
+          },
+        })
+      )
+    })
+
+    it("skips compression if result is not significantly smaller", async () => {
+      const { result } = renderHook(() => useImageProcessor())
+      const largeJpegFile = createMockJpegFile(5)
+
+      // Mock compression to return same-sized file (already optimized)
+      mockImageCompression.mockImplementation(async (file: File) => {
+        return new File([new ArrayBuffer(file.size)], file.name, { type: file.type })
+      })
+
+      let processResult: Awaited<ReturnType<typeof result.current.processImage>>
+
+      await act(async () => {
+        processResult = await result.current.processImage(largeJpegFile)
+      })
+
+      // Should return original file since compression didn't help
+      expect(processResult!.wasCompressed).toBe(false)
+    })
+  })
+
   describe("large file warning", () => {
-    it("shows warning toast for files >15MB", async () => {
+    it("shows warning toast for HEIC files >15MB", async () => {
       const { result } = renderHook(() => useImageProcessor())
       const largeHeicFile = createMockHeicFile(16) // 16MB
 
@@ -257,7 +488,11 @@ describe("useImageProcessor", () => {
         await result.current.processImage(normalHeicFile)
       })
 
-      expect(toast.warning).not.toHaveBeenCalled()
+      // Only the compression warning might show, not the HEIC warning
+      expect(toast.warning).not.toHaveBeenCalledWith(
+        "This is a large image. Conversion may take a moment.",
+        expect.anything()
+      )
     })
 
     it("continues conversion after warning (non-blocking)", async () => {
@@ -276,7 +511,7 @@ describe("useImageProcessor", () => {
   })
 
   describe("error handling", () => {
-    it("shows error toast on conversion failure", async () => {
+    it("shows error toast on HEIC conversion failure", async () => {
       const { result } = renderHook(() => useImageProcessor())
       const heicFile = createMockHeicFile(1)
 
@@ -296,7 +531,7 @@ describe("useImageProcessor", () => {
       )
     })
 
-    it("reports errors to Sentry without PII", async () => {
+    it("reports HEIC errors to Sentry without PII", async () => {
       const { result } = renderHook(() => useImageProcessor())
       const heicFile = createMockHeicFile(1)
       const error = new Error("Memory limit exceeded")
@@ -325,7 +560,7 @@ describe("useImageProcessor", () => {
       )
     })
 
-    it("throws error to let caller handle it", async () => {
+    it("throws error on HEIC conversion failure to let caller handle it", async () => {
       const { result } = renderHook(() => useImageProcessor())
       const heicFile = createMockHeicFile(1)
 
@@ -398,7 +633,7 @@ describe("useImageProcessor", () => {
   })
 
   describe("result metadata", () => {
-    it("returns original and converted file sizes", async () => {
+    it("returns original and final file sizes", async () => {
       const { result } = renderHook(() => useImageProcessor())
       const heicFile = createMockHeicFile(2) // 2MB
 
@@ -413,7 +648,22 @@ describe("useImageProcessor", () => {
       })
 
       expect(processResult!.originalSize).toBe(heicFile.size)
-      expect(processResult!.convertedSize).toBe(smallerBlob.size)
+      expect(processResult!.finalSize).toBe(smallerBlob.size)
+    })
+
+    it("tracks compression ratio after compression", async () => {
+      const { result } = renderHook(() => useImageProcessor())
+      const largeJpegFile = createMockJpegFile(5) // 5MB
+
+      let processResult: Awaited<ReturnType<typeof result.current.processImage>>
+
+      await act(async () => {
+        processResult = await result.current.processImage(largeJpegFile)
+      })
+
+      expect(processResult!.originalSize).toBe(largeJpegFile.size)
+      // Compressed file should be smaller
+      expect(processResult!.finalSize).toBeLessThan(processResult!.originalSize)
     })
   })
 })

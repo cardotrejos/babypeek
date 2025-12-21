@@ -78,13 +78,13 @@ development_status:
   epic-3: in-progress
   3-1-image-picker-with-format-validation: done
   3-2-client-side-heic-conversion: done
-  3-3-client-side-image-compression: backlog
-  3-4-email-capture: backlog
-  3-5-presigned-url-generation-and-r2-upload: backlog
-  3-6-session-token-and-job-creation: backlog
-  3-7-rate-limiting: backlog
-  3-8-upload-error-handling: backlog
-  3-9-upload-analytics: backlog
+  3-3-client-side-image-compression: done
+  3-4-email-capture: done
+  3-5-presigned-url-generation-and-r2-upload: done
+  3-6-session-token-and-job-creation: ready-for-dev
+  3-7-rate-limiting: ready-for-dev
+  3-8-upload-error-handling: ready-for-dev
+  3-9-upload-analytics: ready-for-dev
   epic-3-retrospective: optional
 
   # ═══════════════════════════════════════════════════════════════════════════

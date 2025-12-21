@@ -11,3 +11,4 @@ export * from "./services"
 // Routes
 export { default as healthRoutes } from "./routes/health"
 export { default as storageRoutes } from "./routes/storage"
+export { default as uploadRoutes } from "./routes/upload"
