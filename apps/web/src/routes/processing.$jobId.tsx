@@ -26,6 +26,7 @@ export const Route = createFileRoute("/processing/$jobId")({
   component: ProcessingPage,
   validateSearch: z.object({
     prompts: z.boolean().optional(),
+    promptVersion: z.enum(["v3", "v3-json", "v4", "v4-json"]).optional(),
   }),
 })
 
@@ -50,13 +51,14 @@ interface ProcessingError {
 
 function ProcessingPage() {
   const { jobId } = Route.useParams()
-  const { prompts: showPromptSelector } = Route.useSearch()
+  const { prompts: showPromptSelector, promptVersion: urlPromptVersion } = Route.useSearch()
   const navigate = useNavigate()
 
   const [state, setState] = useState<ProcessingState>("idle")
   const [error, setError] = useState<ProcessingError | null>(null)
   const [workflowRunId, setWorkflowRunId] = useState<string | null>(null)
-  const [selectedPrompt, setSelectedPrompt] = useState<PromptVersion>("v4")
+  // Use URL prompt version if provided, otherwise default
+  const [selectedPrompt, setSelectedPrompt] = useState<PromptVersion>(urlPromptVersion || "v4")
 
   // Story 5.7: Tab coordination - only leader tab polls (AC8)
   const shouldCoordinate = state === "processing" || state === "already-processing"
@@ -259,8 +261,8 @@ function ProcessingPage() {
         },
         body: JSON.stringify({ 
           uploadId: jobId,
-          // Include promptVersion when prompt selector is enabled
-          ...(showPromptSelector && { promptVersion: selectedPrompt }),
+          // Include promptVersion when provided via URL
+          ...(urlPromptVersion && { promptVersion: urlPromptVersion }),
         }),
       })
 
@@ -326,13 +328,14 @@ function ProcessingPage() {
   // Start processing on mount (auto-start in prod, manual in dev for testing)
   const [devManualStart, setDevManualStart] = useState(false)
   useEffect(() => {
-    // When prompt selector is enabled, wait for manual start
-    if (showPromptSelector && !devManualStart) return
+    // When prompt selector is enabled WITHOUT a pre-selected prompt, wait for manual start
+    // If promptVersion is in URL, auto-start with that prompt
+    if (showPromptSelector && !urlPromptVersion && !devManualStart) return
     
     if (state === "idle") {
       startProcessing()
     }
-  }, [state, startProcessing, devManualStart, showPromptSelector])
+  }, [state, startProcessing, devManualStart, showPromptSelector, urlPromptVersion])
 
   // Handle retry by calling the retry endpoint first, then restarting processing
   const handleRetry = async () => {
