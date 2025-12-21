@@ -1,16 +1,16 @@
 import { Hono } from "hono"
-import { Effect, Layer } from "effect"
+import { Effect } from "effect"
 import { z } from "zod"
-import { start } from "workflow/api"
 
-import { UploadService, UploadServiceLive } from "../services/UploadService"
-import { PostHogService, PostHogServiceLive } from "../services/PostHogService"
+import { UploadService } from "../services/UploadService"
+import { PostHogService } from "../services/PostHogService"
+import { GeminiService } from "../services/GeminiService"
+import { R2Service } from "../services/R2Service"
+import { ResultService } from "../services/ResultService"
+import { AppServicesLive } from "../services"
 import { UnauthorizedError, NotFoundError, AlreadyProcessingError } from "../lib/errors"
-import { processImageWorkflow } from "../workflows/process-image"
 import { rateLimitMiddleware } from "../middleware/rate-limit"
-
-// Combined layer for process routes
-const ProcessRoutesLive = Layer.merge(UploadServiceLive, PostHogServiceLive)
+import { getPrompt } from "../prompts/baby-portrait"
 
 const app = new Hono()
 
@@ -36,13 +36,17 @@ const processRequestSchema = z.object({
 /**
  * POST /api/process
  *
- * Trigger the AI image processing workflow.
- * This endpoint implements the fire-and-forget pattern:
+ * Process the uploaded image using Gemini AI.
+ * This endpoint processes the image synchronously (within Vercel's function timeout).
+ *
+ * Flow:
  * 1. Validates the session token
  * 2. Verifies the upload exists and is in "pending" status
- * 3. Triggers the Workflow DevKit workflow asynchronously
- * 4. Updates upload status to "processing" with workflowRunId
- * 5. Returns immediately (< 2s)
+ * 3. Updates status to "processing"
+ * 4. Fetches original image from R2
+ * 5. Calls Gemini to generate the image
+ * 6. Stores result in R2
+ * 7. Updates status to "complete"
  *
  * Headers:
  * - X-Session-Token: string - Required session token for authentication
@@ -53,8 +57,9 @@ const processRequestSchema = z.object({
  * Response:
  * - success: boolean
  * - jobId: string - Same as uploadId
- * - status: "processing"
- * - workflowRunId: string - The Workflow DevKit run ID
+ * - status: "complete" | "failed"
+ * - resultId?: string - The result ID (on success)
+ * - error?: string - Error message (on failure)
  */
 app.post("/", async (c) => {
   // Get session token from header
@@ -86,9 +91,12 @@ app.post("/", async (c) => {
 
   const { uploadId } = parsed.data
 
-  const triggerProcessing = Effect.fn("routes.process.trigger")(function* () {
+  const processImage = Effect.gen(function* () {
     const uploadService = yield* UploadService
     const posthog = yield* PostHogService
+    const gemini = yield* GeminiService
+    const r2 = yield* R2Service
+    const resultService = yield* ResultService
 
     // Get upload and verify session token
     const upload = yield* uploadService.getById(uploadId)
@@ -98,27 +106,90 @@ app.post("/", async (c) => {
       return yield* Effect.fail(new UnauthorizedError({ reason: "INVALID_TOKEN" }))
     }
 
-    // Trigger the workflow asynchronously (fire-and-forget)
-    // The workflow will handle the actual processing
-    const run = yield* Effect.promise(() => start(processImageWorkflow, [{ uploadId }]))
-    const workflowRunId = run.runId
-
-    // Update upload status to "processing" and store workflow run ID
-    const updatedUpload = yield* uploadService.startProcessing(uploadId, workflowRunId)
-
-    // Fire analytics event (server-side)
+    // Track processing start
     yield* posthog.capture("processing_started", sessionToken, {
       upload_id: uploadId,
-      workflow_run_id: workflowRunId,
+    })
+
+    // Update status to processing
+    yield* uploadService.startProcessing(uploadId, `sync-${Date.now()}`)
+
+    // Update stage: validating
+    yield* uploadService.updateStage(uploadId, "validating", 10)
+
+    // Fetch original image from R2
+    // Try multiple extensions since we don't know the original format
+    const extensions = ["png", "jpg", "jpeg", "webp"]
+    let imageUrl: string | null = null
+
+    for (const ext of extensions) {
+      const imageKey = `uploads/${uploadId}/original.${ext}`
+      try {
+        const presigned = yield* r2.generatePresignedDownloadUrl(imageKey, 300)
+        imageUrl = presigned.url
+        break
+      } catch {
+        // Try next extension
+      }
+    }
+
+    if (!imageUrl) {
+      yield* uploadService.updateStage(uploadId, "failed", 15)
+      return yield* Effect.fail(new NotFoundError({ resource: "original image", id: uploadId }))
+    }
+
+    // Update stage: generating
+    yield* uploadService.updateStage(uploadId, "generating", 30)
+
+    // Get the prompt and call Gemini
+    const prompt = getPrompt("v3")
+    const startTime = Date.now()
+
+    const generatedImage = yield* gemini.generateImageFromUrl(imageUrl, prompt)
+
+    const durationMs = Date.now() - startTime
+
+    // Track Gemini success
+    yield* posthog.capture("gemini_call_completed", sessionToken, {
+      upload_id: uploadId,
+      duration_ms: durationMs,
+      image_size_bytes: generatedImage.data.length,
+    })
+
+    // Update stage: storing
+    yield* uploadService.updateStage(uploadId, "storing", 80)
+
+    // Store result in R2
+    const createdResult = yield* resultService.create({
+      uploadId,
+      fullImageBuffer: generatedImage.data,
+      mimeType: generatedImage.mimeType,
+    })
+
+    // Track result storage
+    yield* posthog.capture("result_stored", sessionToken, {
+      upload_id: uploadId,
+      result_id: createdResult.resultId,
+      file_size_bytes: createdResult.fileSizeBytes,
+    })
+
+    // Update stage: complete
+    yield* uploadService.updateStage(uploadId, "complete", 100)
+
+    // Track processing complete
+    yield* posthog.capture("processing_completed", sessionToken, {
+      upload_id: uploadId,
+      result_id: createdResult.resultId,
+      total_duration_ms: Date.now() - startTime,
     })
 
     return {
-      upload: updatedUpload,
-      workflowRunId,
+      resultId: createdResult.resultId,
+      resultUrl: createdResult.resultUrl,
     }
   })
 
-  const program = triggerProcessing().pipe(Effect.provide(ProcessRoutesLive))
+  const program = processImage.pipe(Effect.provide(AppServicesLive))
 
   const result = await Effect.runPromise(Effect.either(program))
 
@@ -158,22 +229,23 @@ app.post("/", async (c) => {
     }
 
     // Generic error
-    console.error("[process] Error triggering workflow:", error)
+    console.error("[process] Error processing image:", error)
     return c.json(
       {
-        error: "Failed to start processing",
-        code: "WORKFLOW_ERROR",
+        error: "Failed to process image",
+        code: "PROCESSING_ERROR",
+        message: error instanceof Error ? error.message : String(error),
       },
       500
     )
   }
 
-  // Success - return immediately (fire-and-forget pattern)
+  // Success
   return c.json({
     success: true,
     jobId: uploadId,
-    status: "processing",
-    workflowRunId: result.right.workflowRunId,
+    status: "complete",
+    resultId: result.right.resultId,
   })
 })
 

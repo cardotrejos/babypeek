@@ -94,6 +94,12 @@ export class ResultError extends Data.TaggedError("ResultError")<{
   resultId?: string
 }> {}
 
+export class UploadStatusError extends Data.TaggedError("UploadStatusError")<{
+  cause: "DB_FAILED" | "INVALID_TRANSITION"
+  message: string
+  uploadId?: string
+}> {}
+
 // =============================================================================
 // Union of all errors
 // =============================================================================
@@ -111,3 +117,4 @@ export type AppError =
   | PaymentError
   | EmailError
   | ResultError
+  | UploadStatusError
