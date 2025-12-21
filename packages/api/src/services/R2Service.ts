@@ -1,5 +1,5 @@
 import { Effect, Context, Layer } from "effect"
-import { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand, HeadObjectCommand } from "@aws-sdk/client-s3"
+import { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand, HeadObjectCommand, ListObjectsV2Command } from "@aws-sdk/client-s3"
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner"
 import { env, isR2Configured } from "../lib/env"
 import { R2Error } from "../lib/errors"
@@ -23,6 +23,7 @@ export class R2Service extends Context.Tag("R2Service")<
     generatePresignedDownloadUrl: (key: string, expiresIn?: number) => Effect.Effect<PresignedUrl, R2Error>
     upload: (key: string, body: Buffer, contentType: string) => Effect.Effect<string, R2Error>
     delete: (key: string) => Effect.Effect<void, R2Error>
+    deletePrefix: (prefix: string) => Effect.Effect<number, R2Error>
     headObject: (key: string) => Effect.Effect<boolean, R2Error>
     // Legacy aliases for backwards compatibility
     getUploadUrl: (key: string, contentType: string, expiresIn?: number) => Effect.Effect<string, R2Error>
@@ -210,6 +211,52 @@ const headObject = Effect.fn("R2Service.headObject")(function* (key: string) {
   })
 })
 
+const deletePrefix = Effect.fn("R2Service.deletePrefix")(function* (prefix: string) {
+  const { client, bucketName } = yield* validateR2Request(prefix)
+
+  // List all objects with the given prefix
+  const listResult = yield* Effect.tryPromise({
+    try: () =>
+      client.send(
+        new ListObjectsV2Command({
+          Bucket: bucketName,
+          Prefix: prefix,
+        })
+      ),
+    catch: (error) =>
+      new R2Error({
+        cause: "LIST_FAILED",
+        message: `Failed to list objects with prefix ${prefix}: ${error}`,
+      }),
+  })
+
+  const objects = listResult.Contents || []
+  let deletedCount = 0
+
+  // Delete each object found
+  for (const obj of objects) {
+    if (obj.Key) {
+      yield* Effect.tryPromise({
+        try: () =>
+          client.send(
+            new DeleteObjectCommand({
+              Bucket: bucketName,
+              Key: obj.Key,
+            })
+          ),
+        catch: (error) =>
+          new R2Error({
+            cause: "DELETE_FAILED",
+            message: `Failed to delete ${obj.Key} from R2: ${error}`,
+          }),
+      })
+      deletedCount++
+    }
+  }
+
+  return deletedCount
+})
+
 const getUploadUrl = Effect.fn("R2Service.getUploadUrl")(function* (
   key: string,
   contentType: string,
@@ -233,6 +280,7 @@ export const R2ServiceLive = Layer.succeed(R2Service, {
   generatePresignedDownloadUrl,
   upload: uploadObject,
   delete: deleteObject,
+  deletePrefix,
   headObject,
   // Legacy aliases for backwards compatibility
   getUploadUrl,

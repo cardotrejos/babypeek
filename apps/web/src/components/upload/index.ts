@@ -12,3 +12,6 @@ export type { UploadFormProps, UploadFormData } from "./upload-form"
 
 export { UploadProgress } from "./upload-progress"
 export type { UploadProgressProps } from "./upload-progress"
+
+export { UploadError } from "./upload-error"
+export type { UploadErrorProps } from "./upload-error"

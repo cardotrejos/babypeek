@@ -4,6 +4,10 @@ import { createRouter as createTanStackRouter } from "@tanstack/react-router"
 import "./index.css"
 import Loader from "./components/loader"
 import { routeTree } from "./routeTree.gen"
+import { initializePageLoadTracking } from "./lib/upload-session"
+
+// Initialize page load tracking for analytics
+initializePageLoadTracking()
 
 // Create query client
 export const queryClient = new QueryClient({

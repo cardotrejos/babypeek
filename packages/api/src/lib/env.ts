@@ -69,6 +69,13 @@ const envSchema = z.object({
   FROM_EMAIL: z.string().email().default("noreply@3d-ultra.com"),
 
   // ─────────────────────────────────────────────────────────────────────────────
+  // Workflow (Vercel Workflow DevKit) - Auto-configured on Vercel
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Note: Workflow DevKit auto-configures in Vercel deployments.
+  // For local development, it uses the Local World (filesystem-based).
+  // No API key required - authentication is handled automatically.
+
+  // ─────────────────────────────────────────────────────────────────────────────
   // Environment
   // ─────────────────────────────────────────────────────────────────────────────
   NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
