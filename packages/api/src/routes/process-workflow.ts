@@ -68,10 +68,10 @@ app.post("/", async (c) => {
       }, 409)
     }
 
-    // Trigger the workflow with optional promptVersion (for testing)
+    // Trigger the workflow with optional promptVersion
     const run = await start(processImageWorkflowSimple, [{ 
       uploadId, 
-      promptVersion: promptVersion as PromptVersion | undefined 
+      promptVersion: promptVersion as PromptVersion | undefined,
     }])
 
     // Update upload with workflow run ID

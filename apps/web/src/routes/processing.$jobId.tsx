@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router"
 import { useState, useEffect, useCallback, useRef } from "react"
+import { z } from "zod"
 import { getSession, hasSession, updateJobStatus, updateJobResult } from "@/lib/session"
 import { posthog, isPostHogConfigured } from "@/lib/posthog"
 import { useStatus } from "@/hooks/use-status"
@@ -18,9 +19,14 @@ import { API_BASE_URL } from "@/lib/api-config"
  * Story 4.1: Fire-and-forget pattern - triggers workflow and shows UI
  * Story 4.6: Timeout handling with retry capability
  * Story 5.1: Full processing status page implementation (future)
+ * 
+ * Add ?prompts=true to URL to show prompt selector (for testing)
  */
 export const Route = createFileRoute("/processing/$jobId")({
   component: ProcessingPage,
+  validateSearch: z.object({
+    prompts: z.boolean().optional(),
+  }),
 })
 
 type ProcessingState = "idle" | "starting" | "processing" | "error" | "already-processing" | "timeout" | "retrying" | "complete"
@@ -44,6 +50,7 @@ interface ProcessingError {
 
 function ProcessingPage() {
   const { jobId } = Route.useParams()
+  const { prompts: showPromptSelector } = Route.useSearch()
   const navigate = useNavigate()
 
   const [state, setState] = useState<ProcessingState>("idle")
@@ -252,8 +259,8 @@ function ProcessingPage() {
         },
         body: JSON.stringify({ 
           uploadId: jobId,
-          // Include promptVersion for testing (dev only)
-          ...(import.meta.env.DEV && { promptVersion: selectedPrompt }),
+          // Include promptVersion when prompt selector is enabled
+          ...(showPromptSelector && { promptVersion: selectedPrompt }),
         }),
       })
 
@@ -319,13 +326,13 @@ function ProcessingPage() {
   // Start processing on mount (auto-start in prod, manual in dev for testing)
   const [devManualStart, setDevManualStart] = useState(false)
   useEffect(() => {
-    // In dev mode, wait for manual start to allow prompt selection
-    if (import.meta.env.DEV && !devManualStart) return
+    // When prompt selector is enabled, wait for manual start
+    if (showPromptSelector && !devManualStart) return
     
     if (state === "idle") {
       startProcessing()
     }
-  }, [state, startProcessing, devManualStart])
+  }, [state, startProcessing, devManualStart, showPromptSelector])
 
   // Handle retry by calling the retry endpoint first, then restarting processing
   const handleRetry = async () => {
@@ -387,8 +394,8 @@ function ProcessingPage() {
     navigate({ to: "/" })
   }
 
-  // Dev mode: Show prompt selector before starting
-  if (import.meta.env.DEV && state === "idle" && !devManualStart) {
+  // Show prompt selector when ?prompts=true is in URL
+  if (showPromptSelector && state === "idle" && !devManualStart) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-cream">
         <div className="max-w-md w-full text-center space-y-6">
@@ -460,8 +467,8 @@ function ProcessingPage() {
           isComplete={isComplete}
           isFailed={isFailed}
         />
-        {/* Dev debug panel at bottom */}
-        {import.meta.env.DEV && (
+        {/* Debug panel at bottom (when prompt selector enabled) */}
+        {showPromptSelector && (
           <div className="fixed bottom-0 left-0 right-0 bg-charcoal/90 text-white p-2 text-xs font-mono z-50">
             <div className="flex gap-4 justify-center flex-wrap">
               <span>Job: {jobId}</span>
@@ -627,11 +634,12 @@ function ProcessingPage() {
           </>
         )}
 
-        {/* Debug info (development only) */}
-        {import.meta.env.DEV && (
+        {/* Debug info (when prompt selector enabled) */}
+        {showPromptSelector && (
           <div className="text-xs text-warm-gray/50 font-mono space-y-1 pt-4 border-t border-warm-gray/20">
             <p>Job ID: {jobId}</p>
             <p>State: {state}</p>
+            <p>Prompt: {selectedPrompt}</p>
             {workflowRunId && <p>Workflow Run: {workflowRunId}</p>}
             {error?.code && <p>Error Code: {error.code}</p>}
           </div>
