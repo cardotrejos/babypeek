@@ -190,10 +190,11 @@ describe("Prompt Templates", () => {
     expect(PROMPTS["v3-json"].length).toBeGreaterThan(50)
   })
 
-  it("should return default v3 prompt via getPrompt()", async () => {
-    const { getPrompt, PROMPTS } = await import("../prompts/baby-portrait")
-    // Default is v3 (in-utero style) for highest quality
-    expect(getPrompt()).toBe(PROMPTS.v3)
+  it("should return default v4 prompt via getPrompt()", async () => {
+    const { getPrompt, PROMPTS, DEFAULT_PROMPT_VERSION } = await import("../prompts/baby-portrait")
+    // Default is v4 (National Geographic / Linus Ekenstam style) for zoomed-out womb aesthetic
+    expect(DEFAULT_PROMPT_VERSION).toBe("v4")
+    expect(getPrompt()).toBe(PROMPTS.v4)
   })
 
   it("should return specific version via getPrompt(version)", async () => {
@@ -255,7 +256,39 @@ describe("Prompt Templates", () => {
     const versions = getAvailableVersions()
     expect(versions).toContain("v3")
     expect(versions).toContain("v3-json")
-    expect(versions.length).toBe(2)
+    expect(versions).toContain("v4")
+    expect(versions).toContain("v4-json")
+    expect(versions.length).toBe(4)
+  })
+
+  it("should export v4 prompt (National Geographic style)", async () => {
+    const { PROMPTS } = await import("../prompts/baby-portrait")
+    expect(PROMPTS.v4).toBeDefined()
+    expect(typeof PROMPTS.v4).toBe("string")
+    expect(PROMPTS.v4.length).toBeGreaterThan(100)
+    // v4 specific elements
+    expect(PROMPTS.v4).toContain("National Geographic")
+    expect(PROMPTS.v4).toContain("womb membrane")
+    expect(PROMPTS.v4).toContain("DO NOT crop")
+    expect(PROMPTS.v4).toContain("Dark void")
+  })
+
+  it("should export v4-json prompt", async () => {
+    const { PROMPTS } = await import("../prompts/baby-portrait")
+    expect(PROMPTS["v4-json"]).toBeDefined()
+    expect(typeof PROMPTS["v4-json"]).toBe("string")
+    const parsed = JSON.parse(PROMPTS["v4-json"])
+    expect(parsed.task).toBe("edit_ultrasound_to_national_geographic_inutero_photo")
+    expect(parsed.critical_composition).toBeDefined()
+    expect(parsed.environment.wombMembrane).toBeDefined()
+  })
+
+  it("should provide v4 metadata", async () => {
+    const { getPromptMetadata } = await import("../prompts/baby-portrait")
+    expect(getPromptMetadata("v4").style).toBe("national-geographic")
+    expect(getPromptMetadata("v4").format).toBe("prose")
+    expect(getPromptMetadata("v4-json").style).toBe("national-geographic")
+    expect(getPromptMetadata("v4-json").format).toBe("json")
   })
 })
 

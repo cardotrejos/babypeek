@@ -168,13 +168,156 @@ Do not introduce new features, text, or anatomy changes.
 `.trim()
 
 // =============================================================================
+// Prompt Template v4 - National Geographic / Linus Ekenstam Style
+// =============================================================================
+
+/**
+ * V4 Prompt: "Zoomed out womb" style like Linus Ekenstam viral images.
+ *
+ * Key differences from v3:
+ * - Baby appears in wider view, not just face crop
+ * - Visible womb membrane/boundary around baby
+ * - Dark void/black background beyond the womb
+ * - Baby "floating" in amniotic fluid
+ * - More visible body (hands, arms if in original)
+ * - National Geographic documentary photography style
+ *
+ * @see IMG_9994.jpg, IMG_9995.jpg for reference
+ */
+export const BABY_PORTRAIT_PROMPT_V4 = `
+Edit task: Transform this 4D ultrasound into a hyper-realistic in-utero photograph as if captured by National Geographic inside the womb.
+
+CRITICAL - Composition:
+- DO NOT crop tightly to just the face
+- Show the baby floating inside the womb cavity
+- Include visible body parts as shown in the original (hands, arms, shoulders)
+- Surround the baby with the glowing womb membrane/boundary
+- Dark void/black background OUTSIDE the womb membrane
+- The womb should appear as a luminous, semi-translucent organic sphere containing the baby
+
+Reference priority:
+1. Keep the exact pose, head angle, facial proportions from the input image
+2. Match all visible body parts (hands, fingers, arms) exactly as positioned
+3. Preserve the framing scale - if hands are visible, keep them visible
+
+What to change: Replace ultrasound rendering with real photographic detail:
+- Realistic skin texture with visible peach fuzz (lanugo)
+- Natural skin micro-texture, mild mottling, subsurface scattering
+- Realistic eyelids, lips, nose
+- Amniotic fluid with suspended particles and subtle caustics
+- Visible womb membrane with organic veined texture (like the National Geographic embryo photos)
+
+Lighting:
+- Warm amber/red transillumination FROM the womb walls
+- Baby illuminated by light passing through tissue (subsurface glow)
+- Dark exterior void beyond the womb
+- Rim lighting on baby's silhouette from womb glow
+- Floating dust particles catching light in the amniotic fluid
+
+Camera:
+- Medium shot showing baby's face AND visible body parts
+- Shallow depth of field with the face sharpest
+- 35-50mm equivalent for wider field of view
+- f/2.8 aperture look
+
+Style: National Geographic documentary photography, Lennart Nilsson "A Child is Born" aesthetic, cinematic medical visualization
+
+Negative prompt: no date stamp, no text, no watermark, no border, not rustic, not aged, no CGI look, no 3D render, no plastic/waxy skin, no beauty filter, no over-smoothing, no over-sharpening, no HDR look, no tight face crop only, no missing the womb context, no extra fingers, no missing fingers, no fused fingers, no duplicated facial features, no warped anatomy
+`.trim()
+
+/**
+ * V4 JSON Prompt: Structured format for zoomed-out womb style.
+ */
+export const BABY_PORTRAIT_PROMPT_V4_JSON = {
+  task: "edit_ultrasound_to_national_geographic_inutero_photo",
+  critical_composition: {
+    crop: "DO NOT crop to just the face - show baby floating in womb",
+    context: "Include visible womb membrane/boundary around baby",
+    background: "Dark void/black background OUTSIDE the womb",
+    body: "Show all visible body parts (hands, arms, shoulders) from original",
+  },
+  referencePriority: [
+    "Input image: pose, head angle, facial proportions lock",
+    "Input image: all visible body parts (hands, fingers, arms) position lock",
+    "Input image: framing scale - preserve what is visible",
+  ],
+  constraints: {
+    keepPose: true,
+    keepFraming: false, // We want wider view
+    keepFacialProportions: true,
+    keepVisibleBodyParts: true,
+    showWombContext: true,
+    minimalChanges: "convert ultrasound to photoreal with womb membrane visible",
+  },
+  subject: {
+    type: "late-term fetus in womb",
+    expression: "relaxed, eyes closed",
+    details: [
+      "realistic skin texture",
+      "visible peach fuzz (lanugo)",
+      "natural skin micro-texture",
+      "mild mottling",
+      "subsurface scattering",
+      "realistic eyelids, lips, nose",
+    ],
+  },
+  environment: {
+    setting: "inside womb with visible membrane boundary",
+    wombMembrane: {
+      appearance: "luminous, semi-translucent organic sphere",
+      texture: "organic veined texture like National Geographic embryo photos",
+      lighting: "glowing from within, amber/red transillumination",
+    },
+    amnioticFluid: ["suspended particles", "subtle caustics", "floating specks"],
+    exterior: "dark void/black background beyond womb membrane",
+    forbidden: ["props", "extra objects", "text", "borders", "medical equipment"],
+  },
+  lighting: {
+    type: "transillumination from womb walls",
+    tone: "warm amber/red",
+    effects: [
+      "subsurface glow on baby",
+      "rim lighting from womb glow",
+      "floating particles catching light",
+      "dark exterior contrast",
+    ],
+  },
+  camera: {
+    style: "National Geographic documentary photography",
+    shotType: "medium shot showing face AND body parts",
+    focalRange: "35-50mm equivalent",
+    depthOfField: "shallow (around f/2.8)",
+    focus: "face sharpest, body slightly soft",
+  },
+  styleReference: [
+    "Lennart Nilsson 'A Child is Born'",
+    "National Geographic embryo photography",
+    "Linus Ekenstam viral baby reconstructions",
+  ],
+  negatives: [
+    ...V3_NEGATIVE_PROMPT,
+    "tight face crop only",
+    "missing womb context",
+    "no visible womb membrane",
+    "floating in void without womb",
+  ],
+} as const
+
+/**
+ * Get the v4 JSON prompt as a formatted string.
+ */
+export function getV4JsonPromptAsString(): string {
+  return JSON.stringify(BABY_PORTRAIT_PROMPT_V4_JSON, null, 2)
+}
+
+// =============================================================================
 // Prompt Registry
 // =============================================================================
 
 /**
  * Prompt style metadata for analytics.
  */
-export type PromptStyle = "in-utero"
+export type PromptStyle = "in-utero" | "national-geographic"
 
 /**
  * Prompt format type.
@@ -187,6 +330,8 @@ export type PromptFormat = "prose" | "json"
 export const PROMPT_METADATA = {
   v3: { style: "in-utero" as PromptStyle, format: "prose" as PromptFormat },
   "v3-json": { style: "in-utero" as PromptStyle, format: "json" as PromptFormat },
+  v4: { style: "national-geographic" as PromptStyle, format: "prose" as PromptFormat },
+  "v4-json": { style: "national-geographic" as PromptStyle, format: "json" as PromptFormat },
 } as const
 
 /**
@@ -195,6 +340,8 @@ export const PROMPT_METADATA = {
 export const PROMPTS = {
   v3: BABY_PORTRAIT_PROMPT_V3,
   "v3-json": getV3JsonPromptAsString(),
+  v4: BABY_PORTRAIT_PROMPT_V4,
+  "v4-json": getV4JsonPromptAsString(),
 } as const
 
 /**
@@ -204,9 +351,11 @@ export type PromptVersion = keyof typeof PROMPTS
 
 /**
  * Default prompt version to use.
- * Using v3 (in-utero prose style) for highest quality output.
+ * 
+ * v3: Close-up face portrait (tight crop)
+ * v4: National Geographic style - zoomed out with visible womb membrane (Linus Ekenstam style)
  */
-export const DEFAULT_PROMPT_VERSION: PromptVersion = "v3"
+export const DEFAULT_PROMPT_VERSION: PromptVersion = "v4"
 
 // =============================================================================
 // Prompt Retrieval
