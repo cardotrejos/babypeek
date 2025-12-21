@@ -1,85 +1,170 @@
 /**
  * Baby Portrait Prompt Template
  *
- * This module contains the structured prompt template used for transforming
- * 4D ultrasound images into photorealistic baby portraits using Gemini Imagen 3.
+ * This module contains the structured prompt templates used for transforming
+ * 4D ultrasound images into photorealistic baby portraits using Gemini's
+ * native image generation (Nano Banana Pro - gemini-3-pro-image-preview).
  *
- * The prompt is designed to:
- * - Produce warm, high-quality newborn photography aesthetic
- * - Match visible facial features from the ultrasound
- * - Follow safety guidelines to avoid controversial outputs
- * - Support A/B testing with versioned prompts
+ * Prompt Style: "In-utero" - baby inside womb, Linus Ekenstam viral quality
+ *
+ * Based on the Nano Banana Pro guide (fofr.ai) and official Google documentation
+ * for optimal image generation.
  *
  * @see Story 4.2 - Gemini Imagen 3 Integration
+ * @see Story 4.2.1 - Prompt Optimization (Nano Banana Pro Style)
+ * @see nano-banana-prompt.md - Prompting guide
+ * @see guide-nano-banana.md - Official Google documentation
  */
 
 // =============================================================================
-// Prompt Template v1
+// Prompt Template v3 - In-Utero Style (Nano Banana Pro)
 // =============================================================================
 
 /**
- * Primary prompt for ultrasound-to-photorealistic baby portrait conversion.
+ * V3 Prompt: In-utero photorealistic style based on Nano Banana Pro guide.
  *
- * Design rationale:
- * - Clear instruction structure for the AI model
- * - Emphasis on matching ultrasound features for personalization
- * - Professional newborn photography aesthetic for emotional appeal
- * - Safety guidelines to prevent inappropriate outputs
- * - Warm, magical tone aligned with product positioning (gift for parents)
+ * This prompt produces the "Linus Ekenstam" viral quality:
+ * - Baby appears inside the womb with amniotic fluid
+ * - Warm amber/red transillumination lighting
+ * - Strict anatomy lock (preserves pose, facial proportions)
+ * - Subsurface scattering for realistic translucent skin
+ * - Medical macro photography aesthetic
+ *
+ * @see nano-banana-prompt.md for full guide
  */
-export const BABY_PORTRAIT_PROMPT_V1 = `
-Transform this 4D ultrasound image into a photorealistic portrait of the baby.
+export const BABY_PORTRAIT_PROMPT_V3 = `
+Edit task: Transform this 4D ultrasound into a single-frame ultra-realistic in-utero photograph.
 
-Instructions:
-- Create a warm, soft portrait of a newborn baby
-- Match the facial features visible in the ultrasound (face shape, nose, lips, cheeks)
-- Use soft, natural lighting as if in a nursery setting
-- Background should be neutral, warm, and softly blurred
-- Baby should appear peaceful, serene, and comfortable
-- Skin tone should be realistic, healthy, and natural
-- Eyes can be gently closed or softly gazing
+Reference priority:
+1. Keep the exact pose, head angle, facial proportions, and framing from the input image.
+2. Match facial geometry exactly (identity lock).
+3. Match hand/finger count and placement if visible (anatomy lock).
 
-Style guidelines:
-- Photorealistic rendering, not cartoonish or stylized
-- Professional newborn photography aesthetic
-- Warm color palette with soft pinks, creams, and natural skin tones
-- High resolution with fine detail
-- Soft focus on background, sharp focus on baby's face
+What to change (only): Replace ultrasound material/shading with real photographic detail:
+- Realistic eyelids, lips, nose, soft cheeks
+- Subtle peach fuzz (lanugo)
+- Natural skin micro-texture and mild mottling
+- Physically plausible subsurface scattering (translucent, not plastic)
 
-Safety guidelines:
-- Do not generate any inappropriate or disturbing content
-- Maintain dignity and respect for the baby
-- No medical instruments, clinical elements, or hospital equipment in output
-- No text, watermarks, or overlays
-- Ensure output is suitable for all audiences
+Scene: Inside the womb with amniotic fluid haze and a few floating specks. No extra objects.
 
-This is a precious gift for expecting parents - make it magical and heartwarming.
+Lighting/optics:
+- Warm amber/red transillumination through tissue
+- Gentle bloom and soft falloff
+- Shallow depth of field (macro portrait look, 50-85mm equivalent, ~f/2)
+- Slight vignette
+- Candid medical macro photo aesthetic (not studio portrait)
+
+Constraint: Make as few changes as possible beyond converting ultrasound rendering into a photoreal photo while keeping anatomy locked.
+
+Negative prompt: no date stamp, no text, no watermark, no border, not rustic, not aged, no CGI, no 3D render, no plastic/waxy skin, no beauty filter, no over-smoothing, no over-sharpening, no HDR look, no extra fingers, no missing fingers, no fused fingers, no duplicated facial features, no warped anatomy
 `.trim()
 
+/**
+ * Comprehensive negative prompt for v3.
+ * Can be appended or used separately with JSON prompts.
+ */
+export const V3_NEGATIVE_PROMPT = [
+  "date stamp",
+  "text",
+  "watermark",
+  "border",
+  "rustic",
+  "aged look",
+  "CGI",
+  "3D render",
+  "plastic skin",
+  "waxy skin",
+  "beauty filter",
+  "over-smoothed skin",
+  "over-sharpened",
+  "HDR look",
+  "extra fingers",
+  "missing fingers",
+  "fused fingers",
+  "duplicated facial features",
+  "warped anatomy",
+] as const
+
 // =============================================================================
-// Alternative Prompts for A/B Testing
+// Prompt Template v3-json - Structured JSON Format
 // =============================================================================
 
 /**
- * Alternative prompt v2 - More concise, focused on key features.
- * Can be tested against v1 to measure conversion and satisfaction.
+ * V3 JSON Prompt: Structured format for maximum control.
+ *
+ * Use this format when you need fine-grained control over each aspect
+ * of the generation. Nano Banana Pro accepts JSON prompts directly.
+ *
+ * @see guide-nano-banana.md - JSON prompting section
  */
-export const BABY_PORTRAIT_PROMPT_V2 = `
-Create a photorealistic newborn baby portrait based on this 4D ultrasound image.
+export const BABY_PORTRAIT_PROMPT_V3_JSON = {
+  task: "edit_ultrasound_to_photoreal_inutero_photo",
+  referencePriority: [
+    "Input image: framing + pose lock",
+    "Input image: face geometry / identity lock",
+    "Input image: hand anatomy lock (if visible)",
+  ],
+  constraints: {
+    keepPose: true,
+    keepFraming: true,
+    keepFacialProportions: true,
+    noAnatomyChanges: true,
+    minimalChanges: "only convert ultrasound rendering to photoreal",
+  },
+  subject: {
+    type: "late-term fetus",
+    expression: "relaxed, eyes closed",
+    details: [
+      "natural eyelids",
+      "natural lips",
+      "soft cheeks",
+      "subtle peach fuzz (lanugo)",
+      "skin micro-texture",
+      "subsurface scattering",
+      "mild skin mottling",
+    ],
+  },
+  environment: {
+    setting: "inside womb",
+    elements: ["amniotic fluid haze", "subtle floating specks"],
+    forbidden: ["props", "extra objects", "text", "borders", "medical equipment"],
+  },
+  lighting: {
+    type: "warm transillumination",
+    tone: "amber/red",
+    effects: ["soft bloom", "gentle falloff", "slight vignette"],
+  },
+  camera: {
+    style: "candid medical macro photo",
+    focalRange: "50-85mm equivalent",
+    depthOfField: "shallow (around f/2 look)",
+  },
+  negatives: V3_NEGATIVE_PROMPT,
+} as const
 
-Key requirements:
-- Match the baby's facial features from the ultrasound (face shape, nose, lips)
-- Professional newborn photography style with soft, warm lighting
-- Neutral, softly blurred background
-- Baby appears peaceful with eyes gently closed
-- Natural, healthy skin tone
-- High quality, detailed rendering
+/**
+ * Get the v3 JSON prompt as a formatted string.
+ * Useful when the API expects a string but you want JSON structure.
+ */
+export function getV3JsonPromptAsString(): string {
+  return JSON.stringify(BABY_PORTRAIT_PROMPT_V3_JSON, null, 2)
+}
 
-Output should be:
-- Suitable for framing as a gift for parents
-- Warm, heartwarming, and magical
-- Free of any medical or clinical elements
-- Safe for all audiences
+// =============================================================================
+// Upscale/Restore Prompt
+// =============================================================================
+
+/**
+ * Upscale prompt for optional second-pass enhancement.
+ * Run on the generated image to increase resolution while preserving details.
+ *
+ * @see nano-banana-prompt.md - Two-step pipeline
+ */
+export const UPSCALE_PROMPT = `
+Upscale to 4K and lightly restore. Preserve the exact image content and composition.
+Increase fine skin detail and realistic grain subtly.
+Do not introduce new features, text, or anatomy changes.
 `.trim()
 
 // =============================================================================
@@ -87,11 +172,29 @@ Output should be:
 // =============================================================================
 
 /**
- * All available prompt versions for A/B testing.
+ * Prompt style metadata for analytics.
+ */
+export type PromptStyle = "in-utero"
+
+/**
+ * Prompt format type.
+ */
+export type PromptFormat = "prose" | "json"
+
+/**
+ * Prompt metadata for each version.
+ */
+export const PROMPT_METADATA = {
+  v3: { style: "in-utero" as PromptStyle, format: "prose" as PromptFormat },
+  "v3-json": { style: "in-utero" as PromptStyle, format: "json" as PromptFormat },
+} as const
+
+/**
+ * All available prompt versions.
  */
 export const PROMPTS = {
-  v1: BABY_PORTRAIT_PROMPT_V1,
-  v2: BABY_PORTRAIT_PROMPT_V2,
+  v3: BABY_PORTRAIT_PROMPT_V3,
+  "v3-json": getV3JsonPromptAsString(),
 } as const
 
 /**
@@ -101,8 +204,9 @@ export type PromptVersion = keyof typeof PROMPTS
 
 /**
  * Default prompt version to use.
+ * Using v3 (in-utero prose style) for highest quality output.
  */
-export const DEFAULT_PROMPT_VERSION: PromptVersion = "v1"
+export const DEFAULT_PROMPT_VERSION: PromptVersion = "v3"
 
 // =============================================================================
 // Prompt Retrieval
@@ -111,17 +215,47 @@ export const DEFAULT_PROMPT_VERSION: PromptVersion = "v1"
 /**
  * Get the prompt template for a specific version.
  *
- * @param version - The prompt version to retrieve (defaults to v1)
+ * @param version - The prompt version to retrieve (defaults to v3)
  * @returns The prompt string
  *
  * @example
  * ```typescript
- * const prompt = getPrompt('v1')
- * const result = await geminiService.generateImage(imageUrl, prompt)
+ * const prompt = getPrompt('v3')       // Prose format (default)
+ * const prompt = getPrompt('v3-json')  // JSON format
+ * const result = await geminiService.generateImage(imageBuffer, prompt)
  * ```
  */
 export function getPrompt(version: PromptVersion = DEFAULT_PROMPT_VERSION): string {
   return PROMPTS[version]
+}
+
+/**
+ * Get the v3 JSON prompt object (not stringified).
+ * Useful when you need to modify or extend the prompt structure.
+ *
+ * @returns The v3 JSON prompt object
+ */
+export function getV3JsonPrompt(): typeof BABY_PORTRAIT_PROMPT_V3_JSON {
+  return BABY_PORTRAIT_PROMPT_V3_JSON
+}
+
+/**
+ * Get the upscale prompt for optional second-pass enhancement.
+ *
+ * @returns The upscale prompt string
+ */
+export function getUpscalePrompt(): string {
+  return UPSCALE_PROMPT
+}
+
+/**
+ * Get metadata for a specific prompt version.
+ *
+ * @param version - The prompt version
+ * @returns Metadata including style and format
+ */
+export function getPromptMetadata(version: PromptVersion): (typeof PROMPT_METADATA)[PromptVersion] {
+  return PROMPT_METADATA[version]
 }
 
 /**

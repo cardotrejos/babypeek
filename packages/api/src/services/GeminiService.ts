@@ -1,21 +1,39 @@
 /**
  * Gemini Service
  *
- * Effect-based service for calling Gemini Imagen 3 API to transform
+ * Effect-based service for calling Gemini native image generation API to transform
  * 4D ultrasound images into photorealistic baby portraits.
+ *
+ * Uses gemini-3-pro-image-preview (Nano Banana Pro) for highest quality output:
+ * - Up to 14 reference images
+ * - 1K/2K/4K resolution output
+ * - Thinking mode for complex prompts
+ * - Native image generation (responseModalities: ['text', 'image'])
  *
  * Features:
  * - Effect.tryPromise for error handling
  * - 60 second timeout
  * - Typed GeminiError for different failure scenarios
  * - Retry logic with exponential backoff
+ * - Configurable image output (aspect ratio, resolution)
  *
  * @see Story 4.2 - Gemini Imagen 3 Integration
+ * @see Story 4.2.1 - Prompt Optimization (Nano Banana Pro Style)
+ * @see https://ai.google.dev/gemini-api/docs/image-generation
  */
 
 import { Effect, Context, Layer, Schedule } from "effect"
 import { GeminiError } from "../lib/errors"
-import { getGeminiClient, IMAGEN_MODEL, SAFETY_SETTINGS, GENERATION_CONFIG, bufferToBase64, inferMimeType } from "../lib/gemini"
+import {
+  getGeminiClient,
+  IMAGEN_MODEL,
+  SAFETY_SETTINGS,
+  GENERATION_CONFIG,
+  DEFAULT_IMAGE_CONFIG,
+  bufferToBase64,
+  inferMimeType,
+  type ImageGenerationConfig,
+} from "../lib/gemini"
 import { isGeminiConfigured, env } from "../lib/env"
 
 // =============================================================================
@@ -36,6 +54,14 @@ export interface GeneratedImage {
 // =============================================================================
 
 /**
+ * Options for image generation.
+ */
+export interface GenerateImageOptions {
+  /** Image configuration (aspect ratio, size) */
+  imageConfig?: ImageGenerationConfig
+}
+
+/**
  * Gemini Service interface.
  * Provides image generation capabilities using Google's Gemini API.
  */
@@ -47,18 +73,28 @@ export class GeminiService extends Context.Tag("GeminiService")<
      *
      * @param imageBuffer - The input image as a Buffer
      * @param prompt - The transformation prompt
+     * @param options - Optional image generation config
      * @returns Effect containing the generated image data
      */
-    generateImage: (imageBuffer: Buffer, prompt: string) => Effect.Effect<GeneratedImage, GeminiError>
+    generateImage: (
+      imageBuffer: Buffer,
+      prompt: string,
+      options?: GenerateImageOptions
+    ) => Effect.Effect<GeneratedImage, GeminiError>
 
     /**
      * Generate an image from a URL (fetches the image first).
      *
      * @param imageUrl - URL of the input image
      * @param prompt - The transformation prompt
+     * @param options - Optional image generation config
      * @returns Effect containing the generated image data
      */
-    generateImageFromUrl: (imageUrl: string, prompt: string) => Effect.Effect<GeneratedImage, GeminiError>
+    generateImageFromUrl: (
+      imageUrl: string,
+      prompt: string,
+      options?: GenerateImageOptions
+    ) => Effect.Effect<GeneratedImage, GeminiError>
   }
 >() {}
 
@@ -69,6 +105,7 @@ export class GeminiService extends Context.Tag("GeminiService")<
 /**
  * Map Gemini SDK errors to typed GeminiError.
  * Categorizes errors for proper handling and analytics.
+ * Preserves originalError for Sentry logging.
  */
 function mapGeminiError(error: unknown): GeminiError {
   const message = error instanceof Error ? error.message : String(error)
@@ -79,6 +116,7 @@ function mapGeminiError(error: unknown): GeminiError {
     return new GeminiError({
       cause: "RATE_LIMITED",
       message: `Gemini API rate limit exceeded: ${message}`,
+      originalError: error,
     })
   }
 
@@ -92,6 +130,7 @@ function mapGeminiError(error: unknown): GeminiError {
     return new GeminiError({
       cause: "CONTENT_POLICY",
       message: `Content was blocked by safety filters: ${message}`,
+      originalError: error,
     })
   }
 
@@ -105,6 +144,7 @@ function mapGeminiError(error: unknown): GeminiError {
     return new GeminiError({
       cause: "INVALID_IMAGE",
       message: `Invalid or corrupted input image: ${message}`,
+      originalError: error,
     })
   }
 
@@ -112,6 +152,7 @@ function mapGeminiError(error: unknown): GeminiError {
   return new GeminiError({
     cause: "API_ERROR",
     message: `Gemini API error: ${message}`,
+    originalError: error,
   })
 }
 
@@ -141,9 +182,15 @@ const fetchImageBuffer = (url: string): Effect.Effect<Buffer, GeminiError> =>
 
 /**
  * Call the Gemini API to generate an image.
- * Uses the generative model with image input.
+ * Uses gemini-3-pro-image-preview (Nano Banana Pro) with native image generation.
+ *
+ * @see https://ai.google.dev/gemini-api/docs/image-generation
  */
-const callGeminiApi = (imageBuffer: Buffer, prompt: string): Effect.Effect<GeneratedImage, GeminiError> =>
+const callGeminiApi = (
+  imageBuffer: Buffer,
+  prompt: string,
+  options?: GenerateImageOptions
+): Effect.Effect<GeneratedImage, GeminiError> =>
   Effect.gen(function* () {
     const client = getGeminiClient()
 
@@ -156,11 +203,20 @@ const callGeminiApi = (imageBuffer: Buffer, prompt: string): Effect.Effect<Gener
       )
     }
 
-    // Get the generative model
+    // Merge with default image config
+    const imageConfig = { ...DEFAULT_IMAGE_CONFIG, ...options?.imageConfig }
+
+    // Get the generative model with image generation support
+    // Note: responseModalities must include 'image' for native image generation
     const model = client.getGenerativeModel({
       model: IMAGEN_MODEL,
       safetySettings: SAFETY_SETTINGS,
-      generationConfig: GENERATION_CONFIG,
+      generationConfig: {
+        ...GENERATION_CONFIG,
+        // Enable image output - this is required for gemini-3-pro-image-preview
+        // @ts-expect-error - responseModalities not in SDK types yet but supported by API
+        responseModalities: ["text", "image"],
+      },
     })
 
     // Prepare image data for the API
@@ -170,6 +226,20 @@ const callGeminiApi = (imageBuffer: Buffer, prompt: string): Effect.Effect<Gener
     // Call the API with image and prompt
     const result = yield* Effect.tryPromise({
       try: async () => {
+        // For development/testing without API key, return mock response
+        if (env.NODE_ENV === "development" && !isGeminiConfigured()) {
+          console.warn(
+            `[GeminiService] DEV MODE: No GEMINI_API_KEY configured. Returning mock placeholder image.`
+          )
+          const mockPlaceholder = Buffer.from(`MOCK_GEMINI_OUTPUT_${Date.now()}`)
+          return {
+            data: mockPlaceholder,
+            mimeType: "image/png",
+          }
+        }
+
+        console.log(`[GeminiService] Calling ${IMAGEN_MODEL} with imageConfig:`, imageConfig)
+
         const response = await model.generateContent([
           prompt,
           {
@@ -187,29 +257,8 @@ const callGeminiApi = (imageBuffer: Buffer, prompt: string): Effect.Effect<Gener
           throw new Error(`Content blocked: ${generatedContent.promptFeedback.blockReason}`)
         }
 
-        // Extract the response text (for vision models, this describes what to generate)
-        const text = generatedContent.text()
-
-        // For now, since Imagen 3 proper image generation may require different API,
-        // we return the response as a placeholder
-        // In production, this would be the actual generated image bytes
-        // The exact API may vary based on Google's Imagen 3 availability
-
-        // Note: If using imagen-3.0-generate-001 model, the response format may differ
-        // This implementation uses the generative model approach
-        // When Imagen 3 is fully available, update to use the correct endpoint
-
-        // For development/testing, return a placeholder response
-        // Real implementation would extract image data from response.candidates[0].content.parts[0].inlineData
-        if (env.NODE_ENV === "development" && !isGeminiConfigured()) {
-          console.log(`[GeminiService] Mock response: ${text.substring(0, 100)}...`)
-          return {
-            data: imageBuffer, // Return input as mock output in dev
-            mimeType: "image/jpeg",
-          }
-        }
-
         // Try to extract generated image from response
+        // Nano Banana Pro returns images in inlineData
         const candidates = generatedContent.candidates
         if (candidates && candidates.length > 0) {
           const firstCandidate = candidates[0]
@@ -218,19 +267,28 @@ const callGeminiApi = (imageBuffer: Buffer, prompt: string): Effect.Effect<Gener
             for (const part of parts) {
               if ("inlineData" in part && part.inlineData && part.inlineData.data) {
                 const imageData = part.inlineData
+                console.log(`[GeminiService] Successfully generated image, mimeType: ${imageData.mimeType}`)
                 return {
                   data: Buffer.from(imageData.data, "base64"),
-                  mimeType: imageData.mimeType ?? "image/jpeg",
+                  mimeType: imageData.mimeType ?? "image/png",
                 }
               }
             }
           }
         }
 
-        // If no image in response, this model may not support image generation
-        // Return a descriptive error
+        // If no image in response, check for text response (might be an error or thinking)
+        let textResponse = ""
+        try {
+          textResponse = generatedContent.text()
+        } catch {
+          // No text available
+        }
+
+        // If no image in response, this model may not have generated one
         throw new Error(
-          `Model ${IMAGEN_MODEL} did not return generated image. Response: ${text.substring(0, 200)}`
+          `Model ${IMAGEN_MODEL} did not return generated image. ` +
+          `Text response: ${textResponse.substring(0, 200) || "(none)"}`
         )
       },
       catch: mapGeminiError,
@@ -242,8 +300,12 @@ const callGeminiApi = (imageBuffer: Buffer, prompt: string): Effect.Effect<Gener
 /**
  * Generate image with retry logic and timeout.
  */
-const generateImageWithRetry = (imageBuffer: Buffer, prompt: string): Effect.Effect<GeneratedImage, GeminiError> =>
-  callGeminiApi(imageBuffer, prompt).pipe(
+const generateImageWithRetry = (
+  imageBuffer: Buffer,
+  prompt: string,
+  options?: GenerateImageOptions
+): Effect.Effect<GeneratedImage, GeminiError> =>
+  callGeminiApi(imageBuffer, prompt, options).pipe(
     // Retry up to 3 times with exponential backoff for transient errors
     Effect.retry({
       times: 3,
@@ -251,7 +313,7 @@ const generateImageWithRetry = (imageBuffer: Buffer, prompt: string): Effect.Eff
       // Only retry on rate limiting or transient API errors
       while: (error) => error.cause === "RATE_LIMITED" || error.cause === "API_ERROR",
     }),
-    // 60 second timeout
+    // 60 second timeout (Nano Banana Pro may take longer due to thinking mode)
     Effect.timeout("60 seconds"),
     // Map timeout to GeminiError
     Effect.catchTag("TimeoutException", () =>
@@ -267,8 +329,12 @@ const generateImageWithRetry = (imageBuffer: Buffer, prompt: string): Effect.Eff
 /**
  * Implementation of generateImage.
  */
-const generateImage = Effect.fn("GeminiService.generateImage")(function* (imageBuffer: Buffer, prompt: string) {
-  return yield* generateImageWithRetry(imageBuffer, prompt)
+const generateImage = Effect.fn("GeminiService.generateImage")(function* (
+  imageBuffer: Buffer,
+  prompt: string,
+  options?: GenerateImageOptions
+) {
+  return yield* generateImageWithRetry(imageBuffer, prompt, options)
 })
 
 /**
@@ -276,13 +342,14 @@ const generateImage = Effect.fn("GeminiService.generateImage")(function* (imageB
  */
 const generateImageFromUrl = Effect.fn("GeminiService.generateImageFromUrl")(function* (
   imageUrl: string,
-  prompt: string
+  prompt: string,
+  options?: GenerateImageOptions
 ) {
   // Fetch the image from URL
   const imageBuffer = yield* fetchImageBuffer(imageUrl)
 
   // Generate the image
-  return yield* generateImageWithRetry(imageBuffer, prompt)
+  return yield* generateImageWithRetry(imageBuffer, prompt, options)
 })
 
 // =============================================================================
@@ -306,15 +373,15 @@ export const GeminiServiceLive = Layer.succeed(GeminiService, {
  * Returns a predictable response without calling the API.
  */
 export const GeminiServiceMock = Layer.succeed(GeminiService, {
-  generateImage: (_imageBuffer: Buffer, _prompt: string) =>
+  generateImage: (_imageBuffer: Buffer, _prompt: string, _options?: GenerateImageOptions) =>
     Effect.succeed({
       data: Buffer.from("mock-generated-image-data"),
-      mimeType: "image/jpeg",
+      mimeType: "image/png",
     }),
-  generateImageFromUrl: (_imageUrl: string, _prompt: string) =>
+  generateImageFromUrl: (_imageUrl: string, _prompt: string, _options?: GenerateImageOptions) =>
     Effect.succeed({
       data: Buffer.from("mock-generated-image-data"),
-      mimeType: "image/jpeg",
+      mimeType: "image/png",
     }),
 })
 
@@ -323,6 +390,8 @@ export const GeminiServiceMock = Layer.succeed(GeminiService, {
  */
 export const GeminiServiceErrorMock = (cause: GeminiError["cause"], message: string) =>
   Layer.succeed(GeminiService, {
-    generateImage: () => Effect.fail(new GeminiError({ cause, message })),
-    generateImageFromUrl: () => Effect.fail(new GeminiError({ cause, message })),
+    generateImage: (_imageBuffer?: Buffer, _prompt?: string, _options?: GenerateImageOptions) =>
+      Effect.fail(new GeminiError({ cause, message })),
+    generateImageFromUrl: (_imageUrl?: string, _prompt?: string, _options?: GenerateImageOptions) =>
+      Effect.fail(new GeminiError({ cause, message })),
   })
