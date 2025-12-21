@@ -3,16 +3,21 @@
   "type": "module",
   "main": "src/index.ts",
   "scripts": {
-    "build": "tsdown",
+    "build": "nitro build",
+    "build:tsdown": "tsdown",
     "check-types": "tsc -b",
     "compile": "bun build --compile --minify --sourcemap --bytecode ./src/index.ts --outfile server",
-    "dev": "bun run --hot src/index.ts",
+    "dev": "nitro dev",
+    "dev:simple": "bun run --hot src/index.ts",
     "start": "bun run dist/index.js"
   },
   "dependencies": {
     "hono": "catalog:",
     "dotenv": "catalog:",
     "zod": "catalog:",
+    "nitro": "^3.0.1-alpha.1",
+    "rollup": "^4.54.0",
+    "workflow": "^4.0.1-beta.35",
     "@3d-ultra/api": "workspace:*",
     "@3d-ultra/db": "workspace:*"
   },

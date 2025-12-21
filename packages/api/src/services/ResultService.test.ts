@@ -69,8 +69,10 @@ describe("ResultService", () => {
     create: () => Effect.succeed({} as never),
     getById: () => Effect.succeed({} as never),
     getBySessionToken: () => Effect.succeed({} as never),
+    getByIdWithAuth: () => Effect.succeed({} as never),
     updateStatus: () => Effect.succeed(undefined),
     updateResult: () => Effect.succeed(undefined),
+    updateStage: () => Effect.succeed({} as never),
     startProcessing: () => Effect.succeed({} as never),
   })
 

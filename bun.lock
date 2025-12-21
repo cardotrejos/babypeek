@@ -28,6 +28,9 @@
         "@3d-ultra/db": "workspace:*",
         "dotenv": "catalog:",
         "hono": "catalog:",
+        "nitro": "^3.0.1-alpha.1",
+        "rollup": "^4.54.0",
+        "workflow": "^4.0.1-beta.35",
         "zod": "catalog:",
       },
       "devDependencies": {

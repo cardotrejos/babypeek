@@ -22,6 +22,7 @@ import { GeminiService, type GeneratedImage } from "../services/GeminiService"
 import { R2Service } from "../services/R2Service"
 import { PostHogService } from "../services/PostHogService"
 import { ResultService, type CreatedResult } from "../services/ResultService"
+import { UploadService, type UploadStage } from "../services/UploadService"
 import { AppServicesLive } from "../services/index"
 import { getPrompt, type PromptVersion } from "../prompts/baby-portrait"
 import type { GeminiError } from "../lib/errors"
@@ -67,7 +68,7 @@ interface GenerateResult {
  * Used to execute Effect-based service calls within workflow steps.
  */
 async function runWithServices<A, E>(
-  effect: Effect.Effect<A, E, GeminiService | R2Service | PostHogService | ResultService>
+  effect: Effect.Effect<A, E, GeminiService | R2Service | PostHogService | ResultService | UploadService>
 ): Promise<{ success: true; data: A } | { success: false; error: E }> {
   const program = effect.pipe(Effect.provide(AppServicesLive))
 
@@ -76,6 +77,27 @@ async function runWithServices<A, E>(
     return { success: true, data: result }
   } catch (e) {
     return { success: false, error: e as E }
+  }
+}
+
+/**
+ * Update the processing stage and progress in the database.
+ * This enables real-time progress tracking via the status API.
+ * 
+ * @param uploadId - The upload ID
+ * @param stage - The current processing stage
+ * @param progress - Progress percentage (0-100)
+ */
+async function updateStage(uploadId: string, stage: UploadStage, progress: number): Promise<void> {
+  const effect = Effect.gen(function* () {
+    const uploadService = yield* UploadService
+    yield* uploadService.updateStage(uploadId, stage, progress)
+  })
+
+  const result = await runWithServices(effect)
+  if (!result.success) {
+    console.warn(`[workflow:updateStage] Failed to update stage for ${uploadId}:`, result.error)
+    // Don't fail the workflow if stage update fails - it's not critical
   }
 }
 
@@ -380,9 +402,11 @@ export async function processImageWorkflow(input: ProcessImageInput): Promise<Pr
   const { uploadId, promptVersion = "v3" } = input
   console.log(`[workflow:start] Starting process-image workflow for upload: ${uploadId}`)
 
-  // Stage 1: Validate
+  // Stage 1: Validate (10%)
+  await updateStage(uploadId, "validating", 10)
   const validation = await validateUpload(uploadId)
   if (!validation.valid) {
+    await updateStage(uploadId, "failed", 10)
     await finalizeProcessing(uploadId, false)
     return {
       resultId: uploadId,
@@ -391,9 +415,10 @@ export async function processImageWorkflow(input: ProcessImageInput): Promise<Pr
     }
   }
 
-  // Stage 1.5: Fetch original image from R2
+  // Stage 1.5: Fetch original image from R2 (still part of validating)
   const fetchResult = await fetchOriginalImage(uploadId)
   if (!fetchResult.url) {
+    await updateStage(uploadId, "failed", 15)
     await finalizeProcessing(uploadId, false)
     return {
       resultId: uploadId,
@@ -402,9 +427,15 @@ export async function processImageWorkflow(input: ProcessImageInput): Promise<Pr
     }
   }
 
-  // Stage 2: Generate image using Gemini (Story 4.2)
+  // Stage 2: Generate image using Gemini (30-70%)
+  await updateStage(uploadId, "generating", 30)
   const generation = await generateImage(uploadId, fetchResult.url, promptVersion)
+  
+  // Update progress mid-generation
+  await updateStage(uploadId, "generating", 70)
+  
   if (!generation.success || !generation.imageData) {
+    await updateStage(uploadId, "failed", 70)
     await finalizeProcessing(uploadId, false)
     return {
       resultId: uploadId,
@@ -413,9 +444,11 @@ export async function processImageWorkflow(input: ProcessImageInput): Promise<Pr
     }
   }
 
-  // Stage 3: Store result in R2 (Story 4.4 - basic implementation here)
+  // Stage 3: Store result in R2 (80%)
+  await updateStage(uploadId, "storing", 80)
   const storage = await storeResult(uploadId, generation.imageData)
   if (!storage.resultKey) {
+    await updateStage(uploadId, "failed", 80)
     await finalizeProcessing(uploadId, false)
     return {
       resultId: uploadId,
@@ -424,14 +457,16 @@ export async function processImageWorkflow(input: ProcessImageInput): Promise<Pr
     }
   }
 
-  // Stage 4: Watermark (Story 5.2 - placeholder)
+  // Stage 4: Watermark (90%) - Story 5.2 placeholder
+  await updateStage(uploadId, "watermarking", 90)
   const watermark = await applyWatermark(uploadId, storage.resultKey)
   if (watermark.error) {
     // Watermark is not critical yet - continue without it
     console.log(`[workflow:watermark] Skipping watermark: ${watermark.error}`)
   }
 
-  // Stage 5: Finalize
+  // Stage 5: Complete (100%)
+  await updateStage(uploadId, "complete", 100)
   await finalizeProcessing(uploadId, true, storage.resultKey)
 
   console.log(`[workflow:complete] Workflow completed for upload: ${uploadId}`)

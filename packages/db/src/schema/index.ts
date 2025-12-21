@@ -5,6 +5,17 @@ import { createId } from "@paralleldrive/cuid2"
 export const uploadStatusValues = ["pending", "processing", "completed", "failed"] as const
 export type UploadStatus = typeof uploadStatusValues[number]
 
+// Upload stage enum values (for progress tracking)
+export const uploadStageValues = [
+  "validating",
+  "generating",
+  "storing",
+  "watermarking",
+  "complete",
+  "failed"
+] as const
+export type UploadStage = typeof uploadStageValues[number]
+
 // Purchase status enum values  
 export const purchaseStatusValues = ["pending", "completed", "failed", "refunded"] as const
 export type PurchaseStatus = typeof purchaseStatusValues[number]
@@ -26,6 +37,8 @@ export const uploads = pgTable("uploads", {
   
   // Processing status
   status: text("status", { enum: uploadStatusValues }).default("pending").notNull(),
+  stage: text("stage", { enum: uploadStageValues }), // Processing stage for progress UI
+  progress: integer("progress").default(0), // Progress percentage 0-100
   workflowRunId: text("workflow_run_id"), // useworkflow.dev run ID
   errorMessage: text("error_message"),
   
