@@ -2,6 +2,7 @@ import { useState, useCallback, type ComponentPropsWithoutRef } from "react"
 import { Button } from "@/components/ui/button"
 import { API_BASE_URL } from "@/lib/api-config"
 import { posthog, isPostHogConfigured } from "@/lib/posthog"
+import { getSession } from "@/lib/session"
 
 // Price from env or default $9.99
 const PRICE_CENTS = Number(import.meta.env.VITE_PRODUCT_PRICE_CENTS) || 999
@@ -44,10 +45,17 @@ export function CheckoutButton({
     }
 
     try {
+      // Get session token for authentication
+      const sessionToken = getSession(uploadId)
+      if (!sessionToken) {
+        throw new Error("Session expired. Please start a new upload.")
+      }
+
       const response = await fetch(`${API_BASE_URL}/api/checkout`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "X-Session-Token": sessionToken,
         },
         body: JSON.stringify({ uploadId, type: "self" }),
       })

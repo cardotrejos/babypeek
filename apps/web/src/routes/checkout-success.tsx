@@ -75,14 +75,14 @@ function CheckoutSuccessPage() {
             className="w-full bg-coral hover:bg-coral/90 text-white font-body text-lg py-6"
             onClick={() => {
               // TODO: Implement actual download in Story 7.x
-              console.log("[checkout-success] Download clicked, session:", session_id)
+              // For now, show a message that download is coming
             }}
           >
             Download HD Portrait
           </Button>
 
           <p className="text-sm text-warm-gray">
-            A download link has also been sent to your email.
+            Download will be available shortly. Check back soon!
           </p>
         </div>
 
