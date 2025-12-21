@@ -10,12 +10,13 @@ import { z } from "zod"
 import { start } from "workflow/api"
 import { db, uploads } from "@3d-ultra/db"
 import { eq } from "drizzle-orm"
-import { processImageWorkflowSimple } from "../workflows/process-image-simple"
+import { processImageWorkflowSimple, type PromptVersion } from "../workflows/process-image-simple"
 
 const app = new Hono()
 
 const processRequestSchema = z.object({
   uploadId: z.string().min(1, "Upload ID is required"),
+  promptVersion: z.enum(["v3", "v3-json", "v4", "v4-json"]).optional(),
 })
 
 /**
@@ -43,7 +44,7 @@ app.post("/", async (c) => {
     }, 400)
   }
 
-  const { uploadId } = parsed.data
+  const { uploadId, promptVersion } = parsed.data
 
   try {
     // Verify upload exists and session token matches
@@ -67,8 +68,11 @@ app.post("/", async (c) => {
       }, 409)
     }
 
-    // Trigger the workflow
-    const run = await start(processImageWorkflowSimple, [{ uploadId }])
+    // Trigger the workflow with optional promptVersion (for testing)
+    const run = await start(processImageWorkflowSimple, [{ 
+      uploadId, 
+      promptVersion: promptVersion as PromptVersion | undefined 
+    }])
 
     // Update upload with workflow run ID
     await db

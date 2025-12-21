@@ -13,7 +13,11 @@ import { S3Client, PutObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner"
 import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from "@google/generative-ai"
 import { Jimp, intToRGBA, rgbaToInt } from "jimp"
-import { GEMINI_MODEL, BABY_PORTRAIT_PROMPT } from "./config"
+import { GEMINI_MODEL } from "./config"
+import { getPrompt, DEFAULT_PROMPT_VERSION, type PromptVersion } from "../prompts/baby-portrait"
+
+// Re-export PromptVersion for use in route
+export type { PromptVersion }
 
 // =============================================================================
 // Types
@@ -21,6 +25,7 @@ import { GEMINI_MODEL, BABY_PORTRAIT_PROMPT } from "./config"
 
 export interface ProcessImageInput {
   uploadId: string
+  promptVersion?: PromptVersion
 }
 
 export interface ProcessImageOutput {
@@ -115,7 +120,10 @@ async function getOriginalImageUrl(uploadId: string): Promise<string | null> {
   }
 }
 
-async function generateWithGemini(imageUrl: string): Promise<{ data: Buffer; mimeType: string } | null> {
+async function generateWithGemini(
+  imageUrl: string,
+  prompt: string
+): Promise<{ data: Buffer; mimeType: string } | null> {
   "use step"
   
   const env = getEnv()
@@ -135,6 +143,7 @@ async function generateWithGemini(imageUrl: string): Promise<{ data: Buffer; mim
   
   console.log(`[workflow] Image fetched, size: ${imageBuffer.length} bytes, type: ${imageMimeType}`)
   console.log(`[workflow] Using model: ${GEMINI_MODEL}`)
+  console.log(`[workflow] Prompt length: ${prompt.length} chars`)
   
   // Initialize Gemini
   const ai = new GoogleGenerativeAI(env.GEMINI_API_KEY)
@@ -156,10 +165,10 @@ async function generateWithGemini(imageUrl: string): Promise<{ data: Buffer; mim
   })
 
   try {
-    console.log(`[workflow] Calling Gemini API with in-utero prompt...`)
+    console.log(`[workflow] Calling Gemini API...`)
     
     const result = await model.generateContent([
-      BABY_PORTRAIT_PROMPT,
+      prompt,
       {
         inlineData: {
           mimeType: imageMimeType,
@@ -401,8 +410,11 @@ export async function processImageWorkflowSimple(
 ): Promise<ProcessImageOutput> {
   "use workflow"
   
-  const { uploadId } = input
-  console.log(`[workflow] Starting for upload: ${uploadId}`)
+  const { uploadId, promptVersion = DEFAULT_PROMPT_VERSION } = input
+  console.log(`[workflow] Starting for upload: ${uploadId}, prompt: ${promptVersion}`)
+  
+  // Resolve the prompt string here (workflow can use module imports, steps cannot)
+  const prompt = getPrompt(promptVersion)
   
   try {
     // Stage 1: Validating
@@ -418,7 +430,7 @@ export async function processImageWorkflowSimple(
     // Stage 2: Generating (this is the main AI step)
     await updateUploadStage(uploadId, "generating", 30)
     
-    const generatedImage = await generateWithGemini(imageUrl)
+    const generatedImage = await generateWithGemini(imageUrl, prompt)
     if (!generatedImage) {
       await markFailed(uploadId, "Failed to generate image with Gemini")
       return { success: false, error: "Failed to generate image" }
