@@ -182,6 +182,15 @@
   .safe-top {
     padding-top: calc(1rem + var(--safe-area-inset-top));
   }
+  
+  /* Hide scrollbar but keep functionality - Story 2.3 */
+  .scrollbar-hide {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;  /* Chrome, Safari, Opera */
+  }
 }
 
 /* 3d-ultra Signature Animations */

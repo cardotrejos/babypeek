@@ -1,10 +1,46 @@
 import { createFileRoute } from "@tanstack/react-router"
-import { LandingLayout, HeroImage } from "@/components/landing"
+import { LandingLayout, HeroImage, ExampleGallery, TrustSignals, FaqSection } from "@/components/landing"
+import { StructuredData } from "@/components/seo/structured-data"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 
+// SEO constants for the landing page
+const SEO = {
+  title: "3d-ultra | Transform Your 4D Ultrasound into a Baby Portrait",
+  description: "See your baby before they're born. Upload your 4D ultrasound and get a beautiful AI-generated portrait in 60 seconds. Free preview, instant results.",
+  siteUrl: "https://3d-ultra.com/", // Trailing slash for canonical consistency
+  ogImage: "/og-image.png", // PNG format required for Facebook/Twitter OG image support
+} as const
+
 export const Route = createFileRoute("/")({
   component: LandingPage,
+  head: () => ({
+    meta: [
+      // Page title (AC1)
+      { title: SEO.title },
+      // Meta description (AC1)
+      { name: "description", content: SEO.description },
+      // Open Graph tags (AC3)
+      { property: "og:title", content: SEO.title },
+      { property: "og:description", content: SEO.description },
+      { property: "og:type", content: "website" },
+      { property: "og:url", content: SEO.siteUrl },
+      { property: "og:image", content: `${SEO.siteUrl}${SEO.ogImage}` },
+      { property: "og:image:width", content: "1200" },
+      { property: "og:image:height", content: "630" },
+      { property: "og:site_name", content: "3d-ultra" },
+      { property: "og:locale", content: "en_US" },
+      // Twitter Card tags (AC3)
+      { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: SEO.title },
+      { name: "twitter:description", content: SEO.description },
+      { name: "twitter:image", content: `${SEO.siteUrl}${SEO.ogImage}` },
+    ],
+    links: [
+      // Canonical URL (AC4)
+      { rel: "canonical", href: SEO.siteUrl },
+    ],
+  }),
 })
 
 function LandingPage() {
@@ -19,6 +55,12 @@ function LandingPage() {
 
   return (
     <LandingLayout onCtaClick={handleCtaClick}>
+      {/* JSON-LD Structured Data for SEO (AC2) */}
+      <StructuredData
+        siteUrl={SEO.siteUrl}
+        siteName="3d-ultra"
+        description={SEO.description}
+      />
       {/* Hero Section - Story 2.2 Implementation */}
       <section
         id="hero"
@@ -59,38 +101,19 @@ function LandingPage() {
         </div>
       </section>
 
-      {/* Gallery Section - Placeholder for Story 2.3 */}
+      {/* Gallery Section - Story 2.3 Implementation */}
       <section id="gallery" className="py-12">
         <h2 className="font-display text-2xl text-charcoal mb-6">
           See the magic
         </h2>
-        <div className="h-48 bg-muted rounded-xl flex items-center justify-center">
-          <span className="text-muted-foreground font-body">
-            [Example gallery - Story 2.3]
-          </span>
-        </div>
+        <ExampleGallery />
       </section>
 
-      {/* Trust Signals Section - Placeholder for Story 2.4 */}
-      <section id="trust" className="py-12">
-        <div className="h-32 bg-muted rounded-xl flex items-center justify-center">
-          <span className="text-muted-foreground font-body">
-            [Trust signals - Story 2.4]
-          </span>
-        </div>
-      </section>
+      {/* Trust Signals Section - Story 2.4 Implementation */}
+      <TrustSignals id="trust" />
 
-      {/* FAQ Section - Placeholder for Story 2.5 */}
-      <section id="faq" className="py-12">
-        <h2 className="font-display text-2xl text-charcoal mb-6">
-          Questions? We've got answers
-        </h2>
-        <div className="h-64 bg-muted rounded-xl flex items-center justify-center">
-          <span className="text-muted-foreground font-body">
-            [FAQ accordion - Story 2.5]
-          </span>
-        </div>
-      </section>
+      {/* FAQ Section - Story 2.5 Implementation */}
+      <FaqSection id="faq" />
 
       {/* Footer */}
       <footer className="py-8 text-center">
