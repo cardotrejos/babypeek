@@ -114,6 +114,7 @@ const sendDownloadEmail = Effect.fn("ResendService.sendDownloadEmail")(function*
         html: `
                 <h1>Download your HD photo</h1>
                 <p><a href="${downloadUrl}">Download now</a></p>
+                <p>Result ID: ${resultId}</p>
                 <p>This link expires in 7 days.</p>
               `,
       }),
