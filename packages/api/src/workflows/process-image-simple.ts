@@ -88,23 +88,31 @@ async function getOriginalImageUrl(uploadId: string): Promise<string | null> {
   
   const env = getEnv()
   const client = getR2Client()
-  const extensions = ["png", "jpg", "jpeg", "webp"]
   
-  for (const ext of extensions) {
-    const key = `uploads/${uploadId}/original.${ext}`
-    try {
-      const command = new GetObjectCommand({
-        Bucket: env.R2_BUCKET_NAME,
-        Key: key,
-      })
-      const url = await getSignedUrl(client, command, { expiresIn: 300 })
-      return url
-    } catch {
-      // Try next extension
-    }
+  // Get the actual image key from the database (includes correct extension)
+  const upload = await db.query.uploads.findFirst({
+    where: eq(uploads.id, uploadId),
+  })
+  
+  if (!upload?.originalUrl) {
+    console.error(`[workflow] Upload not found or no originalUrl: ${uploadId}`)
+    return null
   }
   
-  return null
+  const key = upload.originalUrl
+  console.log(`[workflow] Using image key from database: ${key}`)
+  
+  try {
+    const command = new GetObjectCommand({
+      Bucket: env.R2_BUCKET_NAME,
+      Key: key,
+    })
+    const url = await getSignedUrl(client, command, { expiresIn: 300 })
+    return url
+  } catch (error) {
+    console.error(`[workflow] Failed to generate presigned URL for ${key}:`, error)
+    return null
+  }
 }
 
 async function generateWithGemini(imageUrl: string): Promise<{ data: Buffer; mimeType: string } | null> {
