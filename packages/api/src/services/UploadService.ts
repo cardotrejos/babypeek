@@ -76,6 +76,17 @@ export class UploadService extends Context.Tag("UploadService")<
      * @throws AlreadyProcessingError if upload is not in "pending" status
      */
     startProcessing: (uploadId: string, workflowRunId: string) => Effect.Effect<Upload, NotFoundError | AlreadyProcessingError>
+    /**
+     * Reset an upload for retry after failure.
+     * Clears error state and resets status to "pending".
+     * Only works for uploads in "failed" status.
+     *
+     * @param uploadId - The upload ID to reset
+     * @returns The updated upload record
+     * @throws NotFoundError if upload doesn't exist
+     * @throws UploadStatusError if upload is not in "failed" status
+     */
+    resetForRetry: (uploadId: string) => Effect.Effect<Upload, NotFoundError | UploadStatusError>
   }
 >() {}
 

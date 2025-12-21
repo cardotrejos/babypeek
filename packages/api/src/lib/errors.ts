@@ -75,6 +75,9 @@ export class UploadError extends Data.TaggedError("UploadError")<{
 export class ProcessingError extends Data.TaggedError("ProcessingError")<{
   cause: "AI_FAILED" | "TIMEOUT" | "QUALITY_CHECK_FAILED"
   message: string
+  uploadId?: string
+  lastStage?: string
+  lastProgress?: number
 }> {}
 
 export class PaymentError extends Data.TaggedError("PaymentError")<{
