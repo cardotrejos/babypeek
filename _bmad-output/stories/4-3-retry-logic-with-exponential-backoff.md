@@ -1,6 +1,6 @@
 # Story 4.3: Retry Logic with Exponential Backoff
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -395,18 +395,51 @@ N/A - No blocking issues encountered
 ### File List
 
 - packages/api/src/lib/errors.ts (modified) - Added `isRetryableGeminiError` helper and `attempt` field to GeminiError
-- packages/api/src/lib/retry.ts (new) - Reusable retry schedules with exponential backoff
-- packages/api/src/lib/retry.test.ts (new) - Unit tests for retry logic
+- packages/api/src/lib/retry.ts (modified) - Reusable retry schedules, added geminiRetryScheduleTest for unit testing
+- packages/api/src/lib/retry.test.ts (modified) - Rewrote to test actual schedules with predicates
 - packages/api/src/lib/errors.test.ts (modified) - Added tests for `isRetryableGeminiError`
-- packages/api/src/services/GeminiService.ts (modified) - Updated retry logic with Sentry/PostHog integration
+- packages/api/src/services/GeminiService.ts (modified) - Fixed race condition with Ref, updated mocks
 - packages/api/src/services/GeminiService.test.ts (modified) - Updated to provide PostHogServiceMock
+- packages/api/src/services/GeminiService.retry.test.ts (new) - Integration tests for Sentry/PostHog
 - packages/api/src/services/PostHogService.ts (modified) - Added `PostHogServiceMock` for testing
 - packages/api/src/services/services.test.ts (modified) - Updated to provide PostHogServiceMock
 
 ### Change Log
 
-- 2024-12-21: Implemented Story 4.3 - Retry Logic with Exponential Backoff
+- 2025-12-21: Implemented Story 4.3 - Retry Logic with Exponential Backoff
   - Added error classification for retry eligibility
   - Created reusable retry schedules with jitter
   - Integrated Sentry breadcrumbs and PostHog analytics
   - All acceptance criteria satisfied
+- 2025-12-21: Code Review Fixes (7 issues resolved)
+  - [HIGH] Rewrote retry.test.ts to actually test geminiRetrySchedule with predicate
+  - [HIGH] Added proper tests for geminiRetryScheduleExact  
+  - [MED] Removed unused quickRetrySchedule dead code
+  - [MED] Fixed attemptNumber race condition using Effect.Ref
+  - [MED] Fixed mock services to properly require PostHogService
+  - [MED] Added GeminiService.retry.test.ts for Sentry/PostHog integration tests
+  - Added geminiRetryScheduleTest for zero-delay unit testing
+
+## Senior Developer Review (AI)
+
+**Review Date:** 2025-12-21
+**Reviewer:** Claude (Code Review Workflow)
+**Outcome:** Changes Requested → Fixed
+
+### Issues Found: 2 High, 5 Medium, 3 Low
+
+### Action Items (All Resolved)
+
+- [x] [HIGH] Tests don't actually test the `geminiRetrySchedule` - fixed by using actual schedule with predicate
+- [x] [HIGH] `geminiRetryScheduleExact` test was placeholder - replaced with real tests
+- [x] [MED] Story File List missing 5 files from git - documented below
+- [x] [MED] `quickRetrySchedule` dead code - removed
+- [x] [MED] `attemptNumber` race condition with mutable let - fixed with Effect.Ref
+- [x] [MED] Mock services don't require PostHogService - fixed to match interface
+- [x] [MED] No integration tests for Sentry/PostHog calls - added GeminiService.retry.test.ts
+
+### Files Not in Original Story (from git)
+
+- .github/workflows/db-migrate.yml (Added - unrelated CI fix)
+- apps/web/.env.example (Modified - unrelated env update)
+- turbo.json (Modified - unrelated build config)
