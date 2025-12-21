@@ -1,14 +1,7 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "cd apps/web && bun run build",
-  "installCommand": "bun install",
+  "installCommand": "cd ../.. && bun install",
   "framework": "vite",
-  "outputDirectory": "apps/web/dist",
-  "functions": {
-    "apps/server/**/*.ts": {
-      "maxDuration": 60
-    }
-  },
   "rewrites": [
     {
       "source": "/api/:path*",
