@@ -82,8 +82,9 @@ workflow_status:
       name: "Epics & Stories"
       agent: "pm"
       command: "/bmad:bmm:workflows:create-epics-and-stories"
-      status: "required"
-      output: null
+      status: "in-progress"
+      output: "_bmad-output/epics.md"
+      note: "Epics 1-2 stories complete, ready for implementation"
       
     - id: "test-design"
       name: "Test Design Review"
