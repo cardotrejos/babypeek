@@ -74,8 +74,9 @@ workflow_status:
       name: "System Architecture"
       agent: "architect"
       command: "/bmad:bmm:workflows:create-architecture"
-      status: "required"
-      output: null
+      status: "complete"
+      completed: "2024-12-20"
+      output: "_bmad-output/architecture.md"
       
     - id: "create-epics-and-stories"
       name: "Epics & Stories"
@@ -117,8 +118,8 @@ workflow_status:
 
 # Next action
 next_workflow:
-  id: "create-architecture"
-  name: "System Architecture"
-  agent: "architect"
-  command: "/bmad:bmm:workflows:create-architecture"
-  note: "Ready for technical architecture design"
+  id: "create-epics-and-stories"
+  name: "Epics & Stories"
+  agent: "pm"
+  command: "/bmad:bmm:workflows:create-epics-and-stories"
+  note: "Ready to create implementation stories from architecture"
