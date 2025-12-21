@@ -1,0 +1,124 @@
+# Workflow Status - 3d-ultra
+# Generated: 2024-12-20
+# Track: BMad Method (Greenfield)
+
+# This tracks progress through BMM methodology Analysis, Planning, and Solutioning phases.
+# Implementation phase is tracked separately in sprint-status.yaml
+
+# STATUS DEFINITIONS:
+# ==================
+# Initial Status (before completion):
+#   - required: Must be completed to progress
+#   - optional: Can be completed but not required
+#   - recommended: Strongly suggested but not required
+#   - conditional: Required only if certain conditions met (e.g., if_has_ui)
+#   - pending: Selected by user, awaiting completion
+#
+# Completion Status:
+#   - {file-path}: File created/found (e.g., "docs/product-brief.md")
+#   - skipped: Optional/conditional workflow that was skipped
+
+generated: "2024-12-20"
+project: "3d-ultra"
+project_type: "AI-powered 4D ultrasound to photorealistic imagery transformation service"
+selected_track: "bmad-method"
+field_type: "greenfield"
+workflow_path: "method-greenfield.yaml"
+
+# User description captured during init
+user_description: |
+  Transform 4D ultrasound images into ultra-realistic in-utero photography using
+  AI image generation models (Nano Banana Pro / GPT Image). Inspired by Linus 
+  Ekenstam's viral approach using structured prompts with image-to-image editing.
+
+workflow_status:
+  # Phase 0: Discovery (Optional - User Selected)
+  phase_0_discovery:
+    - id: "brainstorm-project"
+      name: "Brainstorm"
+      agent: "analyst"
+      command: "/bmad:bmm:workflows:brainstorming"
+      status: "complete"
+      output: "_bmad-output/analysis/brainstorming-session-2024-12-20.md"
+      
+    - id: "product-brief"
+      name: "Product Brief"
+      agent: "analyst"
+      command: "/bmad:bmm:workflows:create-product-brief"
+      status: "complete"
+      output: "_bmad-output/analysis/product-brief-3d-ultra-2024-12-20.md"
+
+  # Phase 1: Planning (Required)
+  phase_1_planning:
+    - id: "prd"
+      name: "Product Requirements Document"
+      agent: "pm"
+      command: "/bmad:bmm:workflows:create-prd"
+      status: "complete"
+      completed: "2024-12-20"
+      output: "_bmad-output/prd.md"
+      
+    - id: "create-ux-design"
+      name: "UX Design"
+      agent: "ux-designer"
+      command: "/bmad:bmm:workflows:create-ux-design"
+      status: "complete"
+      completed: "2024-12-20"
+      output: "_bmad-output/ux-design-specification.md"
+      supporting_files:
+        - "_bmad-output/ux-design-directions.html"
+
+  # Phase 2: Solutioning (Required)
+  phase_2_solutioning:
+    - id: "create-architecture"
+      name: "System Architecture"
+      agent: "architect"
+      command: "/bmad:bmm:workflows:create-architecture"
+      status: "required"
+      output: null
+      
+    - id: "create-epics-and-stories"
+      name: "Epics & Stories"
+      agent: "pm"
+      command: "/bmad:bmm:workflows:create-epics-and-stories"
+      status: "required"
+      output: null
+      
+    - id: "test-design"
+      name: "Test Design Review"
+      agent: "tea"
+      command: "/bmad:bmm:workflows:testarch-test-design"
+      status: "recommended"
+      output: null
+      
+    - id: "validate-architecture"
+      name: "Architecture Validation"
+      agent: "architect"
+      command: "/bmad:bmm:workflows:validate-architecture"
+      status: "optional"
+      output: null
+      
+    - id: "implementation-readiness"
+      name: "Implementation Readiness Check"
+      agent: "architect"
+      command: "/bmad:bmm:workflows:check-implementation-readiness"
+      status: "required"
+      output: null
+
+  # Phase 3: Implementation
+  phase_3_implementation:
+    - id: "sprint-planning"
+      name: "Sprint Planning"
+      agent: "sm"
+      command: "/bmad:bmm:workflows:sprint-planning"
+      status: "required"
+      note: "Creates sprint plan - subsequent work tracked in sprint-status.yaml"
+      output: null
+
+# Next action
+next_workflow:
+  id: "create-architecture"
+  name: "System Architecture"
+  agent: "architect"
+  command: "/bmad:bmm:workflows:create-architecture"
+  note: "Ready for technical architecture design"
