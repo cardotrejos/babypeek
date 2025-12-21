@@ -39,7 +39,7 @@ app.post("/", async (c) => {
   if (!parsed.success) {
     return c.json({
       error: "Invalid request",
-      details: parsed.error.flatten().fieldErrors,
+      details: parsed.error.format(),
     }, 400)
   }
 
