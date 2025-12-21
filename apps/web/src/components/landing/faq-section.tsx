@@ -27,7 +27,7 @@ interface FaqSectionProps {
 
 const faqItems = [
   {
-    question: "How does 3d-ultra work?",
+    question: "How does BabyPeek work?",
     answer:
       "Simply upload your 4D ultrasound image, and our AI transforms it into a beautiful, photorealistic portrait of your baby in about 60 seconds. You'll see a stunning reveal, then you can share it with family or purchase the HD version.",
   },

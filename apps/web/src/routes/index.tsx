@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils"
 
 // SEO constants - meta tags are in index.html for SPA
 const SEO = {
-  siteUrl: "https://3d-ultra.com/",
+  siteUrl: "https://babypeek.io/",
   description: "See your baby before they're born. Upload your 4D ultrasound and get a beautiful AI-generated portrait in 60 seconds. Free preview, instant results.",
 } as const
 
@@ -28,7 +28,7 @@ function LandingPage() {
       {/* JSON-LD Structured Data for SEO (AC2) */}
       <StructuredData
         siteUrl={SEO.siteUrl}
-        siteName="3d-ultra"
+        siteName="BabyPeek"
         description={SEO.description}
       />
       {/* Hero Section - Story 2.2 Implementation */}
@@ -91,7 +91,7 @@ function LandingPage() {
       {/* Footer */}
       <footer className="py-8 text-center">
         <p className="text-warm-gray text-sm font-body">
-          © {new Date().getFullYear()} 3d-ultra. Made with love for expecting
+          © {new Date().getFullYear()} BabyPeek. Made with love for expecting
           parents.
         </p>
       </footer>

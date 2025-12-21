@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
+  <!-- Baby face peeking - Teal variant -->
+  <defs>
+    <clipPath id="peekClip">
+      <rect x="0" y="0" width="100" height="58"/>
+    </clipPath>
+  </defs>
+  
+  <!-- Peek line -->
+  <rect x="10" y="55" width="80" height="4" rx="2" fill="#14B8A6"/>
+  
+  <!-- Baby head (clipped to peek effect) -->
+  <g clip-path="url(#peekClip)">
+    <circle cx="50" cy="45" r="30" fill="#14B8A6"/>
+    <circle cx="22" cy="42" r="8" fill="#14B8A6"/>
+    <circle cx="78" cy="42" r="8" fill="#14B8A6"/>
+  </g>
+  
+  <!-- Eyes -->
+  <ellipse cx="38" cy="38" rx="9" ry="10" fill="white"/>
+  <ellipse cx="62" cy="38" rx="9" ry="10" fill="white"/>
+  
+  <!-- Pupils -->
+  <circle cx="38" cy="35" r="4" fill="#14B8A6"/>
+  <circle cx="62" cy="35" r="4" fill="#14B8A6"/>
+  
+  <!-- Eye shine -->
+  <circle cx="40" cy="33" r="1.5" fill="white"/>
+  <circle cx="64" cy="33" r="1.5" fill="white"/>
+</svg>
