@@ -102,7 +102,7 @@ const sendReceiptEmail = Effect.fn("ResendService.sendReceiptEmail")(function* (
       resend.emails.send({
         from: getFromEmail(),
         to: params.email,
-        subject: "Your 3d-ultra HD photo is ready! 🎉",
+        subject: "Your babypeek HD photo is ready! 🎉",
         html: generateReceiptHtml({
           amount: formattedAmount,
           date: purchaseDate,

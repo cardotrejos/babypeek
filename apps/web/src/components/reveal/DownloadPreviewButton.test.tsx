@@ -214,8 +214,8 @@ describe("DownloadPreviewButton", () => {
       fireEvent.click(button)
 
       await waitFor(() => {
-        // Verify filename matches pattern: 3d-ultra-preview-YYYY-MM-DD.jpg
-        expect(capturedFilename).toMatch(/^3d-ultra-preview-\d{4}-\d{2}-\d{2}\.jpg$/)
+        // Verify filename matches pattern: babypeek-preview-YYYY-MM-DD.jpg
+        expect(capturedFilename).toMatch(/^babypeek-preview-\d{4}-\d{2}-\d{2}\.jpg$/)
       })
     })
 
@@ -246,7 +246,7 @@ describe("DownloadPreviewButton", () => {
       const today = new Date().toISOString().split("T")[0]
       
       await waitFor(() => {
-        expect(capturedFilename).toBe(`3d-ultra-preview-${today}.jpg`)
+        expect(capturedFilename).toBe(`babypeek-preview-${today}.jpg`)
       })
     })
   })

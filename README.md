@@ -1,4 +1,4 @@
-# 3d-ultra
+# babypeek
 
 This project was created with [Better-T-Stack](https://github.com/AmanVarshney01/create-better-t-stack), a modern TypeScript stack that combines React, TanStack Start, Hono, ORPC, and more.
 
@@ -54,7 +54,7 @@ The API is running at [http://localhost:3000](http://localhost:3000).
 ## Project Structure
 
 ```
-3d-ultra/
+babypeek/
 ├── apps/
 │   ├── web/         # Frontend application (React + TanStack Start)
 │   └── server/      # Backend API (Hono, ORPC)

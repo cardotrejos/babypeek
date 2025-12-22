@@ -84,7 +84,7 @@ export const purchases = pgTable("purchases", {
 // packages/api/src/services/PurchaseService.ts
 import { Effect, Context, Layer } from "effect"
 import { createId } from "@paralleldrive/cuid2"
-import { db, purchases, uploads } from "@3d-ultra/db"
+import { db, purchases, uploads } from "@babypeek/db"
 import { eq } from "drizzle-orm"
 import { PaymentError } from "../lib/errors"
 

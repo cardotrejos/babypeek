@@ -9,7 +9,7 @@
 // Constants
 // =============================================================================
 
-const UPLOAD_SESSION_KEY = "3d-ultra-upload-session"
+const UPLOAD_SESSION_KEY = "babypeek-upload-session"
 const SESSION_EXPIRY_MS = 30 * 60 * 1000 // 30 minutes
 
 // =============================================================================

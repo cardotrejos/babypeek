@@ -91,7 +91,7 @@ if (!upload) {
 import { Hono } from "hono"
 import { Effect } from "effect"
 import { eq } from "drizzle-orm"
-import { db, uploads } from "@3d-ultra/db"
+import { db, uploads } from "@babypeek/db"
 import { R2Service, R2ServiceLive } from "../services/R2Service"
 import { PurchaseService, PurchaseServiceLive } from "../services/PurchaseService"
 import { StripeServiceLive } from "../services/StripeService"

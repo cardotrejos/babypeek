@@ -8,7 +8,7 @@
 import { Hono } from "hono"
 import { z } from "zod"
 import { start } from "workflow/api"
-import { db, uploads } from "@3d-ultra/db"
+import { db, uploads } from "@babypeek/db"
 import { eq } from "drizzle-orm"
 import { processImageWorkflowSimple, type PromptVersion } from "../workflows/process-image-simple"
 

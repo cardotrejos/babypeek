@@ -11,7 +11,7 @@ so that **I can share it even without purchasing**.
 ## Acceptance Criteria
 
 1. **AC-1:** Given I'm viewing my result, when I tap "Download Preview", then the watermarked image downloads to my device (FR-3.6)
-2. **AC-2:** The filename is "3d-ultra-preview-{date}.jpg"
+2. **AC-2:** The filename is "babypeek-preview-{date}.jpg"
 3. **AC-3:** The download is tracked in PostHog
 
 ## Tasks / Subtasks
@@ -28,7 +28,7 @@ so that **I can share it even without purchasing**.
   - [x] Create object URL from blob
   - [x] Create temporary anchor with download attribute
   - [x] Trigger click and cleanup
-  - [x] Filename format: "3d-ultra-preview-2024-12-21.jpg"
+  - [x] Filename format: "babypeek-preview-2024-12-21.jpg"
 
 - [x] **Task 3: Add download analytics** (AC: 3)
   - [x] Track `preview_download_started` when button clicked
@@ -103,7 +103,7 @@ export function DownloadPreviewButton({
       
       // Create download filename with date
       const date = new Date().toISOString().split('T')[0] // YYYY-MM-DD
-      const filename = `3d-ultra-preview-${date}.jpg`
+      const filename = `babypeek-preview-${date}.jpg`
       
       // Create object URL and trigger download
       const url = URL.createObjectURL(blob)
@@ -229,16 +229,16 @@ const handleDownload = async () => {
 ### Filename Format
 
 ```typescript
-// Format: 3d-ultra-preview-YYYY-MM-DD.jpg
+// Format: babypeek-preview-YYYY-MM-DD.jpg
 const formatFilename = () => {
   const date = new Date()
   const dateStr = date.toISOString().split('T')[0] // YYYY-MM-DD
-  return `3d-ultra-preview-${dateStr}.jpg`
+  return `babypeek-preview-${dateStr}.jpg`
 }
 
 // Examples:
-// 3d-ultra-preview-2024-12-21.jpg
-// 3d-ultra-preview-2025-01-15.jpg
+// babypeek-preview-2024-12-21.jpg
+// babypeek-preview-2025-01-15.jpg
 ```
 
 ### Analytics Events
@@ -342,7 +342,7 @@ None required - implementation was straightforward.
 - ✅ Added loading/error states with proper UX feedback
 - ✅ iOS Safari detection with fallback to open in new tab
 - ✅ Complete PostHog analytics tracking (started/completed/failed events)
-- ✅ Date-based filename format: `3d-ultra-preview-YYYY-MM-DD.jpg`
+- ✅ Date-based filename format: `babypeek-preview-YYYY-MM-DD.jpg`
 - ✅ Integrated into RevealUI, replacing callback with component
 - ✅ Updated result page to pass required props (resultId, previewUrl)
 - ✅ 19 unit tests for DownloadPreviewButton (5 new tests added in review)

@@ -12,7 +12,7 @@ so that **I can save it to my camera roll immediately**.
 
 1. **AC-1:** Given I'm on the download page after purchase (FR-5.5), when I tap "Download HD", then the image downloads to my device
 2. **AC-2:** I see download progress if file is large
-3. **AC-3:** The filename is "3d-ultra-baby-{date}.jpg"
+3. **AC-3:** The filename is "babypeek-baby-{date}.jpg"
 4. **AC-4:** Success confirmation is shown after download completes
 5. **AC-5:** download_clicked event is sent to PostHog
 6. **AC-6:** Button shows loading state while fetching download URL
@@ -83,7 +83,7 @@ so that **I can save it to my camera roll immediately**.
 ```typescript
 export const getSession = (uploadId: string): string | null => {
   try {
-    return localStorage.getItem(`3d-ultra-session-${uploadId}`)
+    return localStorage.getItem(`babypeek-session-${uploadId}`)
   } catch {
     return null
   }
@@ -152,7 +152,7 @@ export function DownloadButton({
 
       // AC-3: Generate filename with date
       const filename = suggestedFilename || 
-        `3d-ultra-baby-${new Date().toISOString().split('T')[0]}.jpg`
+        `babypeek-baby-${new Date().toISOString().split('T')[0]}.jpg`
 
       // Trigger download via hidden anchor
       const link = document.createElement("a")
@@ -256,7 +256,7 @@ function CheckoutSuccessPage() {
   
   // Get uploadId from session storage (stored during checkout)
   const uploadId = typeof window !== "undefined" 
-    ? localStorage.getItem("3d-ultra-last-purchase-upload") 
+    ? localStorage.getItem("babypeek-last-purchase-upload") 
     : null
   const sessionToken = uploadId ? getSession(uploadId) : null
 

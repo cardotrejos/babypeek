@@ -272,7 +272,7 @@ function ResultPage() {
   const { resultId } = Route.useParams()
   
   // Get session from the upload that created this result
-  const uploadId = localStorage.getItem(`3d-ultra-result-upload-${resultId}`)
+  const uploadId = localStorage.getItem(`babypeek-result-upload-${resultId}`)
   const sessionToken = uploadId ? getSession(uploadId) : null
   
   // Fetch result data

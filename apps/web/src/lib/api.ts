@@ -1,4 +1,4 @@
-// Simple fetch-based API client for 3d-ultra
+// Simple fetch-based API client for babypeek
 // Will be enhanced with Hono RPC types as we build features
 
 import { API_BASE_URL } from "./api-config"

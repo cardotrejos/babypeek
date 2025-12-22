@@ -87,7 +87,7 @@ So that **I understand how the service works before uploading**.
   - [x] 2.5 Export from `apps/web/src/components/landing/index.ts`
 
 - [x] **Task 3: Implement FAQ Content** (AC: 2)
-  - [x] 3.1 Add FAQ: "How does 3d-ultra work?" (upload → AI → reveal flow)
+  - [x] 3.1 Add FAQ: "How does babypeek work?" (upload → AI → reveal flow)
   - [x] 3.2 Add FAQ: "How much does it cost?" (pricing: $9.99 / $14.99)
   - [x] 3.3 Add FAQ: "Is my data safe?" (privacy: 30-day deletion, HTTPS, no sharing)
   - [x] 3.4 Add FAQ: "What makes the images so realistic?" (Gemini AI, quality checks)
@@ -285,7 +285,7 @@ interface FaqSectionProps {
 
 const faqItems = [
   {
-    question: "How does 3d-ultra work?",
+    question: "How does babypeek work?",
     answer: "Simply upload your 4D ultrasound image..."
   },
   // ... more items

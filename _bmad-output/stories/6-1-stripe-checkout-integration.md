@@ -119,7 +119,7 @@ interface CheckoutSessionParams {
 import { Effect, Context, Layer } from "effect"
 import { StripeService } from "./StripeService"
 import { PaymentError } from "../lib/errors"
-import { db, uploads, purchases } from "@3d-ultra/db"
+import { db, uploads, purchases } from "@babypeek/db"
 import { eq } from "drizzle-orm"
 
 export class PurchaseService extends Context.Tag("PurchaseService")<

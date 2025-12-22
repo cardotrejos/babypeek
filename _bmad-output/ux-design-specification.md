@@ -1,13 +1,13 @@
 ---
 workflow: create-ux-design
-project: 3d-ultra
+project: babypeek
 started: 2024-12-20
 lastStep: 14
 stepsCompleted: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
 status: complete
 ---
 
-# UX Design Specification: 3d-ultra
+# UX Design Specification: babypeek
 
 **Version:** 1.0  
 **Date:** 2024-12-20  
@@ -19,7 +19,7 @@ status: complete
 ## Executive Summary
 
 ### Project Vision
-3d-ultra transforms 4D ultrasound images into photorealistic "baby's first photo" using AI. The product creates an emotional, shareable moment for expecting parents.
+babypeek transforms 4D ultrasound images into photorealistic "baby's first photo" using AI. The product creates an emotional, shareable moment for expecting parents.
 
 ### Target Users
 
@@ -339,7 +339,7 @@ const RevealAnimation = {
 - Position: Bottom-right corner
 - Opacity: 40%
 - Size: 15% of image width
-- Text: "3d-ultra.com"
+- Text: "babypeek.com"
 
 ---
 
@@ -509,7 +509,7 @@ graph TD
 
 **Mobile-First Philosophy:**
 
-3d-ultra is designed mobile-first because:
+babypeek is designed mobile-first because:
 - Primary action (sharing) happens on mobile
 - WhatsApp/Messages are mobile apps
 - Emotional moments captured on phones

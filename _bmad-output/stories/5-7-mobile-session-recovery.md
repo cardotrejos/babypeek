@@ -90,7 +90,7 @@ interface SessionData {
   createdAt: number;
 }
 
-const SESSION_KEY = '3d-ultra-session';
+const SESSION_KEY = 'babypeek-session';
 const SESSION_TTL = 24 * 60 * 60 * 1000; // 24 hours
 
 export function saveSession(jobId: string): void {
@@ -129,7 +129,7 @@ export function clearSession(): void {
 
 ```typescript
 // apps/web/src/lib/tab-coordinator.ts
-const CHANNEL_NAME = '3d-ultra-poll';
+const CHANNEL_NAME = 'babypeek-poll';
 
 export function createTabCoordinator(jobId: string) {
   if (typeof BroadcastChannel === 'undefined') {

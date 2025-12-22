@@ -29,10 +29,10 @@ describe("R2Service", () => {
     // AC-4: Content-Disposition for browser download
     describe("Content-Disposition Support", () => {
       it("encodes filename correctly for ASCII characters", () => {
-        const filename = "3d-ultra-baby-2024-12-21.jpg"
+        const filename = "babypeek-baby-2024-12-21.jpg"
         const encodedFilename = encodeURIComponent(filename).replace(/'/g, "%27")
         
-        expect(encodedFilename).toBe("3d-ultra-baby-2024-12-21.jpg")
+        expect(encodedFilename).toBe("babypeek-baby-2024-12-21.jpg")
       })
 
       it("encodes filename correctly for special characters", () => {
@@ -46,7 +46,7 @@ describe("R2Service", () => {
       })
 
       it("generates correct Content-Disposition header format", () => {
-        const filename = "3d-ultra-baby-2024-12-21.jpg"
+        const filename = "babypeek-baby-2024-12-21.jpg"
         const encodedFilename = encodeURIComponent(filename).replace(/'/g, "%27")
         const contentDisposition = `attachment; filename="${filename}"; filename*=UTF-8''${encodedFilename}`
         
@@ -106,11 +106,11 @@ describe("R2Service", () => {
       it("accepts options object with expiresIn and filename", () => {
         const options = {
           expiresIn: 604800,
-          filename: "3d-ultra-baby-2024-12-21.jpg"
+          filename: "babypeek-baby-2024-12-21.jpg"
         }
 
         expect(options.expiresIn).toBe(604800)
-        expect(options.filename).toBe("3d-ultra-baby-2024-12-21.jpg")
+        expect(options.filename).toBe("babypeek-baby-2024-12-21.jpg")
       })
 
       it("defaults expiresIn to 7 days when not provided", () => {
@@ -123,11 +123,11 @@ describe("R2Service", () => {
   })
 
   describe("Filename Format", () => {
-    it("generates filename in correct format: 3d-ultra-baby-{date}.jpg", () => {
+    it("generates filename in correct format: babypeek-baby-{date}.jpg", () => {
       const today = new Date().toISOString().split("T")[0]
-      const suggestedFilename = `3d-ultra-baby-${today}.jpg`
+      const suggestedFilename = `babypeek-baby-${today}.jpg`
 
-      expect(suggestedFilename).toMatch(/^3d-ultra-baby-\d{4}-\d{2}-\d{2}\.jpg$/)
+      expect(suggestedFilename).toMatch(/^babypeek-baby-\d{4}-\d{2}-\d{2}\.jpg$/)
     })
 
     it("uses current date in YYYY-MM-DD format", () => {

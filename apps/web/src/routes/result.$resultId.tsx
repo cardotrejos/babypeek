@@ -73,7 +73,7 @@ function ResultPage() {
   const uploadId = (() => {
     try {
       return typeof window !== "undefined"
-        ? localStorage.getItem(`3d-ultra-result-upload-${resultId}`)
+        ? localStorage.getItem(`babypeek-result-upload-${resultId}`)
         : null
     } catch {
       return null

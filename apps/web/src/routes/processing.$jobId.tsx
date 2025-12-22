@@ -202,7 +202,7 @@ function ProcessingPage() {
         })
       }
       // Store mapping of result -> upload for session token retrieval
-      localStorage.setItem(`3d-ultra-result-upload-${resultId}`, jobId)
+      localStorage.setItem(`babypeek-result-upload-${resultId}`, jobId)
       // Story 5.7: Update session with result for recovery
       updateJobResult(jobId, resultId)
       

@@ -1,6 +1,6 @@
 # Upload Analytics Events Documentation
 
-> This document defines all analytics events related to the upload funnel in 3D Ultra.
+> This document defines all analytics events related to the upload funnel in BabyPeek.
 > Events are sent to PostHog via the `useAnalytics` hook.
 
 ## Event Naming Conventions

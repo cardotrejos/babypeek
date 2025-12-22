@@ -18,13 +18,13 @@
     "nitro": "^3.0.1-alpha.1",
     "rollup": "^4.54.0",
     "workflow": "^4.0.1-beta.35",
-    "@3d-ultra/api": "workspace:*",
-    "@3d-ultra/db": "workspace:*"
+    "@babypeek/api": "workspace:*",
+    "@babypeek/db": "workspace:*"
   },
   "devDependencies": {
     "@types/bun": "catalog:",
     "typescript": "catalog:",
     "tsdown": "^0.16.5",
-    "@3d-ultra/config": "workspace:*"
+    "@babypeek/config": "workspace:*"
   }
 }

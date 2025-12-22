@@ -1,5 +1,5 @@
 // Centralized API URL configuration
-// VITE_SERVER_URL should be set in Vercel to https://api.3d-ultra.com
+// VITE_SERVER_URL should be set in Vercel to https://api.babypeek.io
 // Fallbacks:
 // - VITE_API_URL: legacy env used in some routes
 // - empty string: same-origin (local dev / proxies)

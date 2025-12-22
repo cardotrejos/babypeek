@@ -11,7 +11,7 @@ import { WatermarkError } from "../lib/errors"
  * - AC-1: Watermark applied at 40% opacity
  * - AC-2: Watermark positioned bottom-right
  * - AC-3: Watermark is 15% of image width
- * - AC-4: Watermark text is "3d-ultra.com"
+ * - AC-4: Watermark text is "babypeek.com"
  * - AC-5: Preview resized to 800px max dimension
  * - AC-7: Uses Jimp library (pure JS, serverless compatible)
  */
@@ -45,12 +45,12 @@ describe("WatermarkService", () => {
       expect(result[1]).toBe(0xd8)
     })
 
-    it("uses default watermark text '3d-ultra.com' (AC-4)", async () => {
+    it("uses default watermark text 'babypeek.com' (AC-4)", async () => {
       const testImage = await createTestImage()
 
       const program = Effect.gen(function* () {
         const service = yield* WatermarkService
-        // Default options should use "3d-ultra.com"
+        // Default options should use "babypeek.com"
         return yield* service.apply(testImage, {})
       }).pipe(Effect.provide(WatermarkServiceLive))
 

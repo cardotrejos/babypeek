@@ -1,5 +1,5 @@
 {
-  "name": "@3d-ultra/api",
+  "name": "@babypeek/api",
   "type": "module",
   "exports": {
     ".": {
@@ -15,7 +15,7 @@
     "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
-    "@3d-ultra/db": "workspace:*",
+    "@babypeek/db": "workspace:*",
     "@aws-sdk/client-s3": "^3.956.0",
     "@aws-sdk/s3-request-presigner": "^3.956.0",
     "@google/generative-ai": "^0.24.1",
@@ -35,7 +35,7 @@
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@3d-ultra/config": "workspace:*",
+    "@babypeek/config": "workspace:*",
     "@types/sharp": "^0.32.0",
     "@vitest/coverage-v8": "^4.0.16",
     "typescript": "catalog:",

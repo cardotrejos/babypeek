@@ -1,9 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from "vitest"
 import { Hono } from "hono"
-import { db } from "@3d-ultra/db"
+import { db } from "@babypeek/db"
 
 // Mock database
-vi.mock("@3d-ultra/db", () => ({
+vi.mock("@babypeek/db", () => ({
   db: {
     query: {
       uploads: {

@@ -8,7 +8,7 @@
  * - Opacity: 40%
  * - Position: Bottom-right corner
  * - Size: 15% of image width
- * - Text: "3d-ultra.com"
+ * - Text: "babypeek.io"
  * - Margin: 3% from edges
  *
  * Preview Specs:
@@ -27,7 +27,7 @@ import { WatermarkError } from "../lib/errors"
 // =============================================================================
 
 export interface WatermarkOptions {
-  text?: string // Default: "3d-ultra.com"
+  text?: string // Default: "babypeek.io"
   opacity?: number // Default: 0.4 (40%)
   widthPercent?: number // Default: 0.15 (15%)
   marginPercent?: number // Default: 0.03 (3%)

@@ -4,12 +4,12 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/* 3d-ultra Design System - Warm & Intimate Theme */
+/* babypeek Design System - Warm & Intimate Theme */
 /* Google Fonts loaded via preconnect in __root.tsx for LCP optimization */
 /* Fonts: DM Sans (body) and Playfair Display (headlines) */
 
 :root {
-  /* 3d-ultra Warm Color Palette */
+  /* babypeek Warm Color Palette */
   --cream: #FDF8F5;
   --coral: #E8927C;
   --coral-hover: #D4806B;
@@ -97,12 +97,12 @@
 }
 
 @theme inline {
-  /* Typography - 3d-ultra fonts */
+  /* Typography - babypeek fonts */
   --font-sans: "DM Sans", system-ui, sans-serif;
   --font-display: "Playfair Display", Georgia, serif;
   --font-body: "DM Sans", system-ui, sans-serif;
   
-  /* 3d-ultra Warm Color Palette */
+  /* babypeek Warm Color Palette */
   --color-cream: var(--cream);
   --color-coral: var(--coral);
   --color-coral-hover: var(--coral-hover);
@@ -164,7 +164,7 @@
   }
 }
 
-/* 3d-ultra Touch Target Utilities */
+/* babypeek Touch Target Utilities */
 @layer utilities {
   .touch-target {
     min-height: 48px;
@@ -195,7 +195,7 @@
   }
 }
 
-/* 3d-ultra Signature Animations */
+/* babypeek Signature Animations */
 @keyframes signature-glow {
   0%, 100% { box-shadow: 0 0 20px rgba(232, 146, 124, 0.3); }
   50% { box-shadow: 0 0 30px rgba(232, 146, 124, 0.5); }

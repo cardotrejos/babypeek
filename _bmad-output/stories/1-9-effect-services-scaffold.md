@@ -386,7 +386,7 @@ export const StripeServiceLive = Layer.succeed(
             line_items: [{
               price_data: {
                 currency: 'usd',
-                product_data: { name: '3d-ultra HD Photo' },
+                product_data: { name: 'babypeek HD Photo' },
                 unit_amount: 999, // $9.99
               },
               quantity: 1,
@@ -459,12 +459,12 @@ export const ResendServiceLive = Layer.succeed(
         try: async () => {
           const resend = getResendClient()
           await resend.emails.send({
-            from: '3d-ultra <noreply@3d-ultra.com>',
+            from: 'babypeek <noreply@babypeek.com>',
             to: email,
-            subject: 'Your 3d-ultra portrait is ready! 🎉',
+            subject: 'Your babypeek portrait is ready! 🎉',
             html: `
               <h1>Your baby portrait is ready!</h1>
-              <p>View your result: <a href="https://3d-ultra.com/result/${resultId}">Click here</a></p>
+              <p>View your result: <a href="https://babypeek.com/result/${resultId}">Click here</a></p>
             `,
           })
         },
@@ -476,9 +476,9 @@ export const ResendServiceLive = Layer.succeed(
         try: async () => {
           const resend = getResendClient()
           await resend.emails.send({
-            from: '3d-ultra <noreply@3d-ultra.com>',
+            from: 'babypeek <noreply@babypeek.com>',
             to: email,
-            subject: 'Your 3d-ultra purchase receipt',
+            subject: 'Your babypeek purchase receipt',
             html: `
               <h1>Thank you for your purchase!</h1>
               <p>Amount: $${(amount / 100).toFixed(2)}</p>
@@ -494,7 +494,7 @@ export const ResendServiceLive = Layer.succeed(
         try: async () => {
           const resend = getResendClient()
           await resend.emails.send({
-            from: '3d-ultra <noreply@3d-ultra.com>',
+            from: 'babypeek <noreply@babypeek.com>',
             to: email,
             subject: 'Your HD photo is ready to download! 📸',
             html: `

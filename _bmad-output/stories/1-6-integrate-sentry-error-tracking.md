@@ -194,7 +194,7 @@ export default defineConfig({
     // ... other plugins
     sentryVitePlugin({
       org: "your-org",
-      project: "3d-ultra-web",
+      project: "babypeek-web",
       authToken: process.env.SENTRY_AUTH_TOKEN,
     }),
   ],
@@ -231,7 +231,7 @@ SENTRY_DSN=https://xxx@xxx.ingest.sentry.io/xxx
 # CI/CD (for source map uploads)
 SENTRY_AUTH_TOKEN=sntrys_xxx
 SENTRY_ORG=your-org
-SENTRY_PROJECT=3d-ultra
+SENTRY_PROJECT=babypeek
 ```
 
 ### Previous Story Learnings

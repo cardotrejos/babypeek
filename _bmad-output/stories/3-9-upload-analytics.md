@@ -177,7 +177,7 @@ function getConnectionType(): string {
 
 ```typescript
 // apps/web/src/lib/upload-session.ts
-const UPLOAD_SESSION_KEY = '3d-ultra-upload-session'
+const UPLOAD_SESSION_KEY = 'babypeek-upload-session'
 
 interface UploadSession {
   id: string

@@ -13,7 +13,7 @@ so that **users can share without giving away the full image**.
 1. **AC-1:** Given the AI-generated image is stored, when the watermarking stage runs, then a watermark is applied at 40% opacity (FR-3.2)
 2. **AC-2:** The watermark is positioned in bottom-right corner
 3. **AC-3:** The watermark is 15% of image width
-4. **AC-4:** The watermark text is "3d-ultra.com"
+4. **AC-4:** The watermark text is "babypeek.com"
 5. **AC-5:** The preview is resized to 800px max dimension (FR-3.3)
 6. **AC-6:** The preview is stored at `/results/{resultId}/preview.jpg`
 7. **AC-7:** Watermarking uses Sharp library
@@ -95,7 +95,7 @@ export class WatermarkService extends Context.Tag('WatermarkService')<
 >() {}
 
 interface WatermarkOptions {
-  text?: string       // Default: "3d-ultra.com"
+  text?: string       // Default: "babypeek.com"
   opacity?: number    // Default: 0.4 (40%)
   widthPercent?: number // Default: 0.15 (15%)
 }
@@ -107,7 +107,7 @@ export const WatermarkServiceLive = Layer.succeed(
     apply: (imageBuffer, options = {}) =>
       Effect.gen(function* () {
         const {
-          text = '3d-ultra.com',
+          text = 'babypeek.com',
           opacity = 0.4,
           widthPercent = 0.15,
         } = options
@@ -222,7 +222,7 @@ yield* ResultService.updatePreviewUrl(resultId, previewUrl)
 | Opacity | 40% |
 | Position | Bottom-right corner |
 | Size | 15% of image width |
-| Text | "3d-ultra.com" |
+| Text | "babypeek.com" |
 | Margin | 3% from edges |
 | Font | Arial (system fallback) |
 

@@ -11,7 +11,7 @@ import { API_BASE_URL } from "@/lib/api-config"
  * Enables users to download their HD image directly from the app.
  * - AC-1: Downloads HD image when tapped
  * - AC-2: Shows download progress (loading states)
- * - AC-3: Filename is "3d-ultra-baby-{date}.jpg"
+ * - AC-3: Filename is "babypeek-{date}.jpg"
  * - AC-4: Success confirmation shown after download
  * - AC-5: Tracks download_clicked event to PostHog
  * - AC-6: Shows loading state while fetching download URL
@@ -73,7 +73,7 @@ export function DownloadButton({
       // AC-3: Generate filename with date (use API suggested or fallback)
       const filename =
         suggestedFilename ||
-        `3d-ultra-baby-${new Date().toISOString().split("T")[0]}.jpg`
+        `babypeek-${new Date().toISOString().split("T")[0]}.jpg`
 
       // Trigger download via hidden anchor
       const link = document.createElement("a")

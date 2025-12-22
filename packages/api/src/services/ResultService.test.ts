@@ -7,7 +7,7 @@ import { PostHogServiceMock } from "./PostHogService"
 import { ResultError, NotFoundError, R2Error } from "../lib/errors"
 
 // Mock the database module with proper promise chain
-vi.mock("@3d-ultra/db", () => ({
+vi.mock("@babypeek/db", () => ({
   db: {
     query: {
       uploads: {
@@ -130,7 +130,7 @@ describe("ResultService", () => {
 
     it("fails with ResultError NOT_FOUND when uploadId doesn't exist", async () => {
       // Create a mock that returns empty array (simulating upload not found)
-      const dbModule = await import("@3d-ultra/db")
+      const dbModule = await import("@babypeek/db")
       const originalUpdate = dbModule.db.update
 
       // Temporarily override update to return empty result

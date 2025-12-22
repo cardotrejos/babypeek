@@ -17,7 +17,7 @@ describe("ResendService", () => {
       const html = generateReceiptHtml({
         amount: "$9.99",
         date: "December 21, 2024",
-        downloadUrl: "https://3d-ultra.com/download/upload-456",
+        downloadUrl: "https://babypeek.com/download/upload-456",
         isGift: false,
         purchaseId: "purchase-123",
       })
@@ -29,19 +29,19 @@ describe("ResendService", () => {
       const html = generateReceiptHtml({
         amount: "$9.99",
         date: "December 21, 2024",
-        downloadUrl: "https://3d-ultra.com/download/upload-xyz",
+        downloadUrl: "https://babypeek.com/download/upload-xyz",
         isGift: false,
         purchaseId: "purchase-123",
       })
 
-      expect(html).toContain("https://3d-ultra.com/download/upload-xyz")
+      expect(html).toContain("https://babypeek.com/download/upload-xyz")
     })
 
     it("includes purchase ID in email", () => {
       const html = generateReceiptHtml({
         amount: "$3.99",
         date: "December 21, 2024",
-        downloadUrl: "https://3d-ultra.com/download/abc",
+        downloadUrl: "https://babypeek.com/download/abc",
         isGift: false,
         purchaseId: "pur_abc123",
       })
@@ -53,7 +53,7 @@ describe("ResendService", () => {
       const html = generateReceiptHtml({
         amount: "$9.99",
         date: "December 21, 2024",
-        downloadUrl: "https://3d-ultra.com/download/upload-789",
+        downloadUrl: "https://babypeek.com/download/upload-789",
         isGift: true,
         purchaseId: "purchase-gift",
       })
@@ -67,7 +67,7 @@ describe("ResendService", () => {
       const html1 = generateReceiptHtml({
         amount: "$3.99",
         date: "December 21, 2024",
-        downloadUrl: "https://3d-ultra.com/download/abc",
+        downloadUrl: "https://babypeek.com/download/abc",
         isGift: false,
         purchaseId: "pur_123",
       })
@@ -77,7 +77,7 @@ describe("ResendService", () => {
       const html2 = generateReceiptHtml({
         amount: "$19.99",
         date: "December 21, 2024",
-        downloadUrl: "https://3d-ultra.com/download/abc",
+        downloadUrl: "https://babypeek.com/download/abc",
         isGift: false,
         purchaseId: "pur_123",
       })
@@ -87,7 +87,7 @@ describe("ResendService", () => {
       const html3 = generateReceiptHtml({
         amount: "$0.00",
         date: "December 21, 2024",
-        downloadUrl: "https://3d-ultra.com/download/abc",
+        downloadUrl: "https://babypeek.com/download/abc",
         isGift: false,
         purchaseId: "pur_123",
       })
@@ -100,14 +100,14 @@ describe("ResendService", () => {
       const html = generateReceiptHtml({
         amount: "$9.99",
         date: "December 21, 2024",
-        downloadUrl: "https://3d-ultra.com/download/abc",
+        downloadUrl: "https://babypeek.com/download/abc",
         isGift: false,
         purchaseId: "pur_123",
       })
 
       expect(html).toContain("$9.99")
       expect(html).toContain("December 21, 2024")
-      expect(html).toContain("https://3d-ultra.com/download/abc")
+      expect(html).toContain("https://babypeek.com/download/abc")
       expect(html).toContain("pur_123")
     })
 
@@ -115,7 +115,7 @@ describe("ResendService", () => {
       const html = generateReceiptHtml({
         amount: "$9.99",
         date: "December 21, 2024",
-        downloadUrl: "https://3d-ultra.com/download/abc",
+        downloadUrl: "https://babypeek.com/download/abc",
         isGift: false,
         purchaseId: "pur_123",
       })
@@ -128,20 +128,20 @@ describe("ResendService", () => {
       const html = generateReceiptHtml({
         amount: "$9.99",
         date: "December 21, 2024",
-        downloadUrl: "https://3d-ultra.com/download/abc",
+        downloadUrl: "https://babypeek.com/download/abc",
         isGift: false,
         purchaseId: "pur_123",
       })
 
       expect(html).toContain("Download HD Photo")
-      expect(html).toContain('href="https://3d-ultra.com/download/abc"')
+      expect(html).toContain('href="https://babypeek.com/download/abc"')
     })
 
     it("mentions 30-day access", () => {
       const html = generateReceiptHtml({
         amount: "$9.99",
         date: "December 21, 2024",
-        downloadUrl: "https://3d-ultra.com/download/abc",
+        downloadUrl: "https://babypeek.com/download/abc",
         isGift: false,
         purchaseId: "pur_123",
       })
@@ -153,7 +153,7 @@ describe("ResendService", () => {
       const html = generateReceiptHtml({
         amount: "$9.99",
         date: "December 21, 2024",
-        downloadUrl: "https://3d-ultra.com/download/abc",
+        downloadUrl: "https://babypeek.com/download/abc",
         isGift: true,
         purchaseId: "pur_123",
       })
@@ -165,7 +165,7 @@ describe("ResendService", () => {
       const html = generateReceiptHtml({
         amount: "$9.99",
         date: "December 21, 2024",
-        downloadUrl: "https://3d-ultra.com/download/abc",
+        downloadUrl: "https://babypeek.com/download/abc",
         isGift: false,
         purchaseId: "pur_123",
       })
@@ -186,7 +186,7 @@ describe("ResendService", () => {
         const giftHtml = generateReceiptHtml({
           amount: "$9.99",
           date: "December 21, 2024",
-          downloadUrl: "https://3d-ultra.com/download/abc",
+          downloadUrl: "https://babypeek.com/download/abc",
           isGift: true,
           purchaseId: "pur_gift_123",
         })
@@ -194,7 +194,7 @@ describe("ResendService", () => {
         const regularHtml = generateReceiptHtml({
           amount: "$9.99",
           date: "December 21, 2024",
-          downloadUrl: "https://3d-ultra.com/download/abc",
+          downloadUrl: "https://babypeek.com/download/abc",
           isGift: false,
           purchaseId: "pur_regular_123",
         })
@@ -214,7 +214,7 @@ describe("ResendService", () => {
         const html = generateReceiptHtml({
           amount: "$9.99",
           date: "December 21, 2024",
-          downloadUrl: "https://3d-ultra.com/download/abc",
+          downloadUrl: "https://babypeek.com/download/abc",
           isGift: true,
           purchaseId: "pur_gift_456",
         })
@@ -231,12 +231,12 @@ describe("ResendService", () => {
         const html = generateReceiptHtml({
           amount: "$9.99",
           date: "December 21, 2024",
-          downloadUrl: "https://3d-ultra.com/download/gift-upload",
+          downloadUrl: "https://babypeek.com/download/gift-upload",
           isGift: true,
           purchaseId: "pur_123",
         })
 
-        expect(html).toContain("https://3d-ultra.com/download/gift-upload")
+        expect(html).toContain("https://babypeek.com/download/gift-upload")
         expect(html).toContain("Download HD Photo")
       })
     })
@@ -247,7 +247,7 @@ describe("ResendService", () => {
     describe("Template structure", () => {
       it("includes all required HTML structure", () => {
         const html = generateDownloadHtml({
-          downloadUrl: "https://3d-ultra.com/download/abc",
+          downloadUrl: "https://babypeek.com/download/abc",
           isGift: false,
         })
 
@@ -258,7 +258,7 @@ describe("ResendService", () => {
 
       it("includes baby emoji header", () => {
         const html = generateDownloadHtml({
-          downloadUrl: "https://3d-ultra.com/download/abc",
+          downloadUrl: "https://babypeek.com/download/abc",
           isGift: false,
         })
 
@@ -269,7 +269,7 @@ describe("ResendService", () => {
     describe("AC-2: Celebratory/warm tone", () => {
       it("has celebratory headline for self purchase", () => {
         const html = generateDownloadHtml({
-          downloadUrl: "https://3d-ultra.com/download/abc",
+          downloadUrl: "https://babypeek.com/download/abc",
           isGift: false,
         })
 
@@ -280,7 +280,7 @@ describe("ResendService", () => {
 
       it("has gift-specific celebratory headline for gift", () => {
         const html = generateDownloadHtml({
-          downloadUrl: "https://3d-ultra.com/download/abc",
+          downloadUrl: "https://babypeek.com/download/abc",
           isGift: true,
         })
 
@@ -292,17 +292,17 @@ describe("ResendService", () => {
     describe("AC-3: Prominent download button", () => {
       it("includes download button with correct URL", () => {
         const html = generateDownloadHtml({
-          downloadUrl: "https://3d-ultra.com/download/test-upload",
+          downloadUrl: "https://babypeek.com/download/test-upload",
           isGift: false,
         })
 
-        expect(html).toContain('href="https://3d-ultra.com/download/test-upload"')
+        expect(html).toContain('href="https://babypeek.com/download/test-upload"')
         expect(html).toContain("Download HD Photo")
       })
 
       it("button has coral background color matching brand", () => {
         const html = generateDownloadHtml({
-          downloadUrl: "https://3d-ultra.com/download/abc",
+          downloadUrl: "https://babypeek.com/download/abc",
           isGift: false,
         })
 
@@ -313,7 +313,7 @@ describe("ResendService", () => {
     describe("AC-4: 7-day expiration notice", () => {
       it("shows default 7-day expiration", () => {
         const html = generateDownloadHtml({
-          downloadUrl: "https://3d-ultra.com/download/abc",
+          downloadUrl: "https://babypeek.com/download/abc",
           isGift: false,
         })
 
@@ -323,7 +323,7 @@ describe("ResendService", () => {
 
       it("supports custom expiration days", () => {
         const html = generateDownloadHtml({
-          downloadUrl: "https://3d-ultra.com/download/abc",
+          downloadUrl: "https://babypeek.com/download/abc",
           isGift: false,
           expiresInDays: 14,
         })
@@ -333,7 +333,7 @@ describe("ResendService", () => {
 
       it("has warning styling (yellow background)", () => {
         const html = generateDownloadHtml({
-          downloadUrl: "https://3d-ultra.com/download/abc",
+          downloadUrl: "https://babypeek.com/download/abc",
           isGift: false,
         })
 
@@ -346,7 +346,7 @@ describe("ResendService", () => {
     describe("AC-5: Consistent brand styling", () => {
       it("uses brand coral color (#E8927C)", () => {
         const html = generateDownloadHtml({
-          downloadUrl: "https://3d-ultra.com/download/abc",
+          downloadUrl: "https://babypeek.com/download/abc",
           isGift: false,
         })
 
@@ -355,7 +355,7 @@ describe("ResendService", () => {
 
       it("uses brand background color (#FDF8F5)", () => {
         const html = generateDownloadHtml({
-          downloadUrl: "https://3d-ultra.com/download/abc",
+          downloadUrl: "https://babypeek.com/download/abc",
           isGift: false,
         })
 
@@ -364,7 +364,7 @@ describe("ResendService", () => {
 
       it("includes tips section", () => {
         const html = generateDownloadHtml({
-          downloadUrl: "https://3d-ultra.com/download/abc",
+          downloadUrl: "https://babypeek.com/download/abc",
           isGift: false,
         })
 
@@ -376,24 +376,24 @@ describe("ResendService", () => {
 
       it("includes footer with support info", () => {
         const html = generateDownloadHtml({
-          downloadUrl: "https://3d-ultra.com/download/abc",
+          downloadUrl: "https://babypeek.com/download/abc",
           isGift: false,
         })
 
         expect(html).toContain("Questions? Reply to this email")
-        expect(html).toContain("Made with 💕 by 3d-ultra")
+        expect(html).toContain("Made with 💕 by babypeek")
       })
     })
 
     describe("Gift vs Self purchase differentiation", () => {
       it("shows different copy for gift recipients", () => {
         const giftHtml = generateDownloadHtml({
-          downloadUrl: "https://3d-ultra.com/download/abc",
+          downloadUrl: "https://babypeek.com/download/abc",
           isGift: true,
         })
 
         const selfHtml = generateDownloadHtml({
-          downloadUrl: "https://3d-ultra.com/download/abc",
+          downloadUrl: "https://babypeek.com/download/abc",
           isGift: false,
         })
 
@@ -416,12 +416,12 @@ describe("ResendService", () => {
       const params: DownloadEmailParams = {
         email: "test@example.com",
         uploadId: "upload-123",
-        downloadUrl: "https://3d-ultra.com/download/upload-123",
+        downloadUrl: "https://babypeek.com/download/upload-123",
       }
 
       expect(params.email).toBe("test@example.com")
       expect(params.uploadId).toBe("upload-123")
-      expect(params.downloadUrl).toBe("https://3d-ultra.com/download/upload-123")
+      expect(params.downloadUrl).toBe("https://babypeek.com/download/upload-123")
       expect(params.isGift).toBeUndefined()
     })
 
@@ -429,14 +429,14 @@ describe("ResendService", () => {
       const selfParams: DownloadEmailParams = {
         email: "test@example.com",
         uploadId: "upload-123",
-        downloadUrl: "https://3d-ultra.com/download/upload-123",
+        downloadUrl: "https://babypeek.com/download/upload-123",
         isGift: false,
       }
 
       const giftParams: DownloadEmailParams = {
         email: "recipient@example.com",
         uploadId: "upload-456",
-        downloadUrl: "https://3d-ultra.com/download/upload-456",
+        downloadUrl: "https://babypeek.com/download/upload-456",
         isGift: true,
       }
 
@@ -467,7 +467,7 @@ describe("ResendService", () => {
       const params: DownloadEmailParams = {
         email: "test@example.com",
         uploadId: "upload-789",
-        downloadUrl: "https://3d-ultra.com/download/upload-789",
+        downloadUrl: "https://babypeek.com/download/upload-789",
         isGift: false,
       }
 

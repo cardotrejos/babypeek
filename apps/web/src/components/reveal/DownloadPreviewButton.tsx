@@ -26,7 +26,7 @@ export function detectIOS(): boolean {
  * Story 5.6: Download Preview Button (AC-1, AC-2, AC-3)
  *
  * Downloads the watermarked preview image with:
- * - Date-based filename: 3d-ultra-preview-YYYY-MM-DD.jpg
+ * - Date-based filename: babypeek-preview-YYYY-MM-DD.jpg
  * - Loading state during download
  * - Error handling with user feedback
  * - PostHog analytics tracking
@@ -67,7 +67,7 @@ export function DownloadPreviewButton({
           duration: 5000,
         })
 
-        const filename = `3d-ultra-preview-${new Date().toISOString().split("T")[0]}.jpg`
+        const filename = `babypeek-preview-${new Date().toISOString().split("T")[0]}.jpg`
         if (isPostHogConfigured()) {
           posthog.capture("preview_download_completed", {
             result_id: resultId,
@@ -100,9 +100,9 @@ export function DownloadPreviewButton({
 
       const blob = await response.blob()
 
-      // Generate filename with date: 3d-ultra-preview-YYYY-MM-DD.jpg (AC-2)
+      // Generate filename with date: babypeek-preview-YYYY-MM-DD.jpg (AC-2)
       const date = new Date().toISOString().split("T")[0]
-      const filename = `3d-ultra-preview-${date}.jpg`
+      const filename = `babypeek-preview-${date}.jpg`
 
       // M4 FIX: Create object URL and trigger download with proper cleanup
       const url = URL.createObjectURL(blob)

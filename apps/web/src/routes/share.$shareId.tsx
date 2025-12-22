@@ -159,7 +159,7 @@ function SharePage() {
         <div className="text-center space-y-3">
           <p className="font-body text-warm-gray">Want your own AI baby portrait?</p>
           <Button variant="outline" className="w-full" onClick={handleGoHome}>
-            Try 3d-ultra Free
+            Try BabyPeek Free
           </Button>
         </div>
 

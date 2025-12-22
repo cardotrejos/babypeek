@@ -7,7 +7,7 @@
  * Uses Nano Banana Pro (gemini-3-pro-image-preview) with in-utero style prompts.
  */
 
-import { db, uploads } from "@3d-ultra/db"
+import { db, uploads } from "@babypeek/db"
 import { eq } from "drizzle-orm"
 import { S3Client, PutObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3"
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner"
@@ -309,7 +309,7 @@ async function updatePreviewUrl(uploadId: string, previewUrl: string): Promise<v
  * - Opacity: 40%
  * - Position: Bottom-right corner
  * - Size: 15% of image width
- * - Text: "3d-ultra.com"
+ * - Text: "babypeek.io"
  * - Margin: 3% from edges
  * 
  * Preview Specs:

@@ -73,7 +73,7 @@ so that **I have control over my personal information**.
 import { Hono } from "hono"
 import { Effect } from "effect"
 import { eq } from "drizzle-orm"
-import { db, uploads, purchases, downloads } from "@3d-ultra/db"
+import { db, uploads, purchases, downloads } from "@babypeek/db"
 import { R2Service, R2ServiceLive } from "../services/R2Service"
 import { NotFoundError } from "../lib/errors"
 import { addBreadcrumb, captureException } from "../middleware/sentry"

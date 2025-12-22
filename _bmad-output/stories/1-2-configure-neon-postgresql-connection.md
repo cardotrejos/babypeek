@@ -36,9 +36,9 @@ So that **I can store and query data in the database**.
 services:
   postgres:
     image: postgres
-    container_name: 3d-ultra-postgres
+    container_name: babypeek-postgres
     environment:
-      POSTGRES_DB: 3d-ultra
+      POSTGRES_DB: babypeek
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password
     ports:
@@ -48,7 +48,7 @@ services:
 **Environment Configuration:**
 ```bash
 # apps/server/.env
-DATABASE_URL="postgresql://postgres:password@localhost:5432/3d-ultra"
+DATABASE_URL="postgresql://postgres:password@localhost:5432/babypeek"
 ```
 
 ### Commands Used
@@ -75,7 +75,7 @@ bun run db:studio
 ### Verification
 
 ```bash
-docker exec 3d-ultra-postgres psql -U postgres -d 3d-ultra -c "\dt"
+docker exec babypeek-postgres psql -U postgres -d babypeek -c "\dt"
 
 # Output:
 #  Schema |   Name    | Type  |  Owner   

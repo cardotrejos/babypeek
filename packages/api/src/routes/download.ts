@@ -1,7 +1,7 @@
 import { Hono } from "hono"
 import { Effect } from "effect"
 import { eq } from "drizzle-orm"
-import { db, uploads } from "@3d-ultra/db"
+import { db, uploads } from "@babypeek/db"
 import { R2Service, R2ServiceLive } from "../services/R2Service"
 import { PurchaseService, PurchaseServiceLive } from "../services/PurchaseService"
 import { DownloadService, DownloadServiceLive } from "../services/DownloadService"
@@ -155,7 +155,7 @@ app.get("/:uploadId", async (c) => {
 
     // Generate suggested filename with current date
     const today = new Date().toISOString().split("T")[0] // YYYY-MM-DD
-    const suggestedFilename = `3d-ultra-baby-${today}.jpg`
+    const suggestedFilename = `babypeek-${today}.jpg`
 
     const r2Service = yield* R2Service
     const presignedUrl = yield* r2Service.generatePresignedDownloadUrl(r2Key, {

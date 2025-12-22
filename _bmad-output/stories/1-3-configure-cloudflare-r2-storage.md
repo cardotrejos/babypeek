@@ -138,7 +138,7 @@ https://{ACCOUNT_ID}.r2.cloudflarestorage.com
 ```json
 [
   {
-    "AllowedOrigins": ["http://localhost:3001", "https://3d-ultra.com"],
+    "AllowedOrigins": ["http://localhost:3001", "https://babypeek.com"],
     "AllowedMethods": ["GET", "PUT", "POST"],
     "AllowedHeaders": ["*"],
     "MaxAgeSeconds": 3600

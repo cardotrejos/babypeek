@@ -14,7 +14,7 @@ import { createHash } from "crypto"
  */
 export function hashIP(ip: string): string {
   // Use environment salt or default (in production, should always have env salt)
-  const salt = process.env.IP_HASH_SALT || "3d-ultra-default-salt"
+  const salt = process.env.IP_HASH_SALT || "babypeek-default-salt"
   return createHash("sha256")
     .update(`${salt}:${ip}`)
     .digest("hex")

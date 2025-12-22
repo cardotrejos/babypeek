@@ -1,6 +1,6 @@
 import { Effect, Context, Layer } from "effect"
 import { eq, and } from "drizzle-orm"
-import { db, uploads, purchases, type Purchase } from "@3d-ultra/db"
+import { db, uploads, purchases, type Purchase } from "@babypeek/db"
 import { StripeService } from "./StripeService"
 import { NotFoundError, PaymentError, ValidationError } from "../lib/errors"
 import { env } from "../lib/env"

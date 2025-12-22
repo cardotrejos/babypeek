@@ -42,7 +42,7 @@ describe("StripeService - Express Payments Configuration", () => {
               {
                 price_data: {
                   currency: "usd",
-                  product_data: { name: "3d-ultra HD Photo" },
+                  product_data: { name: "babypeek HD Photo" },
                   unit_amount: 999,
                 },
                 quantity: 1,

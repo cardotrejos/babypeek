@@ -3,10 +3,10 @@ import { Effect, Layer } from "effect"
 import { PurchaseService, PurchaseServiceLive, type CreatePurchaseParams } from "./PurchaseService"
 import { StripeService } from "./StripeService"
 import { NotFoundError, ValidationError, PaymentError } from "../lib/errors"
-import { db } from "@3d-ultra/db"
+import { db } from "@babypeek/db"
 
 // Mock database
-vi.mock("@3d-ultra/db", () => ({
+vi.mock("@babypeek/db", () => ({
   db: {
     query: {
       uploads: {

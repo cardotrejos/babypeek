@@ -1,6 +1,6 @@
 import { Hono } from "hono"
 import { eq } from "drizzle-orm"
-import { db, uploads } from "@3d-ultra/db"
+import { db, uploads } from "@babypeek/db"
 
 const app = new Hono()
 

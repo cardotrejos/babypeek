@@ -30,7 +30,7 @@ so that **I can reach family who use iPhones**.
   - [x] Conditionally show based on iOS detection
 
 - [x] **Task 3: Implement iMessage/SMS URL** (AC: 1, 2)
-  - [x] Generate share URL: `https://3d-ultra.com/share/${uploadId}`
+  - [x] Generate share URL: `https://babypeek.com/share/${uploadId}`
   - [x] iOS: Use `sms:&body=${encodeURIComponent(message)}`
   - [x] Non-iOS fallback: Use generic SMS URL (`sms:?body=`)
 
@@ -112,7 +112,7 @@ const handleIMessageShare = useCallback(() => {
 
 **iOS (iMessage):**
 ```
-sms:&body=Look%20at%20this%20AI%20baby%20portrait!%20https%3A%2F%2F3d-ultra.com%2Fshare%2F{uploadId}
+sms:&body=Look%20at%20this%20AI%20baby%20portrait!%20https%3A%2F%2Fbabypeek.com%2Fshare%2F{uploadId}
 ```
 
 **Note:** iOS uses `sms:&body=` (ampersand) while Android uses `sms:?body=` (question mark)

@@ -230,7 +230,7 @@ describe("DeleteDataButton", () => {
 
       await waitFor(() => {
         expect(window.localStorage.removeItem).toHaveBeenCalledWith(
-          "3d-ultra-result-upload-test-upload-123"
+          "babypeek-result-upload-test-upload-123"
         )
       })
     })

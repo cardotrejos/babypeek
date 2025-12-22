@@ -14,7 +14,7 @@ so that **I can track the progress of my transformation**.
 
 1. **AC-1:** A database record is created with status "pending" when upload completes
 2. **AC-2:** A jobId (uploadId) is returned to the frontend after upload confirmation
-3. **AC-3:** A sessionToken is generated and stored as `3d-ultra-session-{jobId}` in localStorage
+3. **AC-3:** A sessionToken is generated and stored as `babypeek-session-{jobId}` in localStorage
 4. **AC-4:** User is navigated to the processing screen with the jobId
 5. **AC-5:** `upload_completed` event is sent to PostHog with uploadId
 
@@ -34,8 +34,8 @@ so that **I can track the progress of my transformation**.
   - [x] Return final confirmation with jobId
 
 - [x] **Task 3: Update useUpload hook for session management** (AC: 3, 4)
-  - [x] Store sessionToken in localStorage as `3d-ultra-session-{jobId}`
-  - [x] Also store `3d-ultra-current-job` for session recovery (Story 5.7 prep)
+  - [x] Store sessionToken in localStorage as `babypeek-session-{jobId}`
+  - [x] Also store `babypeek-current-job` for session recovery (Story 5.7 prep)
   - [x] Return sessionToken from startUpload result
   - [x] Add navigation callback or return values for routing
 
@@ -79,10 +79,10 @@ so that **I can track the progress of my transformation**.
 const sessionToken = crypto.randomUUID()
 
 // Client: Store per job
-localStorage.setItem(`3d-ultra-session-${jobId}`, sessionToken)
+localStorage.setItem(`babypeek-session-${jobId}`, sessionToken)
 
 // Client: Also track current job for recovery
-localStorage.setItem('3d-ultra-current-job', jobId)
+localStorage.setItem('babypeek-current-job', jobId)
 
 // Client: Send in header for authenticated requests
 headers: { 'X-Session-Token': sessionToken }
@@ -173,8 +173,8 @@ New (Story 3.6):
 
 ```typescript
 // apps/web/src/lib/session.ts
-export const SESSION_PREFIX = '3d-ultra-session-'
-export const CURRENT_JOB_KEY = '3d-ultra-current-job'
+export const SESSION_PREFIX = 'babypeek-session-'
+export const CURRENT_JOB_KEY = 'babypeek-current-job'
 
 export function storeSession(jobId: string, token: string): void {
   localStorage.setItem(`${SESSION_PREFIX}${jobId}`, token)
@@ -323,7 +323,7 @@ packages/api/src/routes/
 
 - Story 3.7 (Rate Limiting) - rate limit by session/IP
 - Story 4.1 (Workflow Job) - can trigger workflow using uploadId
-- Story 5.7 (Session Recovery) - `3d-ultra-current-job` storage
+- Story 5.7 (Session Recovery) - `babypeek-current-job` storage
 
 ### References
 

@@ -61,7 +61,7 @@ export function DeleteDataButton({ uploadId, sessionToken }: DeleteDataButtonPro
       clearSession(uploadId)
       // Also clear result mapping
       try {
-        localStorage.removeItem(`3d-ultra-result-upload-${uploadId}`)
+        localStorage.removeItem(`babypeek-result-upload-${uploadId}`)
       } catch {
         // Silent fail
       }
