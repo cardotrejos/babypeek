@@ -257,7 +257,8 @@ app.get("/:uploadId", async (c) => {
     }
     
     // Unknown error - log to Sentry
-    captureException(error instanceof Error ? error : new Error(String(error)), { uploadId })
+    const unknownError = error as unknown
+    captureException(unknownError instanceof Error ? unknownError : new Error(String(unknownError)), { uploadId })
     return c.json({
       success: false,
       error: { code: "INTERNAL_ERROR", message: "Something went wrong. Please try again." }
