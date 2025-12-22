@@ -4,6 +4,17 @@
   "framework": "vite",
   "rewrites": [
     {
+      "source": "/share/:shareId",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": ".*(facebookexternalhit|Facebot|Twitterbot|WhatsApp|LinkedInBot|Slackbot|TelegramBot|Discordbot|Pinterest|Googlebot|bingbot|Applebot|iMessageLinkPreview).*"
+        }
+      ],
+      "destination": "/api/og/:shareId"
+    },
+    {
       "source": "/api/:path*",
       "destination": "https://3d-ultra-server.vercel.app/api/:path*"
     },

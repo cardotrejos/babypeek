@@ -4,9 +4,15 @@ import userEvent from "@testing-library/user-event"
 import { GiftCheckoutButton } from "./GiftCheckoutButton"
 
 // Mock posthog
+const mockIsPostHogConfigured = vi.fn(() => true)
 vi.mock("@/lib/posthog", () => ({
   posthog: { capture: vi.fn() },
-  isPostHogConfigured: () => true,
+  isPostHogConfigured: () => mockIsPostHogConfigured(),
+}))
+
+// Mock sentry
+vi.mock("@/lib/sentry", () => ({
+  addBreadcrumb: vi.fn(),
 }))
 
 // Mock fetch
@@ -158,14 +164,42 @@ describe("GiftCheckoutButton - Story 6.7", () => {
   })
 
   describe("Analytics (AC-6)", () => {
-    it("tracks gift_purchase_started on CTA click", async () => {
+    it("tracks gift_cta_clicked on CTA click (Story 8.5)", async () => {
       const { posthog } = await import("@/lib/posthog")
 
       render(<GiftCheckoutButton {...defaultProps} />)
       await userEvent.click(screen.getByTestId("gift-checkout-button"))
 
-      expect(posthog.capture).toHaveBeenCalledWith("gift_purchase_started", {
+      expect(posthog.capture).toHaveBeenCalledWith("gift_cta_clicked", {
         share_id: "share_123",
+        upload_id: "upload_123",
+        source: "share_page",
+      })
+    })
+
+    it("tracks gift_purchase_started when clicking Continue to Payment (H1 fix)", async () => {
+      const { posthog } = await import("@/lib/posthog")
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ checkoutUrl: "https://checkout.stripe.com/test" }),
+      })
+
+      render(<GiftCheckoutButton {...defaultProps} />)
+      await userEvent.click(screen.getByTestId("gift-checkout-button"))
+      
+      // Should NOT have fired yet (only gift_cta_clicked should fire on modal open)
+      expect(posthog.capture).not.toHaveBeenCalledWith("gift_purchase_started", expect.anything())
+      
+      // Enter email and click continue
+      await userEvent.type(screen.getByTestId("gift-email-input"), "test@example.com")
+      await userEvent.click(screen.getByTestId("gift-continue-button"))
+
+      // NOW it should fire
+      await waitFor(() => {
+        expect(posthog.capture).toHaveBeenCalledWith("gift_purchase_started", {
+          share_id: "share_123",
+          upload_id: "upload_123",
+        })
       })
     })
 
@@ -218,6 +252,38 @@ describe("GiftCheckoutButton - Story 6.7", () => {
       await userEvent.click(screen.getByTestId("gift-checkout-button"))
 
       expect(screen.getByText(/HD photo will be sent directly to the parent/i)).toBeInTheDocument()
+    })
+  })
+
+  describe("PostHog Disabled (M2 fix)", () => {
+    it("works correctly when PostHog is disabled", async () => {
+      mockIsPostHogConfigured.mockReturnValue(false)
+      const { posthog } = await import("@/lib/posthog")
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ checkoutUrl: "https://checkout.stripe.com/test" }),
+      })
+
+      render(<GiftCheckoutButton {...defaultProps} />)
+      
+      // Click CTA - should not throw
+      await userEvent.click(screen.getByTestId("gift-checkout-button"))
+      expect(screen.getByTestId("gift-email-input")).toBeInTheDocument()
+      
+      // Complete flow - should not throw
+      await userEvent.type(screen.getByTestId("gift-email-input"), "test@example.com")
+      await userEvent.click(screen.getByTestId("gift-continue-button"))
+
+      // PostHog capture should not have been called
+      expect(posthog.capture).not.toHaveBeenCalled()
+      
+      // But checkout should still work
+      await waitFor(() => {
+        expect(window.location.href).toBe("https://checkout.stripe.com/test")
+      })
+
+      // Reset mock for other tests
+      mockIsPostHogConfigured.mockReturnValue(true)
     })
   })
 })

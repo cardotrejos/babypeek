@@ -5,6 +5,7 @@ import { DownloadPreviewButton } from "./DownloadPreviewButton"
 import { CheckoutButton } from "@/components/payment"
 import { DownloadButton } from "@/components/download"
 import { ShareButtons } from "@/components/share"
+import { DeleteDataButton } from "@/components/settings"
 import { toast } from "sonner"
 import { getSession } from "@/lib/session"
 import { API_BASE_URL } from "@/lib/api-config"
@@ -149,6 +150,15 @@ export function RevealUI({
         >
           {showComparison ? "Hide Comparison" : "Compare with Original"}
         </Button>
+      )}
+
+      {/* GDPR Data Deletion (Story 8.6 AC-1) */}
+      {sessionToken && (
+        <div className="pt-4 border-t border-gray-200">
+          <div className="flex justify-center">
+            <DeleteDataButton uploadId={uploadId} sessionToken={sessionToken} />
+          </div>
+        </div>
       )}
     </div>
   )

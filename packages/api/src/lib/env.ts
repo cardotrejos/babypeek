@@ -81,6 +81,11 @@ const envSchema = z.object({
   IP_HASH_SALT: z.string().min(16, "IP_HASH_SALT should be at least 16 characters").optional(),
 
   // ─────────────────────────────────────────────────────────────────────────────
+  // Cron Jobs
+  // ─────────────────────────────────────────────────────────────────────────────
+  CRON_SECRET: z.string().min(16, "CRON_SECRET should be at least 16 characters").optional(),
+
+  // ─────────────────────────────────────────────────────────────────────────────
   // Environment
   // ─────────────────────────────────────────────────────────────────────────────
   NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
@@ -130,6 +135,7 @@ export const env = parsed.success
       POSTHOG_KEY: undefined,
       SENTRY_DSN: undefined,
       IP_HASH_SALT: undefined,
+      CRON_SECRET: undefined,
     }
 
 export type Env = z.infer<typeof envSchema>
