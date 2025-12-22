@@ -3,5 +3,11 @@
   "installCommand": "cd ../.. && bun install",
   "buildCommand": "cd ../.. && bun run build --filter=server",
   "outputDirectory": ".vercel/output",
-  "framework": null
+  "framework": null,
+  "crons": [
+    {
+      "path": "/api/cron/cleanup",
+      "schedule": "0 3 * * *"
+    }
+  ]
 }

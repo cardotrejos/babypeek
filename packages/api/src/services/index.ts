@@ -14,6 +14,7 @@ export * from "./PostHogService"
 export * from "./RateLimitService"
 export * from "./WatermarkService"
 export * from "./PurchaseService"
+export * from "./CleanupService"
 
 // =============================================================================
 // Import Layers for Composition

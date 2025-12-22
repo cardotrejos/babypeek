@@ -113,6 +113,12 @@ export class WatermarkError extends Data.TaggedError("WatermarkError")<{
   message: string
 }> {}
 
+export class CleanupError extends Data.TaggedError("CleanupError")<{
+  cause: "DB_FAILED" | "R2_FAILED" | "PARTIAL_FAILURE"
+  message: string
+  uploadId?: string
+}> {}
+
 // =============================================================================
 // Union of all errors
 // =============================================================================
@@ -133,3 +139,4 @@ export type AppError =
   | UploadStatusError
   | WatermarkError
   | DownloadExpiredError
+  | CleanupError

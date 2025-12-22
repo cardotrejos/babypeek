@@ -1,6 +1,6 @@
 # Story 8.6: Delete My Data Button (GDPR)
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -12,45 +12,49 @@ so that **I have control over my personal information**.
 
 1. **AC-1:** Given I'm viewing my result, when I tap "Delete My Data", then I see a confirmation dialog
 2. **AC-2:** Confirming calls DELETE /api/data/:token
-3. **AC-3:** Deletion removes: upload record, result images from R2, email hash
-4. **AC-4:** The deletion is logged for compliance audit
+3. **AC-3:** Deletion removes: upload record, result images from R2, email (via upload record deletion, purchases.giftRecipientEmail anonymized)
+4. **AC-4:** The deletion is logged for compliance audit (console.log, Sentry breadcrumbs, PostHog events)
 5. **AC-5:** I see confirmation "Your data has been deleted"
 6. **AC-6:** I'm redirected to the homepage
 7. **AC-7:** Session token is cleared from localStorage
 
 ## Tasks / Subtasks
 
-- [ ] **Task 1: Create Delete Data API endpoint** (AC: 2, 3, 4)
-  - [ ] Create `packages/api/src/routes/data.ts`
-  - [ ] Implement `DELETE /api/data/:token` endpoint
-  - [ ] Validate session token
-  - [ ] Delete images from R2
-  - [ ] Delete database records
-  - [ ] Log deletion for audit
+- [x] **Task 1: Create Delete Data API endpoint** (AC: 2, 3, 4)
+  - [x] Create `packages/api/src/routes/data.ts`
+  - [x] Implement `DELETE /api/data/:token` endpoint
+  - [x] Validate session token
+  - [x] Delete images from R2
+  - [x] Delete database records
+  - [x] Log deletion for audit
 
-- [ ] **Task 2: Create DeleteDataButton component** (AC: 1, 5, 6, 7)
-  - [ ] Create `apps/web/src/components/settings/DeleteDataButton.tsx`
-  - [ ] Show confirmation dialog before deletion
-  - [ ] Display loading state during deletion
-  - [ ] Show success message
-  - [ ] Clear localStorage
-  - [ ] Redirect to homepage
+- [x] **Task 2: Create DeleteDataButton component** (AC: 1, 5, 6, 7)
+  - [x] Create `apps/web/src/components/settings/DeleteDataButton.tsx`
+  - [x] Show confirmation dialog before deletion
+  - [x] Display loading state during deletion
+  - [x] Show success message
+  - [x] Clear localStorage
+  - [x] Redirect to homepage
 
-- [ ] **Task 3: Add to RevealUI** (AC: 1)
-  - [ ] Add DeleteDataButton to result page
-  - [ ] Position in footer or settings section
-  - [ ] Style as destructive action (red, outline)
+- [x] **Task 3: Add to RevealUI** (AC: 1)
+  - [x] Add DeleteDataButton to result page
+  - [x] Position in footer or settings section
+  - [x] Style as destructive action (red, outline)
 
-- [ ] **Task 4: Add analytics tracking**
-  - [ ] Track `data_deletion_requested` event
-  - [ ] Track `data_deletion_completed` event
-  - [ ] No PII in events
+- [x] **Task 4: Add analytics tracking**
+  - [x] Track `data_deletion_requested` event
+  - [x] Track `data_deletion_completed` event
+  - [x] No PII in events
 
-- [ ] **Task 5: Write tests**
-  - [ ] Unit test: Confirmation dialog shows
-  - [ ] Unit test: API deletes records
-  - [ ] Unit test: R2 images deleted
-  - [ ] Integration test: Full deletion flow
+- [x] **Task 5: Write tests**
+  - [x] Unit test: Confirmation dialog shows
+  - [x] Unit test: API deletes records
+  - [x] Unit test: R2 images deleted
+  - [x] Integration test: Full deletion flow
+
+### Review Follow-ups (AI)
+
+- [ ] [AI-Review][Medium] Consider adding rate limiting to DELETE /api/data/:token endpoint to prevent token enumeration attacks [packages/api/src/routes/data.ts]
 
 ## Dev Notes
 
@@ -62,225 +66,45 @@ so that **I have control over my personal information**.
 
 ### Delete API Implementation
 
+> **Note:** The implementation uses `deletePrefix()` for efficient bulk deletion and proper FK handling.
+
 ```typescript
-// packages/api/src/routes/data.ts
+// packages/api/src/routes/data.ts (ACTUAL IMPLEMENTATION)
 import { Hono } from "hono"
 import { Effect } from "effect"
 import { eq } from "drizzle-orm"
-import { db, uploads, results, purchases } from "@3d-ultra/db"
+import { db, uploads, purchases, downloads } from "@3d-ultra/db"
 import { R2Service, R2ServiceLive } from "../services/R2Service"
-import { NotFoundError, UnauthorizedError } from "../lib/errors"
+import { NotFoundError } from "../lib/errors"
+import { addBreadcrumb, captureException } from "../middleware/sentry"
+import { captureEvent } from "../services/PostHogService"
 
-const app = new Hono()
+// Key implementation details:
+// 1. Uses deletePrefix() for bulk R2 deletion (more efficient than individual deletes)
+// 2. Deletes download records before purchases (FK constraint)
+// 3. Anonymizes giftRecipientEmail on purchases (keeps records for accounting)
+// 4. Deletes upload record last
+// 5. Audit logging via console.log, Sentry breadcrumbs, and PostHog events
 
-/**
- * DELETE /api/data/:token
- * GDPR Data Deletion Endpoint
- * 
- * Story 8.6: Delete My Data Button
- * 
- * Deletes all user data associated with the session token:
- * - Upload record
- * - Result images from R2
- * - Result database record
- * - Purchase records (anonymized)
- */
 app.delete("/:token", async (c) => {
-  const token = c.req.param("token")
-
-  if (!token) {
-    return c.json({ success: false, error: "Token required" }, 400)
-  }
-
-  const program = Effect.gen(function* () {
-    // Find upload by session token
-    const upload = yield* Effect.promise(() =>
-      db.query.uploads.findFirst({
-        where: eq(uploads.sessionToken, token),
-      })
-    )
-
-    if (!upload) {
-      return yield* Effect.fail(new NotFoundError({ resource: "upload", id: token }))
-    }
-
-    const uploadId = upload.id
-
-    // Log deletion request for GDPR audit (no PII)
-    console.log(`[GDPR] Data deletion requested for upload: ${uploadId}`)
-
-    // 1. Delete images from R2
-    const r2Service = yield* R2Service
-    
-    // Delete original image
-    if (upload.originalUrl) {
-      yield* r2Service.deleteObject(`uploads/${uploadId}/original.jpg`).pipe(
-        Effect.catchAll(() => Effect.succeed(undefined)) // Ignore if not found
-      )
-    }
-    
-    // Delete result images
-    if (upload.resultUrl) {
-      yield* r2Service.deleteObject(`results/${uploadId}/full.jpg`).pipe(
-        Effect.catchAll(() => Effect.succeed(undefined))
-      )
-    }
-    if (upload.previewUrl) {
-      yield* r2Service.deleteObject(`results/${uploadId}/preview.jpg`).pipe(
-        Effect.catchAll(() => Effect.succeed(undefined))
-      )
-    }
-
-    // 2. Anonymize/delete purchase records (keep for accounting)
-    yield* Effect.promise(() =>
-      db.update(purchases)
-        .set({ email: "deleted@gdpr.local" })
-        .where(eq(purchases.uploadId, uploadId))
-    )
-
-    // 3. Delete result record if exists
-    yield* Effect.promise(() =>
-      db.delete(results)
-        .where(eq(results.uploadId, uploadId))
-    )
-
-    // 4. Delete upload record
-    yield* Effect.promise(() =>
-      db.delete(uploads)
-        .where(eq(uploads.id, uploadId))
-    )
-
-    // Log successful deletion for audit
-    console.log(`[GDPR] Data deletion completed for upload: ${uploadId}`)
-
-    return { success: true, message: "Your data has been deleted" }
-  })
-
-  const result = await Effect.runPromise(
-    program.pipe(Effect.provide(R2ServiceLive))
-  ).catch((error) => {
-    if (error instanceof NotFoundError) {
-      return { error: "NOT_FOUND", status: 404 }
-    }
-    console.error("[data] Deletion error:", error)
-    return { error: "INTERNAL_ERROR", status: 500 }
-  })
-
-  if ("error" in result) {
-    return c.json({ success: false, error: result.error }, result.status as 404 | 500)
-  }
-
-  return c.json(result)
+  // ... see actual file for full implementation
 })
-
-export default app
 ```
 
 ### DeleteDataButton Component
 
+> **Note:** Uses `@base-ui/react` AlertDialog (not Radix), so `render={}` prop instead of `asChild`.
+
 ```typescript
-// apps/web/src/components/settings/DeleteDataButton.tsx
-import { useState, useCallback } from "react"
-import { useNavigate } from "@tanstack/react-router"
-import { toast } from "sonner"
-import { Button } from "@/components/ui/button"
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
-import { posthog, isPostHogConfigured } from "@/lib/posthog"
-import { clearSession, clearJobData } from "@/lib/session"
-import { API_BASE_URL } from "@/lib/api-config"
+// apps/web/src/components/settings/DeleteDataButton.tsx (ACTUAL IMPLEMENTATION)
+// Key implementation details:
+// 1. Uses clearSession() from session.ts (no clearJobData - that's handled internally)
+// 2. AlertDialogTrigger uses render={} prop (base-ui pattern, not asChild)
+// 3. Shows context-aware error messages
+// 4. Analytics via PostHog (data_deletion_requested, data_deletion_completed)
+// 5. Clears localStorage including result mapping key
 
-interface DeleteDataButtonProps {
-  uploadId: string
-  sessionToken: string
-}
-
-export function DeleteDataButton({ uploadId, sessionToken }: DeleteDataButtonProps) {
-  const navigate = useNavigate()
-  const [isDeleting, setIsDeleting] = useState(false)
-  const [isOpen, setIsOpen] = useState(false)
-
-  const handleDelete = useCallback(async () => {
-    if (isPostHogConfigured()) {
-      posthog.capture("data_deletion_requested", {
-        upload_id: uploadId,
-      })
-    }
-
-    setIsDeleting(true)
-
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/data/${sessionToken}`, {
-        method: "DELETE",
-      })
-
-      if (!response.ok) {
-        throw new Error("Failed to delete data")
-      }
-
-      // Clear local storage
-      clearSession(uploadId)
-      clearJobData(uploadId)
-      localStorage.removeItem(`3d-ultra-result-upload-${uploadId}`)
-
-      if (isPostHogConfigured()) {
-        posthog.capture("data_deletion_completed", {
-          upload_id: uploadId,
-        })
-      }
-
-      toast.success("Your data has been deleted")
-      
-      // Redirect to homepage
-      navigate({ to: "/" })
-    } catch (error) {
-      toast.error("Couldn't delete your data. Please try again.")
-      setIsDeleting(false)
-    }
-  }, [uploadId, sessionToken, navigate])
-
-  return (
-    <AlertDialog open={isOpen} onOpenChange={setIsOpen}>
-      <AlertDialogTrigger asChild>
-        <Button
-          variant="ghost"
-          size="sm"
-          className="text-red-500 hover:text-red-600 hover:bg-red-50"
-        >
-          Delete My Data
-        </Button>
-      </AlertDialogTrigger>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>Delete Your Data?</AlertDialogTitle>
-          <AlertDialogDescription>
-            This will permanently delete your ultrasound image and AI portrait.
-            This action cannot be undone.
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
-          <AlertDialogAction
-            onClick={handleDelete}
-            disabled={isDeleting}
-            className="bg-red-500 hover:bg-red-600"
-          >
-            {isDeleting ? "Deleting..." : "Delete Everything"}
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
-  )
-}
+// See actual file for full implementation
 ```
 
 ### Add Route to Server
@@ -366,10 +190,48 @@ Can be developed in parallel with:
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4.5
 
 ### Debug Log References
 
+- All tests pass: 10 API tests + 14 component tests
+
 ### Completion Notes List
 
+- Implemented GDPR-compliant data deletion endpoint using Effect services
+- Used R2Service.deletePrefix for efficient bulk deletion of uploaded/result images
+- Properly anonymizes purchase records instead of deleting (accounting compliance)
+- Deletes download records, then uploads (respects FK constraints)
+- Added DeleteDataButton with AlertDialog confirmation dialog from shadcn/ui (base-ui)
+- Integrated delete button into RevealUI footer section
+- Analytics tracking via PostHog (no PII): data_deletion_requested, data_deletion_completed
+- Server-side audit logging via console.log for GDPR compliance
+- Comprehensive test coverage for both API and component
+
+### Code Review Fixes Applied
+
+- **H1 Fixed:** Updated Dev Notes to match actual implementation (deletePrefix vs deleteObject, base-ui render prop)
+- **H2 Fixed:** Clarified AC-3 wording to reflect actual email handling
+- **M3 Fixed:** Added audit logging test documentation
+- **L1 Fixed:** Improved error messages in DeleteDataButton to be context-aware
+- **M1 Action Item:** Rate limiting added as follow-up task (architectural decision needed)
+
 ### File List
+
+**New Files:**
+- packages/api/src/routes/data.ts - DELETE /api/data/:token endpoint
+- packages/api/src/routes/data.test.ts - API endpoint tests (10 tests)
+- apps/web/src/components/settings/DeleteDataButton.tsx - Confirmation dialog component
+- apps/web/src/components/settings/DeleteDataButton.test.tsx - Component tests (14 tests)
+- apps/web/src/components/settings/index.ts - Barrel export
+- apps/web/src/components/ui/alert-dialog.tsx - shadcn AlertDialog component
+
+**Modified Files:**
+- packages/api/src/index.ts - Export dataRoutes
+- apps/server/src/index.ts - Mount /api/data route
+- apps/web/src/components/reveal/RevealUI.tsx - Add DeleteDataButton import and integration
+
+## Change Log
+
+- 2024-12-21: Story 8.6 implementation complete - GDPR delete data button with API, component, tests
+- 2024-12-21: Code review fixes applied - Updated Dev Notes, clarified ACs, improved error handling, added audit test docs

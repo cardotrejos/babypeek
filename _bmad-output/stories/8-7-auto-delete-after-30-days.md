@@ -1,6 +1,6 @@
 # Story 8.7: Auto-Delete After 30 Days
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -19,39 +19,39 @@ so that **storage costs are controlled and privacy is maintained**.
 
 ## Tasks / Subtasks
 
-- [ ] **Task 1: Create cleanup service** (AC: 1, 2, 3)
-  - [ ] Create `packages/api/src/services/CleanupService.ts`
-  - [ ] Implement Effect service for data cleanup
-  - [ ] Query uploads older than 30 days
-  - [ ] Delete R2 objects
-  - [ ] Anonymize/delete database records
+- [x] **Task 1: Create cleanup service** (AC: 1, 2, 3)
+  - [x] Create `packages/api/src/services/CleanupService.ts`
+  - [x] Implement Effect service for data cleanup
+  - [x] Query uploads older than 30 days
+  - [x] Delete R2 objects
+  - [x] Anonymize/delete database records
 
-- [ ] **Task 2: Create cleanup API endpoint** (AC: 5)
-  - [ ] Create `packages/api/src/routes/cleanup.ts`
-  - [ ] Implement `POST /api/cron/cleanup` endpoint
-  - [ ] Secure with CRON_SECRET header
-  - [ ] Return cleanup statistics
+- [x] **Task 2: Create cleanup API endpoint** (AC: 5)
+  - [x] Create `packages/api/src/routes/cleanup.ts`
+  - [x] Implement `POST /api/cron/cleanup` endpoint
+  - [x] Secure with CRON_SECRET header
+  - [x] Return cleanup statistics
 
-- [ ] **Task 3: Configure Vercel Cron** (AC: 5)
-  - [ ] Add `vercel.json` cron configuration
-  - [ ] Schedule for daily at 3 AM UTC
-  - [ ] Add CRON_SECRET environment variable
+- [x] **Task 3: Configure Vercel Cron** (AC: 5)
+  - [x] Add `vercel.json` cron configuration
+  - [x] Schedule for daily at 3 AM UTC
+  - [x] Add CRON_SECRET environment variable
 
-- [ ] **Task 4: Handle purchased uploads** (AC: 4)
-  - [ ] Check for purchases associated with upload
-  - [ ] Use purchase date + 30 days for purchased items
-  - [ ] Only delete if 30 days past purchase
+- [x] **Task 4: Handle purchased uploads** (AC: 4)
+  - [x] Check for purchases associated with upload
+  - [x] Use purchase date + 30 days for purchased items
+  - [x] Only delete if 30 days past purchase
 
-- [ ] **Task 5: Add error handling** (AC: 6)
-  - [ ] Continue processing on individual failures
-  - [ ] Log all failures to Sentry
-  - [ ] Report partial success in response
+- [x] **Task 5: Add error handling** (AC: 6)
+  - [x] Continue processing on individual failures
+  - [x] Log all failures to Sentry
+  - [x] Report partial success in response
 
-- [ ] **Task 6: Write tests**
-  - [ ] Unit test: Identifies stale records
-  - [ ] Unit test: Respects purchase dates
-  - [ ] Unit test: Handles partial failures
-  - [ ] Integration test: Full cleanup flow
+- [x] **Task 6: Write tests**
+  - [x] Unit test: Identifies stale records
+  - [x] Unit test: Respects purchase dates
+  - [x] Unit test: Handles partial failures
+  - [x] Integration test: Full cleanup flow
 
 ## Dev Notes
 
@@ -361,10 +361,37 @@ Can be developed in parallel with:
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4.5
 
 ### Debug Log References
 
+- All 22 tests pass (cleanup.test.ts)
+- TypeScript compilation clean for cleanup files
+
 ### Completion Notes List
 
+- **Task 1:** Created `CleanupService.ts` with Effect pattern following existing services. Implements retention policy: unpurchased=30d from upload, purchased=30d from purchase.
+- **Task 2:** Created `cleanup.ts` route at `POST /api/cron/cleanup`. Verifies `x-cron-secret` or `Authorization: Bearer` header against `CRON_SECRET`.
+- **Task 3:** Added cron config to `apps/server/vercel.json` with `"schedule": "0 3 * * *"` (daily 3 AM UTC).
+- **Task 4:** `shouldDeleteUpload()` function checks purchase date. If purchased, uses `purchase.createdAt + 30 days` for expiry calculation.
+- **Task 5:** Each upload cleanup wrapped in `Effect.either()` to catch individual failures. Errors aggregated and reported to Sentry. Partial success returns with stats.
+- **Task 6:** 22 tests covering: auth (401/500), cleanup stats, partial failures (AC-6), retention policy logic (purchased vs unpurchased), edge cases (30-day boundary).
+
+### Change Log
+
+- 2024-12-21: Story implementation complete - all tasks/subtasks done, 22 tests passing
+
 ### File List
+
+**New Files:**
+- `packages/api/src/services/CleanupService.ts` - Core cleanup service with retention policy
+- `packages/api/src/routes/cleanup.ts` - Cron endpoint
+- `packages/api/src/routes/cleanup.test.ts` - 22 unit/integration tests
+
+**Modified Files:**
+- `packages/api/src/lib/env.ts` - Added `CRON_SECRET` env var
+- `packages/api/src/lib/errors.ts` - Added `CleanupError` type
+- `packages/api/src/services/index.ts` - Exported CleanupService
+- `packages/api/src/index.ts` - Exported cleanup routes
+- `apps/server/src/index.ts` - Mounted route at `/api/cron/cleanup`
+- `apps/server/vercel.json` - Added cron config for daily 3 AM UTC

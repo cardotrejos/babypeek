@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/dialog"
 import { API_BASE_URL } from "@/lib/api-config"
 import { posthog, isPostHogConfigured } from "@/lib/posthog"
+import { addBreadcrumb } from "@/lib/sentry"
 
 // Price from env or default $9.99
 const PRICE_CENTS = Number(import.meta.env.VITE_PRODUCT_PRICE_CENTS) || 999
@@ -49,21 +50,37 @@ export function GiftCheckoutButton({ shareId, uploadId }: GiftCheckoutButtonProp
   }
 
   const handleOpenModal = useCallback(() => {
-    // Track gift CTA click (AC-6)
+    // Story 8.5 - Track CTA click (funnel: awareness → interest)
     if (isPostHogConfigured()) {
-      posthog.capture("gift_purchase_started", { share_id: shareId })
+      posthog.capture("gift_cta_clicked", {
+        share_id: shareId,
+        upload_id: uploadId,
+        source: "share_page",
+      })
     }
-    // M1 Fix: Reset loading state when modal opens (in case user navigated back)
+    // M1: Sentry breadcrumb for debugging checkout flows
+    addBreadcrumb("Gift CTA clicked", "checkout", { share_id: shareId })
+    
+    // Reset state when modal opens (in case user navigated back)
     setIsLoading(false)
     setEmailError("")
     setShowEmailModal(true)
-  }, [shareId])
+  }, [shareId, uploadId])
 
   const handleGiftPurchase = useCallback(async () => {
     if (!validateEmail(email)) return
     if (isLoading) return
 
     setIsLoading(true)
+
+    // H1 Fix: Track purchase started at correct funnel stage (interest → intent)
+    if (isPostHogConfigured()) {
+      posthog.capture("gift_purchase_started", {
+        share_id: shareId,
+        upload_id: uploadId,
+      })
+    }
+    addBreadcrumb("Gift purchase started", "checkout", { share_id: shareId })
 
     try {
       // Gift checkout - no session token required (public purchase)

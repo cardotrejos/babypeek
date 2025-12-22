@@ -10,6 +10,8 @@ import { usePreloadImage } from "@/hooks/use-preload-image"
 import { RevealAnimation, RevealUI, BeforeAfterSlider } from "@/components/reveal"
 import { API_BASE_URL } from "@/lib/api-config"
 import { getPaymentErrorMessage } from "@/lib/payment-errors"
+import { isExpiredError } from "@/lib/error-detection"
+import { ExpiredResult } from "@/components/states"
 
 /**
  * Result/Reveal Page
@@ -308,8 +310,14 @@ function ResultPage() {
     )
   }
 
-  // Error state
+  // Error state - Story 8.8: Handle expired results with warm messaging
   if (queryError || !previewUrl) {
+    // AC-1, AC-3: Show warm expired message for 404/not found errors
+    if (isExpiredError(queryError)) {
+      return <ExpiredResult resultId={resultId} source="result" />
+    }
+
+    // Generic error state for other errors
     return (
       <div className="min-h-screen bg-cream flex items-center justify-center p-4">
         <div className="max-w-md w-full text-center space-y-6">
@@ -368,7 +376,7 @@ function ResultPage() {
           />
           <RevealUI
             resultId={resultId}
-            uploadId={uploadId!}
+            uploadId={uploadId ?? ""}
             previewUrl={previewUrl}
             onShare={handleShare}
             hasOriginalImage={!!originalUrl}
@@ -388,7 +396,7 @@ function ResultPage() {
         >
           <RevealUI
             resultId={resultId}
-            uploadId={uploadId!}
+            uploadId={uploadId ?? ""}
             previewUrl={previewUrl}
             onShare={handleShare}
             hasOriginalImage={!!originalUrl}

@@ -162,6 +162,7 @@ export function BeforeAfterSlider({
         alt={afterLabel}
         className="absolute inset-0 w-full h-full object-cover pointer-events-none"
         draggable={false}
+        data-testid="after-image"
       />
 
       {/* Before image (original) - clipped by position (Task 1, 5) */}
@@ -174,6 +175,7 @@ export function BeforeAfterSlider({
           alt={beforeLabel}
           className="absolute top-0 left-0 h-full w-full object-cover"
           draggable={false}
+          data-testid="before-image"
         />
       </div>
 
@@ -189,7 +191,7 @@ export function BeforeAfterSlider({
             "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2",
             "w-12 h-12 rounded-full bg-white shadow-lg", // 48px = w-12
             "flex items-center justify-center",
-            "cursor-grab transition-transform duration-150",
+            "cursor-grab transition-transform duration-150 will-change-transform",
             isDragging && "cursor-grabbing scale-110"
           )}
         >
