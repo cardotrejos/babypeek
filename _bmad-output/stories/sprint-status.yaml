@@ -54,7 +54,7 @@ development_status:
   1-7-configure-ci-cd-pipeline: done
   1-8-test-infrastructure-setup: done
   1-9-effect-services-scaffold: done
-  epic-1-retrospective: optional
+  epic-1-retrospective: done
 
   # ═══════════════════════════════════════════════════════════════════════════
   # EPIC 2: Landing Experience (6 stories)
@@ -68,7 +68,7 @@ development_status:
   2-4-trust-signals-section: done
   2-5-faq-accordion: done
   2-6-seo-optimization: done
-  epic-2-retrospective: optional
+  epic-2-retrospective: done
 
   # ═══════════════════════════════════════════════════════════════════════════
   # EPIC 3: Image Upload (9 stories)
@@ -85,7 +85,7 @@ development_status:
   3-7-rate-limiting: done
   3-8-upload-error-handling: done
   3-9-upload-analytics: done
-  epic-3-retrospective: optional
+  epic-3-retrospective: done
 
   # ═══════════════════════════════════════════════════════════════════════════
   # EPIC 4: AI Processing (6 stories)
@@ -100,7 +100,7 @@ development_status:
   4-4-result-storage-in-r2: done
   4-5-processing-status-updates: done
   4-6-processing-timeout-handling: done
-  epic-4-retrospective: optional
+  epic-4-retrospective: done
 
   # ═══════════════════════════════════════════════════════════════════════════
   # EPIC 5: Reveal Experience (7 stories)
@@ -115,7 +115,7 @@ development_status:
   5-5-before-after-comparison-slider: done
   5-6-download-preview-button: done
   5-7-mobile-session-recovery: done
-  epic-5-retrospective: optional
+  epic-5-retrospective: done
 
   # ═══════════════════════════════════════════════════════════════════════════
   # EPIC 6: Payment (7 stories)
@@ -130,7 +130,7 @@ development_status:
   6-5-payment-receipt-email: done
   6-6-payment-failure-handling: done
   6-7-gift-purchase-option: done
-  epic-6-retrospective: optional
+  epic-6-retrospective: done
 
   # ═══════════════════════════════════════════════════════════════════════════
   # EPIC 7: Download & Delivery (6 stories)
@@ -144,7 +144,7 @@ development_status:
   7-4-download-email-via-resend: done
   7-5-re-download-support: done
   7-6-download-tracking: done
-  epic-7-retrospective: optional
+  epic-7-retrospective: done
 
   # ═══════════════════════════════════════════════════════════════════════════
   # EPIC 8: Sharing & Viral Loop (8 stories)
@@ -160,4 +160,4 @@ development_status:
   8-6-delete-my-data-button-gdpr: done
   8-7-auto-delete-after-30-days: done
   8-8-expired-result-handling: done
-  epic-8-retrospective: optional
+  epic-8-retrospective: done
