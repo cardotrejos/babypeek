@@ -392,7 +392,6 @@ function ResultPage() {
           imageUrl={previewUrl}
           alt="Your AI-generated baby portrait"
           onRevealComplete={handleRevealComplete}
-          showUI={showRevealUI}
         >
           <RevealUI
             resultId={resultId}
