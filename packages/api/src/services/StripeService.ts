@@ -6,10 +6,11 @@ import { env, isStripeConfigured } from "../lib/env"
 // Checkout session parameters
 export interface CheckoutSessionParams {
   uploadId: string
-  email: string
+  email: string // Recipient email (original uploader for gifts)
   type: "self" | "gift"
   successUrl: string
   cancelUrl: string
+  purchaserEmail?: string // Gift purchaser email (for receipt)
 }
 
 // Stripe Service interface
@@ -46,6 +47,12 @@ const createCheckoutSession = Effect.fn("StripeService.createCheckoutSession")(f
   params: CheckoutSessionParams
 ) {
   const stripe = yield* getStripeClient()
+  
+  // For gift purchases: purchaser gets Stripe receipt, recipient gets HD link
+  const isGift = params.type === "gift"
+  const customerEmail = isGift && params.purchaserEmail ? params.purchaserEmail : params.email
+  const productName = isGift ? "3d-ultra HD Photo Gift" : "3d-ultra HD Photo"
+  
   return yield* Effect.tryPromise({
     try: () =>
       stripe.checkout.sessions.create({
@@ -54,7 +61,7 @@ const createCheckoutSession = Effect.fn("StripeService.createCheckoutSession")(f
           {
             price_data: {
               currency: "usd",
-              product_data: { name: "3d-ultra HD Photo" },
+              product_data: { name: productName },
               unit_amount: env.PRODUCT_PRICE_CENTS,
             },
             quantity: 1,
@@ -63,11 +70,12 @@ const createCheckoutSession = Effect.fn("StripeService.createCheckoutSession")(f
         mode: "payment",
         success_url: params.successUrl,
         cancel_url: params.cancelUrl,
-        customer_email: params.email,
+        customer_email: customerEmail,
         metadata: {
           uploadId: params.uploadId,
-          email: params.email,
+          email: params.email, // Recipient email (for HD download link)
           type: params.type,
+          purchaserEmail: params.purchaserEmail || "", // Gift purchaser email
         },
       }),
     catch: (e) =>

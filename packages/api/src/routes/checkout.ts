@@ -116,4 +116,88 @@ app.post("/", async (c) => {
   })
 })
 
+// Gift checkout request schema
+const giftCheckoutSchema = z.object({
+  uploadId: z.string().min(1, "Upload ID is required"),
+  purchaserEmail: z.string().email("Valid email is required"),
+})
+
+/**
+ * POST /api/checkout/gift
+ * 
+ * Create a Stripe Checkout session for gift purchase.
+ * PUBLIC endpoint - no session token required (anyone can gift).
+ * 
+ * Story 6.7: Gift Purchase Option (AC-1, AC-2)
+ * 
+ * Request body:
+ * - uploadId: string - The upload ID to gift
+ * - purchaserEmail: string - Purchaser's email for receipt
+ * 
+ * Response:
+ * - checkoutUrl: string - Stripe Checkout URL for redirect
+ * - sessionId: string - Stripe session ID
+ */
+app.post("/gift", async (c) => {
+  // Parse and validate request body
+  const body = await c.req.json().catch(() => ({}))
+  const parsed = giftCheckoutSchema.safeParse(body)
+
+  if (!parsed.success) {
+    return c.json(
+      {
+        error: "Invalid request",
+        details: parsed.error.flatten().fieldErrors,
+      },
+      400
+    )
+  }
+
+  const { uploadId, purchaserEmail } = parsed.data
+
+  // Create gift checkout (no auth - anyone can gift)
+  const createGiftCheckout = Effect.fn("routes.checkout.createGift")(function* () {
+    const purchaseService = yield* PurchaseService
+    return yield* purchaseService.createGiftCheckout(uploadId, purchaserEmail)
+  })
+
+  const program = createGiftCheckout().pipe(
+    Effect.provide(CheckoutRoutesLive)
+  )
+
+  const result = await Effect.runPromise(Effect.either(program))
+
+  if (result._tag === "Left") {
+    const error = result.left
+
+    if (error instanceof NotFoundError) {
+      return c.json(
+        { error: "Upload not found", code: "NOT_FOUND" },
+        404
+      )
+    }
+
+    if (error instanceof ValidationError) {
+      return c.json(
+        { error: error.message, code: "VALIDATION_ERROR", field: error.field },
+        400
+      )
+    }
+
+    if (error instanceof PaymentError) {
+      return c.json(
+        { error: "Payment service unavailable", code: error.cause },
+        503
+      )
+    }
+
+    return c.json({ error: "Internal server error", code: "UNKNOWN" }, 500)
+  }
+
+  return c.json({
+    checkoutUrl: result.right.checkoutUrl,
+    sessionId: result.right.sessionId,
+  })
+})
+
 export default app

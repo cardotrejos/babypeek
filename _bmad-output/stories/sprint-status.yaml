@@ -124,12 +124,12 @@ development_status:
   # ═══════════════════════════════════════════════════════════════════════════
   epic-6: in-progress
   6-1-stripe-checkout-integration: done
-  6-2-apple-pay-and-google-pay-support: ready-for-dev
-  6-3-stripe-webhook-handler: ready-for-dev
-  6-4-purchase-record-creation: ready-for-dev
-  6-5-payment-receipt-email: ready-for-dev
-  6-6-payment-failure-handling: ready-for-dev
-  6-7-gift-purchase-option: ready-for-dev
+  6-2-apple-pay-and-google-pay-support: done
+  6-3-stripe-webhook-handler: done
+  6-4-purchase-record-creation: done
+  6-5-payment-receipt-email: done
+  6-6-payment-failure-handling: done
+  6-7-gift-purchase-option: done
   epic-6-retrospective: optional
 
   # ═══════════════════════════════════════════════════════════════════════════
@@ -137,13 +137,13 @@ development_status:
   # Priority: P0 core (7.1-7.3), P1 delivery (7.4-7.5), P2 tracking (7.6)
   # Parallel: 7.1 → 7.2 → [7.3 ∥ 7.4] → [7.5 ∥ 7.6]
   # ═══════════════════════════════════════════════════════════════════════════
-  epic-7: backlog
-  7-1-hd-image-retrieval: backlog
-  7-2-signed-download-url-generation: backlog
-  7-3-in-app-download-button: backlog
-  7-4-download-email-via-resend: backlog
-  7-5-re-download-support: backlog
-  7-6-download-tracking: backlog
+  epic-7: in-progress
+  7-1-hd-image-retrieval: done
+  7-2-signed-download-url-generation: done
+  7-3-in-app-download-button: done
+  7-4-download-email-via-resend: done
+  7-5-re-download-support: done
+  7-6-download-tracking: done
   epic-7-retrospective: optional
 
   # ═══════════════════════════════════════════════════════════════════════════
@@ -151,13 +151,13 @@ development_status:
   # Priority: P1 core (8.1, 8.3-8.5), P2 extras (8.2, 8.6-8.8)
   # Parallel: [8.1 ∥ 8.2 ∥ 8.3] → 8.4 → 8.5 → [8.6 ∥ 8.7 ∥ 8.8]
   # ═══════════════════════════════════════════════════════════════════════════
-  epic-8: backlog
-  8-1-whatsapp-share-button: backlog
-  8-2-imessage-share-button: backlog
-  8-3-copy-link-button: backlog
-  8-4-share-page-with-watermarked-preview: backlog
-  8-5-gift-purchase-cta-on-share-page: backlog
-  8-6-delete-my-data-button-gdpr: backlog
-  8-7-auto-delete-after-30-days: backlog
-  8-8-expired-result-handling: backlog
+  epic-8: in-progress
+  8-1-whatsapp-share-button: done
+  8-2-imessage-share-button: done
+  8-3-copy-link-button: done
+  8-4-share-page-with-watermarked-preview: ready-for-dev
+  8-5-gift-purchase-cta-on-share-page: ready-for-dev
+  8-6-delete-my-data-button-gdpr: ready-for-dev
+  8-7-auto-delete-after-30-days: ready-for-dev
+  8-8-expired-result-handling: ready-for-dev
   epic-8-retrospective: optional

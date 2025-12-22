@@ -10,6 +10,10 @@ const PRICE_DISPLAY = `$${(PRICE_CENTS / 100).toFixed(2)}`
 
 interface CheckoutButtonProps extends Omit<ComponentPropsWithoutRef<typeof Button>, "onClick"> {
   uploadId: string
+  /** Retry count for analytics (Story 6.6) */
+  retryCount?: number
+  /** Callback when checkout starts - use to increment retry count */
+  onCheckoutStart?: () => void
   onCheckoutError?: (error: string) => void
 }
 
@@ -24,6 +28,8 @@ interface CheckoutButtonProps extends Omit<ComponentPropsWithoutRef<typeof Butto
  */
 export function CheckoutButton({
   uploadId,
+  retryCount = 0,
+  onCheckoutStart,
   onCheckoutError,
   disabled,
   className,
@@ -35,12 +41,14 @@ export function CheckoutButton({
     if (isLoading || !uploadId) return
 
     setIsLoading(true)
+    onCheckoutStart?.()
 
-    // Track purchase_started event (AC-5)
+    // Track purchase_started event (AC-5, Story 6.6 retry tracking)
     if (isPostHogConfigured()) {
       posthog.capture("purchase_started", {
         uploadId,
         amount: PRICE_CENTS,
+        retry_count: retryCount,
       })
     }
 
@@ -75,6 +83,13 @@ export function CheckoutButton({
         })
       }
 
+      // Store uploadId for checkout-success page (Story 7.3)
+      try {
+        localStorage.setItem("3d-ultra-last-checkout-upload", uploadId)
+      } catch {
+        // localStorage may not be available
+      }
+
       // Redirect to Stripe Checkout (AC-3)
       window.location.href = checkoutUrl
     } catch (error) {
@@ -93,7 +108,7 @@ export function CheckoutButton({
       )
       setIsLoading(false)
     }
-  }, [uploadId, isLoading, onCheckoutError])
+  }, [uploadId, isLoading, retryCount, onCheckoutStart, onCheckoutError])
 
   return (
     <Button

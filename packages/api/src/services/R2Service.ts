@@ -20,14 +20,14 @@ export class R2Service extends Context.Tag("R2Service")<
   R2Service,
   {
     generatePresignedUploadUrl: (key: string, contentType: string, expiresIn?: number) => Effect.Effect<PresignedUrl, R2Error>
-    generatePresignedDownloadUrl: (key: string, expiresIn?: number) => Effect.Effect<PresignedUrl, R2Error>
+    generatePresignedDownloadUrl: (key: string, optionsOrExpiresIn?: number | DownloadUrlOptions) => Effect.Effect<PresignedUrl, R2Error>
     upload: (key: string, body: Buffer, contentType: string) => Effect.Effect<string, R2Error>
     delete: (key: string) => Effect.Effect<void, R2Error>
     deletePrefix: (prefix: string) => Effect.Effect<number, R2Error>
     headObject: (key: string) => Effect.Effect<boolean, R2Error>
     // Legacy aliases for backwards compatibility
     getUploadUrl: (key: string, contentType: string, expiresIn?: number) => Effect.Effect<string, R2Error>
-    getDownloadUrl: (key: string, expiresIn?: number) => Effect.Effect<string, R2Error>
+    getDownloadUrl: (key: string, optionsOrExpiresIn?: number | DownloadUrlOptions) => Effect.Effect<string, R2Error>
   }
 >() {}
 
@@ -113,14 +113,41 @@ const generatePresignedUploadUrl = Effect.fn("R2Service.generatePresignedUploadU
   }
 )
 
+// Options for download URL generation
+export interface DownloadUrlOptions {
+  expiresIn?: number
+  filename?: string // Custom filename for Content-Disposition
+}
+
 const generatePresignedDownloadUrl = Effect.fn("R2Service.generatePresignedDownloadUrl")(
-  function* (key: string, expiresIn = DEFAULT_DOWNLOAD_EXPIRES) {
+  function* (key: string, optionsOrExpiresIn: number | DownloadUrlOptions = DEFAULT_DOWNLOAD_EXPIRES) {
     const { client, bucketName } = yield* validateR2Request(key)
 
-    const command = new GetObjectCommand({
+    // Support both legacy number param and new options object
+    const options: DownloadUrlOptions = typeof optionsOrExpiresIn === "number"
+      ? { expiresIn: optionsOrExpiresIn }
+      : optionsOrExpiresIn
+    
+    const expiresIn = options.expiresIn ?? DEFAULT_DOWNLOAD_EXPIRES
+
+    // Build command with optional Content-Disposition
+    const commandParams: {
+      Bucket: string
+      Key: string
+      ResponseContentDisposition?: string
+    } = {
       Bucket: bucketName,
       Key: key,
-    })
+    }
+
+    // Add Content-Disposition for browser download with custom filename
+    if (options.filename) {
+      // Encode filename for special characters (RFC 5987)
+      const encodedFilename = encodeURIComponent(options.filename).replace(/'/g, "%27")
+      commandParams.ResponseContentDisposition = `attachment; filename="${options.filename}"; filename*=UTF-8''${encodedFilename}`
+    }
+
+    const command = new GetObjectCommand(commandParams)
 
     const url = yield* Effect.tryPromise({
       try: () => getSignedUrl(client, command, { expiresIn }),
@@ -268,9 +295,9 @@ const getUploadUrl = Effect.fn("R2Service.getUploadUrl")(function* (
 
 const getDownloadUrl = Effect.fn("R2Service.getDownloadUrl")(function* (
   key: string,
-  expiresIn = DEFAULT_DOWNLOAD_EXPIRES
+  optionsOrExpiresIn: number | DownloadUrlOptions = DEFAULT_DOWNLOAD_EXPIRES
 ) {
-  const result = yield* generatePresignedDownloadUrl(key, expiresIn)
+  const result = yield* generatePresignedDownloadUrl(key, optionsOrExpiresIn)
   return result.url
 })
 

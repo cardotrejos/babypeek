@@ -10,7 +10,7 @@ export class NotFoundError extends Data.TaggedError("NotFoundError")<{
 }> {}
 
 export class UnauthorizedError extends Data.TaggedError("UnauthorizedError")<{
-  reason: "MISSING_TOKEN" | "INVALID_TOKEN" | "EXPIRED_TOKEN"
+  reason: "MISSING_TOKEN" | "INVALID_TOKEN" | "EXPIRED_TOKEN" | "PURCHASE_REQUIRED"
 }> {}
 
 export class ValidationError extends Data.TaggedError("ValidationError")<{
@@ -97,6 +97,11 @@ export class ResultError extends Data.TaggedError("ResultError")<{
   resultId?: string
 }> {}
 
+export class DownloadExpiredError extends Data.TaggedError("DownloadExpiredError")<{
+  uploadId: string
+  expiredAt: string
+}> {}
+
 export class UploadStatusError extends Data.TaggedError("UploadStatusError")<{
   cause: "DB_FAILED" | "INVALID_TRANSITION"
   message: string
@@ -127,3 +132,4 @@ export type AppError =
   | ResultError
   | UploadStatusError
   | WatermarkError
+  | DownloadExpiredError

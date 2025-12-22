@@ -76,6 +76,11 @@ const envSchema = z.object({
   // No API key required - authentication is handled automatically.
 
   // ─────────────────────────────────────────────────────────────────────────────
+  // Privacy & Security
+  // ─────────────────────────────────────────────────────────────────────────────
+  IP_HASH_SALT: z.string().min(16, "IP_HASH_SALT should be at least 16 characters").optional(),
+
+  // ─────────────────────────────────────────────────────────────────────────────
   // Environment
   // ─────────────────────────────────────────────────────────────────────────────
   NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
@@ -124,6 +129,7 @@ export const env = parsed.success
       RESEND_API_KEY: undefined,
       POSTHOG_KEY: undefined,
       SENTRY_DSN: undefined,
+      IP_HASH_SALT: undefined,
     }
 
 export type Env = z.infer<typeof envSchema>
