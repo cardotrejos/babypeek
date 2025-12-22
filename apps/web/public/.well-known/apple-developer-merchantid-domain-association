@@ -1,0 +1,18 @@
+# Apple Pay Domain Verification Placeholder
+#
+# This file is a PLACEHOLDER. Follow these steps to get the actual file:
+#
+# 1. Go to Stripe Dashboard → Settings → Payment methods
+# 2. Click "Configure" on Apple Pay
+# 3. Add your production domain (e.g., 3d-ultra.com)
+# 4. Download the verification file from Stripe
+# 5. Replace THIS FILE with the downloaded file
+# 6. Rename to: apple-developer-merchantid-domain-association (no extension)
+#
+# IMPORTANT:
+# - The actual file has no extension (remove .txt)
+# - It contains a long hex string from Apple/Stripe
+# - It must be served at: https://yourdomain.com/.well-known/apple-developer-merchantid-domain-association
+#
+# For Stripe test mode, Apple Pay works without domain verification.
+# Domain verification is required for production Apple Pay.

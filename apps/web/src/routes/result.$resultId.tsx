@@ -1,25 +1,40 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router"
 import { useState, useEffect, useCallback, useRef } from "react"
 import { useQuery } from "@tanstack/react-query"
+import { toast } from "sonner"
 import { getSession, getJobData } from "@/lib/session"
 // Note: clearSession will be used in Epic 6 after payment completes (Story 5.7: AC7)
 import { posthog, isPostHogConfigured } from "@/lib/posthog"
+import { addBreadcrumb, isSentryConfigured, Sentry } from "@/lib/sentry"
 import { usePreloadImage } from "@/hooks/use-preload-image"
 import { RevealAnimation, RevealUI, BeforeAfterSlider } from "@/components/reveal"
 import { API_BASE_URL } from "@/lib/api-config"
+import { getPaymentErrorMessage } from "@/lib/payment-errors"
 
 /**
  * Result/Reveal Page
  * Story 5.3: Blur-to-Sharp Reveal Animation
+ * Story 6.6: Payment Failure Handling
  *
  * This route displays the dramatic reveal of the processed portrait.
  * Key features:
  * - AC-1 to AC-7: Complete reveal animation
  * - Image preloading during navigation
  * - Post-reveal UI with purchase/share/download options
+ * - Payment error/cancellation handling
  */
+// Search params for payment failure handling (Story 6.6)
+interface ResultSearchParams {
+  cancelled?: string
+  error?: string
+}
+
 export const Route = createFileRoute("/result/$resultId")({
   component: ResultPage,
+  validateSearch: (search: Record<string, unknown>): ResultSearchParams => ({
+    cancelled: search.cancelled === "true" ? "true" : undefined,
+    error: typeof search.error === "string" ? search.error : undefined,
+  }),
 })
 
 interface StatusData {
@@ -37,15 +52,19 @@ interface StatusData {
 
 function ResultPage() {
   const { resultId } = Route.useParams()
+  const { cancelled, error: paymentError } = Route.useSearch()
   const navigate = useNavigate()
 
   const [showRevealUI, setShowRevealUI] = useState(false)
   const [revealStartTime, setRevealStartTime] = useState<number | null>(null)
   const [preloadStartTime, setPreloadStartTime] = useState<number | null>(null)
   const [showComparison, setShowComparison] = useState(false)
+  const [retryCount, setRetryCount] = useState(0)
 
   // Track if we came from session recovery
   const sessionRecoveryTrackedRef = useRef(false)
+  // Track if we already showed payment error/cancel toast
+  const paymentErrorTrackedRef = useRef(false)
 
   // Get upload ID from local storage (resultId mapping stored during processing)
   // Safe localStorage access for SSR/private browsing
@@ -77,11 +96,64 @@ function ResultPage() {
     }
   }, [uploadId, resultId])
 
+  // Story 6.6: Handle payment cancellation/error from Stripe redirect
+  useEffect(() => {
+    if (paymentErrorTrackedRef.current) return
+    if (!cancelled && !paymentError) return
+
+    paymentErrorTrackedRef.current = true
+
+    // Add checkout flow breadcrumb for Sentry
+    addBreadcrumb("Payment redirect from Stripe", "checkout", {
+      cancelled: cancelled === "true",
+      error_type: paymentError,
+    })
+
+    if (cancelled === "true") {
+      toast.info("No worries! Your photo is still here when you're ready.")
+
+      if (isPostHogConfigured()) {
+        posthog.capture("checkout_cancelled", {
+          upload_id: uploadId,
+          result_id: resultId,
+        })
+      }
+    } else if (paymentError) {
+      const message = getPaymentErrorMessage(paymentError)
+      toast.error(message)
+
+      if (isPostHogConfigured()) {
+        posthog.capture("payment_failed", {
+          upload_id: uploadId,
+          result_id: resultId,
+          error_type: paymentError,
+          retry_count: retryCount,
+        })
+      }
+
+      // Log to Sentry (no PII - only safe identifiers)
+      if (isSentryConfigured()) {
+        Sentry.captureMessage("Payment failed", {
+          level: "warning",
+          extra: {
+            upload_id: uploadId,
+            result_id: resultId,
+            error_type: paymentError,
+            timestamp: new Date().toISOString(),
+          },
+        })
+      }
+    }
+
+    // Clear query params from URL to prevent re-triggering
+    window.history.replaceState({}, "", `/result/${resultId}`)
+  }, [cancelled, paymentError, uploadId, resultId, retryCount])
+
   // Fetch result data via status endpoint (uses uploadId, not resultId)
   const {
     data: statusData,
     isLoading,
-    error,
+    error: queryError,
   } = useQuery<StatusData>({
     queryKey: ["status", uploadId],
     queryFn: async () => {
@@ -178,7 +250,6 @@ function ResultPage() {
       })
     }
     // TODO: Implement share functionality when Epic 8 is implemented
-    console.log("[result] Share clicked for result:", resultId)
   }, [resultId])
 
 
@@ -199,6 +270,30 @@ function ResultPage() {
     }
   }, [showComparison, resultId])
 
+  // Story 6.6: Track retry attempts
+  const handleCheckoutStart = useCallback(() => {
+    setRetryCount((prev) => {
+      const newCount = prev + 1
+
+      // Track retry if this is not the first attempt
+      if (prev > 0 && isPostHogConfigured()) {
+        posthog.capture("payment_retry_attempted", {
+          upload_id: uploadId,
+          result_id: resultId,
+          retry_count: newCount,
+        })
+      }
+
+      // Add breadcrumb for Sentry
+      addBreadcrumb("Checkout started", "checkout", {
+        upload_id: uploadId,
+        retry_count: newCount,
+      })
+
+      return newCount
+    })
+  }, [uploadId, resultId])
+
   // Loading state
   if (isLoading || imageLoading) {
     return (
@@ -214,7 +309,7 @@ function ResultPage() {
   }
 
   // Error state
-  if (error || !previewUrl) {
+  if (queryError || !previewUrl) {
     return (
       <div className="min-h-screen bg-cream flex items-center justify-center p-4">
         <div className="max-w-md w-full text-center space-y-6">
@@ -240,8 +335,8 @@ function ResultPage() {
               Couldn&apos;t load your portrait
             </h1>
             <p className="font-body text-warm-gray">
-              {error instanceof Error
-                ? error.message
+              {queryError instanceof Error
+                ? queryError.message
                 : "Something went wrong. Please try again."}
             </p>
           </div>
@@ -279,6 +374,8 @@ function ResultPage() {
             hasOriginalImage={!!originalUrl}
             showComparison={showComparison}
             onToggleComparison={handleToggleComparison}
+            retryCount={retryCount}
+            onCheckoutStart={handleCheckoutStart}
           />
         </div>
       ) : (
@@ -297,6 +394,8 @@ function ResultPage() {
             hasOriginalImage={!!originalUrl}
             showComparison={showComparison}
             onToggleComparison={handleToggleComparison}
+            retryCount={retryCount}
+            onCheckoutStart={handleCheckoutStart}
           />
         </RevealAnimation>
       )}

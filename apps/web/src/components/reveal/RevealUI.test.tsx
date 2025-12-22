@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest"
-import { render, screen, fireEvent } from "@testing-library/react"
+import { render, screen, fireEvent } from "@/test/test-utils"
 import { RevealUI } from "./RevealUI"
 
 // Mock PostHog for DownloadPreviewButton and CheckoutButton
@@ -40,8 +40,18 @@ describe("RevealUI", () => {
     it("should render share button", () => {
       render(<RevealUI {...defaultProps} />)
 
-      const shareButton = screen.getByRole("button", { name: /Share/i })
+      // Get the original Share button (exact text match to avoid WhatsApp button)
+      const shareButton = screen.getByRole("button", { name: /^Share$/ })
       expect(shareButton).toBeInTheDocument()
+    })
+
+    it("should render WhatsApp share button (Story 8.1)", () => {
+      render(<RevealUI {...defaultProps} />)
+
+      const whatsappButton = screen.getByRole("button", {
+        name: /share to whatsapp/i,
+      })
+      expect(whatsappButton).toBeInTheDocument()
     })
 
     it("should render download preview button", () => {
@@ -65,7 +75,8 @@ describe("RevealUI", () => {
       const onShare = vi.fn()
       render(<RevealUI {...defaultProps} onShare={onShare} />)
 
-      const shareButton = screen.getByRole("button", { name: /Share/i })
+      // Get the original Share button (exact text match)
+      const shareButton = screen.getByRole("button", { name: /^Share$/ })
       fireEvent.click(shareButton)
 
       expect(onShare).toHaveBeenCalledTimes(1)

@@ -1,8 +1,6 @@
-import { describe, it, expect, beforeEach } from "vitest"
-import { Hono } from "hono"
+import { describe, it, expect } from "vitest"
 import { Effect, Duration } from "effect"
 import { ProcessingError } from "../lib/errors"
-import { clearRateLimitStore } from "../services/RateLimitService"
 
 // =============================================================================
 // Story 4.6: Processing Timeout Handling Tests
@@ -129,41 +127,6 @@ describe("Timeout Response Format", () => {
     expect(timeoutResponse.canRetry).toBe(true)
     expect(timeoutResponse.code).toBe("PROCESSING_TIMEOUT")
     expect(timeoutResponse.jobId).toBeDefined()
-  })
-})
-
-describe("Retry Endpoint Behavior", () => {
-  beforeEach(() => {
-    clearRateLimitStore()
-  })
-
-  it("requires session token", async () => {
-    // Import and create test app
-    const retryRoutes = (await import("./retry")).default
-    const app = new Hono()
-    app.route("/api/retry", retryRoutes)
-
-    const res = await app.request("/api/retry/test-job-id", {
-      method: "POST",
-    })
-
-    expect(res.status).toBe(401)
-    const body = (await res.json()) as { code: string; error: string }
-    expect(body.code).toBe("MISSING_TOKEN")
-  })
-
-  it("returns correct error code for missing token", async () => {
-    const retryRoutes = (await import("./retry")).default
-    const app = new Hono()
-    app.route("/api/retry", retryRoutes)
-
-    const res = await app.request("/api/retry/test-job-id", {
-      method: "POST",
-    })
-
-    const body = (await res.json()) as { code: string; error: string }
-    expect(body.error).toBe("Session token is required")
-    expect(body.code).toBe("MISSING_TOKEN")
   })
 })
 

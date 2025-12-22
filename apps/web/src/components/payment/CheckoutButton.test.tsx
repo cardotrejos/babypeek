@@ -177,6 +177,7 @@ describe("CheckoutButton", () => {
         expect(posthog.capture).toHaveBeenCalledWith("purchase_started", {
           uploadId: "test-upload-123",
           amount: 999,
+          retry_count: 0,
         })
       })
     })
