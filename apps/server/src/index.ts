@@ -3,7 +3,7 @@ import { Hono } from "hono"
 import { cors } from "hono/cors"
 import { logger } from "hono/logger"
 
-import { healthRoutes, storageRoutes, uploadRoutes, processRoutes, processWorkflowRoutes, statusRoutes, retryRoutes, checkoutRoutes, webhookRoutes, shareRoutes, downloadRoutes, dataRoutes, cleanupRoutes } from "@3d-ultra/api"
+import { healthRoutes, storageRoutes, uploadRoutes, processRoutes, processWorkflowRoutes, statusRoutes, retryRoutes, checkoutRoutes, webhookRoutes, shareRoutes, downloadRoutes, dataRoutes, cleanupRoutes } from "@babypeek/api"
 
 const app = new Hono()
 
@@ -36,7 +36,7 @@ app.route("/api/cron/cleanup", cleanupRoutes)
 // Root endpoint
 app.get("/", (c) => {
   return c.json({
-    name: "3d-ultra API",
+    name: "babypeek API",
     version: "1.0.0",
     status: "running",
   })

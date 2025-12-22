@@ -381,7 +381,7 @@ import { test, expect } from '@playwright/test'
 
 test('landing page loads', async ({ page }) => {
   await page.goto('/')
-  await expect(page).toHaveTitle(/3d-ultra/)
+  await expect(page).toHaveTitle(/babypeek/)
 })
 ```
 

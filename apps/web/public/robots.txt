@@ -1,5 +1,5 @@
-# 3d-ultra robots.txt
-# https://3d-ultra.com/robots.txt
+# babypeek robots.txt
+# https://babypeek.io/robots.txt
 
 User-agent: *
 Allow: /
@@ -8,4 +8,4 @@ Allow: /
 Disallow: /api/
 
 # Sitemap (will be added when sitemap generation is implemented)
-# Sitemap: https://3d-ultra.com/sitemap.xml
+# Sitemap: https://babypeek.io/sitemap.xml

@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
 import { Hono } from "hono"
 import { Effect, Layer } from "effect"
-import type { Upload, Purchase, Download } from "@3d-ultra/db"
+import type { Upload, Purchase, Download } from "@babypeek/db"
 
 import { R2Service } from "../services/R2Service"
 import { NotFoundError, R2Error } from "../lib/errors"

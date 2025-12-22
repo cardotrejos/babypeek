@@ -69,7 +69,7 @@ const getResendClient = (): Effect.Effect<Resend, EmailError> => {
 }
 
 // From email configuration using env
-const getFromEmail = () => `3d-ultra <${env.FROM_EMAIL}>`
+const getFromEmail = () => `BabyPeek <${env.FROM_EMAIL}>`
 
 const sendResultEmail = Effect.fn("ResendService.sendResultEmail")(function* (email: string, resultId: string) {
   const resend = yield* getResendClient()
@@ -78,7 +78,7 @@ const sendResultEmail = Effect.fn("ResendService.sendResultEmail")(function* (em
       resend.emails.send({
         from: getFromEmail(),
         to: email,
-        subject: "Your 3d-ultra portrait is ready! 🎉",
+        subject: "Your BabyPeek portrait is ready! 🎉",
         html: `
                 <h1>Your baby portrait is ready!</h1>
                 <p>View your result: <a href="${env.APP_URL}/result/${resultId}">Click here</a></p>
@@ -188,7 +188,7 @@ const sendReceiptEmail = Effect.fn("ResendService.sendReceiptEmail")(function* (
       resend.emails.send({
         from: getFromEmail(),
         to: params.email,
-        subject: "Your 3d-ultra HD photo is ready! 🎉",
+        subject: "Your BabyPeek HD photo is ready! 🎉",
         html: generateReceiptHtml({
           amount: formattedAmount,
           date: purchaseDate,
@@ -288,7 +288,7 @@ export const generateDownloadHtml = (params: {
     <p style="color: #9B8B8B; font-size: 12px; text-align: center; margin-top: 24px;">
       Questions? Reply to this email and we'll help.
       <br><br>
-      Made with 💕 by 3d-ultra
+      Made with 💕 by BabyPeek
     </p>
     
   </div>
@@ -403,7 +403,7 @@ const generateGiftConfirmationHtml = (params: {
     
     <!-- Footer -->
     <p style="color: #9B8B8B; font-size: 12px; text-align: center; margin-top: 24px;">
-      Thank you for sharing the joy with 3d-ultra! 💕
+      Thank you for sharing the joy with BabyPeek! 💕
       <br>
       Questions? Reply to this email.
     </p>

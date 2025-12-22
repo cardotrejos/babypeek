@@ -1,6 +1,6 @@
 ---
 workflow: create-epics-and-stories
-project: 3d-ultra
+project: babypeek
 started: 2024-12-20
 completedAt: 2024-12-20
 lastStep: 4
@@ -34,11 +34,11 @@ validation:
   dependencies: passed
 ---
 
-# 3d-ultra - Epic Breakdown
+# babypeek - Epic Breakdown
 
 ## Overview
 
-This document provides the complete epic and story breakdown for 3d-ultra, decomposing the requirements from the PRD, UX Design, and Architecture into implementable stories.
+This document provides the complete epic and story breakdown for babypeek, decomposing the requirements from the PRD, UX Design, and Architecture into implementable stories.
 
 ## Requirements Inventory
 
@@ -285,9 +285,9 @@ EPIC 8: Sharing
 ---
 
 ### Epic 2: Landing Experience
-**User Outcome:** Users discover 3d-ultra and understand its value proposition
+**User Outcome:** Users discover babypeek and understand its value proposition
 
-**Goal:** A visitor lands on the page, instantly understands what 3d-ultra does, sees compelling before/after examples, and is motivated to try it.
+**Goal:** A visitor lands on the page, instantly understands what babypeek does, sees compelling before/after examples, and is motivated to try it.
 
 **FRs covered:** FR-7.1, FR-7.2, FR-7.3, FR-7.4, FR-7.5, FR-7.6
 
@@ -642,7 +642,7 @@ So that **I can easily browse on my phone**.
 
 **Acceptance Criteria:**
 
-**Given** I visit 3d-ultra.com on mobile  
+**Given** I visit babypeek.com on mobile  
 **When** the page loads  
 **Then** LCP is under 2.5s (NFR-1.1)  
 **And** TTI is under 3.5s (NFR-1.2)  
@@ -658,7 +658,7 @@ So that **I can easily browse on my phone**.
 **Priority:** 🟡 P1 | **Parallel:** [2.2 ∥ 2.3 ∥ 2.4 ∥ 2.5 ∥ 2.6]
 
 As a **visitor**,  
-I want **to immediately understand what 3d-ultra does**,  
+I want **to immediately understand what babypeek does**,  
 So that **I decide whether to try it**.
 
 **Acceptance Criteria:**
@@ -738,7 +738,7 @@ So that **I understand how the service works**.
 **Priority:** 🟢 P2 | **Parallel:** [2.2 ∥ 2.3 ∥ 2.4 ∥ 2.5 ∥ 2.6]
 
 As a **search engine user**,  
-I want **3d-ultra to appear in relevant searches**,  
+I want **babypeek to appear in relevant searches**,  
 So that **I can discover it organically**.
 
 **Acceptance Criteria:**
@@ -867,7 +867,7 @@ So that **I can track the progress of my transformation**.
 **When** the upload completes  
 **Then** a database record is created with status "pending"  
 **And** a jobId is returned to the frontend  
-**And** a sessionToken is generated and stored as `3d-ultra-session-{jobId}` in localStorage  
+**And** a sessionToken is generated and stored as `babypeek-session-{jobId}` in localStorage  
 **And** I'm navigated to the processing screen with the jobId  
 **And** upload_completed event is sent to PostHog
 
@@ -1088,7 +1088,7 @@ So that **users can share without giving away the full image**.
 **Then** a watermark is applied at 40% opacity (FR-3.2)  
 **And** the watermark is positioned in bottom-right corner  
 **And** the watermark is 15% of image width  
-**And** the watermark text is "3d-ultra.com"  
+**And** the watermark text is "babypeek.com"  
 **And** the preview is resized to 800px max dimension (FR-3.3)  
 **And** the preview is stored at `/results/{resultId}/preview.jpg`  
 **And** watermarking uses Sharp library
@@ -1168,7 +1168,7 @@ So that **I can share it even without purchasing**.
 **Given** I'm viewing my result  
 **When** I tap "Download Preview" (FR-3.6)  
 **Then** the watermarked image downloads to my device  
-**And** the filename is "3d-ultra-preview-{date}.jpg"  
+**And** the filename is "babypeek-preview-{date}.jpg"  
 **And** the download is tracked in PostHog
 
 ---
@@ -1385,7 +1385,7 @@ So that **I can save it to my camera roll immediately**.
 **When** I tap "Download HD"  
 **Then** the image downloads to my device  
 **And** I see download progress if file is large  
-**And** the filename is "3d-ultra-baby-{date}.jpg"  
+**And** the filename is "babypeek-baby-{date}.jpg"  
 **And** success confirmation is shown  
 **And** download_clicked event is sent to PostHog
 
@@ -1461,7 +1461,7 @@ So that **my family can see it instantly**.
 **Given** I'm viewing my result  
 **When** I tap the WhatsApp share button (FR-6.1)  
 **Then** WhatsApp opens with a pre-filled message  
-**And** the message includes the share link (3d-ultra.com/share/{shareId})  
+**And** the message includes the share link (babypeek.com/share/{shareId})  
 **And** share_clicked event is sent to PostHog with platform="whatsapp"
 
 ---
@@ -1498,7 +1498,7 @@ So that **I can paste it anywhere**.
 **When** I tap "Copy Link" (FR-6.3)  
 **Then** the share URL is copied to clipboard  
 **And** I see confirmation toast ("Link copied!")  
-**And** the link format is `3d-ultra.com/share/{shareId}`  
+**And** the link format is `babypeek.com/share/{shareId}`  
 **And** share_clicked event is sent to PostHog with platform="copy"
 
 ---

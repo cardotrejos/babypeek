@@ -67,7 +67,7 @@ so that **storage costs are controlled and privacy is maintained**.
 // packages/api/src/services/CleanupService.ts
 import { Effect, Context, Layer, pipe, Array } from "effect"
 import { eq, lt, and, isNull, or } from "drizzle-orm"
-import { db, uploads, results, purchases } from "@3d-ultra/db"
+import { db, uploads, results, purchases } from "@babypeek/db"
 import { R2Service } from "./R2Service"
 
 export class CleanupError extends Data.TaggedError("CleanupError")<{

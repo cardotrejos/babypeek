@@ -66,7 +66,7 @@ const envSchema = z.object({
   // ─────────────────────────────────────────────────────────────────────────────
   APP_URL: z.string().url("APP_URL must be a valid URL").default("http://localhost:3001"),
   PRODUCT_PRICE_CENTS: z.coerce.number().int().positive().default(999), // $9.99 default
-  FROM_EMAIL: z.string().email().default("noreply@3d-ultra.com"),
+  FROM_EMAIL: z.string().email().default("noreply@babypeek.io"),
 
   // ─────────────────────────────────────────────────────────────────────────────
   // Workflow (Vercel Workflow DevKit) - Auto-configured on Vercel
@@ -121,7 +121,7 @@ export const env = parsed.success
       CORS_ORIGIN: process.env.CORS_ORIGIN,
       APP_URL: process.env.APP_URL || "http://localhost:3001",
       PRODUCT_PRICE_CENTS: Number(process.env.PRODUCT_PRICE_CENTS) || 999,
-      FROM_EMAIL: process.env.FROM_EMAIL || "noreply@3d-ultra.com",
+      FROM_EMAIL: process.env.FROM_EMAIL || "noreply@babypeek.io",
       // All optional fields default to undefined
       R2_ACCOUNT_ID: undefined,
       R2_ACCESS_KEY_ID: undefined,

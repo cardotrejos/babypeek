@@ -51,7 +51,7 @@ const createCheckoutSession = Effect.fn("StripeService.createCheckoutSession")(f
   // For gift purchases: purchaser gets Stripe receipt, recipient gets HD link
   const isGift = params.type === "gift"
   const customerEmail = isGift && params.purchaserEmail ? params.purchaserEmail : params.email
-  const productName = isGift ? "3d-ultra HD Photo Gift" : "3d-ultra HD Photo"
+  const productName = isGift ? "BabyPeek HD Photo Gift" : "BabyPeek HD Photo"
   
   return yield* Effect.tryPromise({
     try: () =>

@@ -113,8 +113,8 @@ export const uploads = pgTable("uploads", {
 // packages/api/src/services/ResultService.ts
 import { Effect, Context, Layer } from 'effect'
 import { createId } from '@paralleldrive/cuid2'
-import { db } from '@3d-ultra/db'
-import { results, uploads } from '@3d-ultra/db'
+import { db } from '@babypeek/db'
+import { results, uploads } from '@babypeek/db'
 
 // Service interface
 export class ResultService extends Context.Tag('ResultService')<

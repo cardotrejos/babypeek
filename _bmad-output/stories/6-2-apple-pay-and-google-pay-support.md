@@ -85,7 +85,7 @@ Stripe Checkout with `payment_method_types: ["card"]` automatically enables:
 Steps:
 1. Go to Stripe Dashboard → Settings → Payment methods
 2. Click "Configure" on Apple Pay
-3. Add your domain (e.g., 3d-ultra.com)
+3. Add your domain (e.g., babypeek.com)
 4. Download the verification file
 5. Place in `apps/web/public/.well-known/`
 

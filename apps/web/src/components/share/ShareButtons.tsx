@@ -21,7 +21,7 @@ interface ShareButtonsProps {
  * - Copy Link: Available on all platforms with clipboard fallback
  */
 export function ShareButtons({ uploadId, resultId }: ShareButtonsProps) {
-  const shareUrl = `https://3d-ultra.com/share/${uploadId}`
+  const shareUrl = `https://babypeek.io/share/${uploadId}`
   const shareMessage = `Look at this AI baby portrait I created! 👶✨ ${shareUrl}`
 
   // Story 8.1: WhatsApp share handler

@@ -12,7 +12,7 @@ so that **I can paste it anywhere**.
 
 1. **AC-1:** Given I'm viewing my result, when I tap "Copy Link" (FR-6.3), then the share URL is copied to clipboard
 2. **AC-2:** I see confirmation toast ("Link copied!")
-3. **AC-3:** The link format is `3d-ultra.com/share/{shareId}`
+3. **AC-3:** The link format is `babypeek.com/share/{shareId}`
 4. **AC-4:** share_clicked event is sent to PostHog with platform="copy"
 5. **AC-5:** Works on all devices (mobile and desktop)
 6. **AC-6:** Falls back gracefully if clipboard API unavailable
@@ -70,7 +70,7 @@ toast.error("Couldn't copy link")
 import { toast } from "sonner"
 
 const handleCopyLink = useCallback(async () => {
-  const shareUrl = `https://3d-ultra.com/share/${uploadId}`
+  const shareUrl = `https://babypeek.com/share/${uploadId}`
   let success = false
 
   try {
@@ -126,12 +126,12 @@ const handleCopyLink = useCallback(async () => {
 ### Share URL Format
 
 ```
-https://3d-ultra.com/share/{uploadId}
+https://babypeek.com/share/{uploadId}
 ```
 
 **Example:**
 ```
-https://3d-ultra.com/share/clm8h2xz40001js08x7qz3k4y
+https://babypeek.com/share/clm8h2xz40001js08x7qz3k4y
 ```
 
 ### Complete ShareButtons Component
@@ -150,7 +150,7 @@ interface ShareButtonsProps {
 }
 
 export function ShareButtons({ uploadId, resultId }: ShareButtonsProps) {
-  const shareUrl = `https://3d-ultra.com/share/${uploadId}`
+  const shareUrl = `https://babypeek.com/share/${uploadId}`
   const shareMessage = `Look at this AI baby portrait I created! 👶✨ ${shareUrl}`
 
   // WhatsApp share

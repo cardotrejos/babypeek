@@ -7,7 +7,7 @@
 
 import type { ProcessingStage } from "@/hooks/use-status"
 
-const CHANNEL_NAME = "3d-ultra-poll"
+const CHANNEL_NAME = "babypeek-poll"
 const LEADER_HEARTBEAT_INTERVAL = 2000 // 2 seconds
 const LEADER_TIMEOUT = 5000 // 5 seconds without heartbeat = leader lost
 const LEADER_CLAIM_WAIT_MS = 500

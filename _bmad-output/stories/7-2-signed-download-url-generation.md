@@ -35,7 +35,7 @@ so that **my purchase is protected from unauthorized access**.
 
 - [x] **Task 4: Add Content-Disposition header support** (AC: 1)
   - [x] Configure presigned URL with response-content-disposition
-  - [x] Set filename to `3d-ultra-baby-{date}.jpg`
+  - [x] Set filename to `babypeek-baby-{date}.jpg`
   - [x] Ensure proper filename encoding for special characters
 
 - [x] **Task 5: Write tests**
@@ -99,7 +99,7 @@ return {
   expiresAt: expiresAt.toISOString(),
   expiresInDays: daysUntilExpiry,
   expiryMessage: `Link expires in ${daysUntilExpiry} days`,
-  suggestedFilename: `3d-ultra-baby-${new Date().toISOString().split('T')[0]}.jpg`,
+  suggestedFilename: `babypeek-baby-${new Date().toISOString().split('T')[0]}.jpg`,
 }
 ```
 
@@ -116,7 +116,7 @@ const command = new GetObjectCommand({
 })
 
 // Option 2: Let frontend handle via download attribute
-// <a href={downloadUrl} download="3d-ultra-baby-2024-12-22.jpg">
+// <a href={downloadUrl} download="babypeek-baby-2024-12-22.jpg">
 ```
 
 ### Security Validation
@@ -148,7 +148,7 @@ https://{bucket}.r2.cloudflarestorage.com/{key}
   "expiresAt": "2024-12-29T12:00:00.000Z",
   "expiresInDays": 7,
   "expiryMessage": "Link expires in 7 days",
-  "suggestedFilename": "3d-ultra-baby-2024-12-22.jpg"
+  "suggestedFilename": "babypeek-baby-2024-12-22.jpg"
 }
 ```
 

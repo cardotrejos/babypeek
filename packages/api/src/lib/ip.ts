@@ -47,7 +47,7 @@ export function getClientIP(c: Context): string {
 export function hashIP(ip: string): string {
   // Use environment variable for salt, or a default for development
   // In production, IP_HASH_SALT should be set
-  const salt = process.env.IP_HASH_SALT || "3d-ultra-rate-limit-salt"
+  const salt = process.env.IP_HASH_SALT || "babypeek-rate-limit-salt"
 
   return createHash("sha256")
     .update(`${ip}:${salt}`)

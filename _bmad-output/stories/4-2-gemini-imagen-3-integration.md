@@ -79,7 +79,7 @@ so that **a photorealistic baby portrait is generated**.
 
 ### Gemini Imagen 3 API Overview
 
-Gemini Imagen 3 is Google's latest image generation model. For 3d-ultra, we use image-to-image generation:
+Gemini Imagen 3 is Google's latest image generation model. For babypeek, we use image-to-image generation:
 - Input: 4D ultrasound image
 - Output: Photorealistic baby portrait
 

@@ -60,7 +60,7 @@ export function DownloadExpired({ expiresAt }: DownloadExpiredProps) {
           <p className="text-sm text-warm-gray">
             Need help?{" "}
             <a
-              href="mailto:support@3d-ultra.com"
+              href="mailto:support@babypeek.io"
               className="text-coral underline hover:no-underline"
             >
               Contact support

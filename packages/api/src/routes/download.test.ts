@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest"
 import { Hono } from "hono"
 import { Effect, Layer } from "effect"
-import type { Upload, Purchase } from "@3d-ultra/db"
+import type { Upload, Purchase } from "@babypeek/db"
 
 import { R2Service, type PresignedUrl } from "../services/R2Service"
 import { PurchaseService } from "../services/PurchaseService"
@@ -168,7 +168,7 @@ function createDownloadApp(options: {
 
       // Generate suggested filename with current date (Story 7.2 AC-1)
       const today = new Date().toISOString().split("T")[0]
-      const suggestedFilename = `3d-ultra-baby-${today}.jpg`
+      const suggestedFilename = `babypeek-baby-${today}.jpg`
 
       const r2Service = yield* R2Service
       // Story 7.2: Pass filename option for Content-Disposition
@@ -496,8 +496,8 @@ describe("GET /api/download/:uploadId", () => {
       expect(res.status).toBe(200)
       const body = await res.json() as { suggestedFilename: string }
       expect(body).toHaveProperty("suggestedFilename")
-      // Format: 3d-ultra-baby-YYYY-MM-DD.jpg
-      expect(body.suggestedFilename).toMatch(/^3d-ultra-baby-\d{4}-\d{2}-\d{2}\.jpg$/)
+      // Format: babypeek-baby-YYYY-MM-DD.jpg
+      expect(body.suggestedFilename).toMatch(/^babypeek-baby-\d{4}-\d{2}-\d{2}\.jpg$/)
     })
 
     it("returns 7-day expiration for presigned URL (AC-5)", async () => {
@@ -983,7 +983,7 @@ describe("Download Flow Integration", () => {
     // Step 5: Verify enhanced response format
     expect(body.expiresInDays).toBeLessThanOrEqual(7)
     expect(body.expiryMessage).toContain("Link expires in")
-    expect(body.suggestedFilename).toMatch(/^3d-ultra-baby-\d{4}-\d{2}-\d{2}\.jpg$/)
+    expect(body.suggestedFilename).toMatch(/^babypeek-baby-\d{4}-\d{2}-\d{2}\.jpg$/)
   })
 
   it("complete flow with 30-day validation (Story 7.5)", async () => {

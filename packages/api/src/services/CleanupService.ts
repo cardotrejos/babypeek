@@ -1,6 +1,6 @@
 import { Effect, Context, Layer } from "effect"
 import { lt, eq } from "drizzle-orm"
-import { db, uploads, purchases, downloads } from "@3d-ultra/db"
+import { db, uploads, purchases, downloads } from "@babypeek/db"
 import { R2Service } from "./R2Service"
 import { CleanupError } from "../lib/errors"
 

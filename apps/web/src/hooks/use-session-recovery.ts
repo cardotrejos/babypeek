@@ -95,7 +95,7 @@ export function useSessionRecovery() {
             if (data.status === "completed" && data.resultId) {
               // Persist resultId for future recovery + redirect (AC6)
               updateJobResult(pending.jobId, data.resultId)
-              localStorage.setItem(`3d-ultra-result-upload-${data.resultId}`, pending.jobId)
+              localStorage.setItem(`babypeek-result-upload-${data.resultId}`, pending.jobId)
 
               if (isPostHogConfigured()) {
                 posthog.capture("session_recovery_redirect", {

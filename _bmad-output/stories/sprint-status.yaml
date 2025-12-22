@@ -1,6 +1,6 @@
 # generated: 2024-12-20
-# project: 3d-ultra
-# project_key: 3d-ultra
+# project: babypeek
+# project_key: babypeek
 # tracking_system: file-system
 # story_location: _bmad-output/stories
 
@@ -34,8 +34,8 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2024-12-20
-project: 3d-ultra
-project_key: 3d-ultra
+project: babypeek
+project_key: babypeek
 tracking_system: file-system
 story_location: _bmad-output/stories
 

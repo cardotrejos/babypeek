@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest"
 import { Hono } from "hono"
 import { Effect, Layer } from "effect"
 import Stripe from "stripe"
-import type { Purchase } from "@3d-ultra/db"
+import type { Purchase } from "@babypeek/db"
 
 import { StripeService } from "../services/StripeService"
 import { PaymentError } from "../lib/errors"

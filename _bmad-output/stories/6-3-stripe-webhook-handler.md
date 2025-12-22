@@ -79,7 +79,7 @@ constructWebhookEvent: (payload: string, signature: string) => Effect.Effect<Str
 // apps/server/src/routes/webhook.ts
 import { Hono } from "hono"
 import { Effect, pipe } from "effect"
-import { StripeService, StripeServiceLive } from "@3d-ultra/api/services/StripeService"
+import { StripeService, StripeServiceLive } from "@babypeek/api/services/StripeService"
 
 const app = new Hono()
 

@@ -34,7 +34,7 @@ function CheckoutSuccessPage() {
     if (typeof window === "undefined") return
 
     try {
-      const storedUploadId = localStorage.getItem("3d-ultra-last-checkout-upload")
+      const storedUploadId = localStorage.getItem("babypeek-last-checkout-upload")
       if (storedUploadId) {
         setUploadId(storedUploadId)
         const token = getSession(storedUploadId)
@@ -64,7 +64,7 @@ function CheckoutSuccessPage() {
     toast.success("Your HD photo has been downloaded!")
     // Clean up localStorage after successful download
     try {
-      localStorage.removeItem("3d-ultra-last-checkout-upload")
+      localStorage.removeItem("babypeek-last-checkout-upload")
     } catch {
       // Ignore localStorage errors
     }

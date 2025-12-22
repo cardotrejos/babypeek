@@ -4,9 +4,9 @@
 // Manages localStorage-based session tokens for upload tracking
 // Story 5.7: Enhanced with TTL, result tracking, and recovery support
 
-export const SESSION_PREFIX = "3d-ultra-session-"
-export const CURRENT_JOB_KEY = "3d-ultra-current-job"
-export const JOB_DATA_PREFIX = "3d-ultra-job-"
+export const SESSION_PREFIX = "babypeek-session-"
+export const CURRENT_JOB_KEY = "babypeek-current-job"
+export const JOB_DATA_PREFIX = "babypeek-job-"
 
 // 24-hour TTL for session data
 export const SESSION_TTL_MS = 24 * 60 * 60 * 1000

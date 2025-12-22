@@ -10,9 +10,9 @@ import { test, expect, Page } from "@playwright/test"
  * - AC7: Session is cleared after TTL
  */
 
-const SESSION_PREFIX = "3d-ultra-session-"
-const JOB_DATA_PREFIX = "3d-ultra-job-"
-const CURRENT_JOB_KEY = "3d-ultra-current-job"
+const SESSION_PREFIX = "babypeek-session-"
+const JOB_DATA_PREFIX = "babypeek-job-"
+const CURRENT_JOB_KEY = "babypeek-current-job"
 
 // Helper to set up a mock session in localStorage
 async function setupMockSession(
@@ -31,8 +31,8 @@ async function setupMockSession(
       const createdAt = expired ? Date.now() - 25 * 60 * 60 * 1000 : Date.now()
 
       // Set session token
-      localStorage.setItem(`3d-ultra-session-${jobId}`, `mock-token-${jobId}`)
-      localStorage.setItem("3d-ultra-current-job", jobId)
+      localStorage.setItem(`babypeek-session-${jobId}`, `mock-token-${jobId}`)
+      localStorage.setItem("babypeek-current-job", jobId)
 
       // Set job data
       const jobData = {
@@ -43,13 +43,13 @@ async function setupMockSession(
         ...(resultId && { resultId }),
       }
       localStorage.setItem(
-        `3d-ultra-job-${jobId}`,
+        `babypeek-job-${jobId}`,
         JSON.stringify(jobData)
       )
 
       // Set result mapping if completed
       if (resultId) {
-        localStorage.setItem(`3d-ultra-result-upload-${resultId}`, jobId)
+        localStorage.setItem(`babypeek-result-upload-${resultId}`, jobId)
       }
     },
     { jobId, status, resultId, expired }
@@ -133,7 +133,7 @@ test.describe("Session Recovery (Story 5.7)", () => {
 
       // Session should be cleared
       const sessionExists = await page.evaluate((jobId) => {
-        return localStorage.getItem(`3d-ultra-job-${jobId}`) !== null
+        return localStorage.getItem(`babypeek-job-${jobId}`) !== null
       }, "test-job-4")
       expect(sessionExists).toBe(false)
     })
@@ -198,7 +198,7 @@ test.describe("Session Recovery (Story 5.7)", () => {
 
       // Session should be cleared
       const sessionExists = await page.evaluate((jobId) => {
-        return localStorage.getItem(`3d-ultra-job-${jobId}`) !== null
+        return localStorage.getItem(`babypeek-job-${jobId}`) !== null
       }, "test-job-8")
       expect(sessionExists).toBe(false)
     })

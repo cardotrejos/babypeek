@@ -104,7 +104,7 @@ describe("ShareButtons", () => {
       )
       expect(mockOpen).toHaveBeenCalledWith(
         expect.stringContaining(
-          encodeURIComponent("https://3d-ultra.com/share/test-upload-123")
+          encodeURIComponent("https://babypeek.com/share/test-upload-123")
         ),
         "_blank",
         "noopener,noreferrer"
@@ -184,7 +184,7 @@ describe("ShareButtons", () => {
         // iOS uses &body= (ampersand)
         expect(locationHref).toContain("sms:&body=")
         expect(locationHref).toContain(
-          encodeURIComponent("https://3d-ultra.com/share/test-upload-123")
+          encodeURIComponent("https://babypeek.com/share/test-upload-123")
         )
       })
 
@@ -245,7 +245,7 @@ describe("ShareButtons", () => {
         // Android uses ?body= (question mark)
         expect(locationHref).toContain("sms:?body=")
         expect(locationHref).toContain(
-          encodeURIComponent("https://3d-ultra.com/share/test-upload-123")
+          encodeURIComponent("https://babypeek.com/share/test-upload-123")
         )
       })
 
@@ -272,7 +272,7 @@ describe("ShareButtons", () => {
       const button = screen.getByTestId("share-whatsapp")
       fireEvent.click(button)
 
-      const expectedUrl = "https://3d-ultra.com/share/test-upload-123"
+      const expectedUrl = "https://babypeek.com/share/test-upload-123"
       expect(mockOpen).toHaveBeenCalledWith(
         expect.stringContaining(encodeURIComponent(expectedUrl)),
         expect.any(String),
@@ -342,7 +342,7 @@ describe("ShareButtons", () => {
 
         await vi.waitFor(() => {
           expect(navigator.clipboard.writeText).toHaveBeenCalledWith(
-            "https://3d-ultra.com/share/test-upload-123"
+            "https://babypeek.com/share/test-upload-123"
           )
         })
       })

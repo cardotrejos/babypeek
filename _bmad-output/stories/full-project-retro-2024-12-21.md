@@ -1,7 +1,7 @@
-# 3D Ultra - Full Project Retrospective
+# BabyPeek - Full Project Retrospective
 
 **Date:** 2024-12-21  
-**Project:** 3d-ultra  
+**Project:** babypeek  
 **Scope:** All 8 Epics (Complete MVP)  
 **Facilitator:** Scrum Master (Bob)  
 **Project Lead:** Cardotrejos
@@ -10,7 +10,7 @@
 
 ## Executive Summary
 
-The 3D Ultra MVP has been successfully completed with all 8 epics delivered, covering 59 stories across the full product lifecycle from foundation to viral sharing.
+The BabyPeek MVP has been successfully completed with all 8 epics delivered, covering 59 stories across the full product lifecycle from foundation to viral sharing.
 
 ### Delivery Metrics
 

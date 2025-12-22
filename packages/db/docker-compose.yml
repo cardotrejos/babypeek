@@ -1,17 +1,17 @@
-name: 3d-ultra
+name: babypeek
 
 services:
   postgres:
     image: postgres
-    container_name: 3d-ultra-postgres
+    container_name: babypeek-postgres
     environment:
-      POSTGRES_DB: 3d-ultra
+      POSTGRES_DB: babypeek
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password
     ports:
       - "5432:5432"
     volumes:
-      - 3d-ultra_postgres_data:/var/lib/postgresql
+      - babypeek_postgres_data:/var/lib/postgresql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
@@ -20,4 +20,4 @@ services:
     restart: unless-stopped
 
 volumes:
-  3d-ultra_postgres_data:
+  babypeek_postgres_data:

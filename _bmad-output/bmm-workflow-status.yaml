@@ -1,4 +1,4 @@
-# Workflow Status - 3d-ultra
+# Workflow Status - babypeek
 # Generated: 2024-12-20
 # Track: BMad Method (Greenfield)
 
@@ -19,7 +19,7 @@
 #   - skipped: Optional/conditional workflow that was skipped
 
 generated: "2024-12-20"
-project: "3d-ultra"
+project: "babypeek"
 project_type: "AI-powered 4D ultrasound to photorealistic imagery transformation service"
 selected_track: "bmad-method"
 field_type: "greenfield"
@@ -46,7 +46,7 @@ workflow_status:
       agent: "analyst"
       command: "/bmad:bmm:workflows:create-product-brief"
       status: "complete"
-      output: "_bmad-output/analysis/product-brief-3d-ultra-2024-12-20.md"
+      output: "_bmad-output/analysis/product-brief-babypeek-2024-12-20.md"
 
   # Phase 1: Planning (Required)
   phase_1_planning:

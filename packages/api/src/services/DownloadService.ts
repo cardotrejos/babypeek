@@ -1,6 +1,6 @@
 import { Effect, Context, Layer } from "effect"
 import { eq, count, and, gt } from "drizzle-orm"
-import { db, downloads } from "@3d-ultra/db"
+import { db, downloads } from "@babypeek/db"
 import { hashIP } from "../lib/hash"
 
 // =============================================================================

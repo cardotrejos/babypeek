@@ -61,7 +61,7 @@ describe("DownloadButton", () => {
     const mockResponse = {
       success: true,
       downloadUrl: "https://r2.example.com/signed-url",
-      suggestedFilename: "3d-ultra-baby-2024-01-15.jpg",
+      suggestedFilename: "babypeek-baby-2024-01-15.jpg",
       expiresAt: "2024-01-22T12:00:00Z",
     }
 
@@ -98,7 +98,7 @@ describe("DownloadButton", () => {
       json: () => Promise.resolve({
         success: true,
         downloadUrl: "https://r2.example.com/signed-url",
-        suggestedFilename: "3d-ultra-baby-2024-01-15.jpg",
+        suggestedFilename: "babypeek-baby-2024-01-15.jpg",
       }),
     })
 

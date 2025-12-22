@@ -1,6 +1,6 @@
 import { Effect, Context, Layer } from "effect"
 import { eq, and } from "drizzle-orm"
-import { db, uploads, type Upload, type UploadStatus, type UploadStage, type PromptVersion } from "@3d-ultra/db"
+import { db, uploads, type Upload, type UploadStatus, type UploadStage, type PromptVersion } from "@babypeek/db"
 import { NotFoundError, AlreadyProcessingError, UploadStatusError } from "../lib/errors"
 
 // Re-export PromptVersion for consumers

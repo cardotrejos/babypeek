@@ -10,7 +10,7 @@
 ## User Story
 
 As a **visitor**,  
-I want **to immediately understand what 3d-ultra does**,  
+I want **to immediately understand what babypeek does**,  
 So that **I decide whether to try it**.
 
 ---

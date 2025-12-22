@@ -7,7 +7,7 @@ import { DownloadService, DownloadServiceMock } from "./DownloadService"
 // =============================================================================
 
 // Mock the db module
-vi.mock("@3d-ultra/db", () => ({
+vi.mock("@babypeek/db", () => ({
   db: {
     insert: vi.fn(() => ({
       values: vi.fn(() => ({

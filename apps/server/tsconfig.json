@@ -1,5 +1,5 @@
 {
-  "extends": "@3d-ultra/config/tsconfig.base.json",
+  "extends": "@babypeek/config/tsconfig.base.json",
   "compilerOptions": {
     "composite": true,
     "outDir": "dist",

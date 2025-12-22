@@ -1,6 +1,6 @@
 ---
 workflow: create-architecture
-project: 3d-ultra
+project: babypeek
 started: 2024-12-20
 lastStep: 8
 stepsCompleted: [1, 2, 3, 4, 5, 6, 7, 8]
@@ -12,7 +12,7 @@ inputDocuments:
 workflowType: architecture
 ---
 
-# System Architecture: 3d-ultra
+# System Architecture: babypeek
 
 **Version:** 1.0  
 **Date:** 2024-12-20  
@@ -459,7 +459,7 @@ export async function processImage(file: File): Promise<File> {
 const sessionToken = crypto.randomUUID()
 
 // Client: Store per job
-localStorage.setItem(`3d-ultra-session-${jobId}`, sessionToken)
+localStorage.setItem(`babypeek-session-${jobId}`, sessionToken)
 
 // Client: Send in header
 headers: { 'X-Session-Token': sessionToken }
@@ -505,12 +505,12 @@ app.post('/webhook/stripe', async ({ body, headers }) => {
 // Persist current job
 useEffect(() => {
   if (jobId) {
-    localStorage.setItem('3d-ultra-current-job', jobId)
+    localStorage.setItem('babypeek-current-job', jobId)
   }
 }, [jobId])
 
 // Resume on app load
-const savedJobId = localStorage.getItem('3d-ultra-current-job')
+const savedJobId = localStorage.getItem('babypeek-current-job')
 if (savedJobId && !isCompleted(savedJobId)) {
   navigate(`/processing/${savedJobId}`)
 }
@@ -885,7 +885,7 @@ All major patterns documented with code examples:
 
 ```bash
 # 1. Initialize project
-bun create better-t-stack@latest 3d-ultra \
+bun create better-t-stack@latest babypeek \
   --frontend tanstack-start \
   --backend hono \
   --database postgres \
@@ -893,7 +893,7 @@ bun create better-t-stack@latest 3d-ultra \
   --runtime bun
 
 # 2. Add Effect
-cd 3d-ultra
+cd babypeek
 bun add effect @effect/schema
 
 # 3. Configure external services (Neon, R2, Stripe, etc.)

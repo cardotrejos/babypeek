@@ -81,7 +81,7 @@ export const downloads = pgTable("downloads", {
 // packages/api/src/services/DownloadService.ts
 import { Effect, Context, Layer } from "effect"
 import { eq, count } from "drizzle-orm"
-import { db, downloads, purchases } from "@3d-ultra/db"
+import { db, downloads, purchases } from "@babypeek/db"
 import { hashIP } from "../lib/hash"
 
 // Download Service interface
@@ -210,7 +210,7 @@ import { env } from "./env"
  * - Comply with GDPR (hashed data = pseudonymized)
  */
 export function hashIP(ip: string): string {
-  const salt = env.IP_HASH_SALT || "3d-ultra-default-salt"
+  const salt = env.IP_HASH_SALT || "babypeek-default-salt"
   return createHash("sha256")
     .update(`${salt}:${ip}`)
     .digest("hex")

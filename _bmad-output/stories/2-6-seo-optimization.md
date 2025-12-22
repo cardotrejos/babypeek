@@ -10,7 +10,7 @@
 ## User Story
 
 As a **search engine user**,  
-I want **3d-ultra to appear in relevant searches**,  
+I want **babypeek to appear in relevant searches**,  
 So that **I can discover it organically when searching for "4D ultrasound to photo" or similar terms**.
 
 ---
@@ -82,7 +82,7 @@ So that **I can discover it organically when searching for "4D ultrasound to pho
 
 - [x] **Task 1: Configure Page Meta Tags** (AC: 1, 6, 7)
   - [x] 1.1 Locate meta tag configuration in TanStack Start (likely `apps/web/src/routes/__root.tsx` or route files)
-  - [x] 1.2 Set page title: "3d-ultra | Transform Your 4D Ultrasound into a Baby Portrait"
+  - [x] 1.2 Set page title: "babypeek | Transform Your 4D Ultrasound into a Baby Portrait"
   - [x] 1.3 Set meta description: "See your baby before they're born. Upload your 4D ultrasound and get a beautiful AI-generated portrait in 60 seconds. Free preview, instant results."
   - [x] 1.4 Verify viewport meta: `<meta name="viewport" content="width=device-width, initial-scale=1">`
   - [x] 1.5 Add charset meta: `<meta charset="UTF-8">`
@@ -94,7 +94,7 @@ So that **I can discover it organically when searching for "4D ultrasound to pho
   - [x] 2.4 Add `og:url` = canonical URL
   - [x] 2.5 Add `og:image` = "/og-image.svg" (1200x630px SVG placeholder)
   - [x] 2.6 Add `og:image:width` = "1200" and `og:image:height` = "630"
-  - [x] 2.7 Add `og:site_name` = "3d-ultra"
+  - [x] 2.7 Add `og:site_name` = "babypeek"
 
 - [x] **Task 3: Implement Twitter Card Tags** (AC: 3)
   - [x] 3.1 Add `twitter:card` = "summary_large_image"
@@ -104,7 +104,7 @@ So that **I can discover it organically when searching for "4D ultrasound to pho
 
 - [x] **Task 4: Create OG Image** (AC: 3)
   - [x] 4.1 Create or source OG image (1200x630px)
-  - [x] 4.2 Design should show: before/after ultrasound transformation, 3d-ultra branding
+  - [x] 4.2 Design should show: before/after ultrasound transformation, babypeek branding
   - [x] 4.3 Save as `apps/web/public/og-image.svg` (SVG placeholder - TODO: Replace with optimized JPG/PNG)
   - [x] 4.4 Alternatively, create placeholder and document need for final asset
 
@@ -115,7 +115,7 @@ So that **I can discover it organically when searching for "4D ultrasound to pho
   - [x] 5.4 Validate with Google Rich Results Test
 
 - [x] **Task 6: Set Canonical URL** (AC: 4)
-  - [x] 6.1 Add `<link rel="canonical" href="https://3d-ultra.com/">` to landing page
+  - [x] 6.1 Add `<link rel="canonical" href="https://babypeek.com/">` to landing page
   - [x] 6.2 Use environment variable for domain if available
   - [x] 6.3 Ensure trailing slash consistency
 
@@ -161,13 +161,13 @@ export const Route = createFileRoute('/')({
   component: LandingPage,
   head: () => ({
     meta: [
-      { title: '3d-ultra | Transform Your 4D Ultrasound into a Baby Portrait' },
+      { title: 'babypeek | Transform Your 4D Ultrasound into a Baby Portrait' },
       { name: 'description', content: 'See your baby before they\'re born...' },
       { property: 'og:title', content: '...' },
       // ... more meta tags
     ],
     links: [
-      { rel: 'canonical', href: 'https://3d-ultra.com/' },
+      { rel: 'canonical', href: 'https://babypeek.com/' },
     ],
   }),
 })
@@ -193,7 +193,7 @@ export const Route = createRootRoute({
 
 **Title Tag (50-60 characters):**
 ```
-3d-ultra | Transform Your 4D Ultrasound into a Baby Portrait
+babypeek | Transform Your 4D Ultrasound into a Baby Portrait
 ```
 Character count: 58 ✓
 
@@ -218,22 +218,22 @@ const structuredData = {
   "@graph": [
     {
       "@type": "WebSite",
-      "@id": "https://3d-ultra.com/#website",
-      "url": "https://3d-ultra.com/",
-      "name": "3d-ultra",
+      "@id": "https://babypeek.com/#website",
+      "url": "https://babypeek.com/",
+      "name": "babypeek",
       "description": "Transform your 4D ultrasound into a photorealistic baby portrait",
       "publisher": {
-        "@id": "https://3d-ultra.com/#organization"
+        "@id": "https://babypeek.com/#organization"
       }
     },
     {
       "@type": "Organization",
-      "@id": "https://3d-ultra.com/#organization",
-      "name": "3d-ultra",
-      "url": "https://3d-ultra.com/",
+      "@id": "https://babypeek.com/#organization",
+      "name": "babypeek",
+      "url": "https://babypeek.com/",
       "logo": {
         "@type": "ImageObject",
-        "url": "https://3d-ultra.com/logo.png"
+        "url": "https://babypeek.com/logo.png"
       }
     }
   ]
@@ -254,12 +254,12 @@ const structuredData = {
 - Size: 1200 x 630 pixels (1.91:1 ratio)
 - Format: JPEG or PNG
 - File size: <200KB (optimized for web)
-- Content: Before/after transformation, 3d-ultra branding
+- Content: Before/after transformation, babypeek branding
 
 **Placeholder Strategy:**
 If final OG image isn't ready, create a placeholder with:
 - Solid coral (#E8927C) or cream (#FDF8F5) background
-- "3d-ultra" text in Playfair Display
+- "babypeek" text in Playfair Display
 - Tagline: "Transform your 4D ultrasound"
 
 ### File Locations
@@ -317,8 +317,8 @@ apps/web/
 ### robots.txt Content
 
 ```
-# 3d-ultra robots.txt
-# https://3d-ultra.com/robots.txt
+# babypeek robots.txt
+# https://babypeek.com/robots.txt
 
 User-agent: *
 Allow: /
@@ -327,14 +327,14 @@ Allow: /
 Disallow: /api/
 
 # Sitemap (optional, can be added later)
-# Sitemap: https://3d-ultra.com/sitemap.xml
+# Sitemap: https://babypeek.com/sitemap.xml
 ```
 
 ### Environment Variables for Domain
 
 If the project uses environment variables for the domain:
 ```typescript
-const siteUrl = process.env.VITE_SITE_URL || 'https://3d-ultra.com'
+const siteUrl = process.env.VITE_SITE_URL || 'https://babypeek.com'
 ```
 
 Check `apps/web/.env.example` for existing patterns.
@@ -405,9 +405,9 @@ Claude Sonnet 4 (Anthropic)
 1. **Page Meta Tags** - Added SEO constants and `head` export to landing route with title (58 chars) and description (152 chars)
 2. **Open Graph Tags** - All OG tags added: title, description, type, url, image (with dimensions), site_name
 3. **Twitter Card Tags** - All twitter tags added: card (summary_large_image), title, description, image
-4. **OG Image** - Created SVG placeholder (1200x630) at `public/og-image.svg` with 3d-ultra branding and design system colors
+4. **OG Image** - Created SVG placeholder (1200x630) at `public/og-image.svg` with babypeek branding and design system colors
 5. **JSON-LD Structured Data** - Created `StructuredData` component with WebSite, Organization, and WebApplication schemas
-6. **Canonical URL** - Added canonical link pointing to https://3d-ultra.com
+6. **Canonical URL** - Added canonical link pointing to https://babypeek.com
 7. **robots.txt** - Updated with Allow: /, Disallow: /api/
 8. **Build Verified** - `bun run build` passes with no errors
 
@@ -417,7 +417,7 @@ Claude Sonnet 4 (Anthropic)
 |------|--------|
 | `apps/web/src/routes/index.tsx` | Modified - Added SEO constants, head export with meta/links, StructuredData component |
 | `apps/web/src/components/seo/structured-data.tsx` | Created - StructuredData component with JSON-LD (WebSite, Organization, WebApplication schemas) |
-| `apps/web/public/og-image.svg` | Created - OG image placeholder (1200x630) with 3d-ultra branding |
+| `apps/web/public/og-image.svg` | Created - OG image placeholder (1200x630) with babypeek branding |
 | `apps/web/public/robots.txt` | Modified - Updated with proper Allow/Disallow rules |
 
 ---

@@ -351,7 +351,7 @@ export function DownloadExpired({ uploadId, expiresAt }: DownloadExpiredProps) {
           </button>
           
           <p className="text-sm text-warm-gray">
-            Need help? <a href="mailto:support@3d-ultra.com" className="text-coral underline">Contact support</a>
+            Need help? <a href="mailto:support@babypeek.com" className="text-coral underline">Contact support</a>
           </p>
         </div>
       </div>

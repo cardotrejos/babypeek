@@ -85,19 +85,19 @@ export const Route = createFileRoute("/share/$shareId")({
   component: SharePage,
   head: ({ loaderData }) => ({
     meta: [
-      { title: "Check out this AI baby portrait! | 3d-ultra" },
-      { name: "description", content: "Someone created a beautiful AI baby portrait from their ultrasound. See the magic of 3d-ultra!" },
+      { title: "Check out this AI baby portrait! | babypeek" },
+      { name: "description", content: "Someone created a beautiful AI baby portrait from their ultrasound. See the magic of babypeek!" },
       // Open Graph
       { property: "og:title", content: "Check out this AI baby portrait! 👶✨" },
       { property: "og:description", content: "See what AI created from an ultrasound. Create your own for free!" },
-      { property: "og:image", content: loaderData?.previewUrl ?? "https://3d-ultra.com/og-default.jpg" },
-      { property: "og:url", content: `https://3d-ultra.com/share/${loaderData?.shareId}` },
+      { property: "og:image", content: loaderData?.previewUrl ?? "https://babypeek.com/og-default.jpg" },
+      { property: "og:url", content: `https://babypeek.com/share/${loaderData?.shareId}` },
       { property: "og:type", content: "website" },
       // Twitter Card
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:title", content: "Check out this AI baby portrait! 👶✨" },
       { name: "twitter:description", content: "See what AI created from an ultrasound. Create your own for free!" },
-      { name: "twitter:image", content: loaderData?.previewUrl ?? "https://3d-ultra.com/og-default.jpg" },
+      { name: "twitter:image", content: loaderData?.previewUrl ?? "https://babypeek.com/og-default.jpg" },
     ],
   }),
   loader: async ({ params }) => {
@@ -286,7 +286,7 @@ Claude Opus 4.5 (via Cursor)
 - [x] [MEDIUM] Fix analytics double-fire risk with ref
 - [x] [MEDIUM] Update File List to include story file
 - [x] [MEDIUM] Implement Vercel Edge Function for crawler detection
-- [x] [LOW] Fix brand name inconsistency (3d-ultra → BabyPeek)
+- [x] [LOW] Fix brand name inconsistency (babypeek → BabyPeek)
 - [ ] [LOW] Add AC-3 mobile test coverage - deferred (functionality works)
 
 ### Resolution: Vercel Edge Function

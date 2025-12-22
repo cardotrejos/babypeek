@@ -1,4 +1,4 @@
-# Product Brief: 3d-ultra
+# Product Brief: babypeek
 
 **Date:** 2024-12-20  
 **Author:** Analyst Agent  
@@ -8,7 +8,7 @@
 
 ## Executive Summary
 
-**3d-ultra** transforms 4D ultrasound images into photorealistic "baby's first photo" using AI image generation. This emotional product captures the magic moment when expecting parents can visualize their unborn child in stunning detail.
+**babypeek** transforms 4D ultrasound images into photorealistic "baby's first photo" using AI image generation. This emotional product captures the magic moment when expecting parents can visualize their unborn child in stunning detail.
 
 ### The Hook
 > "Meet your baby before they're born."
@@ -25,7 +25,7 @@
 
 **For** expecting parents  
 **Who** want to see their baby before birth  
-**3d-ultra is** an AI-powered image transformation service  
+**babypeek is** an AI-powered image transformation service  
 **That** turns 4D ultrasounds into photorealistic baby portraits  
 **Unlike** traditional ultrasound viewing or professional artists  
 **We** deliver instant, magical results that are perfect for sharing
@@ -287,7 +287,7 @@
 
 ## Conclusion
 
-3d-ultra has strong product-market fit signals:
+babypeek has strong product-market fit signals:
 - Proven demand from viral content
 - Emotional product with high willingness to pay
 - Technical feasibility with modern AI

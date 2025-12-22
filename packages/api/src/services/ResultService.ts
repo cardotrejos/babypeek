@@ -1,7 +1,7 @@
 import { Effect, Context, Layer } from "effect"
 import { eq } from "drizzle-orm"
 import { createId } from "@paralleldrive/cuid2"
-import { db, uploads, type Upload } from "@3d-ultra/db"
+import { db, uploads, type Upload } from "@babypeek/db"
 import { NotFoundError, UnauthorizedError, ResultError, R2Error } from "../lib/errors"
 import { R2Service } from "./R2Service"
 

@@ -85,7 +85,7 @@ export function CheckoutButton({
 
       // Store uploadId for checkout-success page (Story 7.3)
       try {
-        localStorage.setItem("3d-ultra-last-checkout-upload", uploadId)
+        localStorage.setItem("babypeek-last-checkout-upload", uploadId)
       } catch {
         // localStorage may not be available
       }

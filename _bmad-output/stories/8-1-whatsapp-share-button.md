@@ -11,7 +11,7 @@ so that **my family can see it instantly**.
 ## Acceptance Criteria
 
 1. **AC-1:** Given I'm viewing my result, when I tap the WhatsApp share button (FR-6.1), then WhatsApp opens with a pre-filled message
-2. **AC-2:** The message includes the share link (3d-ultra.com/share/{shareId})
+2. **AC-2:** The message includes the share link (babypeek.com/share/{shareId})
 3. **AC-3:** share_clicked event is sent to PostHog with platform="whatsapp"
 4. **AC-4:** Button uses WhatsApp brand green color (#25D366) for recognition
 5. **AC-5:** Works on both mobile (opens WhatsApp app) and desktop (opens WhatsApp Web)
@@ -25,7 +25,7 @@ so that **my family can see it instantly**.
   - [x] Make button 48px minimum touch target
 
 - [x] **Task 2: Implement WhatsApp share URL** (AC: 1, 2, 5)
-  - [x] Generate share URL: `https://3d-ultra.com/share/${uploadId}`
+  - [x] Generate share URL: `https://babypeek.com/share/${uploadId}`
   - [x] Construct WhatsApp URL: `https://wa.me/?text=${encodeURIComponent(message)}`
   - [x] Pre-filled message: "Look at this AI baby portrait I created! 👶✨ {shareUrl}"
   - [x] Use `window.open()` to open WhatsApp
@@ -93,7 +93,7 @@ interface ShareButtonsProps {
 }
 
 export function ShareButtons({ uploadId, resultId }: ShareButtonsProps) {
-  const shareUrl = `https://3d-ultra.com/share/${uploadId}`
+  const shareUrl = `https://babypeek.com/share/${uploadId}`
   const shareMessage = `Look at this AI baby portrait I created! 👶✨ ${shareUrl}`
 
   const handleWhatsAppShare = useCallback(() => {
@@ -141,7 +141,7 @@ export default ShareButtons
 
 **WhatsApp URL Format:**
 ```
-https://wa.me/?text=Look%20at%20this%20AI%20baby%20portrait%20I%20created!%20%F0%9F%91%B6%E2%9C%A8%20https%3A%2F%2F3d-ultra.com%2Fshare%2F{uploadId}
+https://wa.me/?text=Look%20at%20this%20AI%20baby%20portrait%20I%20created!%20%F0%9F%91%B6%E2%9C%A8%20https%3A%2F%2Fbabypeek.com%2Fshare%2F{uploadId}
 ```
 
 ### File Structure

@@ -1,5 +1,5 @@
 
-# Product Requirements Document: 3d-ultra
+# Product Requirements Document: babypeek
 
 **Version:** 1.0  
 **Date:** 2024-12-20  
@@ -11,7 +11,7 @@
 ## Executive Summary
 
 ### Vision
-3d-ultra transforms expecting parents' 4D ultrasound images into photorealistic "baby's first photo" using AI image generation. The product delivers an emotional, shareable moment that drives viral growth and monetizes through HD image downloads.
+babypeek transforms expecting parents' 4D ultrasound images into photorealistic "baby's first photo" using AI image generation. The product delivers an emotional, shareable moment that drives viral growth and monetizes through HD image downloads.
 
 ### Success Vision
 *"A mother uploads her 4D ultrasound at 10 PM. Sixty seconds later, she's crying happy tears at her phone, showing her partner what their baby might look like. Within an hour, she's shared it to three WhatsApp groups. By morning, her mother has purchased the HD version as a gift, and two friends have uploaded their own ultrasounds."*
@@ -107,7 +107,7 @@
 **Context:** Rosa sees Maria's Instagram post, is also pregnant.
 
 **Flow:**
-1. **Discovery:** Sees "Made with 3d-ultra" watermark
+1. **Discovery:** Sees "Made with babypeek" watermark
 2. **Curiosity:** Taps watermark/link
 3. **Landing:** "Want this for your baby?"
 4. **Upload:** Finds her own 4D ultrasound
@@ -131,7 +131,7 @@ Same image can be purchased multiple times by different people:
 Watermarked preview serves dual purpose:
 - Low-quality enough to drive HD purchase
 - High-quality enough to be shareable
-- Includes subtle "3d-ultra.com" branding
+- Includes subtle "babypeek.com" branding
 - Every share is free marketing
 
 ### The Reveal Moment

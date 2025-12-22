@@ -318,7 +318,7 @@ export function LandingHeader() {
   return (
     <header className="absolute top-0 left-0 right-0 z-10 p-4 sm:p-6">
       <div className="sm:max-w-[560px] sm:mx-auto">
-        <span className="font-display text-xl text-charcoal">3d-ultra</span>
+        <span className="font-display text-xl text-charcoal">babypeek</span>
       </div>
     </header>
   );

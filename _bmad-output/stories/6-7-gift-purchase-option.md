@@ -102,7 +102,7 @@ function SharePage() {
       {/* Gift CTA */}
       <div className="mt-6 p-4">
         <p className="text-warm-gray text-center mb-4">
-          Someone created this beautiful portrait with 3d-ultra!
+          Someone created this beautiful portrait with babypeek!
         </p>
         
         <GiftCheckoutButton shareId={shareId} uploadId={result?.uploadId} />
@@ -116,7 +116,7 @@ function SharePage() {
       <div className="mt-8 text-center">
         <p className="text-warm-gray mb-2">Want your own?</p>
         <Button variant="outline" asChild>
-          <Link to="/">Try 3d-ultra</Link>
+          <Link to="/">Try babypeek</Link>
         </Button>
       </div>
     </div>

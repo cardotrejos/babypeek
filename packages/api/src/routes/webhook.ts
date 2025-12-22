@@ -57,7 +57,7 @@ const handleCheckoutCompleted = (session: Stripe.Checkout.Session) =>
     // Handle email errors gracefully - don't fail webhook on email errors
     const purchaserEmail = session.customer_email
     const recipientEmail = email // Original uploader's email from metadata
-    const appUrl = process.env.APP_URL || "https://3d-ultra.com"
+    const appUrl = process.env.APP_URL || "https://babypeek.io"
     
     yield* Effect.gen(function* () {
       if (isGift && recipientEmail && purchaserEmail) {

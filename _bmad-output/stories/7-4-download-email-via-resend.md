@@ -167,7 +167,7 @@ export const generateDownloadHtml = (params: {
     <p style="color: #9B8B8B; font-size: 12px; text-align: center; margin-top: 24px;">
       Questions? Reply to this email and we'll help.
       <br><br>
-      Made with 💕 by 3d-ultra
+      Made with 💕 by babypeek
     </p>
     
   </div>
