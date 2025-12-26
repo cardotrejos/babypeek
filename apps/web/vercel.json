@@ -16,7 +16,7 @@
     },
     {
       "source": "/api/:path*",
-      "destination": "https://3d-ultra-server.vercel.app/api/:path*"
+      "destination": "https://api.babypeek.io/api/:path*"
     },
     {
       "source": "/(.*)",
