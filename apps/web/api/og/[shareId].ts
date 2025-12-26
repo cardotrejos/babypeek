@@ -29,7 +29,7 @@ const CRAWLER_PATTERNS = [
   /iMessageLinkPreview/i,
 ]
 
-const API_BASE_URL = process.env.VITE_API_URL || "https://3d-ultra-server.vercel.app"
+const API_BASE_URL = process.env.VITE_API_URL || "https://api.babypeek.io"
 const SITE_URL = process.env.VITE_SITE_URL || "https://babypeek.io"
 
 interface ShareData {
