@@ -18,6 +18,7 @@ import {
   dataRoutes,
   cleanupRoutes,
   preferencesRoutes,
+  previewRoutes,
 } from "@babypeek/api";
 
 const app = new Hono();
@@ -48,6 +49,7 @@ app.route("/api/download", downloadRoutes);
 app.route("/api/data", dataRoutes);
 app.route("/api/cron/cleanup", cleanupRoutes);
 app.route("/api/preferences", preferencesRoutes);
+app.route("/api/preview", previewRoutes);
 
 // Root endpoint
 app.get("/", (c) => {

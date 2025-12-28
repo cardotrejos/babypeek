@@ -15,7 +15,7 @@ import { posthog, isPostHogConfigured } from "@/lib/posthog";
  */
 interface ExpiredResultProps {
   resultId?: string;
-  source: "result" | "share";
+  source: "result" | "share" | "preview";
 }
 
 export function ExpiredResult({ resultId, source }: ExpiredResultProps) {

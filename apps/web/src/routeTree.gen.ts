@@ -14,6 +14,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as ShareShareIdRouteImport } from './routes/share.$shareId'
 import { Route as ResultResultIdRouteImport } from './routes/result.$resultId'
 import { Route as ProcessingJobIdRouteImport } from './routes/processing.$jobId'
+import { Route as PreviewUploadIdRouteImport } from './routes/preview.$uploadId'
 import { Route as DownloadUploadIdRouteImport } from './routes/download.$uploadId'
 
 const CheckoutSuccessRoute = CheckoutSuccessRouteImport.update({
@@ -41,6 +42,11 @@ const ProcessingJobIdRoute = ProcessingJobIdRouteImport.update({
   path: '/processing/$jobId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PreviewUploadIdRoute = PreviewUploadIdRouteImport.update({
+  id: '/preview/$uploadId',
+  path: '/preview/$uploadId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DownloadUploadIdRoute = DownloadUploadIdRouteImport.update({
   id: '/download/$uploadId',
   path: '/download/$uploadId',
@@ -51,6 +57,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/checkout-success': typeof CheckoutSuccessRoute
   '/download/$uploadId': typeof DownloadUploadIdRoute
+  '/preview/$uploadId': typeof PreviewUploadIdRoute
   '/processing/$jobId': typeof ProcessingJobIdRoute
   '/result/$resultId': typeof ResultResultIdRoute
   '/share/$shareId': typeof ShareShareIdRoute
@@ -59,6 +66,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/checkout-success': typeof CheckoutSuccessRoute
   '/download/$uploadId': typeof DownloadUploadIdRoute
+  '/preview/$uploadId': typeof PreviewUploadIdRoute
   '/processing/$jobId': typeof ProcessingJobIdRoute
   '/result/$resultId': typeof ResultResultIdRoute
   '/share/$shareId': typeof ShareShareIdRoute
@@ -68,6 +76,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/checkout-success': typeof CheckoutSuccessRoute
   '/download/$uploadId': typeof DownloadUploadIdRoute
+  '/preview/$uploadId': typeof PreviewUploadIdRoute
   '/processing/$jobId': typeof ProcessingJobIdRoute
   '/result/$resultId': typeof ResultResultIdRoute
   '/share/$shareId': typeof ShareShareIdRoute
@@ -78,6 +87,7 @@ export interface FileRouteTypes {
     | '/'
     | '/checkout-success'
     | '/download/$uploadId'
+    | '/preview/$uploadId'
     | '/processing/$jobId'
     | '/result/$resultId'
     | '/share/$shareId'
@@ -86,6 +96,7 @@ export interface FileRouteTypes {
     | '/'
     | '/checkout-success'
     | '/download/$uploadId'
+    | '/preview/$uploadId'
     | '/processing/$jobId'
     | '/result/$resultId'
     | '/share/$shareId'
@@ -94,6 +105,7 @@ export interface FileRouteTypes {
     | '/'
     | '/checkout-success'
     | '/download/$uploadId'
+    | '/preview/$uploadId'
     | '/processing/$jobId'
     | '/result/$resultId'
     | '/share/$shareId'
@@ -103,6 +115,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   CheckoutSuccessRoute: typeof CheckoutSuccessRoute
   DownloadUploadIdRoute: typeof DownloadUploadIdRoute
+  PreviewUploadIdRoute: typeof PreviewUploadIdRoute
   ProcessingJobIdRoute: typeof ProcessingJobIdRoute
   ResultResultIdRoute: typeof ResultResultIdRoute
   ShareShareIdRoute: typeof ShareShareIdRoute
@@ -145,6 +158,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProcessingJobIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/preview/$uploadId': {
+      id: '/preview/$uploadId'
+      path: '/preview/$uploadId'
+      fullPath: '/preview/$uploadId'
+      preLoaderRoute: typeof PreviewUploadIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/download/$uploadId': {
       id: '/download/$uploadId'
       path: '/download/$uploadId'
@@ -159,6 +179,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CheckoutSuccessRoute: CheckoutSuccessRoute,
   DownloadUploadIdRoute: DownloadUploadIdRoute,
+  PreviewUploadIdRoute: PreviewUploadIdRoute,
   ProcessingJobIdRoute: ProcessingJobIdRoute,
   ResultResultIdRoute: ResultResultIdRoute,
   ShareShareIdRoute: ShareShareIdRoute,
