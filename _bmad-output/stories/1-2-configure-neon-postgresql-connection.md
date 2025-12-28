@@ -17,12 +17,12 @@ So that **I can store and query data in the database**.
 
 ## Acceptance Criteria
 
-| # | Criterion | Status |
-|---|-----------|--------|
-| 1 | Drizzle connects to PostgreSQL without errors | ✅ Done |
-| 2 | `bun run db:push` syncs schema changes | ✅ Done |
-| 3 | `bun run db:studio` opens Drizzle Studio | ✅ Done |
-| 4 | Connection pooling configured for serverless | ⏳ Deferred to Neon setup |
+| #   | Criterion                                     | Status                    |
+| --- | --------------------------------------------- | ------------------------- |
+| 1   | Drizzle connects to PostgreSQL without errors | ✅ Done                   |
+| 2   | `bun run db:push` syncs schema changes        | ✅ Done                   |
+| 3   | `bun run db:studio` opens Drizzle Studio      | ✅ Done                   |
+| 4   | Connection pooling configured for serverless  | ⏳ Deferred to Neon setup |
 
 ---
 
@@ -31,6 +31,7 @@ So that **I can store and query data in the database**.
 ### Local Development (Docker)
 
 **Docker PostgreSQL:**
+
 ```yaml
 # packages/db/docker-compose.yml
 services:
@@ -46,6 +47,7 @@ services:
 ```
 
 **Environment Configuration:**
+
 ```bash
 # apps/server/.env
 DATABASE_URL="postgresql://postgres:password@localhost:5432/babypeek"
@@ -66,11 +68,11 @@ bun run db:studio
 
 ### Tables Created
 
-| Table | Purpose |
-|-------|---------|
-| `uploads` | Tracks ultrasound uploads and AI processing status |
-| `purchases` | Tracks Stripe payments |
-| `downloads` | Tracks HD image downloads |
+| Table       | Purpose                                            |
+| ----------- | -------------------------------------------------- |
+| `uploads`   | Tracks ultrasound uploads and AI processing status |
+| `purchases` | Tracks Stripe payments                             |
+| `downloads` | Tracks HD image downloads                          |
 
 ### Verification
 
@@ -78,7 +80,7 @@ bun run db:studio
 docker exec babypeek-postgres psql -U postgres -d babypeek -c "\dt"
 
 # Output:
-#  Schema |   Name    | Type  |  Owner   
+#  Schema |   Name    | Type  |  Owner
 # --------+-----------+-------+----------
 #  public | downloads | table | postgres
 #  public | purchases | table | postgres

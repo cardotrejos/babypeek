@@ -1,4 +1,4 @@
-import { z } from "zod"
+import { z } from "zod";
 
 // =============================================================================
 // Environment Variable Schema
@@ -41,10 +41,7 @@ const envSchema = z.object({
   // ─────────────────────────────────────────────────────────────────────────────
   // Resend Email (Optional in dev, required in production)
   // ─────────────────────────────────────────────────────────────────────────────
-  RESEND_API_KEY: z
-    .string()
-    .startsWith("re_", "RESEND_API_KEY must start with 're_'")
-    .optional(),
+  RESEND_API_KEY: z.string().startsWith("re_", "RESEND_API_KEY must start with 're_'").optional(),
 
   // ─────────────────────────────────────────────────────────────────────────────
   // PostHog Analytics (Optional)
@@ -89,26 +86,26 @@ const envSchema = z.object({
   // Environment
   // ─────────────────────────────────────────────────────────────────────────────
   NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
-})
+});
 
 // =============================================================================
 // Environment Parsing & Validation
 // =============================================================================
 
-const parsed = envSchema.safeParse(process.env)
+const parsed = envSchema.safeParse(process.env);
 
 if (!parsed.success) {
   // Format errors without exposing values
-  const errors = parsed.error.flatten()
+  const errors = parsed.error.flatten();
   const fieldErrors = Object.entries(errors.fieldErrors)
     .map(([field, messages]) => `  - ${field}: ${messages?.join(", ")}`)
-    .join("\n")
+    .join("\n");
 
-  console.error("❌ Environment validation failed:")
-  console.error(fieldErrors)
+  console.error("❌ Environment validation failed:");
+  console.error(fieldErrors);
 
   if (process.env.NODE_ENV === "production") {
-    throw new Error("Invalid environment variables in production")
+    throw new Error("Invalid environment variables in production");
   }
 }
 
@@ -136,9 +133,9 @@ export const env = parsed.success
       SENTRY_DSN: undefined,
       IP_HASH_SALT: undefined,
       CRON_SECRET: undefined,
-    }
+    };
 
-export type Env = z.infer<typeof envSchema>
+export type Env = z.infer<typeof envSchema>;
 
 // =============================================================================
 // Service Configuration Checks
@@ -151,33 +148,33 @@ export const isR2Configured = () => {
     env.R2_ACCESS_KEY_ID &&
     env.R2_SECRET_ACCESS_KEY &&
     env.R2_BUCKET_NAME
-  )
-}
+  );
+};
 
 /** Check if Stripe payments are configured */
 export const isStripeConfigured = () => {
-  return !!(env.STRIPE_SECRET_KEY && env.STRIPE_WEBHOOK_SECRET)
-}
+  return !!(env.STRIPE_SECRET_KEY && env.STRIPE_WEBHOOK_SECRET);
+};
 
 /** Check if PostHog analytics is configured */
 export const isPostHogConfigured = () => {
-  return !!env.POSTHOG_KEY
-}
+  return !!env.POSTHOG_KEY;
+};
 
 /** Check if Sentry error tracking is configured */
 export const isSentryConfigured = () => {
-  return !!env.SENTRY_DSN
-}
+  return !!env.SENTRY_DSN;
+};
 
 /** Check if Resend email is configured */
 export const isResendConfigured = () => {
-  return !!env.RESEND_API_KEY
-}
+  return !!env.RESEND_API_KEY;
+};
 
 /** Check if Gemini AI is configured */
 export const isGeminiConfigured = () => {
-  return !!env.GEMINI_API_KEY
-}
+  return !!env.GEMINI_API_KEY;
+};
 
 // =============================================================================
 // Production Checks (Fail Fast)
@@ -187,37 +184,37 @@ export const isGeminiConfigured = () => {
 export const checkR2Config = () => {
   if (env.NODE_ENV === "production" && !isR2Configured()) {
     throw new Error(
-      "❌ R2 storage not configured. Required in production: R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_BUCKET_NAME"
-    )
+      "❌ R2 storage not configured. Required in production: R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_BUCKET_NAME",
+    );
   }
-  return isR2Configured()
-}
+  return isR2Configured();
+};
 
 /** Validate Stripe config - throws in production if not configured */
 export const checkStripeConfig = () => {
   if (env.NODE_ENV === "production" && !isStripeConfigured()) {
     throw new Error(
-      "❌ Stripe not configured. Required in production: STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET"
-    )
+      "❌ Stripe not configured. Required in production: STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET",
+    );
   }
-  return isStripeConfigured()
-}
+  return isStripeConfigured();
+};
 
 /** Validate all production-required services */
 export const checkProductionConfig = () => {
-  const missing: string[] = []
+  const missing: string[] = [];
 
-  if (!isR2Configured()) missing.push("R2 Storage")
-  if (!isStripeConfigured()) missing.push("Stripe Payments")
-  if (!isResendConfigured()) missing.push("Resend Email")
-  if (!isGeminiConfigured()) missing.push("Gemini AI")
+  if (!isR2Configured()) missing.push("R2 Storage");
+  if (!isStripeConfigured()) missing.push("Stripe Payments");
+  if (!isResendConfigured()) missing.push("Resend Email");
+  if (!isGeminiConfigured()) missing.push("Gemini AI");
 
   if (env.NODE_ENV === "production" && missing.length > 0) {
-    throw new Error(`❌ Missing production configuration: ${missing.join(", ")}`)
+    throw new Error(`❌ Missing production configuration: ${missing.join(", ")}`);
   }
 
-  return missing.length === 0
-}
+  return missing.length === 0;
+};
 
 // =============================================================================
 // Safe Logging (Never expose secrets)
@@ -236,18 +233,18 @@ export const logEnvStatus = () => {
       posthog: isPostHogConfigured(),
       sentry: isSentryConfigured(),
     },
-  }
+  };
 
-  console.log("📊 Environment Status:")
-  console.log(`   Environment: ${status.environment}`)
-  console.log("   Services:")
+  console.log("📊 Environment Status:");
+  console.log(`   Environment: ${status.environment}`);
+  console.log("   Services:");
   Object.entries(status.services).forEach(([service, configured]) => {
-    const icon = configured ? "✅" : "⚪"
-    console.log(`     ${icon} ${service}: ${configured ? "configured" : "not configured"}`)
-  })
+    const icon = configured ? "✅" : "⚪";
+    console.log(`     ${icon} ${service}: ${configured ? "configured" : "not configured"}`);
+  });
 
-  return status
-}
+  return status;
+};
 
 /** Get environment status as object (for programmatic access) */
 export const getEnvStatus = () => ({
@@ -259,4 +256,4 @@ export const getEnvStatus = () => ({
   gemini: isGeminiConfigured(),
   posthog: isPostHogConfigured(),
   sentry: isSentryConfigured(),
-})
+});

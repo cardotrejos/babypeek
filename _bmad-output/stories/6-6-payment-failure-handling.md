@@ -72,6 +72,7 @@ so that **I can resolve the issue and try again**.
 ### How Stripe Checkout Handles Failures
 
 Stripe Checkout handles most payment failures internally:
+
 1. Card declined → Shows error in Checkout, user can retry
 2. 3D Secure failed → Returns to cancel URL
 3. User closes tab → Nothing returned
@@ -102,7 +103,7 @@ export const paymentErrorMessages = {
 
 export function getPaymentErrorMessage(error: string | null): string | null {
   if (!error) return null
-  return paymentErrorMessages[error as keyof typeof paymentErrorMessages] 
+  return paymentErrorMessages[error as keyof typeof paymentErrorMessages]
     ?? paymentErrorMessages.generic
 }
 ```
@@ -130,14 +131,14 @@ useEffect(() => {
     const message = getPaymentErrorMessage(paymentError)
     toast.error(message)
     posthog.capture("payment_failed", { upload_id: uploadId, error_type: paymentError })
-    
+
     // Log to Sentry (no PII)
     Sentry.captureMessage("Payment failed", {
       level: "warning",
       extra: { upload_id: uploadId, error_type: paymentError },
     })
   }
-  
+
   // Clear query params to prevent re-triggering
   window.history.replaceState({}, "", `/result/${resultId}`)
 }, [cancelled, paymentError, uploadId, resultId])
@@ -217,16 +218,16 @@ apps/web/src/routes/
 
 ### Issues Found & Resolved
 
-| Severity | Issue | Status |
-|----------|-------|--------|
-| HIGH | Task 7 marked complete but E2E subtask incomplete | ✅ Fixed - clarified E2E handled by Stripe |
-| HIGH | Cancel URL missing `?error=` param | ✅ Fixed - clarified Stripe handles failures internally |
-| MEDIUM | Off-by-one retry count tracking | ✅ Fixed - used callback pattern |
-| MEDIUM | Dev Notes had outdated code examples | ✅ Fixed - updated to match implementation |
-| MEDIUM | No integration test for result page | ⚠️ Noted - unit tests cover core logic |
-| MEDIUM | Type assertion instead of proper typing | ✅ Fixed - added interface |
-| LOW | Console.log in production code | ✅ Fixed - removed |
-| LOW | Stale comment about error param | ✅ Fixed - updated docs |
+| Severity | Issue                                             | Status                                                  |
+| -------- | ------------------------------------------------- | ------------------------------------------------------- |
+| HIGH     | Task 7 marked complete but E2E subtask incomplete | ✅ Fixed - clarified E2E handled by Stripe              |
+| HIGH     | Cancel URL missing `?error=` param                | ✅ Fixed - clarified Stripe handles failures internally |
+| MEDIUM   | Off-by-one retry count tracking                   | ✅ Fixed - used callback pattern                        |
+| MEDIUM   | Dev Notes had outdated code examples              | ✅ Fixed - updated to match implementation              |
+| MEDIUM   | No integration test for result page               | ⚠️ Noted - unit tests cover core logic                  |
+| MEDIUM   | Type assertion instead of proper typing           | ✅ Fixed - added interface                              |
+| LOW      | Console.log in production code                    | ✅ Fixed - removed                                      |
+| LOW      | Stale comment about error param                   | ✅ Fixed - updated docs                                 |
 
 ### Action Items
 
@@ -263,6 +264,7 @@ Claude Opus 4.5
 7. URL query params cleared after displaying error to prevent re-triggering on refresh
 
 **Code Review Fixes (2024-12-21):**
+
 - Fixed off-by-one bug in retry count tracking (used callback pattern)
 - Removed debug console.log from production code
 - Added proper TypeScript interface for search params (replaced type assertion)
@@ -271,10 +273,12 @@ Claude Opus 4.5
 ### File List
 
 **New Files:**
+
 - `apps/web/src/lib/payment-errors.ts` - Error message mapping
 - `apps/web/src/lib/payment-errors.test.ts` - Unit tests for error messages
 
 **Modified Files:**
+
 - `apps/web/src/routes/result.$resultId.tsx` - Error handling, search params, Sentry/PostHog integration
 - `apps/web/src/components/reveal/RevealUI.tsx` - Retry tracking props
 - `apps/web/src/components/payment/CheckoutButton.tsx` - Retry count prop for analytics

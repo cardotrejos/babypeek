@@ -17,13 +17,13 @@ So that **I can track user behavior and funnel metrics**.
 
 ## Acceptance Criteria
 
-| # | Criterion | Test |
-|---|-----------|------|
-| AC1 | PostHog API key validated in environment | App warns (dev) or fails (prod) if POSTHOG_KEY missing |
-| AC2 | Page views tracked automatically on frontend | PostHog dashboard shows page view events |
-| AC3 | Custom events can be fired from frontend | `posthog.capture('upload_started')` works |
-| AC4 | Custom events can be fired from backend | Server can send events via PostHog API |
-| AC5 | User identification works with session tokens | Events grouped by session token |
+| #   | Criterion                                     | Test                                                   |
+| --- | --------------------------------------------- | ------------------------------------------------------ |
+| AC1 | PostHog API key validated in environment      | App warns (dev) or fails (prod) if POSTHOG_KEY missing |
+| AC2 | Page views tracked automatically on frontend  | PostHog dashboard shows page view events               |
+| AC3 | Custom events can be fired from frontend      | `posthog.capture('upload_started')` works              |
+| AC4 | Custom events can be fired from backend       | Server can send events via PostHog API                 |
+| AC5 | User identification works with session tokens | Events grouped by session token                        |
 
 ---
 
@@ -86,7 +86,7 @@ export function PostHogProvider({ children }: { children: React.ReactNode }) {
       capture_pageleave: true,
     })
   }
-  
+
   return <PHProvider client={posthog}>{children}</PHProvider>
 }
 ```
@@ -99,18 +99,18 @@ import { useCallback } from 'react'
 
 export function useAnalytics() {
   const posthog = usePostHog()
-  
+
   const identify = useCallback((sessionToken: string) => {
     posthog?.identify(sessionToken)
   }, [posthog])
-  
+
   const trackEvent = useCallback((
-    event: string, 
+    event: string,
     properties?: Record<string, unknown>
   ) => {
     posthog?.capture(event, properties)
   }, [posthog])
-  
+
   return { identify, trackEvent }
 }
 ```
@@ -148,18 +148,18 @@ export const PostHogServiceLive = Layer.succeed(PostHogService, {
 
 ### Core Events to Track
 
-| Event | Trigger | Properties |
-|-------|---------|------------|
-| `page_view` | Auto (frontend) | `path`, `referrer` |
-| `upload_started` | User selects image | `file_type`, `file_size` |
-| `upload_completed` | Upload to R2 succeeds | `duration_ms` |
-| `processing_started` | AI job begins | `job_id` |
-| `processing_completed` | AI job finishes | `job_id`, `duration_ms` |
-| `reveal_viewed` | User sees result | `job_id` |
-| `checkout_started` | User clicks purchase | `price`, `type` |
-| `purchase_completed` | Stripe webhook | `amount`, `type` |
-| `download_initiated` | User downloads HD | `purchase_id` |
-| `share_clicked` | User shares result | `platform` |
+| Event                  | Trigger               | Properties               |
+| ---------------------- | --------------------- | ------------------------ |
+| `page_view`            | Auto (frontend)       | `path`, `referrer`       |
+| `upload_started`       | User selects image    | `file_type`, `file_size` |
+| `upload_completed`     | Upload to R2 succeeds | `duration_ms`            |
+| `processing_started`   | AI job begins         | `job_id`                 |
+| `processing_completed` | AI job finishes       | `job_id`, `duration_ms`  |
+| `reveal_viewed`        | User sees result      | `job_id`                 |
+| `checkout_started`     | User clicks purchase  | `price`, `type`          |
+| `purchase_completed`   | Stripe webhook        | `amount`, `type`         |
+| `download_initiated`   | User downloads HD     | `purchase_id`            |
+| `share_clicked`        | User shares result    | `platform`               |
 
 ### Environment Variables
 
@@ -174,22 +174,24 @@ POSTHOG_KEY=phc_...
 ### Previous Story Learnings
 
 **From Story 1.1:**
+
 - Effect service pattern established
 - Services go in `packages/api/src/services/`
 
 **From Story 1.4:**
+
 - Environment validation with Zod
 - Optional variables in dev, can be required in production
 
 ### File Locations
 
-| File | Purpose |
-|------|---------|
-| `apps/web/src/lib/posthog.tsx` | NEW: PostHog provider |
-| `apps/web/src/hooks/use-analytics.ts` | NEW: Analytics hook |
-| `packages/api/src/services/PostHogService.ts` | NEW: Backend service |
-| `packages/api/src/lib/env.ts` | UPDATE: Add POSTHOG_KEY |
-| `apps/web/.env.example` | UPDATE: Add VITE_POSTHOG_KEY |
+| File                                          | Purpose                      |
+| --------------------------------------------- | ---------------------------- |
+| `apps/web/src/lib/posthog.tsx`                | NEW: PostHog provider        |
+| `apps/web/src/hooks/use-analytics.ts`         | NEW: Analytics hook          |
+| `packages/api/src/services/PostHogService.ts` | NEW: Backend service         |
+| `packages/api/src/lib/env.ts`                 | UPDATE: Add POSTHOG_KEY      |
+| `apps/web/.env.example`                       | UPDATE: Add VITE_POSTHOG_KEY |
 
 ### Dependencies
 
@@ -228,21 +230,21 @@ N/A
 
 ### File List
 
-| File | Action |
-|------|--------|
-| `apps/web/src/lib/posthog.tsx` | Created |
-| `apps/web/src/hooks/use-analytics.ts` | Created |
-| `packages/api/src/services/PostHogService.ts` | Created |
-| `packages/api/src/services/index.ts` | Modified |
-| `packages/api/src/lib/env.ts` | Modified |
-| `apps/web/.env.example` | Modified |
+| File                                          | Action   |
+| --------------------------------------------- | -------- |
+| `apps/web/src/lib/posthog.tsx`                | Created  |
+| `apps/web/src/hooks/use-analytics.ts`         | Created  |
+| `packages/api/src/services/PostHogService.ts` | Created  |
+| `packages/api/src/services/index.ts`          | Modified |
+| `packages/api/src/lib/env.ts`                 | Modified |
+| `apps/web/.env.example`                       | Modified |
 
 ---
 
 ## Change Log
 
-| Date | Change |
-|------|--------|
+| Date       | Change                                   |
+| ---------- | ---------------------------------------- |
 | 2024-12-20 | Story created with comprehensive context |
 
 ---

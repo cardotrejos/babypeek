@@ -12,19 +12,19 @@
     "start": "bun run dist/index.js"
   },
   "dependencies": {
-    "hono": "catalog:",
+    "@babypeek/api": "workspace:*",
+    "@babypeek/db": "workspace:*",
     "dotenv": "catalog:",
-    "zod": "catalog:",
+    "hono": "catalog:",
     "nitro": "^3.0.1-alpha.1",
     "rollup": "^4.54.0",
     "workflow": "^4.0.1-beta.35",
-    "@babypeek/api": "workspace:*",
-    "@babypeek/db": "workspace:*"
+    "zod": "catalog:"
   },
   "devDependencies": {
+    "@babypeek/config": "workspace:*",
     "@types/bun": "catalog:",
-    "typescript": "catalog:",
     "tsdown": "^0.16.5",
-    "@babypeek/config": "workspace:*"
+    "typescript": "catalog:"
   }
 }

@@ -17,13 +17,13 @@ So that **I can upload and retrieve files securely**.
 
 ## Acceptance Criteria
 
-| # | Criterion | Test |
-|---|-----------|------|
-| AC1 | R2 credentials validated at startup | App fails fast with descriptive error if R2_* env vars missing |
-| AC2 | Generate presigned upload URLs | `R2Service.getUploadUrl(key, contentType)` returns valid URL |
-| AC3 | Generate presigned download URLs | `R2Service.getDownloadUrl(key, expiresIn)` returns valid URL |
+| #   | Criterion                            | Test                                                                     |
+| --- | ------------------------------------ | ------------------------------------------------------------------------ |
+| AC1 | R2 credentials validated at startup  | App fails fast with descriptive error if R2\_\* env vars missing         |
+| AC2 | Generate presigned upload URLs       | `R2Service.getUploadUrl(key, contentType)` returns valid URL             |
+| AC3 | Generate presigned download URLs     | `R2Service.getDownloadUrl(key, expiresIn)` returns valid URL             |
 | AC4 | URLs expire after specified duration | Upload URLs expire in 15min, download URLs configurable (default 7 days) |
-| AC5 | CORS configured for web domain | R2 bucket allows uploads from `localhost:3001` and production domain |
+| AC5 | CORS configured for web domain       | R2 bucket allows uploads from `localhost:3001` and production domain     |
 
 ---
 
@@ -80,6 +80,7 @@ So that **I can upload and retrieve files securely**.
   ```
 
 **Presigned URL Expiration:**
+
 - Upload URLs: 15 minutes (short for security)
 - Preview URLs: 15 minutes (until payment)
 - Purchased download URLs: 7 days
@@ -127,6 +128,7 @@ R2_BUCKET_NAME: z.string().min(1),
 ```
 
 **R2 Endpoint Format:**
+
 ```
 https://{ACCOUNT_ID}.r2.cloudflarestorage.com
 ```
@@ -149,29 +151,32 @@ https://{ACCOUNT_ID}.r2.cloudflarestorage.com
 ### Previous Story Learnings
 
 **From Story 1.1:**
+
 - Effect runtime helper exists at `packages/api/src/lib/effect-runtime.ts`
 - Typed errors pattern established in `packages/api/src/lib/errors.ts`
 - Use `handleEffect()` helper for route handlers
 
 **From Story 1.2:**
+
 - Environment variables loaded from `apps/server/.env`
 - Docker used for local services
 
 ### File Locations
 
-| File | Purpose |
-|------|---------|
-| `packages/api/src/services/R2Service.ts` | NEW: R2 Effect service |
-| `packages/api/src/routes/storage.ts` | NEW: Storage API routes |
-| `packages/api/src/lib/env.ts` | UPDATE: Add R2 env vars |
-| `apps/server/.env` | UPDATE: Add R2 credentials |
-| `apps/server/.env.example` | UPDATE: Add R2 placeholders |
+| File                                     | Purpose                     |
+| ---------------------------------------- | --------------------------- |
+| `packages/api/src/services/R2Service.ts` | NEW: R2 Effect service      |
+| `packages/api/src/routes/storage.ts`     | NEW: Storage API routes     |
+| `packages/api/src/lib/env.ts`            | UPDATE: Add R2 env vars     |
+| `apps/server/.env`                       | UPDATE: Add R2 credentials  |
+| `apps/server/.env.example`               | UPDATE: Add R2 placeholders |
 
 ### Testing Notes
 
 **Manual Testing (no credentials needed for local):**
 
 For local development without R2 credentials, you can:
+
 1. Use LocalStack S3 as a mock
 2. Skip R2 tests until credentials available
 3. Test the service interface with mocked responses
@@ -191,6 +196,7 @@ curl http://localhost:3000/api/storage/download-url/test/file.jpg
 ### Dependencies
 
 **Required packages:**
+
 ```bash
 cd packages/api
 bun add @aws-sdk/client-s3 @aws-sdk/s3-request-presigner
@@ -219,6 +225,7 @@ N/A
 - All TypeScript types compile cleanly
 
 **Code Review Fixes (2024-12-20):**
+
 - Fixed H1: Updated .env.example with R2 placeholder variables
 - Fixed H2: Added `checkR2Config()` and `isR2Configured()` helpers for fail-fast in production
 - Fixed M1: Cached S3 client to avoid recreation on every request
@@ -228,24 +235,24 @@ N/A
 
 ### File List
 
-| File | Action |
-|------|--------|
-| `packages/api/src/services/R2Service.ts` | Created |
-| `packages/api/src/services/index.ts` | Modified |
-| `packages/api/src/routes/storage.ts` | Created |
-| `packages/api/src/index.ts` | Modified |
-| `packages/api/src/lib/env.ts` | Modified |
-| `apps/server/src/index.ts` | Modified |
-| `apps/server/.env` | Modified |
-| `docs/r2-setup.md` | Created |
+| File                                     | Action   |
+| ---------------------------------------- | -------- |
+| `packages/api/src/services/R2Service.ts` | Created  |
+| `packages/api/src/services/index.ts`     | Modified |
+| `packages/api/src/routes/storage.ts`     | Created  |
+| `packages/api/src/index.ts`              | Modified |
+| `packages/api/src/lib/env.ts`            | Modified |
+| `apps/server/src/index.ts`               | Modified |
+| `apps/server/.env`                       | Modified |
+| `docs/r2-setup.md`                       | Created  |
 
 ---
 
 ## Change Log
 
-| Date | Change |
-|------|--------|
-| 2024-12-20 | Story created with comprehensive context |
+| Date       | Change                                                    |
+| ---------- | --------------------------------------------------------- |
+| 2024-12-20 | Story created with comprehensive context                  |
 | 2024-12-20 | Implementation complete - R2Service, routes, docs created |
 
 ---

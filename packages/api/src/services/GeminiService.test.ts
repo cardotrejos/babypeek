@@ -7,16 +7,16 @@
  * @see Story 4.2 - Gemini Imagen 3 Integration
  */
 
-import { describe, it, expect } from "vitest"
-import { Effect, Layer, Exit } from "effect"
+import { describe, it, expect } from "vitest";
+import { Effect, Layer, Exit } from "effect";
 import {
   GeminiService,
   GeminiServiceMock,
   GeminiServiceErrorMock,
   type GeneratedImage,
-} from "./GeminiService"
-import { GeminiError } from "../lib/errors"
-import { PostHogService, PostHogServiceMock } from "./PostHogService"
+} from "./GeminiService";
+import { GeminiError } from "../lib/errors";
+import { PostHogService, PostHogServiceMock } from "./PostHogService";
 
 // =============================================================================
 // Test Helpers
@@ -28,13 +28,10 @@ import { PostHogService, PostHogServiceMock } from "./PostHogService"
  */
 async function runWithLayer<A, E>(
   effect: Effect.Effect<A, E, GeminiService | PostHogService>,
-  layer: Layer.Layer<GeminiService, never, never>
+  layer: Layer.Layer<GeminiService, never, never>,
 ): Promise<Exit.Exit<A, E>> {
-  const program = effect.pipe(
-    Effect.provide(layer),
-    Effect.provide(PostHogServiceMock)
-  )
-  return Effect.runPromiseExit(program)
+  const program = effect.pipe(Effect.provide(layer), Effect.provide(PostHogServiceMock));
+  return Effect.runPromiseExit(program);
 }
 
 /**
@@ -42,7 +39,7 @@ async function runWithLayer<A, E>(
  */
 function createTestImageBuffer(): Buffer {
   // JPEG magic bytes: FF D8 FF
-  return Buffer.from([0xff, 0xd8, 0xff, 0xe0, 0x00, 0x10, 0x4a, 0x46, 0x49, 0x46])
+  return Buffer.from([0xff, 0xd8, 0xff, 0xe0, 0x00, 0x10, 0x4a, 0x46, 0x49, 0x46]);
 }
 
 // =============================================================================
@@ -53,123 +50,126 @@ describe("GeminiService", () => {
   describe("GeminiServiceMock", () => {
     it("should return mock image data for generateImage", async () => {
       const effect = Effect.gen(function* () {
-        const gemini = yield* GeminiService
-        return yield* gemini.generateImage(createTestImageBuffer(), "test prompt")
-      })
+        const gemini = yield* GeminiService;
+        return yield* gemini.generateImage(createTestImageBuffer(), "test prompt");
+      });
 
-      const exit = await runWithLayer(effect, GeminiServiceMock)
+      const exit = await runWithLayer(effect, GeminiServiceMock);
 
-      expect(Exit.isSuccess(exit)).toBe(true)
+      expect(Exit.isSuccess(exit)).toBe(true);
       if (Exit.isSuccess(exit)) {
-        const result = exit.value as GeneratedImage
-        expect(result.data).toBeInstanceOf(Buffer)
-        expect(result.mimeType).toBe("image/png") // Nano Banana Pro returns PNG
+        const result = exit.value as GeneratedImage;
+        expect(result.data).toBeInstanceOf(Buffer);
+        expect(result.mimeType).toBe("image/png"); // Nano Banana Pro returns PNG
       }
-    })
+    });
 
     it("should return mock image data for generateImageFromUrl", async () => {
       const effect = Effect.gen(function* () {
-        const gemini = yield* GeminiService
-        return yield* gemini.generateImageFromUrl("https://example.com/image.jpg", "test prompt")
-      })
+        const gemini = yield* GeminiService;
+        return yield* gemini.generateImageFromUrl("https://example.com/image.jpg", "test prompt");
+      });
 
-      const exit = await runWithLayer(effect, GeminiServiceMock)
+      const exit = await runWithLayer(effect, GeminiServiceMock);
 
-      expect(Exit.isSuccess(exit)).toBe(true)
+      expect(Exit.isSuccess(exit)).toBe(true);
       if (Exit.isSuccess(exit)) {
-        const result = exit.value as GeneratedImage
-        expect(result.data).toBeInstanceOf(Buffer)
-        expect(result.mimeType).toBe("image/png") // Nano Banana Pro returns PNG
+        const result = exit.value as GeneratedImage;
+        expect(result.data).toBeInstanceOf(Buffer);
+        expect(result.mimeType).toBe("image/png"); // Nano Banana Pro returns PNG
       }
-    })
-  })
+    });
+  });
 
   describe("GeminiServiceErrorMock", () => {
     it("should return RATE_LIMITED error", async () => {
       const effect = Effect.gen(function* () {
-        const gemini = yield* GeminiService
-        return yield* gemini.generateImage(createTestImageBuffer(), "test prompt")
-      })
+        const gemini = yield* GeminiService;
+        return yield* gemini.generateImage(createTestImageBuffer(), "test prompt");
+      });
 
-      const errorLayer = GeminiServiceErrorMock("RATE_LIMITED", "Rate limit exceeded")
-      const exit = await runWithLayer(effect, errorLayer)
+      const errorLayer = GeminiServiceErrorMock("RATE_LIMITED", "Rate limit exceeded");
+      const exit = await runWithLayer(effect, errorLayer);
 
-      expect(Exit.isFailure(exit)).toBe(true)
+      expect(Exit.isFailure(exit)).toBe(true);
       if (Exit.isFailure(exit)) {
-        const error = exit.cause
+        const error = exit.cause;
         // Extract the error from the cause
-        const failure = error as { _tag: string; error: GeminiError }
-        expect(failure._tag).toBe("Fail")
-        expect(failure.error._tag).toBe("GeminiError")
-        expect(failure.error.cause).toBe("RATE_LIMITED")
+        const failure = error as { _tag: string; error: GeminiError };
+        expect(failure._tag).toBe("Fail");
+        expect(failure.error._tag).toBe("GeminiError");
+        expect(failure.error.cause).toBe("RATE_LIMITED");
       }
-    })
+    });
 
     it("should return CONTENT_POLICY error", async () => {
       const effect = Effect.gen(function* () {
-        const gemini = yield* GeminiService
-        return yield* gemini.generateImage(createTestImageBuffer(), "test prompt")
-      })
+        const gemini = yield* GeminiService;
+        return yield* gemini.generateImage(createTestImageBuffer(), "test prompt");
+      });
 
-      const errorLayer = GeminiServiceErrorMock("CONTENT_POLICY", "Content blocked by safety filters")
-      const exit = await runWithLayer(effect, errorLayer)
+      const errorLayer = GeminiServiceErrorMock(
+        "CONTENT_POLICY",
+        "Content blocked by safety filters",
+      );
+      const exit = await runWithLayer(effect, errorLayer);
 
-      expect(Exit.isFailure(exit)).toBe(true)
+      expect(Exit.isFailure(exit)).toBe(true);
       if (Exit.isFailure(exit)) {
-        const failure = exit.cause as { _tag: string; error: GeminiError }
-        expect(failure.error.cause).toBe("CONTENT_POLICY")
+        const failure = exit.cause as { _tag: string; error: GeminiError };
+        expect(failure.error.cause).toBe("CONTENT_POLICY");
       }
-    })
+    });
 
     it("should return INVALID_IMAGE error", async () => {
       const effect = Effect.gen(function* () {
-        const gemini = yield* GeminiService
-        return yield* gemini.generateImage(createTestImageBuffer(), "test prompt")
-      })
+        const gemini = yield* GeminiService;
+        return yield* gemini.generateImage(createTestImageBuffer(), "test prompt");
+      });
 
-      const errorLayer = GeminiServiceErrorMock("INVALID_IMAGE", "Invalid input image")
-      const exit = await runWithLayer(effect, errorLayer)
+      const errorLayer = GeminiServiceErrorMock("INVALID_IMAGE", "Invalid input image");
+      const exit = await runWithLayer(effect, errorLayer);
 
-      expect(Exit.isFailure(exit)).toBe(true)
+      expect(Exit.isFailure(exit)).toBe(true);
       if (Exit.isFailure(exit)) {
-        const failure = exit.cause as { _tag: string; error: GeminiError }
-        expect(failure.error.cause).toBe("INVALID_IMAGE")
+        const failure = exit.cause as { _tag: string; error: GeminiError };
+        expect(failure.error.cause).toBe("INVALID_IMAGE");
       }
-    })
+    });
 
     it("should return API_ERROR error", async () => {
       const effect = Effect.gen(function* () {
-        const gemini = yield* GeminiService
-        return yield* gemini.generateImage(createTestImageBuffer(), "test prompt")
-      })
+        const gemini = yield* GeminiService;
+        return yield* gemini.generateImage(createTestImageBuffer(), "test prompt");
+      });
 
-      const errorLayer = GeminiServiceErrorMock("API_ERROR", "Generic API error")
-      const exit = await runWithLayer(effect, errorLayer)
+      const errorLayer = GeminiServiceErrorMock("API_ERROR", "Generic API error");
+      const exit = await runWithLayer(effect, errorLayer);
 
-      expect(Exit.isFailure(exit)).toBe(true)
+      expect(Exit.isFailure(exit)).toBe(true);
       if (Exit.isFailure(exit)) {
-        const failure = exit.cause as { _tag: string; error: GeminiError }
-        expect(failure.error.cause).toBe("API_ERROR")
+        const failure = exit.cause as { _tag: string; error: GeminiError };
+        expect(failure.error.cause).toBe("API_ERROR");
       }
-    })
+    });
 
     it("should return TIMEOUT error", async () => {
       const effect = Effect.gen(function* () {
-        const gemini = yield* GeminiService
-        return yield* gemini.generateImage(createTestImageBuffer(), "test prompt")
-      })
+        const gemini = yield* GeminiService;
+        return yield* gemini.generateImage(createTestImageBuffer(), "test prompt");
+      });
 
-      const errorLayer = GeminiServiceErrorMock("TIMEOUT", "Request timed out")
-      const exit = await runWithLayer(effect, errorLayer)
+      const errorLayer = GeminiServiceErrorMock("TIMEOUT", "Request timed out");
+      const exit = await runWithLayer(effect, errorLayer);
 
-      expect(Exit.isFailure(exit)).toBe(true)
+      expect(Exit.isFailure(exit)).toBe(true);
       if (Exit.isFailure(exit)) {
-        const failure = exit.cause as { _tag: string; error: GeminiError }
-        expect(failure.error.cause).toBe("TIMEOUT")
+        const failure = exit.cause as { _tag: string; error: GeminiError };
+        expect(failure.error.cause).toBe("TIMEOUT");
       }
-    })
-  })
-})
+    });
+  });
+});
 
 // =============================================================================
 // Prompt Template Tests
@@ -177,120 +177,120 @@ describe("GeminiService", () => {
 
 describe("Prompt Templates", () => {
   it("should export v3 prompt", async () => {
-    const { PROMPTS } = await import("../prompts/baby-portrait")
-    expect(PROMPTS.v3).toBeDefined()
-    expect(typeof PROMPTS.v3).toBe("string")
-    expect(PROMPTS.v3.length).toBeGreaterThan(100)
-  })
+    const { PROMPTS } = await import("../prompts/baby-portrait");
+    expect(PROMPTS.v3).toBeDefined();
+    expect(typeof PROMPTS.v3).toBe("string");
+    expect(PROMPTS.v3.length).toBeGreaterThan(100);
+  });
 
   it("should export v3-json prompt", async () => {
-    const { PROMPTS } = await import("../prompts/baby-portrait")
-    expect(PROMPTS["v3-json"]).toBeDefined()
-    expect(typeof PROMPTS["v3-json"]).toBe("string")
-    expect(PROMPTS["v3-json"].length).toBeGreaterThan(50)
-  })
+    const { PROMPTS } = await import("../prompts/baby-portrait");
+    expect(PROMPTS["v3-json"]).toBeDefined();
+    expect(typeof PROMPTS["v3-json"]).toBe("string");
+    expect(PROMPTS["v3-json"].length).toBeGreaterThan(50);
+  });
 
   it("should return default v4 prompt via getPrompt()", async () => {
-    const { getPrompt, PROMPTS, DEFAULT_PROMPT_VERSION } = await import("../prompts/baby-portrait")
+    const { getPrompt, PROMPTS, DEFAULT_PROMPT_VERSION } = await import("../prompts/baby-portrait");
     // Default is v4 (National Geographic / Linus Ekenstam style) for zoomed-out womb aesthetic
-    expect(DEFAULT_PROMPT_VERSION).toBe("v4")
-    expect(getPrompt()).toBe(PROMPTS.v4)
-  })
+    expect(DEFAULT_PROMPT_VERSION).toBe("v4");
+    expect(getPrompt()).toBe(PROMPTS.v4);
+  });
 
   it("should return specific version via getPrompt(version)", async () => {
-    const { getPrompt, PROMPTS } = await import("../prompts/baby-portrait")
-    expect(getPrompt("v3")).toBe(PROMPTS.v3)
-    expect(getPrompt("v3-json")).toBe(PROMPTS["v3-json"])
-  })
+    const { getPrompt, PROMPTS } = await import("../prompts/baby-portrait");
+    expect(getPrompt("v3")).toBe(PROMPTS.v3);
+    expect(getPrompt("v3-json")).toBe(PROMPTS["v3-json"]);
+  });
 
   it("should contain required prompt elements", async () => {
-    const { PROMPTS } = await import("../prompts/baby-portrait")
+    const { PROMPTS } = await import("../prompts/baby-portrait");
 
     // v3 should contain in-utero specific elements
-    expect(PROMPTS.v3).toContain("ultrasound")
-    expect(PROMPTS.v3).toContain("in-utero")
-    expect(PROMPTS.v3).toContain("anatomy lock")
-    expect(PROMPTS.v3).toContain("subsurface scattering")
-    expect(PROMPTS.v3).toContain("amniotic fluid")
-    expect(PROMPTS.v3).toContain("Negative prompt")
+    expect(PROMPTS.v3).toContain("ultrasound");
+    expect(PROMPTS.v3).toContain("in-utero");
+    expect(PROMPTS.v3).toContain("anatomy lock");
+    expect(PROMPTS.v3).toContain("subsurface scattering");
+    expect(PROMPTS.v3).toContain("amniotic fluid");
+    expect(PROMPTS.v3).toContain("Negative prompt");
 
     // v3-json should contain JSON structure
-    expect(PROMPTS["v3-json"]).toContain("edit_ultrasound_to_photoreal_inutero_photo")
-    expect(PROMPTS["v3-json"]).toContain("referencePriority")
-    expect(PROMPTS["v3-json"]).toContain("constraints")
-  })
+    expect(PROMPTS["v3-json"]).toContain("edit_ultrasound_to_photoreal_inutero_photo");
+    expect(PROMPTS["v3-json"]).toContain("referencePriority");
+    expect(PROMPTS["v3-json"]).toContain("constraints");
+  });
 
   it("should provide v3 JSON prompt as object and string", async () => {
-    const { getV3JsonPrompt, getV3JsonPromptAsString } = await import("../prompts/baby-portrait")
-    
-    const jsonObj = getV3JsonPrompt()
-    expect(jsonObj.task).toBe("edit_ultrasound_to_photoreal_inutero_photo")
-    expect(jsonObj.constraints.keepPose).toBe(true)
-    expect(jsonObj.negatives).toContain("plastic skin")
-    
-    const jsonStr = getV3JsonPromptAsString()
-    expect(jsonStr).toContain("edit_ultrasound_to_photoreal_inutero_photo")
-    expect(JSON.parse(jsonStr)).toEqual(jsonObj)
-  })
+    const { getV3JsonPrompt, getV3JsonPromptAsString } = await import("../prompts/baby-portrait");
+
+    const jsonObj = getV3JsonPrompt();
+    expect(jsonObj.task).toBe("edit_ultrasound_to_photoreal_inutero_photo");
+    expect(jsonObj.constraints.keepPose).toBe(true);
+    expect(jsonObj.negatives).toContain("plastic skin");
+
+    const jsonStr = getV3JsonPromptAsString();
+    expect(jsonStr).toContain("edit_ultrasound_to_photoreal_inutero_photo");
+    expect(JSON.parse(jsonStr)).toEqual(jsonObj);
+  });
 
   it("should provide upscale prompt", async () => {
-    const { getUpscalePrompt } = await import("../prompts/baby-portrait")
-    const upscale = getUpscalePrompt()
-    expect(upscale).toContain("Upscale")
-    expect(upscale).toContain("4K")
-    expect(upscale).toContain("Preserve")
-  })
+    const { getUpscalePrompt } = await import("../prompts/baby-portrait");
+    const upscale = getUpscalePrompt();
+    expect(upscale).toContain("Upscale");
+    expect(upscale).toContain("4K");
+    expect(upscale).toContain("Preserve");
+  });
 
   it("should provide prompt metadata", async () => {
-    const { getPromptMetadata } = await import("../prompts/baby-portrait")
-    
+    const { getPromptMetadata } = await import("../prompts/baby-portrait");
+
     // Check metadata - both are in-utero style
-    expect(getPromptMetadata("v3").style).toBe("in-utero")
-    expect(getPromptMetadata("v3").format).toBe("prose")
-    expect(getPromptMetadata("v3-json").style).toBe("in-utero")
-    expect(getPromptMetadata("v3-json").format).toBe("json")
-  })
+    expect(getPromptMetadata("v3").style).toBe("in-utero");
+    expect(getPromptMetadata("v3").format).toBe("prose");
+    expect(getPromptMetadata("v3-json").style).toBe("in-utero");
+    expect(getPromptMetadata("v3-json").format).toBe("json");
+  });
 
   it("should list available versions", async () => {
-    const { getAvailableVersions } = await import("../prompts/baby-portrait")
-    const versions = getAvailableVersions()
-    expect(versions).toContain("v3")
-    expect(versions).toContain("v3-json")
-    expect(versions).toContain("v4")
-    expect(versions).toContain("v4-json")
-    expect(versions.length).toBe(4)
-  })
+    const { getAvailableVersions } = await import("../prompts/baby-portrait");
+    const versions = getAvailableVersions();
+    expect(versions).toContain("v3");
+    expect(versions).toContain("v3-json");
+    expect(versions).toContain("v4");
+    expect(versions).toContain("v4-json");
+    expect(versions.length).toBe(4);
+  });
 
   it("should export v4 prompt (National Geographic style)", async () => {
-    const { PROMPTS } = await import("../prompts/baby-portrait")
-    expect(PROMPTS.v4).toBeDefined()
-    expect(typeof PROMPTS.v4).toBe("string")
-    expect(PROMPTS.v4.length).toBeGreaterThan(100)
+    const { PROMPTS } = await import("../prompts/baby-portrait");
+    expect(PROMPTS.v4).toBeDefined();
+    expect(typeof PROMPTS.v4).toBe("string");
+    expect(PROMPTS.v4.length).toBeGreaterThan(100);
     // v4 specific elements
-    expect(PROMPTS.v4).toContain("National Geographic")
-    expect(PROMPTS.v4).toContain("womb membrane")
-    expect(PROMPTS.v4).toContain("DO NOT crop")
-    expect(PROMPTS.v4).toContain("Dark void")
-  })
+    expect(PROMPTS.v4).toContain("National Geographic");
+    expect(PROMPTS.v4).toContain("womb membrane");
+    expect(PROMPTS.v4).toContain("DO NOT crop");
+    expect(PROMPTS.v4).toContain("Dark void");
+  });
 
   it("should export v4-json prompt", async () => {
-    const { PROMPTS } = await import("../prompts/baby-portrait")
-    expect(PROMPTS["v4-json"]).toBeDefined()
-    expect(typeof PROMPTS["v4-json"]).toBe("string")
-    const parsed = JSON.parse(PROMPTS["v4-json"])
-    expect(parsed.task).toBe("edit_ultrasound_to_national_geographic_inutero_photo")
-    expect(parsed.critical_composition).toBeDefined()
-    expect(parsed.environment.wombMembrane).toBeDefined()
-  })
+    const { PROMPTS } = await import("../prompts/baby-portrait");
+    expect(PROMPTS["v4-json"]).toBeDefined();
+    expect(typeof PROMPTS["v4-json"]).toBe("string");
+    const parsed = JSON.parse(PROMPTS["v4-json"]);
+    expect(parsed.task).toBe("edit_ultrasound_to_national_geographic_inutero_photo");
+    expect(parsed.critical_composition).toBeDefined();
+    expect(parsed.environment.wombMembrane).toBeDefined();
+  });
 
   it("should provide v4 metadata", async () => {
-    const { getPromptMetadata } = await import("../prompts/baby-portrait")
-    expect(getPromptMetadata("v4").style).toBe("national-geographic")
-    expect(getPromptMetadata("v4").format).toBe("prose")
-    expect(getPromptMetadata("v4-json").style).toBe("national-geographic")
-    expect(getPromptMetadata("v4-json").format).toBe("json")
-  })
-})
+    const { getPromptMetadata } = await import("../prompts/baby-portrait");
+    expect(getPromptMetadata("v4").style).toBe("national-geographic");
+    expect(getPromptMetadata("v4").format).toBe("prose");
+    expect(getPromptMetadata("v4-json").style).toBe("national-geographic");
+    expect(getPromptMetadata("v4-json").format).toBe("json");
+  });
+});
 
 // =============================================================================
 // Gemini Client Tests
@@ -298,47 +298,47 @@ describe("Prompt Templates", () => {
 
 describe("Gemini Client Utilities", () => {
   it("should convert buffer to base64", async () => {
-    const { bufferToBase64 } = await import("../lib/gemini")
-    const buffer = Buffer.from("test data")
-    const base64 = bufferToBase64(buffer)
-    expect(base64).toBe(buffer.toString("base64"))
-  })
+    const { bufferToBase64 } = await import("../lib/gemini");
+    const buffer = Buffer.from("test data");
+    const base64 = bufferToBase64(buffer);
+    expect(base64).toBe(buffer.toString("base64"));
+  });
 
   it("should convert base64 back to buffer", async () => {
-    const { base64ToBuffer } = await import("../lib/gemini")
-    const originalData = "test data"
-    const base64 = Buffer.from(originalData).toString("base64")
-    const buffer = base64ToBuffer(base64)
-    expect(buffer.toString()).toBe(originalData)
-  })
+    const { base64ToBuffer } = await import("../lib/gemini");
+    const originalData = "test data";
+    const base64 = Buffer.from(originalData).toString("base64");
+    const buffer = base64ToBuffer(base64);
+    expect(buffer.toString()).toBe(originalData);
+  });
 
   it("should infer JPEG mime type", async () => {
-    const { inferMimeType } = await import("../lib/gemini")
+    const { inferMimeType } = await import("../lib/gemini");
     // JPEG magic bytes
-    const jpegBuffer = Buffer.from([0xff, 0xd8, 0xff, 0xe0])
-    expect(inferMimeType(jpegBuffer)).toBe("image/jpeg")
-  })
+    const jpegBuffer = Buffer.from([0xff, 0xd8, 0xff, 0xe0]);
+    expect(inferMimeType(jpegBuffer)).toBe("image/jpeg");
+  });
 
   it("should infer PNG mime type", async () => {
-    const { inferMimeType } = await import("../lib/gemini")
+    const { inferMimeType } = await import("../lib/gemini");
     // PNG magic bytes
-    const pngBuffer = Buffer.from([0x89, 0x50, 0x4e, 0x47])
-    expect(inferMimeType(pngBuffer)).toBe("image/png")
-  })
+    const pngBuffer = Buffer.from([0x89, 0x50, 0x4e, 0x47]);
+    expect(inferMimeType(pngBuffer)).toBe("image/png");
+  });
 
   it("should infer WebP mime type", async () => {
-    const { inferMimeType } = await import("../lib/gemini")
+    const { inferMimeType } = await import("../lib/gemini");
     // WebP magic bytes (RIFF)
-    const webpBuffer = Buffer.from([0x52, 0x49, 0x46, 0x46])
-    expect(inferMimeType(webpBuffer)).toBe("image/webp")
-  })
+    const webpBuffer = Buffer.from([0x52, 0x49, 0x46, 0x46]);
+    expect(inferMimeType(webpBuffer)).toBe("image/webp");
+  });
 
   it("should default to JPEG for unknown formats", async () => {
-    const { inferMimeType } = await import("../lib/gemini")
-    const unknownBuffer = Buffer.from([0x00, 0x00, 0x00, 0x00])
-    expect(inferMimeType(unknownBuffer)).toBe("image/jpeg")
-  })
-})
+    const { inferMimeType } = await import("../lib/gemini");
+    const unknownBuffer = Buffer.from([0x00, 0x00, 0x00, 0x00]);
+    expect(inferMimeType(unknownBuffer)).toBe("image/jpeg");
+  });
+});
 
 // =============================================================================
 // GeminiError Tests
@@ -349,21 +349,21 @@ describe("GeminiError", () => {
     const error = new GeminiError({
       cause: "RATE_LIMITED",
       message: "Rate limit exceeded",
-    })
-    expect(error._tag).toBe("GeminiError")
-    expect(error.cause).toBe("RATE_LIMITED")
-    expect(error.message).toBe("Rate limit exceeded")
-  })
+    });
+    expect(error._tag).toBe("GeminiError");
+    expect(error.cause).toBe("RATE_LIMITED");
+    expect(error.message).toBe("Rate limit exceeded");
+  });
 
   it("should preserve originalError for Sentry logging", () => {
-    const originalError = new Error("SDK error details")
+    const originalError = new Error("SDK error details");
     const error = new GeminiError({
       cause: "API_ERROR",
       message: "Gemini API error",
       originalError,
-    })
-    expect(error.originalError).toBe(originalError)
-  })
+    });
+    expect(error.originalError).toBe(originalError);
+  });
 
   it("should create TIMEOUT error with expected message format", () => {
     // Tests that the TIMEOUT cause works as expected
@@ -371,41 +371,41 @@ describe("GeminiError", () => {
     const error = new GeminiError({
       cause: "TIMEOUT",
       message: "Gemini API timed out after 60 seconds",
-    })
-    expect(error._tag).toBe("GeminiError")
-    expect(error.cause).toBe("TIMEOUT")
-    expect(error.message).toContain("60 seconds")
-  })
+    });
+    expect(error._tag).toBe("GeminiError");
+    expect(error.cause).toBe("TIMEOUT");
+    expect(error.message).toContain("60 seconds");
+  });
 
   it("should create CONTENT_POLICY error", () => {
     const error = new GeminiError({
       cause: "CONTENT_POLICY",
       message: "Content blocked",
-    })
-    expect(error.cause).toBe("CONTENT_POLICY")
-  })
+    });
+    expect(error.cause).toBe("CONTENT_POLICY");
+  });
 
   it("should create INVALID_IMAGE error", () => {
     const error = new GeminiError({
       cause: "INVALID_IMAGE",
       message: "Invalid image format",
-    })
-    expect(error.cause).toBe("INVALID_IMAGE")
-  })
+    });
+    expect(error.cause).toBe("INVALID_IMAGE");
+  });
 
   it("should create API_ERROR error", () => {
     const error = new GeminiError({
       cause: "API_ERROR",
       message: "API call failed",
-    })
-    expect(error.cause).toBe("API_ERROR")
-  })
+    });
+    expect(error.cause).toBe("API_ERROR");
+  });
 
   it("should create TIMEOUT error", () => {
     const error = new GeminiError({
       cause: "TIMEOUT",
       message: "Request timed out",
-    })
-    expect(error.cause).toBe("TIMEOUT")
-  })
-})
+    });
+    expect(error.cause).toBe("TIMEOUT");
+  });
+});

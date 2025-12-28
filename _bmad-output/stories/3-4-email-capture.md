@@ -109,6 +109,7 @@ interface UploadFormProps {
 ### Design System Alignment
 
 Per UX specification and existing components:
+
 - Input height: 48px minimum (touch target)
 - Border radius: 12px (rounded-[12px])
 - Focus ring: 3px coral (`focus-visible:ring-[3px] focus-visible:ring-coral`)
@@ -118,11 +119,11 @@ Per UX specification and existing components:
 
 ### Error Copy (Warm Tone)
 
-| Error | Message |
-|-------|---------|
-| Empty | "We'll need your email to send you the result" |
+| Error          | Message                                                   |
+| -------------- | --------------------------------------------------------- |
+| Empty          | "We'll need your email to send you the result"            |
 | Invalid format | "That doesn't look quite right. Please check your email." |
-| Missing @ | "Please include an @ in your email address" |
+| Missing @      | "Please include an @ in your email address"               |
 
 ### Accessibility Requirements (WCAG 2.1 AA)
 
@@ -135,11 +136,13 @@ Per UX specification and existing components:
 ### Integration Points
 
 **With Story 3.1/3.2/3.3 (ImageUploader):**
+
 - UploadForm wraps EmailInput + ImageUploader
 - Form state manages both email and file selection
 - ProcessingIndicator shows during HEIC conversion/compression
 
 **With Story 3.5 (Upload to R2):**
+
 - UploadForm.onSubmit provides {email, file} to parent
 - Parent initiates presigned URL request with email
 
@@ -217,12 +220,14 @@ Claude Opus 4
 ### File List
 
 **New Files:**
+
 - `apps/web/src/components/upload/email-input.tsx`
 - `apps/web/src/components/upload/email-input.test.tsx`
 - `apps/web/src/components/upload/upload-form.tsx`
 - `apps/web/src/components/upload/upload-form.test.tsx`
 
 **Modified Files:**
+
 - `apps/web/src/hooks/use-analytics.ts` - Added email analytics event types
 - `apps/web/src/components/upload/index.ts` - Added exports
 
@@ -237,6 +242,7 @@ Claude Opus 4
 ### Issues Found
 
 No issues found in Story 3.4 implementation. All acceptance criteria met:
+
 - ✅ AC-1: Email validation on blur
 - ✅ AC-2: Warm error messages
 - ✅ AC-3: type="email" for mobile
@@ -252,8 +258,8 @@ No issues found in Story 3.4 implementation. All acceptance criteria met:
 
 ## Change Log
 
-| Date | Change |
-|------|--------|
-| 2025-12-21 | Story created for sprint implementation |
-| 2025-12-21 | Implemented all tasks, 30 tests passing |
+| Date       | Change                                      |
+| ---------- | ------------------------------------------- |
+| 2025-12-21 | Story created for sprint implementation     |
+| 2025-12-21 | Implemented all tasks, 30 tests passing     |
 | 2025-12-21 | **Code Review:** APPROVED - No issues found |

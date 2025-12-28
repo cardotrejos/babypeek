@@ -56,6 +56,7 @@ so that **my family can see it instantly**.
 ### Existing Code to Leverage
 
 **RevealUI handleShare placeholder** (apps/web/src/routes/result.$resultId.tsx):
+
 ```typescript
 const handleShare = useCallback(() => {
   if (isPostHogConfigured()) {
@@ -69,6 +70,7 @@ const handleShare = useCallback(() => {
 ```
 
 **PostHog tracking pattern** (already in use):
+
 ```typescript
 if (isPostHogConfigured()) {
   posthog.capture("share_clicked", {
@@ -140,6 +142,7 @@ export default ShareButtons
 ### Response Format
 
 **WhatsApp URL Format:**
+
 ```
 https://wa.me/?text=Look%20at%20this%20AI%20baby%20portrait%20I%20created!%20%F0%9F%91%B6%E2%9C%A8%20https%3A%2F%2Fbabypeek.com%2Fshare%2F{uploadId}
 ```
@@ -163,6 +166,7 @@ apps/web/src/components/reveal/
 ### Parallel Work
 
 Can be developed in parallel with:
+
 - Story 8.2 (iMessage Share)
 - Story 8.3 (Copy Link)
 

@@ -1,9 +1,9 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router"
-import { useQuery } from "@tanstack/react-query"
-import { getSession } from "@/lib/session"
-import { DownloadButton, DownloadExpired } from "@/components/download"
-import { API_BASE_URL } from "@/lib/api-config"
-import { posthog, isPostHogConfigured } from "@/lib/posthog"
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
+import { getSession } from "@/lib/session";
+import { DownloadButton, DownloadExpired } from "@/components/download";
+import { API_BASE_URL } from "@/lib/api-config";
+import { posthog, isPostHogConfigured } from "@/lib/posthog";
 
 /**
  * Download Page Route
@@ -18,24 +18,24 @@ import { posthog, isPostHogConfigured } from "@/lib/posthog"
 
 export const Route = createFileRoute("/download/$uploadId")({
   component: DownloadPage,
-})
+});
 
 interface DownloadStatus {
-  canDownload: boolean
-  isExpired: boolean
-  expiresAt: string | null
-  daysRemaining: number | null
+  canDownload: boolean;
+  isExpired: boolean;
+  expiresAt: string | null;
+  daysRemaining: number | null;
   error?: {
-    code: string
-    message?: string
-    expiredAt?: string
-  }
+    code: string;
+    message?: string;
+    expiredAt?: string;
+  };
 }
 
 function DownloadPage() {
-  const { uploadId } = Route.useParams()
-  const navigate = useNavigate()
-  const sessionToken = getSession(uploadId)
+  const { uploadId } = Route.useParams();
+  const navigate = useNavigate();
+  const sessionToken = getSession(uploadId);
 
   // Check download eligibility
   const { data, isLoading, error } = useQuery<DownloadStatus>({
@@ -48,34 +48,31 @@ function DownloadPage() {
           expiresAt: null,
           daysRemaining: null,
           error: { code: "SESSION_NOT_FOUND", message: "Session not found" },
-        }
+        };
       }
 
-      const response = await fetch(
-        `${API_BASE_URL}/api/download/${uploadId}/status`,
-        {
-          headers: {
-            "Content-Type": "application/json",
-            "X-Session-Token": sessionToken,
-          },
-        }
-      )
+      const response = await fetch(`${API_BASE_URL}/api/download/${uploadId}/status`, {
+        headers: {
+          "Content-Type": "application/json",
+          "X-Session-Token": sessionToken,
+        },
+      });
 
-      const result = await response.json()
+      const result = await response.json();
 
       // AC-5: Track expiry view
       if (result.isExpired && isPostHogConfigured()) {
         posthog.capture("download_expired_viewed", {
           upload_id: uploadId,
-        })
+        });
       }
 
-      return result
+      return result;
     },
     enabled: !!sessionToken,
     staleTime: 30 * 1000, // 30 seconds
     retry: 1,
-  })
+  });
 
   // Loading state
   if (isLoading) {
@@ -83,7 +80,7 @@ function DownloadPage() {
       <div className="min-h-screen bg-cream flex items-center justify-center">
         <div className="size-12 animate-spin rounded-full border-4 border-coral border-t-transparent" />
       </div>
-    )
+    );
   }
 
   // No session - user may have come from a different device
@@ -96,13 +93,10 @@ function DownloadPage() {
               <span className="text-3xl">🔒</span>
             </div>
           </div>
-          <h1 className="font-display text-2xl text-charcoal">
-            Session Not Found
-          </h1>
+          <h1 className="font-display text-2xl text-charcoal">Session Not Found</h1>
           <p className="text-warm-gray">
-            We couldn't find your download session. This usually happens if
-            you're on a different device. Try accessing the link from your
-            email.
+            We couldn't find your download session. This usually happens if you're on a different
+            device. Try accessing the link from your email.
           </p>
           <button
             onClick={() => navigate({ to: "/" })}
@@ -112,23 +106,19 @@ function DownloadPage() {
           </button>
         </div>
       </div>
-    )
+    );
   }
 
   // AC-3: Expired state
   if (data?.isExpired) {
-    return (
-      <DownloadExpired
-        expiresAt={data.expiresAt || data.error?.expiredAt || null}
-      />
-    )
+    return <DownloadExpired expiresAt={data.expiresAt || data.error?.expiredAt || null} />;
   }
 
   // Error state (no purchase, not found, etc.)
   if (error || !data?.canDownload) {
     const errorMessage =
       data?.error?.message ||
-      (error instanceof Error ? error.message : "Unable to access download")
+      (error instanceof Error ? error.message : "Unable to access download");
 
     return (
       <div className="min-h-screen bg-cream flex items-center justify-center p-4">
@@ -138,9 +128,7 @@ function DownloadPage() {
               <span className="text-3xl">😔</span>
             </div>
           </div>
-          <h1 className="font-display text-2xl text-charcoal">
-            Download Unavailable
-          </h1>
+          <h1 className="font-display text-2xl text-charcoal">Download Unavailable</h1>
           <p className="text-warm-gray">{errorMessage}</p>
           <button
             onClick={() => navigate({ to: "/" })}
@@ -150,7 +138,7 @@ function DownloadPage() {
           </button>
         </div>
       </div>
-    )
+    );
   }
 
   // AC-1, AC-2: Download available
@@ -178,9 +166,8 @@ function DownloadPage() {
               posthog.capture("redownload_completed", {
                 upload_id: uploadId,
                 is_redownload: true,
-                days_since_purchase:
-                  data.daysRemaining !== null ? 30 - data.daysRemaining : null,
-              })
+                days_since_purchase: data.daysRemaining !== null ? 30 - data.daysRemaining : null,
+              });
             }
           }}
         />
@@ -188,8 +175,7 @@ function DownloadPage() {
         {/* Expiry warning for last 7 days */}
         {data.daysRemaining !== null && data.daysRemaining < 7 && (
           <p className="text-sm text-amber-600">
-            ⏰ Only {data.daysRemaining} day{data.daysRemaining === 1 ? "" : "s"}{" "}
-            left to download
+            ⏰ Only {data.daysRemaining} day{data.daysRemaining === 1 ? "" : "s"} left to download
           </p>
         )}
 
@@ -204,5 +190,5 @@ function DownloadPage() {
         </p>
       </div>
     </div>
-  )
+  );
 }

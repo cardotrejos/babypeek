@@ -1,14 +1,16 @@
-import { useState, useRef, useCallback, useEffect } from "react"
-import { ChevronLeft, ChevronRight } from "lucide-react"
-import { cn } from "@/lib/utils"
+import { useState, useRef, useCallback, useEffect } from "react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface BeforeAfterSliderProps {
-  beforeImage: string
-  afterImage: string
-  beforeLabel?: string
-  afterLabel?: string
-  initialPosition?: number // 0-100
-  className?: string
+  beforeImage: string;
+  afterImage: string;
+  beforeLabel?: string;
+  afterLabel?: string;
+  initialPosition?: number; // 0-100
+  /** Disable image protection (allow right-click, drag) - for paid users */
+  allowImageSave?: boolean;
+  className?: string;
 }
 
 /**
@@ -27,113 +29,114 @@ export function BeforeAfterSlider({
   beforeLabel = "Original",
   afterLabel = "AI Generated",
   initialPosition = 50,
+  allowImageSave = false,
   className,
 }: BeforeAfterSliderProps) {
-  const [position, setPosition] = useState(initialPosition)
-  const [isDragging, setIsDragging] = useState(false)
-  const containerRef = useRef<HTMLDivElement>(null)
+  const [position, setPosition] = useState(initialPosition);
+  const [isDragging, setIsDragging] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   // Calculate position from pointer event (Task 2)
   const calculatePosition = useCallback((clientX: number) => {
-    if (!containerRef.current) return 50
+    if (!containerRef.current) return 50;
 
-    const rect = containerRef.current.getBoundingClientRect()
-    const x = clientX - rect.left
-    const percentage = (x / rect.width) * 100
-    return Math.max(0, Math.min(100, percentage))
-  }, [])
+    const rect = containerRef.current.getBoundingClientRect();
+    const x = clientX - rect.left;
+    const percentage = (x / rect.width) * 100;
+    return Math.max(0, Math.min(100, percentage));
+  }, []);
 
   // Mouse handlers (Task 2)
   const handleMouseDown = useCallback(
     (e: React.MouseEvent) => {
-      e.preventDefault()
-      setIsDragging(true)
-      setPosition(calculatePosition(e.clientX))
+      e.preventDefault();
+      setIsDragging(true);
+      setPosition(calculatePosition(e.clientX));
     },
-    [calculatePosition]
-  )
+    [calculatePosition],
+  );
 
   const handleMouseMove = useCallback(
     (e: MouseEvent) => {
-      if (!isDragging) return
-      setPosition(calculatePosition(e.clientX))
+      if (!isDragging) return;
+      setPosition(calculatePosition(e.clientX));
     },
-    [isDragging, calculatePosition]
-  )
+    [isDragging, calculatePosition],
+  );
 
   const handleMouseUp = useCallback(() => {
-    setIsDragging(false)
-  }, [])
+    setIsDragging(false);
+  }, []);
 
   // Touch handlers (Task 2)
   const handleTouchStart = useCallback(
     (e: React.TouchEvent) => {
-      setIsDragging(true)
-      setPosition(calculatePosition(e.touches[0].clientX))
+      setIsDragging(true);
+      setPosition(calculatePosition(e.touches[0].clientX));
     },
-    [calculatePosition]
-  )
+    [calculatePosition],
+  );
 
   const handleTouchMove = useCallback(
     (e: React.TouchEvent) => {
-      if (!isDragging) return
-      e.preventDefault() // Prevent scrolling while dragging
-      setPosition(calculatePosition(e.touches[0].clientX))
+      if (!isDragging) return;
+      e.preventDefault(); // Prevent scrolling while dragging
+      setPosition(calculatePosition(e.touches[0].clientX));
     },
-    [isDragging, calculatePosition]
-  )
+    [isDragging, calculatePosition],
+  );
 
   // Keyboard handlers (Task 4)
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
-    const step = 5 // 5% per key press
+    const step = 5; // 5% per key press
     switch (e.key) {
       case "ArrowLeft":
-        setPosition((p) => Math.max(0, p - step))
-        e.preventDefault()
-        break
+        setPosition((p) => Math.max(0, p - step));
+        e.preventDefault();
+        break;
       case "ArrowRight":
-        setPosition((p) => Math.min(100, p + step))
-        e.preventDefault()
-        break
+        setPosition((p) => Math.min(100, p + step));
+        e.preventDefault();
+        break;
       case "Home":
-        setPosition(0)
-        e.preventDefault()
-        break
+        setPosition(0);
+        e.preventDefault();
+        break;
       case "End":
-        setPosition(100)
-        e.preventDefault()
-        break
+        setPosition(100);
+        e.preventDefault();
+        break;
     }
-  }, [])
+  }, []);
 
   // Add/remove global event listeners for drag (Task 2)
   const handleDocumentTouchMove = useCallback(
     (e: TouchEvent) => {
-      if (!isDragging) return
-      e.preventDefault()
-      const touch = e.touches[0]
+      if (!isDragging) return;
+      e.preventDefault();
+      const touch = e.touches[0];
       if (touch) {
-        setPosition(calculatePosition(touch.clientX))
+        setPosition(calculatePosition(touch.clientX));
       }
     },
-    [isDragging, calculatePosition]
-  )
+    [isDragging, calculatePosition],
+  );
 
   useEffect(() => {
     if (isDragging) {
-      document.addEventListener("mousemove", handleMouseMove)
-      document.addEventListener("touchmove", handleDocumentTouchMove, { passive: false })
-      document.addEventListener("mouseup", handleMouseUp)
-      document.addEventListener("touchend", handleMouseUp)
+      document.addEventListener("mousemove", handleMouseMove);
+      document.addEventListener("touchmove", handleDocumentTouchMove, { passive: false });
+      document.addEventListener("mouseup", handleMouseUp);
+      document.addEventListener("touchend", handleMouseUp);
     }
 
     return () => {
-      document.removeEventListener("mousemove", handleMouseMove)
-      document.removeEventListener("touchmove", handleDocumentTouchMove)
-      document.removeEventListener("mouseup", handleMouseUp)
-      document.removeEventListener("touchend", handleMouseUp)
-    }
-  }, [isDragging, handleMouseMove, handleDocumentTouchMove, handleMouseUp])
+      document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("touchmove", handleDocumentTouchMove);
+      document.removeEventListener("mouseup", handleMouseUp);
+      document.removeEventListener("touchend", handleMouseUp);
+    };
+  }, [isDragging, handleMouseMove, handleDocumentTouchMove, handleMouseUp]);
 
   return (
     <div
@@ -141,12 +144,14 @@ export function BeforeAfterSlider({
       className={cn(
         "relative w-full aspect-[4/3] rounded-2xl overflow-hidden cursor-ew-resize select-none",
         "focus:outline-none focus-visible:ring-2 focus-visible:ring-coral focus-visible:ring-offset-2",
-        className
+        className,
       )}
       onMouseDown={handleMouseDown}
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onKeyDown={handleKeyDown}
+      // Prevent right-click context menu
+      onContextMenu={(e) => !allowImageSave && e.preventDefault()}
       tabIndex={0}
       role="slider"
       aria-label="Image comparison slider"
@@ -192,7 +197,7 @@ export function BeforeAfterSlider({
             "w-12 h-12 rounded-full bg-white shadow-lg", // 48px = w-12
             "flex items-center justify-center",
             "cursor-grab transition-transform duration-150 will-change-transform",
-            isDragging && "cursor-grabbing scale-110"
+            isDragging && "cursor-grabbing scale-110",
           )}
         >
           <div className="flex gap-0.5">
@@ -210,5 +215,5 @@ export function BeforeAfterSlider({
         {afterLabel}
       </div>
     </div>
-  )
+  );
 }

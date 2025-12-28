@@ -17,13 +17,13 @@ So that **I'm alerted to production errors immediately**.
 
 ## Acceptance Criteria
 
-| # | Criterion | Test |
-|---|-----------|------|
-| AC1 | Sentry DSN validated in environment | App warns (dev) or fails (prod) if SENTRY_DSN missing |
-| AC2 | Unhandled errors reported to Sentry with stack trace | Throw error → appears in Sentry dashboard |
-| AC3 | Source maps uploaded for readable traces | Stack traces show original TypeScript code |
-| AC4 | User context (session token, not PII) attached | Errors include session token for correlation |
-| AC5 | Breadcrumbs show recent actions | Error includes last 5 user actions |
+| #   | Criterion                                            | Test                                                  |
+| --- | ---------------------------------------------------- | ----------------------------------------------------- |
+| AC1 | Sentry DSN validated in environment                  | App warns (dev) or fails (prod) if SENTRY_DSN missing |
+| AC2 | Unhandled errors reported to Sentry with stack trace | Throw error → appears in Sentry dashboard             |
+| AC3 | Source maps uploaded for readable traces             | Stack traces show original TypeScript code            |
+| AC4 | User context (session token, not PII) attached       | Errors include session token for correlation          |
+| AC5 | Breadcrumbs show recent actions                      | Error includes last 5 user actions                    |
 
 ---
 
@@ -98,7 +98,7 @@ export function initSentry() {
     tracesSampleRate: 0.1, // 10% of transactions
     replaysSessionSampleRate: 0.1,
     replaysOnErrorSampleRate: 1.0, // 100% on errors
-    
+
     // Filter out PII
     beforeSend(event) {
       // Remove email from user context
@@ -165,7 +165,7 @@ export function initSentryBackend() {
 
 export const sentryMiddleware = createMiddleware(async (c, next) => {
   const sessionToken = c.req.header("X-Session-Token")
-  
+
   if (sessionToken) {
     Sentry.setUser({ id: sessionToken })
   }
@@ -237,21 +237,23 @@ SENTRY_PROJECT=babypeek
 ### Previous Story Learnings
 
 **From Story 1.1:**
+
 - Effect error types defined in `packages/api/src/lib/errors.ts`
 
 **From Story 1.4:**
+
 - Environment validation with Zod
 - SENTRY_DSN already in env schema as optional
 
 ### File Locations
 
-| File | Purpose |
-|------|---------|
-| `apps/web/src/lib/sentry.ts` | NEW: Frontend Sentry init |
-| `apps/web/src/components/error-boundary.tsx` | NEW: React error boundary |
-| `packages/api/src/middleware/sentry.ts` | NEW: Backend middleware |
-| `packages/api/src/lib/sentry-effect.ts` | NEW: Effect integration |
-| `apps/web/vite.config.ts` | UPDATE: Add source maps plugin |
+| File                                         | Purpose                        |
+| -------------------------------------------- | ------------------------------ |
+| `apps/web/src/lib/sentry.ts`                 | NEW: Frontend Sentry init      |
+| `apps/web/src/components/error-boundary.tsx` | NEW: React error boundary      |
+| `packages/api/src/middleware/sentry.ts`      | NEW: Backend middleware        |
+| `packages/api/src/lib/sentry-effect.ts`      | NEW: Effect integration        |
+| `apps/web/vite.config.ts`                    | UPDATE: Add source maps plugin |
 
 ### Dependencies
 
@@ -293,22 +295,22 @@ N/A
 
 ### File List
 
-| File | Action |
-|------|--------|
-| `apps/web/src/lib/sentry.ts` | Created |
-| `apps/web/src/components/error-boundary.tsx` | Created |
-| `packages/api/src/middleware/sentry.ts` | Created |
-| `packages/api/src/lib/sentry-effect.ts` | Created |
-| `apps/web/vite.config.ts` | Modified |
-| `apps/server/.env.example` | Modified |
-| `apps/web/.env.example` | Modified |
+| File                                         | Action   |
+| -------------------------------------------- | -------- |
+| `apps/web/src/lib/sentry.ts`                 | Created  |
+| `apps/web/src/components/error-boundary.tsx` | Created  |
+| `packages/api/src/middleware/sentry.ts`      | Created  |
+| `packages/api/src/lib/sentry-effect.ts`      | Created  |
+| `apps/web/vite.config.ts`                    | Modified |
+| `apps/server/.env.example`                   | Modified |
+| `apps/web/.env.example`                      | Modified |
 
 ---
 
 ## Change Log
 
-| Date | Change |
-|------|--------|
+| Date       | Change                                   |
+| ---------- | ---------------------------------------- |
 | 2024-12-20 | Story created with comprehensive context |
 
 ---

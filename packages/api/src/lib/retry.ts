@@ -8,7 +8,7 @@
  * @see https://effect.website/docs/scheduling/schedules
  */
 
-import { Schedule, Duration } from "effect"
+import { Schedule, Duration } from "effect";
 
 /**
  * Gemini API retry schedule with exponential backoff.
@@ -28,8 +28,8 @@ import { Schedule, Duration } from "effect"
  */
 export const geminiRetrySchedule = Schedule.exponential(Duration.seconds(1)).pipe(
   Schedule.jittered,
-  Schedule.intersect(Schedule.recurs(3)) // Max 3 retries = 4 total attempts
-)
+  Schedule.intersect(Schedule.recurs(3)), // Max 3 retries = 4 total attempts
+);
 
 /**
  * Alternative schedule with exact delays for testing.
@@ -38,11 +38,11 @@ export const geminiRetrySchedule = Schedule.exponential(Duration.seconds(1)).pip
 export const geminiRetryScheduleExact = Schedule.fromDelays(
   Duration.seconds(1),
   Duration.seconds(2),
-  Duration.seconds(4)
-)
+  Duration.seconds(4),
+);
 
 /**
  * Zero-delay schedule for unit testing.
  * Same retry count as production but no delays.
  */
-export const geminiRetryScheduleTest = Schedule.recurs(3)
+export const geminiRetryScheduleTest = Schedule.recurs(3);

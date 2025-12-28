@@ -1,9 +1,9 @@
-import { useEffect, useState, useCallback, useRef } from "react"
+import { useEffect, useState, useCallback, useRef } from "react";
 import {
   createTabCoordinator,
   isBroadcastChannelSupported,
   type StatusUpdate,
-} from "@/lib/tab-coordinator"
+} from "@/lib/tab-coordinator";
 
 /**
  * Hook for tab coordination (Story 5.7: AC8)
@@ -15,68 +15,65 @@ import {
  * @param options.enabled - Whether coordination should be active
  * @returns Tab coordination state and methods
  */
-export function useTabCoordinator(
-  jobId: string | null,
-  options?: { enabled?: boolean }
-) {
-  const { enabled = true } = options ?? {}
-  const [isLeader, setIsLeader] = useState(!isBroadcastChannelSupported())
-  const [statusUpdate, setStatusUpdate] = useState<StatusUpdate | null>(null)
-  const [refetchRequested, setRefetchRequested] = useState(0)
-  const coordinatorRef = useRef<ReturnType<typeof createTabCoordinator> | null>(null)
+export function useTabCoordinator(jobId: string | null, options?: { enabled?: boolean }) {
+  const { enabled = true } = options ?? {};
+  const [isLeader, setIsLeader] = useState(!isBroadcastChannelSupported());
+  const [statusUpdate, setStatusUpdate] = useState<StatusUpdate | null>(null);
+  const [refetchRequested, setRefetchRequested] = useState(0);
+  const coordinatorRef = useRef<ReturnType<typeof createTabCoordinator> | null>(null);
 
   // Broadcast a status update to other tabs
   const broadcast = useCallback((status: StatusUpdate) => {
-    coordinatorRef.current?.broadcast(status)
-  }, [])
+    coordinatorRef.current?.broadcast(status);
+  }, []);
 
   // Request the leader tab to refetch status now
   const requestRefetch = useCallback(() => {
-    coordinatorRef.current?.requestRefetch()
-  }, [])
+    coordinatorRef.current?.requestRefetch();
+  }, []);
 
   useEffect(() => {
     // Skip if disabled, no jobId, or SSR
     if (!enabled || !jobId || typeof window === "undefined") {
       // When disabled, act as leader (single tab behavior)
-      setIsLeader(true)
-      return
+      setIsLeader(true);
+      return;
     }
 
     // If BroadcastChannel not supported, act as leader
     if (!isBroadcastChannelSupported()) {
-      setIsLeader(true)
-      return
+      setIsLeader(true);
+      return;
     }
 
     const coordinator = createTabCoordinator(
       jobId,
       () => setIsLeader(true), // onBecomeLeader
-      () => setIsLeader(false) // onLoseLeadership
-    )
+      () => setIsLeader(false), // onLoseLeadership
+    );
 
-    coordinatorRef.current = coordinator
+    coordinatorRef.current = coordinator;
 
     // Initially check if we're leader
-    setIsLeader(coordinator.isLeader)
+    setIsLeader(coordinator.isLeader);
 
     // Listen for status updates from leader tab
     const unsubscribeStatus = coordinator.onStatusUpdate((status) => {
-      setStatusUpdate(status)
-    })
+      setStatusUpdate(status);
+    });
 
     // Listen for refetch requests (only leader should receive these)
     const unsubscribeRefetch = coordinator.onRefetchRequest(() => {
-      setRefetchRequested((n) => n + 1)
-    })
+      setRefetchRequested((n) => n + 1);
+    });
 
     return () => {
-      unsubscribeStatus()
-      unsubscribeRefetch()
-      coordinator.close()
-      coordinatorRef.current = null
-    }
-  }, [enabled, jobId])
+      unsubscribeStatus();
+      unsubscribeRefetch();
+      coordinator.close();
+      coordinatorRef.current = null;
+    };
+  }, [enabled, jobId]);
 
   return {
     /**
@@ -108,5 +105,5 @@ export function useTabCoordinator(
      * Ask the leader tab to refetch status now
      */
     requestRefetch,
-  }
+  };
 }

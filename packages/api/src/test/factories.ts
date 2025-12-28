@@ -17,18 +17,18 @@ export function createMockUpload(overrides: Partial<MockUpload> = {}): MockUploa
     progress: 0,
     createdAt: new Date(),
     ...overrides,
-  }
+  };
 }
 
 interface MockUpload {
-  id: string
-  email: string
-  sessionToken: string
-  originalUrl: string
-  status: "pending" | "processing" | "completed" | "failed"
-  stage?: "validating" | "generating" | "watermarking" | "complete"
-  progress: number
-  createdAt: Date
+  id: string;
+  email: string;
+  sessionToken: string;
+  originalUrl: string;
+  status: "pending" | "processing" | "completed" | "failed";
+  stage?: "validating" | "generating" | "watermarking" | "complete";
+  progress: number;
+  createdAt: Date;
 }
 
 /**
@@ -42,15 +42,15 @@ export function createMockResult(overrides: Partial<MockResult> = {}): MockResul
     previewUrl: "https://example.com/results/preview.jpg",
     createdAt: new Date(),
     ...overrides,
-  }
+  };
 }
 
 interface MockResult {
-  id: string
-  uploadId: string
-  resultUrl: string
-  previewUrl: string
-  createdAt: Date
+  id: string;
+  uploadId: string;
+  resultUrl: string;
+  previewUrl: string;
+  createdAt: Date;
 }
 
 /**
@@ -66,33 +66,35 @@ export function createMockPurchase(overrides: Partial<MockPurchase> = {}): MockP
     type: "self",
     createdAt: new Date(),
     ...overrides,
-  }
+  };
 }
 
 interface MockPurchase {
-  id: string
-  resultId: string
-  email: string
-  stripeSessionId: string
-  amount: number
-  type: "self" | "gift"
-  createdAt: Date
+  id: string;
+  resultId: string;
+  email: string;
+  stripeSessionId: string;
+  amount: number;
+  type: "self" | "gift";
+  createdAt: Date;
 }
 
 /**
  * Create a mock presigned URL response
  */
-export function createMockPresignedUrl(overrides: Partial<MockPresignedUrl> = {}): MockPresignedUrl {
+export function createMockPresignedUrl(
+  overrides: Partial<MockPresignedUrl> = {},
+): MockPresignedUrl {
   return {
     url: `https://r2.example.com/upload?token=${Math.random().toString(36).slice(2)}`,
     key: `uploads/${Date.now()}/image.jpg`,
     expiresAt: new Date(Date.now() + 15 * 60 * 1000), // 15 minutes
     ...overrides,
-  }
+  };
 }
 
 interface MockPresignedUrl {
-  url: string
-  key: string
-  expiresAt: Date
+  url: string;
+  key: string;
+  expiresAt: Date;
 }

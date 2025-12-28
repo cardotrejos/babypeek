@@ -1,19 +1,19 @@
-import { useEffect, useState } from "react"
-import { cn } from "@/lib/utils"
-import type { ProcessingStage } from "@/hooks/use-status"
-import { useReducedMotion } from "@/hooks/use-reduced-motion"
-import { StageIndicator } from "./StageIndicator"
-import { StageCopy } from "./StageCopy"
-import { BabyFacts } from "./BabyFacts"
-import { ImageSkeleton } from "./ImageSkeleton"
-import { getUiStage } from "./stage-copy"
+import { useEffect, useState } from "react";
+import { cn } from "@/lib/utils";
+import type { ProcessingStage } from "@/hooks/use-status";
+import { useReducedMotion } from "@/hooks/use-reduced-motion";
+import { StageIndicator } from "./StageIndicator";
+import { StageCopy } from "./StageCopy";
+import { BabyFacts } from "./BabyFacts";
+import { ImageSkeleton } from "./ImageSkeleton";
+import { getUiStage } from "./stage-copy";
 
 interface ProcessingScreenProps {
-  stage: ProcessingStage
-  progress: number
-  isComplete: boolean
-  isFailed: boolean
-  className?: string
+  stage: ProcessingStage;
+  progress: number;
+  isComplete: boolean;
+  isFailed: boolean;
+  className?: string;
 }
 
 /**
@@ -24,7 +24,7 @@ interface ProcessingScreenProps {
  * - Skeleton loading (AC-5)
  * - Accessibility announcements (AC-6)
  * - Story 5.4: Reduced motion support
- * 
+ *
  * Note: isComplete/isFailed props are passed for future use when transitioning
  * to reveal state. Currently the parent route handles state transitions.
  */
@@ -35,41 +35,39 @@ export function ProcessingScreen({
   isFailed,
   className,
 }: ProcessingScreenProps) {
-  const { ui: uiStage, step: currentStep } = getUiStage(stage)
-  const [prevStep, setPrevStep] = useState(currentStep)
-  const [shouldAnimate, setShouldAnimate] = useState(false)
-  const prefersReducedMotion = useReducedMotion()
+  const { ui: uiStage, step: currentStep } = getUiStage(stage);
+  const [prevStep, setPrevStep] = useState(currentStep);
+  const [shouldAnimate, setShouldAnimate] = useState(false);
+  const prefersReducedMotion = useReducedMotion();
 
   // Trigger animation when step changes
   useEffect(() => {
     if (currentStep !== prevStep) {
-      setShouldAnimate(true)
-      setPrevStep(currentStep)
-      const timeout = setTimeout(() => setShouldAnimate(false), 500)
-      return () => clearTimeout(timeout)
+      setShouldAnimate(true);
+      setPrevStep(currentStep);
+      const timeout = setTimeout(() => setShouldAnimate(false), 500);
+      return () => clearTimeout(timeout);
     }
-  }, [currentStep, prevStep])
+  }, [currentStep, prevStep]);
 
   // Announce stage changes to screen readers (AC-6)
-  const [announcement, setAnnouncement] = useState("")
+  const [announcement, setAnnouncement] = useState("");
   useEffect(() => {
     if (stage && !isComplete && !isFailed) {
       const stageLabels = {
         analyzing: "Analyzing your ultrasound",
         creating: "Creating your baby's portrait",
         finishing: "Adding final touches",
-      }
-      setAnnouncement(
-        `Stage ${currentStep} of 3: ${stageLabels[uiStage]}`
-      )
+      };
+      setAnnouncement(`Stage ${currentStep} of 3: ${stageLabels[uiStage]}`);
     }
-  }, [stage, currentStep, uiStage, isComplete, isFailed])
+  }, [stage, currentStep, uiStage, isComplete, isFailed]);
 
   return (
     <div
       className={cn(
         "min-h-screen flex flex-col items-center justify-center p-4 bg-cream relative overflow-hidden",
-        className
+        className,
       )}
     >
       {/* Subtle background animation (disabled if prefers-reduced-motion) */}
@@ -92,9 +90,7 @@ export function ProcessingScreen({
         {/* Stage indicator (AC-1, AC-2) */}
         <StageIndicator
           currentStep={currentStep}
-          className={cn(
-            shouldAnimate && !prefersReducedMotion && "animate-bounce-subtle"
-          )}
+          className={cn(shouldAnimate && !prefersReducedMotion && "animate-bounce-subtle")}
         />
 
         {/* Progress bar with aria-label (AC-6) */}
@@ -103,7 +99,7 @@ export function ProcessingScreen({
             <div
               className={cn(
                 "bg-coral h-full rounded-full",
-                !prefersReducedMotion && "transition-all duration-500 ease-out"
+                !prefersReducedMotion && "transition-all duration-500 ease-out",
               )}
               style={{ width: `${progress}%` }}
               role="progressbar"
@@ -128,14 +124,10 @@ export function ProcessingScreen({
         <BabyFacts className="mt-6" static={prefersReducedMotion} />
 
         {/* Accessibility: aria-live region for stage announcements (AC-6) */}
-        <div
-          aria-live="polite"
-          aria-atomic="true"
-          className="sr-only"
-        >
+        <div aria-live="polite" aria-atomic="true" className="sr-only">
           {announcement}
         </div>
       </div>
     </div>
-  )
+  );
 }

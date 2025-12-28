@@ -97,6 +97,7 @@ if (!upload) throw new UnauthorizedError({ reason: 'INVALID_TOKEN' })
 ### Database Schema (Already Exists)
 
 From `packages/db/src/schema/index.ts`:
+
 ```typescript
 export const uploads = pgTable("uploads", {
   id: text("id").primaryKey().$defaultFn(() => createId()),
@@ -218,13 +219,13 @@ interface UseUploadResult {
 // Inside hook:
 const startUpload = async (file: File, email: string) => {
   // ... existing presigned URL + upload logic ...
-  
+
   // After successful upload:
   const confirmed = await confirmUpload(uploadId)
   if (confirmed) {
     // Store session
     storeSession(uploadId, sessionToken)
-    
+
     // Track analytics
     trackEvent({
       name: 'upload_completed',
@@ -235,7 +236,7 @@ const startUpload = async (file: File, email: string) => {
         durationMs: Date.now() - startTime
       }
     })
-    
+
     return { uploadId, sessionToken }
   }
   return null
@@ -262,12 +263,12 @@ const handleUploadComplete = ({ uploadId, sessionToken }) => {
 
 ### Error Handling
 
-| Error | HTTP Status | Message |
-|-------|-------------|---------|
-| Upload not found | 404 | "Upload not found. Please try again." |
-| Upload already confirmed | 409 | "This upload has already been processed." |
-| R2 verification failed | 500 | "We couldn't verify your upload. Let's try again!" |
-| Session storage failed | N/A | (Silent fail, log to Sentry) |
+| Error                    | HTTP Status | Message                                            |
+| ------------------------ | ----------- | -------------------------------------------------- |
+| Upload not found         | 404         | "Upload not found. Please try again."              |
+| Upload already confirmed | 409         | "This upload has already been processed."          |
+| R2 verification failed   | 500         | "We couldn't verify your upload. Let's try again!" |
+| Session storage failed   | N/A         | (Silent fail, log to Sentry)                       |
 
 ### UploadService Usage
 
@@ -302,11 +303,11 @@ packages/api/src/routes/
 
 ```typescript
 // Add to use-analytics.ts if not present:
-| { name: 'upload_completed'; properties: { 
-    uploadId: string; 
-    fileSize: number; 
-    fileType: string; 
-    durationMs: number 
+| { name: 'upload_completed'; properties: {
+    uploadId: string;
+    fileSize: number;
+    fileType: string;
+    durationMs: number
   } }
 | { name: 'session_created'; properties: { uploadId: string } }
 | { name: 'upload_confirmed'; properties: { uploadId: string } }
@@ -362,6 +363,7 @@ N/A - Implementation proceeded without issues
 ### File List
 
 **New Files:**
+
 - `apps/web/src/lib/session.ts` - Session storage utilities
 - `apps/web/src/lib/session.test.ts` - Session tests (18 test cases)
 - `apps/web/src/routes/processing.$jobId.tsx` - Processing page placeholder
@@ -369,6 +371,7 @@ N/A - Implementation proceeded without issues
 - `packages/api/src/routes/upload.test.ts` - Upload route validation tests (10 test cases)
 
 **Modified Files:**
+
 - `packages/api/src/routes/upload.ts` - Added DB record creation and confirm endpoint
 - `packages/api/src/services/R2Service.ts` - Added headObject method
 - `packages/api/src/services/UploadService.ts` - Added id param to CreateUploadParams

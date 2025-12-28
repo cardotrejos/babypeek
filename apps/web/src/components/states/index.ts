@@ -1,1 +1,1 @@
-export { ExpiredResult } from "./ExpiredResult"
+export { ExpiredResult } from "./ExpiredResult";

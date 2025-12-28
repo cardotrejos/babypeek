@@ -5,56 +5,51 @@
  * Uses leader election pattern with BroadcastChannel for cross-tab communication.
  */
 
-import type { ProcessingStage } from "@/hooks/use-status"
+import type { ProcessingStage } from "@/hooks/use-status";
 
-const CHANNEL_NAME = "babypeek-poll"
-const LEADER_HEARTBEAT_INTERVAL = 2000 // 2 seconds
-const LEADER_TIMEOUT = 5000 // 5 seconds without heartbeat = leader lost
-const LEADER_CLAIM_WAIT_MS = 500
+const CHANNEL_NAME = "babypeek-poll";
+const LEADER_HEARTBEAT_INTERVAL = 2000; // 2 seconds
+const LEADER_TIMEOUT = 5000; // 5 seconds without heartbeat = leader lost
+const LEADER_CLAIM_WAIT_MS = 500;
 
 export interface StatusUpdate {
-  jobId: string
-  status: string
-  stage?: ProcessingStage
-  progress?: number
-  resultId?: string | null
-  resultUrl?: string | null
-  errorMessage?: string | null
+  jobId: string;
+  status: string;
+  stage?: ProcessingStage;
+  progress?: number;
+  resultId?: string | null;
+  resultUrl?: string | null;
+  errorMessage?: string | null;
 }
 
 interface TabCoordinatorMessage {
-  type:
-    | "LEADER_HEARTBEAT"
-    | "LEADER_CLAIM"
-    | "STATUS_UPDATE"
-    | "LEADER_RESIGN"
-    | "REFETCH_REQUEST"
-  tabId: string
-  jobId?: string
-  status?: StatusUpdate
-  timestamp: number
+  type: "LEADER_HEARTBEAT" | "LEADER_CLAIM" | "STATUS_UPDATE" | "LEADER_RESIGN" | "REFETCH_REQUEST";
+  tabId: string;
+  jobId?: string;
+  status?: StatusUpdate;
+  timestamp: number;
 }
 
 interface TabCoordinator {
-  isLeader: boolean
-  broadcast: (status: StatusUpdate) => void
-  requestRefetch: () => void
-  close: () => void
-  onStatusUpdate: (callback: (status: StatusUpdate) => void) => () => void
-  onRefetchRequest: (callback: () => void) => () => void
+  isLeader: boolean;
+  broadcast: (status: StatusUpdate) => void;
+  requestRefetch: () => void;
+  close: () => void;
+  onStatusUpdate: (callback: (status: StatusUpdate) => void) => () => void;
+  onRefetchRequest: (callback: () => void) => () => void;
 }
 
 function generateTabId(): string {
   // Prefer crypto.randomUUID when available
   try {
-    const cryptoObj = globalThis.crypto as unknown as { randomUUID?: () => string } | undefined
+    const cryptoObj = globalThis.crypto as unknown as { randomUUID?: () => string } | undefined;
     if (cryptoObj?.randomUUID) {
-      return `tab-${cryptoObj.randomUUID()}`
+      return `tab-${cryptoObj.randomUUID()}`;
     }
   } catch {
     // ignore
   }
-  return `tab-${Math.random().toString(36).slice(2)}-${Date.now().toString(36)}`
+  return `tab-${Math.random().toString(36).slice(2)}-${Date.now().toString(36)}`;
 }
 
 /**
@@ -68,7 +63,7 @@ function generateTabId(): string {
 export function createTabCoordinator(
   jobId: string,
   onBecomeLeader?: () => void,
-  onLoseLeadership?: () => void
+  onLoseLeadership?: () => void,
 ): TabCoordinator {
   // Fallback for browsers without BroadcastChannel (Safari < 15.4)
   if (typeof BroadcastChannel === "undefined") {
@@ -79,154 +74,154 @@ export function createTabCoordinator(
       close: () => {},
       onStatusUpdate: () => () => {},
       onRefetchRequest: () => () => {},
-    }
+    };
   }
 
-  const tabId = generateTabId()
-  let channel: BroadcastChannel | null = new BroadcastChannel(CHANNEL_NAME)
-  let isLeader = false
-  let heartbeatInterval: ReturnType<typeof setInterval> | null = null
-  let leaderCheckInterval: ReturnType<typeof setInterval> | null = null
-  let leaderClaimTimeout: ReturnType<typeof setTimeout> | null = null
-  let lastLeaderHeartbeat = 0
-  let currentLeaderId: string | null = null
-  const statusUpdateCallbacks: Set<(status: StatusUpdate) => void> = new Set()
-  const refetchRequestCallbacks: Set<() => void> = new Set()
+  const tabId = generateTabId();
+  let channel: BroadcastChannel | null = new BroadcastChannel(CHANNEL_NAME);
+  let isLeader = false;
+  let heartbeatInterval: ReturnType<typeof setInterval> | null = null;
+  let leaderCheckInterval: ReturnType<typeof setInterval> | null = null;
+  let leaderClaimTimeout: ReturnType<typeof setTimeout> | null = null;
+  let lastLeaderHeartbeat = 0;
+  let currentLeaderId: string | null = null;
+  const statusUpdateCallbacks: Set<(status: StatusUpdate) => void> = new Set();
+  const refetchRequestCallbacks: Set<() => void> = new Set();
 
   const sendMessage = (msg: Omit<TabCoordinatorMessage, "tabId" | "timestamp">) => {
-    if (!channel) return
+    if (!channel) return;
     channel.postMessage({
       ...msg,
       tabId,
       timestamp: Date.now(),
-    })
-  }
+    });
+  };
 
   const becomeLeader = () => {
-    if (isLeader) return
-    isLeader = true
-    currentLeaderId = tabId
+    if (isLeader) return;
+    isLeader = true;
+    currentLeaderId = tabId;
 
     // Start heartbeat
     heartbeatInterval = setInterval(() => {
-      sendMessage({ type: "LEADER_HEARTBEAT", jobId })
-    }, LEADER_HEARTBEAT_INTERVAL)
+      sendMessage({ type: "LEADER_HEARTBEAT", jobId });
+    }, LEADER_HEARTBEAT_INTERVAL);
 
     // Send initial heartbeat
-    sendMessage({ type: "LEADER_HEARTBEAT", jobId })
+    sendMessage({ type: "LEADER_HEARTBEAT", jobId });
 
-    onBecomeLeader?.()
-  }
+    onBecomeLeader?.();
+  };
 
   const loseLeadership = () => {
-    if (!isLeader) return
-    isLeader = false
+    if (!isLeader) return;
+    isLeader = false;
 
     if (heartbeatInterval) {
-      clearInterval(heartbeatInterval)
-      heartbeatInterval = null
+      clearInterval(heartbeatInterval);
+      heartbeatInterval = null;
     }
 
-    onLoseLeadership?.()
-  }
+    onLoseLeadership?.();
+  };
 
   const checkLeaderStatus = () => {
-    const now = Date.now()
+    const now = Date.now();
 
     // If no heartbeat received for too long, attempt to become leader
     if (currentLeaderId !== tabId && now - lastLeaderHeartbeat > LEADER_TIMEOUT) {
-      sendMessage({ type: "LEADER_CLAIM", jobId })
-      becomeLeader()
+      sendMessage({ type: "LEADER_CLAIM", jobId });
+      becomeLeader();
     }
-  }
+  };
 
   // Handle incoming messages
   channel.onmessage = (event: MessageEvent<TabCoordinatorMessage>) => {
-    const msg = event.data
+    const msg = event.data;
 
     // Ignore messages for different jobs
-    if (msg.jobId && msg.jobId !== jobId) return
+    if (msg.jobId && msg.jobId !== jobId) return;
 
     switch (msg.type) {
       case "LEADER_HEARTBEAT":
-        lastLeaderHeartbeat = msg.timestamp
-        currentLeaderId = msg.tabId
+        lastLeaderHeartbeat = msg.timestamp;
+        currentLeaderId = msg.tabId;
 
         // If another tab is leader, we're not
         if (msg.tabId !== tabId && isLeader) {
           // Conflict resolution: lower tabId wins
           if (msg.tabId < tabId) {
-            loseLeadership()
+            loseLeadership();
           }
         }
-        break
+        break;
 
       case "LEADER_CLAIM":
         // If we're the leader and someone else claims, use tabId to resolve
         if (isLeader && msg.tabId !== tabId) {
           if (msg.tabId < tabId) {
-            loseLeadership()
+            loseLeadership();
           } else {
             // We win, reassert leadership
-            sendMessage({ type: "LEADER_HEARTBEAT", jobId })
+            sendMessage({ type: "LEADER_HEARTBEAT", jobId });
           }
         }
-        break
+        break;
 
       case "STATUS_UPDATE":
         // Ignore our own broadcasts
-        if (msg.tabId === tabId) break
+        if (msg.tabId === tabId) break;
         // Notify all callbacks of status update from leader
         if (msg.status) {
           for (const callback of statusUpdateCallbacks) {
-            callback(msg.status)
+            callback(msg.status);
           }
         }
-        break
+        break;
 
       case "LEADER_RESIGN":
         if (msg.tabId === currentLeaderId) {
-          currentLeaderId = null
-          lastLeaderHeartbeat = 0
+          currentLeaderId = null;
+          lastLeaderHeartbeat = 0;
           // Try to become leader
-          sendMessage({ type: "LEADER_CLAIM", jobId })
-          becomeLeader()
+          sendMessage({ type: "LEADER_CLAIM", jobId });
+          becomeLeader();
         }
-        break
+        break;
 
       case "REFETCH_REQUEST":
         // Only the leader should act on refetch requests
-        if (!isLeader) break
+        if (!isLeader) break;
         for (const callback of refetchRequestCallbacks) {
-          callback()
+          callback();
         }
-        break
+        break;
     }
-  }
+  };
 
   // Start checking for leader and try to become leader
-  leaderCheckInterval = setInterval(checkLeaderStatus, LEADER_HEARTBEAT_INTERVAL)
+  leaderCheckInterval = setInterval(checkLeaderStatus, LEADER_HEARTBEAT_INTERVAL);
 
   // Initial leader claim
-  sendMessage({ type: "LEADER_CLAIM", jobId })
+  sendMessage({ type: "LEADER_CLAIM", jobId });
 
   // Wait a bit for other leaders to respond, then become leader if none
   leaderClaimTimeout = setTimeout(() => {
     // If closed before timeout, don't do anything
-    if (!channel) return
+    if (!channel) return;
     if (!currentLeaderId) {
-      becomeLeader()
+      becomeLeader();
     }
-  }, LEADER_CLAIM_WAIT_MS)
+  }, LEADER_CLAIM_WAIT_MS);
 
   return {
     get isLeader() {
-      return isLeader
+      return isLeader;
     },
 
     broadcast(status: StatusUpdate) {
       if (isLeader) {
-        sendMessage({ type: "STATUS_UPDATE", jobId, status })
+        sendMessage({ type: "STATUS_UPDATE", jobId, status });
       }
     },
 
@@ -234,56 +229,56 @@ export function createTabCoordinator(
       // If we're the leader, execute locally
       if (isLeader) {
         for (const callback of refetchRequestCallbacks) {
-          callback()
+          callback();
         }
-        return
+        return;
       }
-      sendMessage({ type: "REFETCH_REQUEST", jobId })
+      sendMessage({ type: "REFETCH_REQUEST", jobId });
     },
 
     close() {
       // Resign leadership before closing
       if (isLeader) {
-        sendMessage({ type: "LEADER_RESIGN", jobId })
+        sendMessage({ type: "LEADER_RESIGN", jobId });
       }
 
       if (leaderClaimTimeout) {
-        clearTimeout(leaderClaimTimeout)
-        leaderClaimTimeout = null
+        clearTimeout(leaderClaimTimeout);
+        leaderClaimTimeout = null;
       }
       if (heartbeatInterval) {
-        clearInterval(heartbeatInterval)
+        clearInterval(heartbeatInterval);
       }
       if (leaderCheckInterval) {
-        clearInterval(leaderCheckInterval)
+        clearInterval(leaderCheckInterval);
       }
       if (channel) {
-        channel.close()
-        channel = null
+        channel.close();
+        channel = null;
       }
-      statusUpdateCallbacks.clear()
-      refetchRequestCallbacks.clear()
+      statusUpdateCallbacks.clear();
+      refetchRequestCallbacks.clear();
     },
 
     onStatusUpdate(callback: (status: StatusUpdate) => void) {
-      statusUpdateCallbacks.add(callback)
+      statusUpdateCallbacks.add(callback);
       return () => {
-        statusUpdateCallbacks.delete(callback)
-      }
+        statusUpdateCallbacks.delete(callback);
+      };
     },
 
     onRefetchRequest(callback: () => void) {
-      refetchRequestCallbacks.add(callback)
+      refetchRequestCallbacks.add(callback);
       return () => {
-        refetchRequestCallbacks.delete(callback)
-      }
+        refetchRequestCallbacks.delete(callback);
+      };
     },
-  }
+  };
 }
 
 /**
  * Check if BroadcastChannel is supported
  */
 export function isBroadcastChannelSupported(): boolean {
-  return typeof BroadcastChannel !== "undefined"
+  return typeof BroadcastChannel !== "undefined";
 }

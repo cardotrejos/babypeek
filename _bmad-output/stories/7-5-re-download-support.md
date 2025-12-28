@@ -63,6 +63,7 @@ so that **I can recover it if I lose the file**.
 ### Existing Code to Leverage
 
 **Purchase schema has createdAt** (packages/db/src/schema/index.ts):
+
 ```typescript
 export const purchases = pgTable("purchases", {
   id: text("id").primaryKey().$defaultFn(() => createId()),
@@ -73,6 +74,7 @@ export const purchases = pgTable("purchases", {
 ```
 
 **PurchaseService.getByUploadId** (packages/api/src/services/PurchaseService.ts):
+
 ```typescript
 getByUploadId: (uploadId: string) => Effect.Effect<Purchase | null, never>
 ```
@@ -123,7 +125,7 @@ function DownloadPage() {
 
       if (!response.ok) {
         const data = await response.json()
-        
+
         // Check if expired
         if (data.error?.code === "DOWNLOAD_EXPIRED") {
           // AC-5: Track expiry view
@@ -132,7 +134,7 @@ function DownloadPage() {
           }
           return { canDownload: false, isExpired: true, expiresAt: data.error.expiresAt, daysRemaining: null }
         }
-        
+
         throw new Error(data.error?.message || "Failed to check download status")
       }
 
@@ -258,11 +260,11 @@ app.get("/:uploadId/status", async (c) => {
 
   const program = Effect.gen(function* () {
     // Validate session and upload...
-    
+
     // Get purchase
     const purchaseService = yield* PurchaseService
     const purchase = yield* purchaseService.getByUploadId(uploadId)
-    
+
     if (!purchase || purchase.status !== "completed") {
       return { canDownload: false, isExpired: false, error: "No purchase found" }
     }
@@ -309,8 +311,8 @@ interface DownloadExpiredProps {
 
 export function DownloadExpired({ uploadId, expiresAt }: DownloadExpiredProps) {
   const navigate = useNavigate()
-  
-  const expiredDate = expiresAt 
+
+  const expiredDate = expiresAt
     ? new Date(expiresAt).toLocaleDateString("en-US", {
         month: "long",
         day: "numeric",
@@ -349,7 +351,7 @@ export function DownloadExpired({ uploadId, expiresAt }: DownloadExpiredProps) {
           >
             Create New Portrait
           </button>
-          
+
           <p className="text-sm text-warm-gray">
             Need help? <a href="mailto:support@babypeek.com" className="text-coral underline">Contact support</a>
           </p>
@@ -438,10 +440,12 @@ Claude Opus 4.5 (2025-12-21)
 ### File List
 
 **New Files:**
+
 - apps/web/src/routes/download.$uploadId.tsx
 - apps/web/src/components/download/DownloadExpired.tsx
 
 **Modified Files:**
+
 - packages/api/src/lib/errors.ts (added DownloadExpiredError)
 - packages/api/src/routes/download.ts (added 30-day check, status endpoint)
 - packages/api/src/routes/download.test.ts (added Story 7.5 tests + status endpoint tests)
@@ -456,15 +460,15 @@ Claude Opus 4.5 (2025-12-21)
 
 ### Issues Found and Resolved
 
-| # | Severity | Issue | Status |
-|---|----------|-------|--------|
-| 1 | HIGH | New files not staged in git | ✅ Fixed - `git add` executed |
-| 2 | HIGH | Story 7.6 imports on untracked files | ✅ Fixed - Files staged |
-| 3 | MEDIUM | Unused `uploadId` prop in DownloadExpired | ✅ Fixed - Prop removed |
-| 4 | MEDIUM | Event fires on success, named "clicked" | ✅ Fixed - Renamed to `redownload_completed` |
-| 5 | MEDIUM | Missing tests for /status endpoint | ✅ Fixed - 7 tests added |
-| 6 | LOW | No frontend tests for DownloadExpired | Deferred (low priority) |
-| 7 | LOW | File List missing routeTree.gen.ts | Noted (auto-generated file) |
+| #   | Severity | Issue                                     | Status                                       |
+| --- | -------- | ----------------------------------------- | -------------------------------------------- |
+| 1   | HIGH     | New files not staged in git               | ✅ Fixed - `git add` executed                |
+| 2   | HIGH     | Story 7.6 imports on untracked files      | ✅ Fixed - Files staged                      |
+| 3   | MEDIUM   | Unused `uploadId` prop in DownloadExpired | ✅ Fixed - Prop removed                      |
+| 4   | MEDIUM   | Event fires on success, named "clicked"   | ✅ Fixed - Renamed to `redownload_completed` |
+| 5   | MEDIUM   | Missing tests for /status endpoint        | ✅ Fixed - 7 tests added                     |
+| 6   | LOW      | No frontend tests for DownloadExpired     | Deferred (low priority)                      |
+| 7   | LOW      | File List missing routeTree.gen.ts        | Noted (auto-generated file)                  |
 
 ### Test Results After Fixes
 

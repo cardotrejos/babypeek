@@ -1,21 +1,21 @@
-import { AlertCircle, RefreshCw } from "lucide-react"
+import { AlertCircle, RefreshCw } from "lucide-react";
 
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/ui/button";
 
 export interface UploadErrorProps {
   /** The error message to display */
-  message: string
+  message: string;
   /** Callback when user clicks retry */
-  onRetry: () => void
+  onRetry: () => void;
   /** Whether a retry is currently in progress */
-  retrying?: boolean
+  retrying?: boolean;
   /** Whether the error is retryable (default: true) */
-  retryable?: boolean
+  retryable?: boolean;
 }
 
 /**
  * Display a friendly error message with retry option for upload failures.
- * 
+ *
  * Uses warm, encouraging copy to reduce user frustration.
  */
 export function UploadError({
@@ -33,22 +33,13 @@ export function UploadError({
 
       {/* Error message */}
       <div className="space-y-2">
-        <h3 className="text-lg font-semibold text-foreground">
-          Oops! Something went wrong
-        </h3>
-        <p className="max-w-sm text-sm text-muted-foreground">
-          {message}
-        </p>
+        <h3 className="text-lg font-semibold text-foreground">Oops! Something went wrong</h3>
+        <p className="max-w-sm text-sm text-muted-foreground">{message}</p>
       </div>
 
       {/* Retry button */}
       {retryable && (
-        <Button
-          onClick={onRetry}
-          disabled={retrying}
-          className="min-w-[140px]"
-          size="lg"
-        >
+        <Button onClick={onRetry} disabled={retrying} className="min-w-[140px]" size="lg">
           {retrying ? (
             <>
               <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
@@ -68,5 +59,5 @@ export function UploadError({
         Don't worry, your photo is safe. Just give it another go!
       </p>
     </div>
-  )
+  );
 }

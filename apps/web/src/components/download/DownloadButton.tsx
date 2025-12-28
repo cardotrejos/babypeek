@@ -1,8 +1,8 @@
-import { useState, useCallback } from "react"
-import { Button } from "@/components/ui/button"
-import { Download, Loader2, CheckCircle } from "lucide-react"
-import { posthog, isPostHogConfigured } from "@/lib/posthog"
-import { API_BASE_URL } from "@/lib/api-config"
+import { useState, useCallback } from "react";
+import { Button } from "@/components/ui/button";
+import { Download, Loader2, CheckCircle } from "lucide-react";
+import { posthog, isPostHogConfigured } from "@/lib/posthog";
+import { API_BASE_URL } from "@/lib/api-config";
 
 /**
  * DownloadButton Component
@@ -18,16 +18,16 @@ import { API_BASE_URL } from "@/lib/api-config"
  */
 
 interface DownloadButtonProps {
-  uploadId: string
-  sessionToken: string
+  uploadId: string;
+  sessionToken: string;
   /** Result ID for analytics tracking (Story 7.3 AC-5) */
-  resultId?: string
-  onSuccess?: () => void
-  onError?: (error: string) => void
-  className?: string
+  resultId?: string;
+  onSuccess?: () => void;
+  onError?: (error: string) => void;
+  className?: string;
 }
 
-type DownloadState = "idle" | "fetching" | "downloading" | "success" | "error"
+type DownloadState = "idle" | "fetching" | "downloading" | "success" | "error";
 
 export function DownloadButton({
   uploadId,
@@ -37,7 +37,7 @@ export function DownloadButton({
   onError,
   className,
 }: DownloadButtonProps) {
-  const [state, setState] = useState<DownloadState>("idle")
+  const [state, setState] = useState<DownloadState>("idle");
 
   const handleDownload = useCallback(async () => {
     // AC-5: Track download clicked (includes upload_id, result_id, source)
@@ -46,10 +46,10 @@ export function DownloadButton({
         upload_id: uploadId,
         result_id: resultId,
         source: "in_app",
-      })
+      });
     }
 
-    setState("fetching")
+    setState("fetching");
 
     try {
       // Fetch download URL from API
@@ -58,34 +58,33 @@ export function DownloadButton({
           "Content-Type": "application/json",
           "X-Session-Token": sessionToken,
         },
-      })
+      });
 
       if (!response.ok) {
-        const data = await response.json()
-        throw new Error(data.error?.message || "Failed to get download link")
+        const data = await response.json();
+        throw new Error(data.error?.message || "Failed to get download link");
       }
 
-      const data = await response.json()
-      const { downloadUrl, suggestedFilename } = data
+      const data = await response.json();
+      const { downloadUrl, suggestedFilename } = data;
 
-      setState("downloading")
+      setState("downloading");
 
       // AC-3: Generate filename with date (use API suggested or fallback)
       const filename =
-        suggestedFilename ||
-        `babypeek-${new Date().toISOString().split("T")[0]}.jpg`
+        suggestedFilename || `babypeek-${new Date().toISOString().split("T")[0]}.jpg`;
 
       // Trigger download via hidden anchor
-      const link = document.createElement("a")
-      link.href = downloadUrl
-      link.download = filename
-      link.target = "_blank"
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
+      const link = document.createElement("a");
+      link.href = downloadUrl;
+      link.download = filename;
+      link.target = "_blank";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
 
       // AC-4: Show success state
-      setState("success")
+      setState("success");
 
       // Track completion
       if (isPostHogConfigured()) {
@@ -93,18 +92,17 @@ export function DownloadButton({
           upload_id: uploadId,
           result_id: resultId,
           source: "in_app",
-        })
+        });
       }
 
-      onSuccess?.()
+      onSuccess?.();
 
       // Reset to idle after showing success
-      setTimeout(() => setState("idle"), 3000)
+      setTimeout(() => setState("idle"), 3000);
     } catch (error) {
-      setState("error")
+      setState("error");
 
-      const errorMessage =
-        error instanceof Error ? error.message : "Download failed"
+      const errorMessage = error instanceof Error ? error.message : "Download failed";
 
       // Track failure
       if (isPostHogConfigured()) {
@@ -112,13 +110,13 @@ export function DownloadButton({
           upload_id: uploadId,
           result_id: resultId,
           error: errorMessage,
-        })
+        });
       }
 
-      onError?.(errorMessage)
+      onError?.(errorMessage);
       // Keep error state - user must click again to retry (better UX)
     }
-  }, [uploadId, sessionToken, resultId, onSuccess, onError])
+  }, [uploadId, sessionToken, resultId, onSuccess, onError]);
 
   const buttonContent = {
     idle: (
@@ -151,7 +149,7 @@ export function DownloadButton({
         Try Again
       </>
     ),
-  }
+  };
 
   return (
     <Button
@@ -163,5 +161,5 @@ export function DownloadButton({
     >
       {buttonContent[state]}
     </Button>
-  )
+  );
 }

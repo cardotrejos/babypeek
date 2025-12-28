@@ -59,17 +59,20 @@ so that **I have a high-quality photo to keep**.
 ### Existing Code to Leverage
 
 **PurchaseService.hasPurchased** (packages/api/src/services/PurchaseService.ts):
+
 ```typescript
 hasPurchased: (uploadId: string) => Effect.Effect<boolean, never>
 ```
 
 **R2Service.generatePresignedDownloadUrl** (packages/api/src/services/R2Service.ts):
+
 ```typescript
 generatePresignedDownloadUrl: (key: string, expiresIn?: number) => Effect.Effect<PresignedUrl, R2Error>
 // Default expiry: 7 days (604800 seconds)
 ```
 
 **Session token validation pattern** (from packages/api/src/routes/status.ts):
+
 ```typescript
 const token = c.req.header("X-Session-Token")
 if (!token) {
@@ -204,6 +207,7 @@ export default app
 ### Response Format
 
 **Success (200):**
+
 ```json
 {
   "success": true,
@@ -213,6 +217,7 @@ export default app
 ```
 
 **Unauthorized (401):**
+
 ```json
 {
   "success": false,
@@ -224,6 +229,7 @@ export default app
 ```
 
 **Forbidden (403):**
+
 ```json
 {
   "success": false,
@@ -316,13 +322,16 @@ Claude Opus 4.5 (claude-sonnet-4-20250514)
 **Review Outcome:** Approve (after fixes applied)
 
 ### Summary
+
 Code review found 1 HIGH, 4 MEDIUM, and 3 LOW severity issues. HIGH and critical MEDIUM issues have been fixed. Remaining MEDIUM issues (M1: test structure, M4: rate limiting) are deferred as they require larger infrastructure changes.
 
 ### Action Items (Resolved)
+
 - [x] [HIGH] H1: Add Sentry logging for unauthorized access attempts
 - [x] [MED] M2: Add PostHog analytics event tracking
 - [x] [MED] M3: Improve R2 key extraction validation
 
 ### Action Items (Deferred - Future Stories)
+
 - [ ] [MED] M1: Refactor tests to import actual route instead of mock copy
 - [ ] [MED] M4: Add rate limiting to download endpoint

@@ -26,6 +26,7 @@ So that **I'm comfortable uploading my ultrasound**.
 - Follows established design system (coral, cream, warm tones)
 
 **Out of Scope:**
+
 - Example gallery (Story 2.3 - DONE)
 - FAQ accordion (Story 2.5)
 - SEO optimization (Story 2.6)
@@ -36,27 +37,27 @@ So that **I'm comfortable uploading my ultrasound**.
 
 ## Acceptance Criteria
 
-| # | Criterion | Test |
-|---|-----------|------|
+| #   | Criterion                                                                          | Test                                        |
+| --- | ---------------------------------------------------------------------------------- | ------------------------------------------- |
 | AC1 | Trust section displays privacy messaging ("Your images are deleted after 30 days") | Visual check - text is visible and readable |
-| AC2 | Security badges/icons are displayed (HTTPS, encrypted) | Visual check - icons present with labels |
-| AC3 | Link to privacy policy is present and functional | Click test - link navigates or opens modal |
-| AC4 | Messaging uses warm tone, not legal jargon | Copy review - friendly, reassuring language |
-| AC5 | Section is visible below gallery when scrolling | Scroll test - section appears after gallery |
-| AC6 | Section is accessible (screen reader compatible) | Lighthouse a11y audit passes |
-| AC7 | Section renders correctly on mobile viewports | Test on 375px, 390px, 360px viewports |
+| AC2 | Security badges/icons are displayed (HTTPS, encrypted)                             | Visual check - icons present with labels    |
+| AC3 | Link to privacy policy is present and functional                                   | Click test - link navigates or opens modal  |
+| AC4 | Messaging uses warm tone, not legal jargon                                         | Copy review - friendly, reassuring language |
+| AC5 | Section is visible below gallery when scrolling                                    | Scroll test - section appears after gallery |
+| AC6 | Section is accessible (screen reader compatible)                                   | Lighthouse a11y audit passes                |
+| AC7 | Section renders correctly on mobile viewports                                      | Test on 375px, 390px, 360px viewports       |
 
 ---
 
 ## Dependencies
 
-| Dependency | Status | Notes |
-|------------|--------|-------|
-| Story 2.1 Layout | **DONE** | LandingLayout, design tokens, responsive container ready |
-| Story 2.2 Hero | **DONE** | Hero section complete |
-| Story 2.3 Gallery | **DONE** | Gallery section complete, trust section placeholder exists |
-| Design tokens | **READY** | `bg-cream`, `text-charcoal`, `text-coral` available |
-| Privacy policy page | **DEFERRED** | Link can point to placeholder or anchor for now |
+| Dependency          | Status       | Notes                                                      |
+| ------------------- | ------------ | ---------------------------------------------------------- |
+| Story 2.1 Layout    | **DONE**     | LandingLayout, design tokens, responsive container ready   |
+| Story 2.2 Hero      | **DONE**     | Hero section complete                                      |
+| Story 2.3 Gallery   | **DONE**     | Gallery section complete, trust section placeholder exists |
+| Design tokens       | **READY**    | `bg-cream`, `text-charcoal`, `text-coral` available        |
+| Privacy policy page | **DEFERRED** | Link can point to placeholder or anchor for now            |
 
 ---
 
@@ -121,12 +122,14 @@ So that **I'm comfortable uploading my ultrasound**.
 ### Architecture Requirements
 
 **From `architecture.md`:**
+
 - Frontend: TanStack Start + React + Tailwind + shadcn/ui
 - Bundle size target: <150KB initial
 - Touch targets: 48px minimum (link should be easily tappable)
 - WCAG 2.1 Level AA compliance
 
 **Stack Already Configured (from Stories 2.1, 2.2, 2.3):**
+
 - TanStack Start with Vite
 - Tailwind CSS with shadcn/ui (base-lyra style)
 - Component aliases: `@/components`, `@/lib/utils`
@@ -138,17 +141,21 @@ So that **I'm comfortable uploading my ultrasound**.
 **From `ux-design-specification.md`:**
 
 **Trust Signals Purpose:**
+
 - Address privacy concerns for expecting parents
 - Build confidence before sensitive data upload
 - Warm, reassuring tone (not clinical/legal)
 
 **Component Strategy (from UX spec):**
+
 > **TrustBadges**
+>
 > - Privacy assurance
 > - Secure payment
 > - Data deletion promise
 
 **Design System Colors:**
+
 ```css
 --color-cream: #FDF8F5;      /* Background */
 --color-charcoal: #2D2A26;   /* Primary text */
@@ -169,30 +176,34 @@ So that **I'm comfortable uploading my ultrasound**.
 **FR-7.4:** Trust signals (privacy, security) - **Must**
 
 **Requirements:**
+
 - Privacy messaging ("Your images are deleted after 30 days")
 - Security badges (HTTPS, encrypted)
 - Link to privacy policy
 - Warm messaging, not legal jargon
 
 **User Journey Context:**
+
 > "Vulnerability Requires Safety: Parents are emotionally invested—be trustworthy"
 
 **GDPR Considerations (from architecture):**
+
 - "Delete my data" button on result page (Epic 8)
 - 30-day auto-deletion
 - No PII in logs
 
 ### File Locations
 
-| File | Purpose |
-|------|---------|
-| `apps/web/src/routes/index.tsx` | MODIFY: Replace trust placeholder |
+| File                                                | Purpose                                  |
+| --------------------------------------------------- | ---------------------------------------- |
+| `apps/web/src/routes/index.tsx`                     | MODIFY: Replace trust placeholder        |
 | `apps/web/src/components/landing/trust-signals.tsx` | NEW: TrustSignals container + TrustBadge |
-| `apps/web/src/components/landing/index.ts` | MODIFY: Export TrustSignals |
+| `apps/web/src/components/landing/index.ts`          | MODIFY: Export TrustSignals              |
 
 ### Project Structure Notes
 
 **Current Structure (from Stories 2.1, 2.2, 2.3):**
+
 ```
 apps/web/src/
 ├── components/
@@ -211,6 +222,7 @@ apps/web/src/
 ```
 
 **Target Structure for Story 2.4:**
+
 ```
 apps/web/src/
 ├── components/
@@ -228,6 +240,7 @@ apps/web/src/
 ### TrustSignals Component Pattern
 
 **Recommended Structure:**
+
 ```typescript
 // apps/web/src/components/landing/trust-signals.tsx
 import { cn } from "@/lib/utils"
@@ -264,16 +277,16 @@ export function TrustSignals({ className }: TrustSignalsProps) {
       <h2 className="font-display text-2xl text-charcoal text-center mb-8">
         Your privacy matters
       </h2>
-      
+
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
         {trustItems.map((item) => (
           <TrustBadge key={item.title} {...item} />
         ))}
       </div>
-      
+
       <p className="text-center mt-8 text-warm-gray">
-        <a 
-          href="/privacy" 
+        <a
+          href="/privacy"
           className="text-coral hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-coral focus-visible:ring-offset-2 rounded"
         >
           Read our privacy policy
@@ -297,14 +310,14 @@ function TrustBadge({ icon, title, description }: TrustBadgeProps) {
   return (
     <div className="flex flex-col items-center text-center p-4">
       {/* Icon container */}
-      <div 
+      <div
         className="w-12 h-12 rounded-full bg-coral-light flex items-center justify-center mb-3"
         aria-hidden="true"
       >
         {/* Use lucide-react or inline SVG */}
         <IconComponent name={icon} className="w-6 h-6 text-coral" />
       </div>
-      
+
       <h3 className="font-body font-semibold text-charcoal mb-1">
         {title}
       </h3>
@@ -319,18 +332,20 @@ function TrustBadge({ icon, title, description }: TrustBadgeProps) {
 ### Icon Options
 
 **Option 1: Lucide React (Recommended)**
+
 ```bash
 # Already available via shadcn/ui
 import { Trash2, Shield, EyeOff, Clock } from "lucide-react"
 ```
 
 **Option 2: Inline SVG**
+
 ```typescript
 // Use simple inline SVGs for minimal bundle impact
 const ShieldIcon = () => (
   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
-      d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" 
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+      d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
     />
   </svg>
 )
@@ -339,6 +354,7 @@ const ShieldIcon = () => (
 ### Previous Story Learnings (from Stories 2.1, 2.2, 2.3)
 
 **What worked well:**
+
 1. Inline subcomponents (GalleryCard pattern) - keep TrustBadge inline
 2. Barrel exports in `components/landing/index.ts`
 3. `role="region"` + `aria-label` for semantic sections
@@ -347,11 +363,13 @@ const ShieldIcon = () => (
 6. Placeholder approach until real assets available
 
 **Issues fixed in previous reviews:**
+
 1. Missing React type import → Add `import type React from "react"` if needed
 2. Focus-visible styles → Always add on interactive elements
 3. Aria-labels → Include on links and interactive elements
 
 **Code Review Patterns to Follow:**
+
 - Document all files in File Locations table
 - Update barrel exports immediately
 - Add aria-labels for accessibility
@@ -361,6 +379,7 @@ const ShieldIcon = () => (
 ### Warm Copy Guidelines
 
 **DO use:**
+
 - "Your privacy matters"
 - "Your images are deleted after 30 days"
 - "Always protected"
@@ -368,6 +387,7 @@ const ShieldIcon = () => (
 - Simple, reassuring language
 
 **DON'T use:**
+
 - "We comply with GDPR regulations"
 - "Data retention policy"
 - "Terms and conditions"
@@ -391,11 +411,13 @@ import { TrustSignals } from "@/components/landing"
 ### Responsive Design
 
 **Mobile (375px):**
+
 - Single column, badges stack vertically
 - Full-width section
 - Adequate touch target for privacy link
 
 **Tablet/Desktop (sm: 640px+):**
+
 - 3-column grid for badges
 - Centered, max-width container
 - More breathing room
@@ -410,6 +432,7 @@ import { TrustSignals } from "@/components/landing"
 ### Testing Checklist
 
 **Manual Testing:**
+
 1. Open in Chrome DevTools mobile emulation (375px, 390px, 360px)
 2. Scroll to trust section (below gallery)
 3. Verify all 3 trust badges are visible
@@ -418,6 +441,7 @@ import { TrustSignals } from "@/components/landing"
 6. Run Lighthouse accessibility audit
 
 **Devices to Test:**
+
 - iPhone SE (375px) - smallest common mobile
 - iPhone 14 (390px) - typical iPhone
 - Samsung Galaxy (360px) - smallest Android
@@ -431,15 +455,15 @@ import { TrustSignals } from "@/components/landing"
 
 ### Issues Found
 
-| # | Severity | Issue | Resolution |
-|---|----------|-------|------------|
-| 1 | MEDIUM | index.css modified but not in File List | Non-issue - change from Story 2.3, not 2.4 |
-| 2 | MEDIUM | Privacy link missing 48px touch target | **FIXED** - Added `min-h-[48px]`, `inline-block`, `px-2 py-2` |
-| 3 | MEDIUM | Redundant aria-hidden on icon container div | **FIXED** - Removed from container, SVGs already have it |
-| 4 | MEDIUM | Missing test documentation in Task 6 | **FIXED** - Added Task 6.5 documenting manual testing |
-| 5 | LOW | TrustBadge not exported separately | Deferred - inline pattern per codebase conventions |
-| 6 | LOW | Magic strings for icon names | Deferred - acceptable for 3 static icons |
-| 7 | LOW | Double section wrapper in index.tsx | **FIXED** - Added `id` prop to TrustSignals, removed outer wrapper |
+| #   | Severity | Issue                                       | Resolution                                                         |
+| --- | -------- | ------------------------------------------- | ------------------------------------------------------------------ |
+| 1   | MEDIUM   | index.css modified but not in File List     | Non-issue - change from Story 2.3, not 2.4                         |
+| 2   | MEDIUM   | Privacy link missing 48px touch target      | **FIXED** - Added `min-h-[48px]`, `inline-block`, `px-2 py-2`      |
+| 3   | MEDIUM   | Redundant aria-hidden on icon container div | **FIXED** - Removed from container, SVGs already have it           |
+| 4   | MEDIUM   | Missing test documentation in Task 6        | **FIXED** - Added Task 6.5 documenting manual testing              |
+| 5   | LOW      | TrustBadge not exported separately          | Deferred - inline pattern per codebase conventions                 |
+| 6   | LOW      | Magic strings for icon names                | Deferred - acceptable for 3 static icons                           |
+| 7   | LOW      | Double section wrapper in index.tsx         | **FIXED** - Added `id` prop to TrustSignals, removed outer wrapper |
 
 ### Summary
 
@@ -479,20 +503,20 @@ Claude Sonnet 4 (Anthropic)
 
 ### File List
 
-| File | Action |
-|------|--------|
+| File                                                | Action                                                                                                                               |
+| --------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
 | `apps/web/src/components/landing/trust-signals.tsx` | Created - TrustSignals + TrustBadge + TrustIcon components (code review: added id prop, touch target, removed redundant aria-hidden) |
-| `apps/web/src/components/landing/index.ts` | Modified - Added TrustSignals export |
-| `apps/web/src/routes/index.tsx` | Modified - Import TrustSignals, replace placeholder section (code review: removed double section wrapper) |
+| `apps/web/src/components/landing/index.ts`          | Modified - Added TrustSignals export                                                                                                 |
+| `apps/web/src/routes/index.tsx`                     | Modified - Import TrustSignals, replace placeholder section (code review: removed double section wrapper)                            |
 
 ---
 
 ## Change Log
 
-| Date | Change |
-|------|--------|
-| 2024-12-20 | Story created via create-story workflow with comprehensive context |
-| 2024-12-20 | Implementation complete: TrustSignals component, TrustBadge, TrustIcon, inline SVGs, responsive grid. Status → review |
+| Date       | Change                                                                                                                                         |
+| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2024-12-20 | Story created via create-story workflow with comprehensive context                                                                             |
+| 2024-12-20 | Implementation complete: TrustSignals component, TrustBadge, TrustIcon, inline SVGs, responsive grid. Status → review                          |
 | 2024-12-20 | Code review complete: 7 issues found (0 High, 4 Medium, 3 Low), 4 fixed, 2 deferred, 1 non-issue. Added id prop to TrustSignals. Status → done |
 
 ---
@@ -507,4 +531,3 @@ Claude Sonnet 4 (Anthropic)
 - [Source: stories/2-1-mobile-optimized-landing-layout.md] - Layout foundation
 - [Source: stories/2-2-hero-section-with-value-proposition.md] - Hero section patterns
 - [Source: stories/2-3-before-after-example-gallery.md] - Gallery patterns, code review learnings
-

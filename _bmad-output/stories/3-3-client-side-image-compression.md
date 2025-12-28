@@ -40,7 +40,7 @@ so that **uploads are faster and don't fail**.
   - [x] Add `onProgress` callback option to compression (browser-image-compression supports this)
   - [x] Track compression progress percentage
   - [x] If compression takes >500ms, update processing state to show progress
-  - [x] Update ProcessingIndicator message: "Compressing image... X%" 
+  - [x] Update ProcessingIndicator message: "Compressing image... X%"
 
 - [x] **Task 4: Update ProcessingIndicator for compression states** (AC: 3)
   - [x] Add optional `progress` prop to ProcessingIndicator component
@@ -104,17 +104,17 @@ export async function processImage(file: File): Promise<File> {
     const heic2any = await import('heic2any')
     file = await heic2any({ blob: file, toType: 'image/jpeg' })
   }
-  
+
   // 2. Compress if > 2MB (THIS STORY)
   if (file.size > 2 * 1024 * 1024) {
     const imageCompression = await import('browser-image-compression')
-    file = await imageCompression(file, { 
+    file = await imageCompression(file, {
       maxSizeMB: 2,
       maxWidthOrHeight: 2048,
-      useWebWorker: true 
+      useWebWorker: true
     })
   }
-  
+
   return file
 }
 ```
@@ -126,6 +126,7 @@ export async function processImage(file: File): Promise<File> {
 **Bundle Size:** ~20KB (will be lazy-loaded)
 
 **API:**
+
 ```typescript
 import imageCompression from 'browser-image-compression'
 
@@ -143,6 +144,7 @@ const compressedFile = await imageCompression(file, options)
 ```
 
 **Important Notes:**
+
 - Returns a File object directly (unlike heic2any which returns Blob)
 - Progress callback receives number 0-100
 - Web Worker support requires browser compatibility (fallback to main thread if unavailable)
@@ -150,27 +152,30 @@ const compressedFile = await imageCompression(file, options)
 
 ### Compression Decision Matrix
 
-| File Size | Image Type | Action |
-|-----------|------------|--------|
-| <2MB | Any | Skip compression |
-| >2MB | JPEG/PNG | Compress |
-| >2MB | HEIC | Convert first, then compress if still >2MB |
-| >2MB | GIF | Skip (animated), warn if very large |
-| Any | WebP | Compress if >2MB |
+| File Size | Image Type | Action                                     |
+| --------- | ---------- | ------------------------------------------ |
+| <2MB      | Any        | Skip compression                           |
+| >2MB      | JPEG/PNG   | Compress                                   |
+| >2MB      | HEIC       | Convert first, then compress if still >2MB |
+| >2MB      | GIF        | Skip (animated), warn if very large        |
+| Any       | WebP       | Compress if >2MB                           |
 
 ### Performance Considerations
 
 **Web Worker Benefits:**
+
 - Non-blocking main thread
 - UI stays responsive during compression
 - Progress updates without jank
 
 **Memory Usage:**
+
 - Compression is memory-intensive
 - Large files (>10MB) may cause issues on mobile
 - Consider showing warning for very large files (similar to HEIC warning)
 
 **Bundle Size:**
+
 - browser-image-compression ~20KB (lazy-loaded)
 - Combined with heic2any (~380KB), total lazy-load ~400KB
 - Initial bundle remains under 150KB (NFR-1.6)
@@ -179,11 +184,11 @@ const compressedFile = await imageCompression(file, options)
 
 Per architecture.md error handling rules:
 
-| Error | Message |
-|-------|---------|
-| Compression failed | "We had trouble optimizing your image, but we'll try uploading it anyway." |
-| File too complex | "This image couldn't be compressed much. We'll upload the original." |
-| Memory issue | "This image is too large to process on your device. Please try a smaller image." |
+| Error              | Message                                                                          |
+| ------------------ | -------------------------------------------------------------------------------- |
+| Compression failed | "We had trouble optimizing your image, but we'll try uploading it anyway."       |
+| File too complex   | "This image couldn't be compressed much. We'll upload the original."             |
+| Memory issue       | "This image is too large to process on your device. Please try a smaller image." |
 
 ### Processing Flow Diagram
 
@@ -229,6 +234,7 @@ User selects file
 ### Project Structure Notes
 
 **Modified Files:**
+
 ```
 apps/web/src/
 ├── hooks/
@@ -246,6 +252,7 @@ apps/web/src/
 ### Naming Conventions
 
 Per architecture.md naming rules:
+
 - File: `use-image-processor.ts` (kebab-case) - existing
 - Hook: `useImageProcessor` (camelCase) - existing
 - Function: `compressImage`, `processImage` (camelCase)
@@ -255,24 +262,28 @@ Per architecture.md naming rules:
 ### Dependencies on Previous Stories
 
 This story builds on:
+
 - **Story 3.1 (Image Picker):** Provides ImageUploader component and validation
 - **Story 3.2 (HEIC Conversion):** Provides `use-image-processor.ts` hook to extend
 
 ### Integration Points
 
 **With Story 3.2:**
+
 - Compression runs AFTER HEIC conversion
 - Share ProcessingIndicator component (extend for progress %)
 - Extend same hook (`use-image-processor.ts`)
 - Reuse analytics patterns
 
 **With Future Stories:**
+
 - Story 3.5 (Upload): Will receive the compressed file
 - Story 3.9 (Analytics): Compression metrics part of upload funnel
 
 ### Testing Strategy
 
 **Mock browser-image-compression:**
+
 ```typescript
 vi.mock('browser-image-compression', () => ({
   default: vi.fn().mockImplementation(async (file, options) => {
@@ -284,10 +295,11 @@ vi.mock('browser-image-compression', () => ({
 ```
 
 **Test Progress Callback:**
+
 ```typescript
 it('should call onProgress during compression', async () => {
   const onProgress = vi.fn()
-  
+
   // Configure mock to call onProgress
   mockImageCompression.mockImplementation(async (file, options) => {
     if (options.onProgress) {
@@ -298,9 +310,9 @@ it('should call onProgress during compression', async () => {
     }
     return file
   })
-  
+
   await compressImage(largeFile, { onProgress })
-  
+
   expect(onProgress).toHaveBeenCalledWith(25)
   expect(onProgress).toHaveBeenCalledWith(100)
 })
@@ -319,6 +331,7 @@ it('should call onProgress during compression', async () => {
 ### Previous Story Intelligence (Story 3.2)
 
 **Key Learnings from Story 3.2:**
+
 1. Lazy-load libraries using dynamic import to keep initial bundle small
 2. Check BOTH file type AND extension for robust detection
 3. Use `focus-visible:ring-[3px]` for 3px focus ring per design system
@@ -329,6 +342,7 @@ it('should call onProgress during compression', async () => {
 8. Error tracking: Include tags and extra context in Sentry (no PII)
 
 **Existing Code Patterns to Follow (from Story 3.2):**
+
 - Toast notifications via `sonner` library with TOAST_WARNING_DURATION, TOAST_ERROR_DURATION constants
 - Analytics via `useAnalytics` hook from `@/hooks/use-analytics`
 - Error tracking via Sentry with component tags
@@ -336,6 +350,7 @@ it('should call onProgress during compression', async () => {
 - Test file creation utilities in `apps/web/src/test/test-utils.tsx`
 
 **Code Review Learnings (Story 3.2):**
+
 - Add type definitions for external libraries if missing
 - Test edge cases (files without extensions, etc.)
 - Use named constants instead of magic numbers
@@ -419,6 +434,7 @@ Claude 3.5 Sonnet (claude-sonnet-4-20250514)
 ### File List
 
 **Modified Files:**
+
 - `apps/web/package.json` - Added browser-image-compression dependency
 - `apps/web/src/hooks/use-image-processor.ts` - Extended with compression functionality
 - `apps/web/src/hooks/use-image-processor.test.ts` - Added 20 compression tests
@@ -438,14 +454,14 @@ Claude 3.5 Sonnet (claude-sonnet-4-20250514)
 
 ### Issues Found & Fixed
 
-| Severity | Issue | Fix Applied |
-|----------|-------|-------------|
-| HIGH | React act() warnings in image-uploader tests | Wrapped async operations in act() and added import |
-| MEDIUM | Unused timer variable in compressImage | Repurposed timer to implement AC-3 progress delay |
-| MEDIUM | AC-3 progress delay not implemented | Progress now only shows if compression takes >500ms |
-| MEDIUM | Missing typed analytics events | Added CompressionStarted/Completed/Skipped/Failed interfaces |
-| MEDIUM | Progress prop interface confusion | Separated message and progressPercent in hook state |
-| LOW | Missing fileSizeMB in already_optimized event | Added fileSizeMB property for consistency |
+| Severity | Issue                                         | Fix Applied                                                  |
+| -------- | --------------------------------------------- | ------------------------------------------------------------ |
+| HIGH     | React act() warnings in image-uploader tests  | Wrapped async operations in act() and added import           |
+| MEDIUM   | Unused timer variable in compressImage        | Repurposed timer to implement AC-3 progress delay            |
+| MEDIUM   | AC-3 progress delay not implemented           | Progress now only shows if compression takes >500ms          |
+| MEDIUM   | Missing typed analytics events                | Added CompressionStarted/Completed/Skipped/Failed interfaces |
+| MEDIUM   | Progress prop interface confusion             | Separated message and progressPercent in hook state          |
+| LOW      | Missing fileSizeMB in already_optimized event | Added fileSizeMB property for consistency                    |
 
 ### Files Modified in Review
 
@@ -461,10 +477,10 @@ Claude 3.5 Sonnet (claude-sonnet-4-20250514)
 
 ## Change Log
 
-| Date | Change |
-|------|--------|
-| 2025-12-21 | Initial implementation of client-side image compression with all acceptance criteria met |
-| 2025-12-21 | Added comprehensive test suite (26 new tests) |
-| 2025-12-21 | Extended ProcessingIndicator with visual progress bar |
-| 2025-12-21 | Verified bundle size compliance (65.32 kB gzip, under 150KB target) |
+| Date       | Change                                                                                              |
+| ---------- | --------------------------------------------------------------------------------------------------- |
+| 2025-12-21 | Initial implementation of client-side image compression with all acceptance criteria met            |
+| 2025-12-21 | Added comprehensive test suite (26 new tests)                                                       |
+| 2025-12-21 | Extended ProcessingIndicator with visual progress bar                                               |
+| 2025-12-21 | Verified bundle size compliance (65.32 kB gzip, under 150KB target)                                 |
 | 2025-12-21 | **Code Review:** Fixed 1 HIGH, 4 MEDIUM, 1 LOW issues (progress delay, typed events, test warnings) |

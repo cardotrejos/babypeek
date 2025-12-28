@@ -17,14 +17,14 @@ So that **I can write and run tests with confidence**.
 
 ## Acceptance Criteria
 
-| # | Criterion | Test |
-|---|-----------|------|
-| AC1 | Vitest configured for unit tests | `bun run test` runs without errors |
-| AC2 | Playwright configured for E2E tests | `bun run test:e2e` runs without errors |
-| AC3 | Unit tests run in CI pipeline | PR triggers unit tests in GitHub Actions |
-| AC4 | E2E tests run in CI pipeline | PR triggers E2E tests in GitHub Actions |
-| AC5 | Coverage reporting configured | Coverage report generated after test run |
-| AC6 | Test utilities available | Common test helpers exported from test utils |
+| #   | Criterion                           | Test                                         |
+| --- | ----------------------------------- | -------------------------------------------- |
+| AC1 | Vitest configured for unit tests    | `bun run test` runs without errors           |
+| AC2 | Playwright configured for E2E tests | `bun run test:e2e` runs without errors       |
+| AC3 | Unit tests run in CI pipeline       | PR triggers unit tests in GitHub Actions     |
+| AC4 | E2E tests run in CI pipeline        | PR triggers E2E tests in GitHub Actions      |
+| AC5 | Coverage reporting configured       | Coverage report generated after test run     |
+| AC6 | Test utilities available            | Common test helpers exported from test utils |
 
 ---
 
@@ -76,6 +76,7 @@ So that **I can write and run tests with confidence**.
 ### Architecture Requirements
 
 **From `architecture.md`:**
+
 - Co-locate tests with source files (`*.test.ts`)
 - Use Effect Services pattern - tests should mock service layers
 - Use `@/` alias for app imports
@@ -228,7 +229,7 @@ export function renderWithProviders(
   options?: Omit<RenderOptions, 'wrapper'>
 ) {
   const queryClient = createTestQueryClient()
-  
+
   return render(ui, {
     wrapper: ({ children }) => (
       <QueryClientProvider client={queryClient}>
@@ -257,7 +258,7 @@ export default defineConfig({
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 1 : undefined,
   reporter: 'html',
-  
+
   use: {
     baseURL: 'http://localhost:3000',
     trace: 'on-first-retry',
@@ -403,27 +404,29 @@ bun add -D @effect/vitest
 
 ### File Locations
 
-| File | Purpose |
-|------|---------|
-| `vitest.config.ts` | Root Vitest config |
-| `vitest.workspace.ts` | Workspace config |
-| `playwright.config.ts` | E2E test config |
-| `packages/api/vitest.config.ts` | API package tests |
+| File                                      | Purpose               |
+| ----------------------------------------- | --------------------- |
+| `vitest.config.ts`                        | Root Vitest config    |
+| `vitest.workspace.ts`                     | Workspace config      |
+| `playwright.config.ts`                    | E2E test config       |
+| `packages/api/vitest.config.ts`           | API package tests     |
 | `packages/api/src/test/effect-helpers.ts` | Effect test utilities |
-| `apps/web/vitest.config.ts` | Web app tests |
-| `apps/web/src/test/setup.ts` | React test setup |
-| `apps/web/src/test/test-utils.tsx` | React test utilities |
-| `.github/workflows/ci.yml` | CI pipeline updates |
-| `e2e/` | E2E test directory |
+| `apps/web/vitest.config.ts`               | Web app tests         |
+| `apps/web/src/test/setup.ts`              | React test setup      |
+| `apps/web/src/test/test-utils.tsx`        | React test utilities  |
+| `.github/workflows/ci.yml`                | CI pipeline updates   |
+| `e2e/`                                    | E2E test directory    |
 
 ### Previous Story Learnings
 
 **From Story 1.7 (CI/CD):**
+
 - GitHub Actions already configured
 - Jobs run on `ubuntu-latest`
 - Bun setup via `oven-sh/setup-bun@v2`
 
 **From Story 1.1:**
+
 - Turborepo monorepo structure
 - `@/` path alias configured
 
@@ -465,6 +468,7 @@ N/A
 - Total: 34 unit tests passing (25 web + 9 API)
 
 **Review Fixes (2024-12-21):**
+
 - Fixed playwright.config.ts baseURL from port 3000 to 3001 (correct dev port)
 - Fixed e2e/landing.spec.ts to handle multiple CTA buttons with `.first()`
 - Updated packages/api/vitest.config.ts with explicit coverage include paths
@@ -474,33 +478,33 @@ N/A
 
 ### File List
 
-| File | Action |
-|------|--------|
-| `vitest.config.ts` | Created |
-| `vitest.workspace.ts` | Created |
-| `playwright.config.ts` | Created |
-| `package.json` | Modified |
-| `turbo.json` | Modified |
-| `packages/api/vitest.config.ts` | Created |
-| `packages/api/package.json` | Modified |
-| `packages/api/src/test/setup.ts` | Created |
-| `packages/api/src/test/effect-helpers.ts` | Created |
-| `packages/api/src/test/factories.ts` | Created |
-| `packages/api/src/lib/errors.test.ts` | Created |
-| `apps/web/vitest.config.ts` | Modified |
-| `apps/web/package.json` | Modified |
-| `apps/web/src/test/test-utils.tsx` | Created |
-| `.github/workflows/ci.yml` | Modified |
-| `e2e/landing.spec.ts` | Created |
+| File                                      | Action   |
+| ----------------------------------------- | -------- |
+| `vitest.config.ts`                        | Created  |
+| `vitest.workspace.ts`                     | Created  |
+| `playwright.config.ts`                    | Created  |
+| `package.json`                            | Modified |
+| `turbo.json`                              | Modified |
+| `packages/api/vitest.config.ts`           | Created  |
+| `packages/api/package.json`               | Modified |
+| `packages/api/src/test/setup.ts`          | Created  |
+| `packages/api/src/test/effect-helpers.ts` | Created  |
+| `packages/api/src/test/factories.ts`      | Created  |
+| `packages/api/src/lib/errors.test.ts`     | Created  |
+| `apps/web/vitest.config.ts`               | Modified |
+| `apps/web/package.json`                   | Modified |
+| `apps/web/src/test/test-utils.tsx`        | Created  |
+| `.github/workflows/ci.yml`                | Modified |
+| `e2e/landing.spec.ts`                     | Created  |
 
 ---
 
 ## Change Log
 
-| Date | Change |
-|------|--------|
-| 2024-12-21 | Story created with comprehensive context |
-| 2024-12-21 | Implementation complete - all tasks done, 34 tests passing |
+| Date       | Change                                                                                                                      |
+| ---------- | --------------------------------------------------------------------------------------------------------------------------- |
+| 2024-12-21 | Story created with comprehensive context                                                                                    |
+| 2024-12-21 | Implementation complete - all tasks done, 34 tests passing                                                                  |
 | 2024-12-21 | Code review: Fixed Playwright port config, E2E selectors, API coverage config. 5 E2E + 34 unit tests passing. Status → done |
 
 ---

@@ -55,6 +55,7 @@ so that **my purchase is protected from unauthorized access**.
 ### Existing Code to Leverage
 
 **R2Service already configured** (packages/api/src/services/R2Service.ts):
+
 ```typescript
 const DEFAULT_DOWNLOAD_EXPIRES = 7 * 24 * 60 * 60 // 7 days
 
@@ -71,6 +72,7 @@ const generatePresignedDownloadUrl = Effect.fn("R2Service.generatePresignedDownl
 ```
 
 **Database uses cuid2** (packages/db/src/schema/index.ts):
+
 ```typescript
 import { createId } from "@paralleldrive/cuid2"
 
@@ -122,6 +124,7 @@ const command = new GetObjectCommand({
 ### Security Validation
 
 **Presigned URL structure:**
+
 ```
 https://{bucket}.r2.cloudflarestorage.com/{key}
   ?X-Amz-Algorithm=AWS4-HMAC-SHA256
@@ -133,6 +136,7 @@ https://{bucket}.r2.cloudflarestorage.com/{key}
 ```
 
 **Security properties:**
+
 - Signature computed from secret key, bucket, key, and expiration
 - Tampering with any parameter invalidates signature
 - Expired URLs return 403 from R2 (enforced server-side)
@@ -141,6 +145,7 @@ https://{bucket}.r2.cloudflarestorage.com/{key}
 ### Response Format
 
 **Success (200):**
+
 ```json
 {
   "success": true,
@@ -183,10 +188,10 @@ describe("URL expiration", () => {
   it("returns 403 for expired URL", async () => {
     // Generate URL with 1 second expiry
     const result = await r2Service.generatePresignedDownloadUrl(key, 1)
-    
+
     // Wait for expiration
     await new Promise(resolve => setTimeout(resolve, 2000))
-    
+
     // Attempt to fetch - should return 403
     const response = await fetch(result.url)
     expect(response.status).toBe(403)
@@ -235,25 +240,25 @@ Claude Opus 4.5 (Cursor)
 
 ### Issues Found & Resolved
 
-| # | Severity | Issue | Resolution |
-|---|----------|-------|------------|
-| 1 | HIGH | R2Service tests were placeholders, missing integration test for URL expiration | Added URL Expiration test suite with integration notes |
-| 2 | MEDIUM | Test mock didn't pass filename option | Updated test to pass `{ filename: suggestedFilename }` |
-| 3 | MEDIUM | No test verifies Content-Disposition is set | Added Content-Disposition verification test |
-| 4 | MEDIUM | Missing singular "1 day" grammar test | Added Expiry Message Grammar test suite |
-| 5 | LOW | File List status inaccuracies (MODIFIED vs ADDED) | Corrected File List entries |
-| 6 | LOW | Mock upload ID didn't match cuid2 format | Changed to `clxyz1234567890abcdef` format |
-| 7 | LOW | Comment referenced Story 7.1 only | Updated to document both Story 7.1 and 7.2 ACs |
+| #   | Severity | Issue                                                                          | Resolution                                             |
+| --- | -------- | ------------------------------------------------------------------------------ | ------------------------------------------------------ |
+| 1   | HIGH     | R2Service tests were placeholders, missing integration test for URL expiration | Added URL Expiration test suite with integration notes |
+| 2   | MEDIUM   | Test mock didn't pass filename option                                          | Updated test to pass `{ filename: suggestedFilename }` |
+| 3   | MEDIUM   | No test verifies Content-Disposition is set                                    | Added Content-Disposition verification test            |
+| 4   | MEDIUM   | Missing singular "1 day" grammar test                                          | Added Expiry Message Grammar test suite                |
+| 5   | LOW      | File List status inaccuracies (MODIFIED vs ADDED)                              | Corrected File List entries                            |
+| 6   | LOW      | Mock upload ID didn't match cuid2 format                                       | Changed to `clxyz1234567890abcdef` format              |
+| 7   | LOW      | Comment referenced Story 7.1 only                                              | Updated to document both Story 7.1 and 7.2 ACs         |
 
 ### Acceptance Criteria Validation
 
-| AC | Description | Status |
-|---|---|---|
+| AC   | Description                                       | Status      |
+| ---- | ------------------------------------------------- | ----------- |
 | AC-1 | Valid purchase → signed URL with 7-day expiration | ✅ Verified |
-| AC-2 | URLs use non-guessable IDs (cuid2) | ✅ Verified |
-| AC-3 | Unauthorized access returns 403 | ✅ Verified |
-| AC-4 | Signed URLs generated via R2Service | ✅ Verified |
-| AC-5 | URL expiration enforced by R2/S3 presigning | ✅ Verified |
+| AC-2 | URLs use non-guessable IDs (cuid2)                | ✅ Verified |
+| AC-3 | Unauthorized access returns 403                   | ✅ Verified |
+| AC-4 | Signed URLs generated via R2Service               | ✅ Verified |
+| AC-5 | URL expiration enforced by R2/S3 presigning       | ✅ Verified |
 
 ### Test Summary
 
@@ -267,5 +272,5 @@ Claude Opus 4.5 (Cursor)
 - packages/api/src/services/R2Service.test.ts (NEW - 16 tests for expiration, Content-Disposition, URL security, interface)
 - packages/api/src/routes/download.ts (NEW - Enhanced response with expiresInDays, expiryMessage, suggestedFilename, Story 7.1+7.2 ACs documented)
 - packages/api/src/routes/download.test.ts (NEW - 21 tests for Story 7.1+7.2 requirements including grammar, Content-Disposition, cuid2)
-- _bmad-output/stories/sprint-status.yaml (MODIFIED - Status update)
-- _bmad-output/stories/7-2-signed-download-url-generation.md (NEW - Story file)
+- \_bmad-output/stories/sprint-status.yaml (MODIFIED - Status update)
+- \_bmad-output/stories/7-2-signed-download-url-generation.md (NEW - Story file)

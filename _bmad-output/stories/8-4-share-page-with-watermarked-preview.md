@@ -62,6 +62,7 @@ so that **I can see the baby photo**.
 ### Existing Code (Already Implemented!)
 
 **Share page exists** at `apps/web/src/routes/share.$shareId.tsx`:
+
 - ✅ Fetches share data from `/api/share/:shareId`
 - ✅ Displays watermarked preview
 - ✅ Mobile-optimized layout
@@ -69,6 +70,7 @@ so that **I can see the baby photo**.
 - ✅ Gift purchase CTA
 
 **Share API exists** at `packages/api/src/routes/share.ts`:
+
 - ✅ Returns shareId, uploadId, previewUrl
 - ✅ No auth required
 - ✅ Validates status is completed
@@ -175,22 +177,22 @@ packages/api/src/routes/
 
 ### What's Already Done
 
-| Feature | Status | Location |
-|---------|--------|----------|
-| Share page route | ✅ Complete | share.$shareId.tsx |
-| Share API endpoint | ✅ Complete | share.ts |
+| Feature               | Status      | Location           |
+| --------------------- | ----------- | ------------------ |
+| Share page route      | ✅ Complete | share.$shareId.tsx |
+| Share API endpoint    | ✅ Complete | share.ts           |
 | Preview image display | ✅ Complete | share.$shareId.tsx |
-| Mobile layout | ✅ Complete | share.$shareId.tsx |
-| Error handling | ✅ Complete | share.$shareId.tsx |
-| Gift CTA | ✅ Complete | share.$shareId.tsx |
+| Mobile layout         | ✅ Complete | share.$shareId.tsx |
+| Error handling        | ✅ Complete | share.$shareId.tsx |
+| Gift CTA              | ✅ Complete | share.$shareId.tsx |
 
 ### What Needs to Be Done
 
-| Feature | Status | Notes |
-|---------|--------|-------|
-| OG meta tags | ❌ Pending | For rich link previews |
+| Feature            | Status     | Notes                   |
+| ------------------ | ---------- | ----------------------- |
+| OG meta tags       | ❌ Pending | For rich link previews  |
 | Analytics tracking | ❌ Pending | share_page_viewed event |
-| Updated messaging | ❌ Pending | Match AC-2 copy |
+| Updated messaging  | ❌ Pending | Match AC-2 copy         |
 
 ### Dependencies
 
@@ -271,11 +273,11 @@ Claude Opus 4.5 (via Cursor)
 ### Review Summary
 
 | Severity | Found | Fixed | Remaining |
-|----------|-------|-------|-----------|
-| Critical | 1 | 1 | 0 |
-| High | 2 | 2 | 0 |
-| Medium | 4 | 4 | 0 |
-| Low | 2 | 1 | 1 |
+| -------- | ----- | ----- | --------- |
+| Critical | 1     | 1     | 0         |
+| High     | 2     | 2     | 0         |
+| Medium   | 4     | 4     | 0         |
+| Low      | 2     | 1     | 1         |
 
 ### Action Items
 
@@ -292,6 +294,7 @@ Claude Opus 4.5 (via Cursor)
 ### Resolution: Vercel Edge Function
 
 **AC-4 (OG Meta Tags)** implemented via Vercel Edge Function:
+
 - Created `apps/web/api/og/[shareId].ts` Edge Function
 - Detects social media crawlers via User-Agent header matching in vercel.json
 - Returns HTML with dynamic OG meta tags (og:image, og:title, og:description, Twitter Cards)
@@ -299,6 +302,7 @@ Claude Opus 4.5 (via Cursor)
 - Crawler rewrite rules added to `vercel.json`
 
 **Supported Crawlers:**
+
 - Facebook (facebookexternalhit, Facebot)
 - Twitter (Twitterbot)
 - WhatsApp

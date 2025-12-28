@@ -26,12 +26,14 @@ workflowType: architecture
 ### Requirements Overview
 
 **Functional Requirements:**
+
 - 54 total FRs across 8 categories
 - Core flow: Image Upload → AI Processing → Reveal → Payment → Download
 - Secondary flows: Sharing, Gift Purchase, Viral Discovery
 - MVP includes all "Must" requirements from FR-1 through FR-8
 
 **Non-Functional Requirements:**
+
 - Performance: <2.5s LCP, <90s AI processing, 60fps reveal animation
 - Scale: 100+ concurrent uploads, 10K images/day
 - Security: HTTPS, signed URLs, rate limiting, no PII in logs
@@ -48,6 +50,7 @@ workflowType: architecture
 ### Technical Constraints & Dependencies
 
 **Framework Constraints:**
+
 - Frontend: TanStack Start + React + Tailwind + shadcn/ui
 - Backend: Hono + Effect (Bun runtime)
 - Hosting: Vercel Pro (60s function timeout)
@@ -55,12 +58,14 @@ workflowType: architecture
 - Storage: Cloudflare R2
 
 **Durable Execution:**
+
 - Workflow (useworkflow.dev) for AI processing pipeline
 - Fire-and-forget pattern: Upload returns jobId in <2s
 - Workflow handles long-running Gemini calls (60-90s)
 - Frontend polls /api/status/:jobId for progress
 
 **External Service Dependencies:**
+
 - AI: Gemini Imagen 3 API
 - Payments: Stripe (Apple Pay, Google Pay)
 - Email: Resend
@@ -69,17 +74,17 @@ workflowType: architecture
 
 ### Cross-Cutting Concerns
 
-| Concern | Strategy |
-|---------|----------|
-| Error Handling | Centralized boundary, warm error copy |
-| Loading States | Consistent skeleton/spinner patterns |
+| Concern            | Strategy                                                 |
+| ------------------ | -------------------------------------------------------- |
+| Error Handling     | Centralized boundary, warm error copy                    |
+| Loading States     | Consistent skeleton/spinner patterns                     |
 | Session Management | Token-based result access (sessionToken in localStorage) |
-| Rate Limiting | Dual: Edge (Vercel Middleware) + App (Hono) |
-| Image Security | Signed URLs (15min preview, 7-day purchased) |
-| Analytics | PostHog event tracking throughout |
-| Data Compliance | GDPR-ready, 30-day auto-deletion, delete button |
-| Long-running Jobs | Workflow durable execution |
-| Cost Monitoring | Vercel spend alerts, Gemini API tracking |
+| Rate Limiting      | Dual: Edge (Vercel Middleware) + App (Hono)              |
+| Image Security     | Signed URLs (15min preview, 7-day purchased)             |
+| Analytics          | PostHog event tracking throughout                        |
+| Data Compliance    | GDPR-ready, 30-day auto-deletion, delete button          |
+| Long-running Jobs  | Workflow durable execution                               |
+| Cost Monitoring    | Vercel spend alerts, Gemini API tracking                 |
 
 ### Party Mode Enhancements
 
@@ -117,15 +122,16 @@ Full-Stack Web Application (Mobile-First) with separate frontend/backend package
 
 ### Starter Options Considered
 
-| Starter | Pros | Cons |
-|---------|------|------|
-| **Better-T-Stack** | Exact stack match (TanStack Start + Hono + Drizzle), actively maintained, Vercel-ready | Effect added separately |
-| Manual Setup | Full control | Time-consuming, error-prone |
-| T3 Stack | Popular | Next.js focused, not TanStack Start |
+| Starter            | Pros                                                                                   | Cons                                |
+| ------------------ | -------------------------------------------------------------------------------------- | ----------------------------------- |
+| **Better-T-Stack** | Exact stack match (TanStack Start + Hono + Drizzle), actively maintained, Vercel-ready | Effect added separately             |
+| Manual Setup       | Full control                                                                           | Time-consuming, error-prone         |
+| T3 Stack           | Popular                                                                                | Next.js focused, not TanStack Start |
 
 ### Selected Starter: Better-T-Stack (v3.10.0)
 
 **Rationale:**
+
 - Exact match for chosen stack (TanStack Start + Hono + Bun)
 - Actively maintained (updated Dec 20, 2024)
 - 4.5k GitHub stars, proven community
@@ -142,26 +148,31 @@ bun create better-t-stack@latest
 ### Architectural Decisions Provided by Starter
 
 **Language & Runtime:**
+
 - TypeScript (strict mode)
 - Bun runtime for backend
 - Vite for frontend bundling
 
 **Project Structure:**
+
 - Monorepo with Turborepo
 - `apps/web` - TanStack Start frontend
 - `packages/api` - Hono + Effect backend
 - `packages/db` - Drizzle schema and migrations
 
 **Styling Solution:**
+
 - Tailwind CSS configured
 - shadcn/ui compatible
 
 **Build Tooling:**
+
 - Turborepo for task orchestration
 - Vite for frontend builds
 - Bun for backend bundling
 
 **Development Experience:**
+
 - Hot reload for frontend and backend
 - Type-safe API with Hono RPC
 - Drizzle Studio for database inspection
@@ -172,18 +183,19 @@ bun create better-t-stack@latest
 
 ### Decision Summary
 
-| Category | Decision |
-|----------|----------|
-| Database | Neon PostgreSQL (serverless) |
-| Storage | Cloudflare R2 |
-| Durable Execution | Workflow (useworkflow.dev) |
-| API | Hono + Effect |
-| State | TanStack Query |
-| Auth | None (session tokens) |
+| Category          | Decision                     |
+| ----------------- | ---------------------------- |
+| Database          | Neon PostgreSQL (serverless) |
+| Storage           | Cloudflare R2                |
+| Durable Execution | Workflow (useworkflow.dev)   |
+| API               | Hono + Effect                |
+| State             | TanStack Query               |
+| Auth              | None (session tokens)        |
 
 ### Data Architecture
 
 **Database:** Neon PostgreSQL
+
 - Serverless, scales to zero
 - Connection pooling via `@neondatabase/serverless`
 - Branching for preview environments
@@ -221,11 +233,13 @@ export const purchases = pgTable('purchases', {
 ```
 
 **Storage:** Cloudflare R2
+
 - S3-compatible API
 - Free egress
 - Presigned URLs for secure access
 
 **File Structure:**
+
 ```
 /uploads/{uploadId}/original.jpg
 /results/{resultId}/full.jpg
@@ -235,12 +249,14 @@ export const purchases = pgTable('purchases', {
 ### Authentication & Security
 
 **Session Token Flow:**
+
 1. Upload → server generates `sessionToken`
 2. Token stored in localStorage
 3. Token required for result access
 4. Token expires with data (30 days)
 
 **Security:**
+
 - Rate limiting: 10 uploads/IP/hour
 - Signed URLs: 15min preview, 7 days purchased
 - Input validation: Zod on all endpoints
@@ -250,16 +266,16 @@ export const purchases = pgTable('purchases', {
 
 **Endpoints:**
 
-| Method | Path | Purpose |
-|--------|------|---------|
-| POST | `/api/upload` | Get presigned URL, create upload |
-| POST | `/api/process` | Trigger Workflow job |
-| GET | `/api/status/:jobId` | Poll job status |
-| GET | `/api/result/:id` | Get result (requires token) |
-| POST | `/api/checkout` | Create Stripe session |
-| POST | `/api/webhook/stripe` | Handle payments |
-| GET | `/api/download/:id` | Signed download URL |
-| DELETE | `/api/data/:token` | GDPR deletion |
+| Method | Path                  | Purpose                          |
+| ------ | --------------------- | -------------------------------- |
+| POST   | `/api/upload`         | Get presigned URL, create upload |
+| POST   | `/api/process`        | Trigger Workflow job             |
+| GET    | `/api/status/:jobId`  | Poll job status                  |
+| GET    | `/api/result/:id`     | Get result (requires token)      |
+| POST   | `/api/checkout`       | Create Stripe session            |
+| POST   | `/api/webhook/stripe` | Handle payments                  |
+| GET    | `/api/download/:id`   | Signed download URL              |
+| DELETE | `/api/data/:token`    | GDPR deletion                    |
 
 ### Frontend State
 
@@ -270,7 +286,7 @@ export const purchases = pgTable('purchases', {
 useQuery({
   queryKey: ['status', jobId],
   queryFn: () => api.status[jobId].get(),
-  refetchInterval: (data) => 
+  refetchInterval: (data) =>
     data?.status === 'completed' ? false : 2000,
 });
 
@@ -301,6 +317,7 @@ SENTRY_DSN=
 ```
 
 **Deployment:**
+
 - Vercel Git integration
 - Auto-deploy main → production
 - PR deploys → preview
@@ -311,20 +328,21 @@ SENTRY_DSN=
 
 ### Naming Conventions
 
-| Context | Convention | Example |
-|---------|------------|---------|
-| DB tables | snake_case, plural | `uploads`, `results` |
-| DB columns | snake_case | `session_token`, `created_at` |
-| API routes | /api/{resource} | `/api/upload`, `/api/result/:id` |
-| Files | kebab-case | `image-uploader.tsx` |
-| Components | PascalCase | `ImageUploader` |
-| Functions | camelCase | `uploadImage()` |
-| Variables | camelCase | `sessionToken` |
-| Env vars | SCREAMING_SNAKE | `GEMINI_API_KEY` |
+| Context    | Convention         | Example                          |
+| ---------- | ------------------ | -------------------------------- |
+| DB tables  | snake_case, plural | `uploads`, `results`             |
+| DB columns | snake_case         | `session_token`, `created_at`    |
+| API routes | /api/{resource}    | `/api/upload`, `/api/result/:id` |
+| Files      | kebab-case         | `image-uploader.tsx`             |
+| Components | PascalCase         | `ImageUploader`                  |
+| Functions  | camelCase          | `uploadImage()`                  |
+| Variables  | camelCase          | `sessionToken`                   |
+| Env vars   | SCREAMING_SNAKE    | `GEMINI_API_KEY`                 |
 
 ### API Response Strategy
 
 **Effect-based Returns:**
+
 ```typescript
 // Success: return Effect with data
 return Effect.succeed({ jobId, sessionToken })
@@ -354,11 +372,13 @@ components/
 ### Error Handling
 
 **Security Rules:**
+
 - Log real errors to Sentry
 - Show warm, vague copy to users
 - Never expose: job IDs, token values, rate limit timing, Stripe details
 
 **User-Facing Copy:**
+
 ```typescript
 const errorMessages = {
   UPLOAD_FAILED: "We couldn't upload your image. Let's try again!",
@@ -370,14 +390,14 @@ const errorMessages = {
 
 ### Contextual Loading States
 
-| State | Copy |
-|-------|------|
-| Uploading | "Preparing your ultrasound..." |
-| Stage 1 | "Analyzing your baby's features..." |
-| Stage 2 | "Creating your portrait..." |
-| Stage 3 | "Adding final touches..." |
-| Payment | "Securing your purchase..." |
-| Download | "Preparing your photo..." |
+| State     | Copy                                |
+| --------- | ----------------------------------- |
+| Uploading | "Preparing your ultrasound..."      |
+| Stage 1   | "Analyzing your baby's features..." |
+| Stage 2   | "Creating your portrait..."         |
+| Stage 3   | "Adding final touches..."           |
+| Payment   | "Securing your purchase..."         |
+| Download  | "Preparing your photo..."           |
 
 ### Environment Validation
 
@@ -437,17 +457,17 @@ export async function processImage(file: File): Promise<File> {
     const heic2any = await import('heic2any')
     file = await heic2any({ blob: file, toType: 'image/jpeg' })
   }
-  
+
   // 2. Compress if > 2MB
   if (file.size > 2 * 1024 * 1024) {
     const imageCompression = await import('browser-image-compression')
-    file = await imageCompression(file, { 
+    file = await imageCompression(file, {
       maxSizeMB: 2,
       maxWidthOrHeight: 2048,
-      useWebWorker: true 
+      useWebWorker: true
     })
   }
-  
+
   return file
 }
 ```
@@ -478,11 +498,11 @@ if (!upload) throw new UnauthorizedError()
 app.post('/webhook/stripe', async ({ body, headers }) => {
   const sig = headers['stripe-signature']
   const event = stripe.webhooks.constructEvent(body, sig, webhookSecret)
-  
+
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object
     const { resultId, email, type } = session.metadata
-    
+
     // Create purchase record
     await db.insert(purchases).values({
       id: createId(),
@@ -492,7 +512,7 @@ app.post('/webhook/stripe', async ({ body, headers }) => {
       amount: session.amount_total,
       type,
     })
-    
+
     // Send download email
     await sendDownloadEmail(email, resultId)
   }
@@ -594,10 +614,10 @@ export class PaymentError extends Data.TaggedError('PaymentError')<{
 }> {}
 
 // Union of all errors for route handlers
-export type AppError = 
-  | NotFoundError 
-  | UnauthorizedError 
-  | ValidationError 
+export type AppError =
+  | NotFoundError
+  | UnauthorizedError
+  | ValidationError
   | PaymentError
   | GeminiError
 ```
@@ -780,26 +800,26 @@ Project structure mirrors Effect service architecture. Routes → Services → E
 
 **Functional Requirements Coverage:**
 
-| FR Category | Coverage |
-|-------------|----------|
-| FR-1: Image Upload | ✅ `/api/upload`, R2Service, client-side processing |
-| FR-2: AI Generation | ✅ Workflow, GeminiService, Effect retry/timeout |
-| FR-3: Preview/Results | ✅ `/api/result/:id`, session tokens, signed URLs |
-| FR-4: Payment | ✅ StripeService, webhook handler, purchase schema |
-| FR-5: Download | ✅ `/api/download/:id`, signed URLs |
-| FR-6: Sharing | ✅ Share sheet, watermarked previews |
-| FR-7: Landing | ✅ Landing components, hero/examples structure |
-| FR-8: System Ops | ✅ Sentry, PostHog, env validation, GDPR deletion |
+| FR Category           | Coverage                                            |
+| --------------------- | --------------------------------------------------- |
+| FR-1: Image Upload    | ✅ `/api/upload`, R2Service, client-side processing |
+| FR-2: AI Generation   | ✅ Workflow, GeminiService, Effect retry/timeout    |
+| FR-3: Preview/Results | ✅ `/api/result/:id`, session tokens, signed URLs   |
+| FR-4: Payment         | ✅ StripeService, webhook handler, purchase schema  |
+| FR-5: Download        | ✅ `/api/download/:id`, signed URLs                 |
+| FR-6: Sharing         | ✅ Share sheet, watermarked previews                |
+| FR-7: Landing         | ✅ Landing components, hero/examples structure      |
+| FR-8: System Ops      | ✅ Sentry, PostHog, env validation, GDPR deletion   |
 
 **Non-Functional Requirements Coverage:**
 
-| NFR | Coverage |
-|-----|----------|
-| Performance (<2.5s LCP) | ✅ Edge deployment, optimized bundles |
-| Scale (10K images/day) | ✅ Serverless auto-scale, R2 free egress |
-| Security | ✅ Signed URLs, session tokens, rate limiting |
-| Accessibility (WCAG 2.1 AA) | ✅ shadcn/ui ARIA support |
-| Reliability (99.5% uptime) | ✅ Effect retry, Workflow durability |
+| NFR                         | Coverage                                      |
+| --------------------------- | --------------------------------------------- |
+| Performance (<2.5s LCP)     | ✅ Edge deployment, optimized bundles         |
+| Scale (10K images/day)      | ✅ Serverless auto-scale, R2 free egress      |
+| Security                    | ✅ Signed URLs, session tokens, rate limiting |
+| Accessibility (WCAG 2.1 AA) | ✅ shadcn/ui ARIA support                     |
+| Reliability (99.5% uptime)  | ✅ Effect retry, Workflow durability          |
 
 ### Implementation Readiness Validation ✅
 
@@ -811,6 +831,7 @@ Complete directory structure defined with all files and directories. Component b
 
 **Pattern Completeness:**
 All major patterns documented with code examples:
+
 - Effect Service Pattern
 - Typed Error Pattern
 - Hono + Effect Integration
@@ -825,30 +846,35 @@ All major patterns documented with code examples:
 **Critical Gaps:** None
 
 **Minor Gaps (addressed in patterns section):**
+
 - Database schema additions for `stage`/`progress` columns (documented)
 - Workflow SDK integration (reference to useworkflow.dev docs)
 
 ### Architecture Completeness Checklist
 
 **✅ Requirements Analysis**
+
 - [x] Project context thoroughly analyzed
 - [x] Scale and complexity assessed (Medium)
 - [x] Technical constraints identified
 - [x] Cross-cutting concerns mapped
 
 **✅ Architectural Decisions**
+
 - [x] Critical decisions documented with versions
 - [x] Technology stack fully specified
 - [x] Integration patterns defined
 - [x] Performance considerations addressed
 
 **✅ Implementation Patterns**
+
 - [x] Naming conventions established
 - [x] Structure patterns defined
 - [x] Communication patterns specified
 - [x] Process patterns documented
 
 **✅ Project Structure**
+
 - [x] Complete directory structure defined
 - [x] Component boundaries established
 - [x] Integration points mapped
@@ -861,6 +887,7 @@ All major patterns documented with code examples:
 **Confidence Level:** HIGH
 
 **Key Strengths:**
+
 1. Effect provides typed errors and composable services
 2. Fire-and-forget pattern elegantly handles AI processing timeouts
 3. Clear separation: routes → services → external APIs
@@ -868,6 +895,7 @@ All major patterns documented with code examples:
 5. GDPR compliance built-in from start
 
 **Areas for Future Enhancement:**
+
 1. Real-time updates via SSE (post-MVP)
 2. Multi-region deployment (if needed for latency)
 3. A/B testing infrastructure for reveal animations
@@ -875,6 +903,7 @@ All major patterns documented with code examples:
 ### Implementation Handoff
 
 **AI Agent Guidelines:**
+
 - Follow all architectural decisions exactly as documented
 - Use Effect Services for all business logic
 - Use implementation patterns consistently across all components
@@ -916,6 +945,7 @@ bun add effect @effect/schema
 ### Final Architecture Deliverables
 
 **📋 Complete Architecture Document**
+
 - All architectural decisions documented with specific versions
 - Implementation patterns ensuring AI agent consistency
 - Complete project structure with all files and directories
@@ -923,12 +953,14 @@ bun add effect @effect/schema
 - Validation confirming coherence and completeness
 
 **🏗️ Implementation Ready Foundation**
+
 - 12 architectural decisions made
 - 8 implementation patterns defined
 - 20 architectural components specified
 - 54 functional requirements fully supported
 
 **📚 AI Agent Implementation Guide**
+
 - Technology stack: Hono + Effect + TanStack Start + Drizzle
 - 17 consistency rules that prevent implementation conflicts
 - Project structure with clear boundaries

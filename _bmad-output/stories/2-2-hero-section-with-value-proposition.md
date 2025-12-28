@@ -25,6 +25,7 @@ So that **I decide whether to try it**.
 - Focus is on emotional impact, clarity, and conversion optimization
 
 **Out of Scope:**
+
 - Gallery section (Story 2.3)
 - Trust signals (Story 2.4)
 - FAQ (Story 2.5)
@@ -35,26 +36,26 @@ So that **I decide whether to try it**.
 
 ## Acceptance Criteria
 
-| # | Criterion | Test |
-|---|-----------|------|
-| AC1 | Hero displays compelling headline "Meet your baby before they're born" | Visual check, text matches exactly |
-| AC2 | Single before/after example image is prominently displayed | Image visible above fold on mobile |
-| AC3 | Clear CTA button "Try it free" is visible and interactive | Button has 48px+ touch target, hover states work |
-| AC4 | CTA scrolls to upload section OR navigates to upload page | Click/tap triggers smooth scroll or navigation |
-| AC5 | Hero section visible above fold on 375px viewport | No scrolling required to see headline + CTA |
-| AC6 | Before/after images are optimized (WebP, lazy loaded if below fold) | Lighthouse image audit passes |
-| AC7 | Accessibility: All images have alt text, CTA is keyboard accessible | axe/Lighthouse a11y audit passes |
+| #   | Criterion                                                              | Test                                             |
+| --- | ---------------------------------------------------------------------- | ------------------------------------------------ |
+| AC1 | Hero displays compelling headline "Meet your baby before they're born" | Visual check, text matches exactly               |
+| AC2 | Single before/after example image is prominently displayed             | Image visible above fold on mobile               |
+| AC3 | Clear CTA button "Try it free" is visible and interactive              | Button has 48px+ touch target, hover states work |
+| AC4 | CTA scrolls to upload section OR navigates to upload page              | Click/tap triggers smooth scroll or navigation   |
+| AC5 | Hero section visible above fold on 375px viewport                      | No scrolling required to see headline + CTA      |
+| AC6 | Before/after images are optimized (WebP, lazy loaded if below fold)    | Lighthouse image audit passes                    |
+| AC7 | Accessibility: All images have alt text, CTA is keyboard accessible    | axe/Lighthouse a11y audit passes                 |
 
 ---
 
 ## Dependencies
 
-| Dependency | Status | Notes |
-|------------|--------|-------|
-| Story 2.1 Layout | **DONE** | LandingLayout, design tokens, fonts all ready |
-| Before/after images | **NEEDED** | Requires 1-2 high-quality sample images |
-| Upload route | **DEFERRED** | CTA can scroll to hero for now; Epic 3 adds upload |
-| Copy finalization | **READY** | PRD has approved copy |
+| Dependency          | Status       | Notes                                              |
+| ------------------- | ------------ | -------------------------------------------------- |
+| Story 2.1 Layout    | **DONE**     | LandingLayout, design tokens, fonts all ready      |
+| Before/after images | **NEEDED**   | Requires 1-2 high-quality sample images            |
+| Upload route        | **DEFERRED** | CTA can scroll to hero for now; Epic 3 adds upload |
+| Copy finalization   | **READY**    | PRD has approved copy                              |
 
 ---
 
@@ -118,6 +119,7 @@ So that **I decide whether to try it**.
 ### Architecture Requirements
 
 **From `architecture.md`:**
+
 - Frontend: TanStack Start + React + Tailwind + shadcn/ui
 - Bundle size target: <150KB initial (watch image sizes!)
 - LCP target: <2.5s - hero image is likely LCP element
@@ -125,6 +127,7 @@ So that **I decide whether to try it**.
 - WCAG 2.1 Level AA compliance
 
 **Stack Already Configured (from Story 2.1):**
+
 - TanStack Start with Vite
 - Tailwind CSS with shadcn/ui (base-lyra style)
 - Component aliases: `@/components`, `@/lib/utils`
@@ -136,6 +139,7 @@ So that **I decide whether to try it**.
 **From `ux-design-specification.md`:**
 
 **Hero Section Requirements:**
+
 ```
 The product's defining moment is when the AI-generated image is revealed.
 Everything builds to this:
@@ -148,15 +152,18 @@ Upload → Wait (anticipation builds) → REVEAL (emotional peak) → Share/Purc
 | Landing | Warm, magical, inviting |
 
 **Critical Success Moments:**
+
 1. **First impression:** "This looks trustworthy and magical"
 
 **Typography for Hero:**
+
 ```css
 --font-display: "Playfair Display", Georgia, serif;  /* Headlines */
 --font-body: "DM Sans", system-ui, sans-serif;       /* Body text */
 ```
 
 **Headline size (from UX spec):**
+
 - Mobile: 32px (`text-3xl`)
 - Tablet/Desktop: 48px (`text-4xl sm:text-5xl`)
 
@@ -165,11 +172,13 @@ Upload → Wait (anticipation builds) → REVEAL (emotional peak) → Share/Purc
 **From `prd.md` and `epics.md`:**
 
 **Approved Hero Copy:**
+
 - Headline: "Meet your baby before they're born"
 - Value proposition: (implied from Maria journey) Transform your 4D ultrasound into a photorealistic portrait
 - CTA: "Try it free"
 
 **Journey Context:**
+
 ```
 Maria (Primary User):
 1. Discovery: Sees friend's share on Instagram
@@ -180,16 +189,17 @@ Maria (Primary User):
 
 ### File Locations
 
-| File | Purpose |
-|------|---------|
-| `apps/web/src/routes/index.tsx` | MODIFY: Update hero content |
+| File                                             | Purpose                           |
+| ------------------------------------------------ | --------------------------------- |
+| `apps/web/src/routes/index.tsx`                  | MODIFY: Update hero content       |
 | `apps/web/src/components/landing/hero-image.tsx` | NEW: Before/after image component |
-| `apps/web/src/components/landing/index.ts` | MODIFY: Export HeroImage |
-| `apps/web/public/images/` | NEW: Sample before/after images |
+| `apps/web/src/components/landing/index.ts`       | MODIFY: Export HeroImage          |
+| `apps/web/public/images/`                        | NEW: Sample before/after images   |
 
 ### Project Structure Notes
 
 **Current Structure (from Story 2.1):**
+
 ```
 apps/web/src/
 ├── components/
@@ -206,6 +216,7 @@ apps/web/src/
 ```
 
 **Target Structure for Story 2.2:**
+
 ```
 apps/web/src/
 ├── components/
@@ -225,6 +236,7 @@ apps/web/src/
 ### Hero Section Implementation Pattern
 
 **Current placeholder (from Story 2.1):**
+
 ```typescript
 <section
   id="hero"
@@ -246,6 +258,7 @@ apps/web/src/
 ```
 
 **Target implementation:**
+
 ```typescript
 <section
   id="hero"
@@ -298,7 +311,7 @@ export function HeroImage({ className }: HeroImageProps) {
           loading="eager" /* Hero image should load immediately */
         />
       </picture>
-      
+
       {/* Optional: Before image in corner */}
       <div className="absolute bottom-4 left-4 w-24 h-24 rounded-lg overflow-hidden shadow-md border-2 border-white">
         <img
@@ -338,6 +351,7 @@ export function HeroImage({ className }: HeroImageProps) {
 ### Signature Glow Animation (from UX spec)
 
 **Already in index.css, verify it exists:**
+
 ```css
 @keyframes signature-glow {
   0%, 100% { box-shadow: 0 0 20px rgba(232, 146, 124, 0.3); }
@@ -348,6 +362,7 @@ export function HeroImage({ className }: HeroImageProps) {
 ### Image Optimization Guidelines
 
 **Performance Requirements (from architecture.md):**
+
 - LCP target: <2.5s
 - Hero image is likely the LCP element
 
@@ -358,6 +373,7 @@ export function HeroImage({ className }: HeroImageProps) {
 | hero-before | 120x120 | WebP | 20KB |
 
 **Preload hint for LCP optimization:**
+
 ```typescript
 // In __root.tsx head links (if needed)
 {
@@ -371,11 +387,13 @@ export function HeroImage({ className }: HeroImageProps) {
 ### Placeholder Images Strategy
 
 **If real images aren't available yet:**
+
 1. Use placeholder.com or similar for development
 2. Create gradient placeholders with CSS
 3. Use low-res placeholder with blur effect
 
 **Example placeholder:**
+
 ```typescript
 <div className="aspect-video bg-gradient-to-br from-coral-light to-cream rounded-xl flex items-center justify-center">
   <span className="text-warm-gray font-body text-sm">
@@ -387,14 +405,16 @@ export function HeroImage({ className }: HeroImageProps) {
 ### Previous Story Learnings (from Story 2.1)
 
 **What worked well:**
+
 1. `@theme inline` for Tailwind color integration
 2. Google Fonts CDN with preconnect (simpler than self-hosting)
 3. Safe area handling with `env(safe-area-inset-bottom)`
 4. Barrel exports for landing components
 
 **Issues fixed in code review:**
+
 1. Missing React type import → Always add `import type React from "react"`
-2. Missing skip link → Already added in __root.tsx
+2. Missing skip link → Already added in \_\_root.tsx
 3. CTA needs aria-label → Include descriptive aria-label
 4. Dynamic copyright year → Use `{new Date().getFullYear()}`
 
@@ -402,17 +422,18 @@ export function HeroImage({ className }: HeroImageProps) {
 
 **From UX Design + Story 2.1 learnings:**
 
-| Requirement | Implementation |
-|-------------|----------------|
-| Alt text for images | Descriptive, not decorative |
+| Requirement         | Implementation                |
+| ------------------- | ----------------------------- |
+| Alt text for images | Descriptive, not decorative   |
 | Keyboard navigation | Tab to CTA, Enter to activate |
-| Focus visible | Already configured in CSS |
-| Color contrast | White on coral: 4.1:1 (AA) |
-| Touch targets | 48px minimum, CTA is 56px |
+| Focus visible       | Already configured in CSS     |
+| Color contrast      | White on coral: 4.1:1 (AA)    |
+| Touch targets       | 48px minimum, CTA is 56px     |
 
 ### Testing Checklist
 
 **Manual Testing:**
+
 1. Open in Chrome DevTools mobile emulation (375px, 390px, 360px)
 2. Verify hero headline, description, and CTA visible without scrolling
 3. Verify before/after image displays correctly
@@ -422,6 +443,7 @@ export function HeroImage({ className }: HeroImageProps) {
 7. Run Lighthouse accessibility audit
 
 **Devices to Test:**
+
 - iPhone SE (375px) - smallest common mobile
 - iPhone 14 (390px) - typical iPhone
 - Samsung Galaxy (360px) - smallest Android
@@ -442,13 +464,13 @@ export function HeroImage({ className }: HeroImageProps) {
   <h1 className="font-display text-3xl sm:text-5xl text-charcoal leading-tight">
     Meet your baby before they're born
   </h1>
-  
+
   {/* Value proposition */}
   <p className="font-body text-warm-gray mt-4 text-lg sm:text-xl max-w-md">
     Transform your 4D ultrasound into a beautiful, photorealistic
     portrait in seconds.
   </p>
-  
+
   {/* Inline CTA for above-fold visibility */}
   <Button
     onClick={handleCtaClick}
@@ -464,7 +486,7 @@ export function HeroImage({ className }: HeroImageProps) {
   >
     Try it free
   </Button>
-  
+
   {/* Before/After example */}
   <div className="mt-8">
     <HeroImage />
@@ -475,6 +497,7 @@ export function HeroImage({ className }: HeroImageProps) {
 ### Image Loading Strategy
 
 **For LCP optimization:**
+
 1. Hero image uses `loading="eager"` (not lazy)
 2. Add `fetchpriority="high"` to hero image
 3. Preload link in head if CLS issues persist
@@ -516,22 +539,22 @@ Claude Sonnet 4 (Anthropic)
 
 ### File List
 
-| File | Action |
-|------|--------|
-| `apps/web/src/routes/index.tsx` | Modified - Updated hero section with headline, value prop, CTA with glow animation, HeroImage |
-| `apps/web/src/components/landing/hero-image.tsx` | Created - Before/after image component with placeholder |
-| `apps/web/src/components/landing/index.ts` | Modified - Added HeroImage export |
-| `apps/web/src/index.css` | Modified - Added signature-glow keyframes animation |
-| `apps/web/public/images/` | Created - Directory for hero images (empty, awaiting assets) |
+| File                                             | Action                                                                                        |
+| ------------------------------------------------ | --------------------------------------------------------------------------------------------- |
+| `apps/web/src/routes/index.tsx`                  | Modified - Updated hero section with headline, value prop, CTA with glow animation, HeroImage |
+| `apps/web/src/components/landing/hero-image.tsx` | Created - Before/after image component with placeholder                                       |
+| `apps/web/src/components/landing/index.ts`       | Modified - Added HeroImage export                                                             |
+| `apps/web/src/index.css`                         | Modified - Added signature-glow keyframes animation                                           |
+| `apps/web/public/images/`                        | Created - Directory for hero images (empty, awaiting assets)                                  |
 
 ---
 
 ## Change Log
 
-| Date | Change |
-|------|--------|
-| 2024-12-20 | Story created via create-story workflow |
-| 2024-12-20 | Implementation complete: Hero section, HeroImage component, CTA button, all tasks done. Status → review |
+| Date       | Change                                                                                                   |
+| ---------- | -------------------------------------------------------------------------------------------------------- |
+| 2024-12-20 | Story created via create-story workflow                                                                  |
+| 2024-12-20 | Implementation complete: Hero section, HeroImage component, CTA button, all tasks done. Status → review  |
 | 2024-12-20 | Code review completed: 7 issues found (0 High, 4 Medium, 3 Low), 4 auto-fixed, 3 deferred. Status → done |
 
 ---
@@ -544,15 +567,15 @@ Claude Sonnet 4 (Anthropic)
 
 ### Issues Found
 
-| # | Severity | Issue | Resolution |
-|---|----------|-------|------------|
-| 1 | MEDIUM | File List incomplete (missing index.css) | Fixed - Added to File List |
-| 2 | MEDIUM | Glow animation class not implemented | Fixed - Added hover:animate-[signature-glow...] |
-| 3 | MEDIUM | Missing signature-glow keyframes | Fixed - Added to index.css |
-| 4 | MEDIUM | Definition of Done checkboxes unchecked | Fixed - Marked all complete |
-| 5 | LOW | Duplicate CTAs in hero and floating | Deferred - Intentional per UX spec |
-| 6 | LOW | Empty images directory | Deferred - Placeholder approach documented |
-| 7 | LOW | Inconsistent alt text format | Deferred - Minor, does not affect a11y |
+| #   | Severity | Issue                                    | Resolution                                      |
+| --- | -------- | ---------------------------------------- | ----------------------------------------------- |
+| 1   | MEDIUM   | File List incomplete (missing index.css) | Fixed - Added to File List                      |
+| 2   | MEDIUM   | Glow animation class not implemented     | Fixed - Added hover:animate-[signature-glow...] |
+| 3   | MEDIUM   | Missing signature-glow keyframes         | Fixed - Added to index.css                      |
+| 4   | MEDIUM   | Definition of Done checkboxes unchecked  | Fixed - Marked all complete                     |
+| 5   | LOW      | Duplicate CTAs in hero and floating      | Deferred - Intentional per UX spec              |
+| 6   | LOW      | Empty images directory                   | Deferred - Placeholder approach documented      |
+| 7   | LOW      | Inconsistent alt text format             | Deferred - Minor, does not affect a11y          |
 
 ### Summary
 

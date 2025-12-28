@@ -1,88 +1,88 @@
-import { useCallback, useRef, useState } from "react"
-import { toast } from "sonner"
-import * as Sentry from "@sentry/react"
+import { useCallback, useRef, useState } from "react";
+import { toast } from "sonner";
+import * as Sentry from "@sentry/react";
 
-import { useAnalytics } from "@/hooks/use-analytics"
-import { useOnlineStatus } from "@/hooks/use-online-status"
-import { API_BASE_URL } from "@/lib/api-config"
-import { storeSession } from "@/lib/session"
-import { categorizeError } from "@/lib/upload-errors"
-import { getAnalyticsContext } from "@/lib/analytics-context"
-import { startUploadAttempt } from "@/lib/upload-session"
+import { useAnalytics } from "@/hooks/use-analytics";
+import { useOnlineStatus } from "@/hooks/use-online-status";
+import { API_BASE_URL } from "@/lib/api-config";
+import { storeSession } from "@/lib/session";
+import { categorizeError } from "@/lib/upload-errors";
+import { getAnalyticsContext } from "@/lib/analytics-context";
+import { startUploadAttempt } from "@/lib/upload-session";
 
 // =============================================================================
 // Constants
 // =============================================================================
 
 /** Upload timeout in milliseconds (30 seconds) */
-const UPLOAD_TIMEOUT = 30 * 1000
+const UPLOAD_TIMEOUT = 30 * 1000;
 
 /** Progress milestone percentages for analytics */
-const PROGRESS_MILESTONES = [25, 50, 75] as const
+const PROGRESS_MILESTONES = [25, 50, 75] as const;
 
 /** Toast duration for error messages */
-const TOAST_ERROR_DURATION = 5000
+const TOAST_ERROR_DURATION = 5000;
 
 // =============================================================================
 // Types
 // =============================================================================
 
-export type UploadStatus = "idle" | "requesting" | "uploading" | "complete" | "error"
+export type UploadStatus = "idle" | "requesting" | "uploading" | "complete" | "error";
 
 export interface UploadState {
-  status: UploadStatus
-  progress: number
-  uploadId: string | null
-  error: string | null
+  status: UploadStatus;
+  progress: number;
+  uploadId: string | null;
+  error: string | null;
   /** Current retry attempt (0 = first attempt) */
-  retryCount: number
+  retryCount: number;
   /** Whether auto-retry is in progress */
-  autoRetrying: boolean
+  autoRetrying: boolean;
 }
 
 export interface UploadResult {
-  uploadId: string
-  key: string
-  sessionToken: string
+  uploadId: string;
+  key: string;
+  sessionToken: string;
 }
 
 export interface UseUploadResult {
-  state: UploadState
-  startUpload: (file: File, email: string) => Promise<UploadResult | null>
-  cancelUpload: () => void
-  reset: () => void
+  state: UploadState;
+  startUpload: (file: File, email: string) => Promise<UploadResult | null>;
+  cancelUpload: () => void;
+  reset: () => void;
   /** Whether the user is currently online (useful for UI hints) */
-  isOnline: boolean
+  isOnline: boolean;
 }
 
 interface PresignedUrlResponse {
-  uploadUrl: string
-  uploadId: string
-  key: string
-  expiresAt: string
-  sessionToken: string
+  uploadUrl: string;
+  uploadId: string;
+  key: string;
+  expiresAt: string;
+  sessionToken: string;
 }
 
 interface ConfirmUploadResponse {
-  success: boolean
-  jobId: string
-  status: string
+  success: boolean;
+  jobId: string;
+  status: string;
 }
 
 interface RateLimitErrorResponse {
-  error: string
-  code: "RATE_LIMIT_EXCEEDED"
-  retryAfter: number
+  error: string;
+  code: "RATE_LIMIT_EXCEEDED";
+  retryAfter: number;
 }
 
 /** Custom error class for rate limiting */
 class RateLimitError extends Error {
-  retryAfter: number
+  retryAfter: number;
 
   constructor(message: string, retryAfter: number) {
-    super(message)
-    this.name = "RateLimitError"
-    this.retryAfter = retryAfter
+    super(message);
+    this.name = "RateLimitError";
+    this.retryAfter = retryAfter;
   }
 }
 
@@ -97,23 +97,23 @@ const initialState: UploadState = {
   error: null,
   retryCount: 0,
   autoRetrying: false,
-}
+};
 
 // =============================================================================
 // Hook
 // =============================================================================
 
 export function useUpload(): UseUploadResult {
-  const [state, setState] = useState<UploadState>(initialState)
-  const { trackEvent } = useAnalytics()
-  const { isOnline, checkStatus } = useOnlineStatus()
-  
+  const [state, setState] = useState<UploadState>(initialState);
+  const { trackEvent } = useAnalytics();
+  const { isOnline, checkStatus } = useOnlineStatus();
+
   // Refs for cancellation and milestone tracking
-  const abortControllerRef = useRef<AbortController | null>(null)
-  const xhrRef = useRef<XMLHttpRequest | null>(null)
-  const passedMilestonesRef = useRef<Set<number>>(new Set())
-  const progressRef = useRef<number>(0)
-  const currentPhaseRef = useRef<"idle" | "requesting" | "uploading">("idle")
+  const abortControllerRef = useRef<AbortController | null>(null);
+  const xhrRef = useRef<XMLHttpRequest | null>(null);
+  const passedMilestonesRef = useRef<Set<number>>(new Set());
+  const progressRef = useRef<number>(0);
+  const currentPhaseRef = useRef<"idle" | "requesting" | "uploading">("idle");
 
   /**
    * Request a presigned upload URL from the server
@@ -122,9 +122,9 @@ export function useUpload(): UseUploadResult {
     async (
       contentType: string,
       email: string,
-      signal: AbortSignal
+      signal: AbortSignal,
     ): Promise<PresignedUrlResponse> => {
-      const startTime = performance.now()
+      const startTime = performance.now();
 
       const response = await fetch(`${API_BASE_URL}/api/upload`, {
         method: "POST",
@@ -133,29 +133,28 @@ export function useUpload(): UseUploadResult {
         },
         body: JSON.stringify({ contentType, email }),
         signal,
-      })
+      });
 
-      const latencyMs = Math.round(performance.now() - startTime)
-      trackEvent("presigned_url_requested", { latencyMs })
+      const latencyMs = Math.round(performance.now() - startTime);
+      trackEvent("presigned_url_requested", { latencyMs });
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({})) as RateLimitErrorResponse | { error?: string }
+        const errorData = (await response.json().catch(() => ({}))) as
+          | RateLimitErrorResponse
+          | { error?: string };
 
         // Handle rate limit specifically
         if (response.status === 429 && "retryAfter" in errorData) {
-          throw new RateLimitError(
-            errorData.error || "Rate limit exceeded",
-            errorData.retryAfter
-          )
+          throw new RateLimitError(errorData.error || "Rate limit exceeded", errorData.retryAfter);
         }
 
-        throw new Error(errorData.error || `Server error: ${response.status}`)
+        throw new Error(errorData.error || `Server error: ${response.status}`);
       }
 
-      return response.json()
+      return response.json();
     },
-    [trackEvent]
-  )
+    [trackEvent],
+  );
 
   /**
    * Confirm upload completion with the server
@@ -168,19 +167,19 @@ export function useUpload(): UseUploadResult {
           "Content-Type": "application/json",
         },
         signal,
-      })
+      });
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}))
-        throw new Error(errorData.error || `Confirmation failed: ${response.status}`)
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `Confirmation failed: ${response.status}`);
       }
 
-      const data = await response.json()
-      trackEvent("upload_confirmed", { upload_id: uploadId })
-      return data
+      const data = await response.json();
+      trackEvent("upload_confirmed", { upload_id: uploadId });
+      return data;
     },
-    [trackEvent]
-  )
+    [trackEvent],
+  );
 
   /**
    * Clean up a partial/failed upload from R2 storage.
@@ -197,80 +196,73 @@ export function useUpload(): UseUploadResult {
           },
         }).catch(() => {
           // Silent fail - cleanup is best-effort
-        })
+        });
 
         // Track cleanup event
-        trackEvent("upload_cleanup_triggered", { upload_id: uploadId })
+        trackEvent("upload_cleanup_triggered", { upload_id: uploadId });
       } catch {
         // Silent fail - cleanup is best-effort
       }
     },
-    [trackEvent]
-  )
+    [trackEvent],
+  );
 
   /**
    * Upload file to R2 using presigned URL with progress tracking
    */
   const uploadToR2 = useCallback(
-    (
-      url: string,
-      file: File,
-      onProgress: (percent: number) => void
-    ): Promise<void> => {
+    (url: string, file: File, onProgress: (percent: number) => void): Promise<void> => {
       return new Promise((resolve, reject) => {
-        const xhr = new XMLHttpRequest()
-        xhrRef.current = xhr
+        const xhr = new XMLHttpRequest();
+        xhrRef.current = xhr;
 
         // Track upload progress
         xhr.upload.onprogress = (event) => {
           if (event.lengthComputable) {
-            const percent = Math.round((event.loaded / event.total) * 100)
-            onProgress(percent)
+            const percent = Math.round((event.loaded / event.total) * 100);
+            onProgress(percent);
 
             // Track milestone events
             for (const milestone of PROGRESS_MILESTONES) {
-              if (
-                percent >= milestone &&
-                !passedMilestonesRef.current.has(milestone)
-              ) {
-                passedMilestonesRef.current.add(milestone)
-                trackEvent("upload_progress", { percent, milestone })
+              if (percent >= milestone && !passedMilestonesRef.current.has(milestone)) {
+                passedMilestonesRef.current.add(milestone);
+                trackEvent("upload_progress", { percent, milestone });
               }
             }
           }
-        }
+        };
 
         xhr.onload = () => {
           if (xhr.status >= 200 && xhr.status < 300) {
-            resolve()
+            resolve();
           } else {
-            reject(new Error(`Upload failed with status ${xhr.status}`))
+            reject(new Error(`Upload failed with status ${xhr.status}`));
           }
-        }
+        };
 
         xhr.onerror = () => {
-          reject(new Error("Network error during upload"))
-        }
+          reject(new Error("Network error during upload"));
+        };
 
         xhr.onabort = () => {
-          reject(new Error("Upload cancelled"))
-        }
+          reject(new Error("Upload cancelled"));
+        };
 
         xhr.ontimeout = () => {
-          reject(new Error("Upload timed out"))
-        }
+          reject(new Error("Upload timed out"));
+        };
 
         // Set timeout
-        xhr.timeout = UPLOAD_TIMEOUT
+        xhr.timeout = UPLOAD_TIMEOUT;
 
         // Open and send request
-        xhr.open("PUT", url)
-        xhr.setRequestHeader("Content-Type", file.type)
-        xhr.send(file)
-      })
+        xhr.open("PUT", url);
+        xhr.setRequestHeader("Content-Type", file.type);
+        xhr.send(file);
+      });
     },
-    [trackEvent]
-  )
+    [trackEvent],
+  );
 
   /**
    * Start the upload process
@@ -278,18 +270,19 @@ export function useUpload(): UseUploadResult {
   const startUpload = useCallback(
     async (file: File, email: string): Promise<UploadResult | null> => {
       // Get session info and analytics context early for all error paths
-      const sessionInfo = startUploadAttempt()
-      const analyticsContext = getAnalyticsContext()
+      const sessionInfo = startUploadAttempt();
+      const analyticsContext = getAnalyticsContext();
 
       // Check online status before starting
-      const currentlyOnline = checkStatus()
+      const currentlyOnline = checkStatus();
       if (!currentlyOnline) {
         const offlineError = {
           type: "NETWORK" as const,
           message: "User is offline",
-          userMessage: "You appear to be offline. Please check your internet connection and try again!",
+          userMessage:
+            "You appear to be offline. Please check your internet connection and try again!",
           retryable: true,
-        }
+        };
 
         trackEvent("upload_failed", {
           errorType: "NETWORK",
@@ -299,31 +292,31 @@ export function useUpload(): UseUploadResult {
           phase: "idle",
           ...sessionInfo,
           ...analyticsContext,
-        })
+        });
 
-        toast.error(offlineError.userMessage, { duration: TOAST_ERROR_DURATION })
+        toast.error(offlineError.userMessage, { duration: TOAST_ERROR_DURATION });
 
-        setState(prev => ({
+        setState((prev) => ({
           status: "error",
           progress: 0,
           uploadId: null,
           error: offlineError.userMessage,
           retryCount: prev.retryCount + 1,
           autoRetrying: false,
-        }))
+        }));
 
-        return null
+        return null;
       }
 
       // Reset milestones
-      passedMilestonesRef.current.clear()
-      currentPhaseRef.current = "idle"
+      passedMilestonesRef.current.clear();
+      currentPhaseRef.current = "idle";
 
       // Create abort controller
-      const abortController = new AbortController()
-      abortControllerRef.current = abortController
+      const abortController = new AbortController();
+      abortControllerRef.current = abortController;
 
-      const startTime = performance.now()
+      const startTime = performance.now();
 
       // Track timing for each phase
       const timings = {
@@ -331,7 +324,7 @@ export function useUpload(): UseUploadResult {
         presignEnd: 0,
         uploadStart: 0,
         uploadEnd: 0,
-      }
+      };
 
       try {
         // Track upload started with enriched context
@@ -340,76 +333,72 @@ export function useUpload(): UseUploadResult {
           file_size: file.size,
           ...sessionInfo,
           ...analyticsContext,
-        })
+        });
 
         // Phase 1: Request presigned URL
-        currentPhaseRef.current = "requesting"
-        setState(prev => ({
+        currentPhaseRef.current = "requesting";
+        setState((prev) => ({
           status: "requesting",
           progress: 0,
           uploadId: null,
           error: null,
           retryCount: prev.retryCount,
           autoRetrying: prev.autoRetrying,
-        }))
+        }));
 
-        timings.presignStart = performance.now()
-        const presignedData = await requestPresignedUrl(
-          file.type,
-          email,
-          abortController.signal
-        )
-        timings.presignEnd = performance.now()
+        timings.presignStart = performance.now();
+        const presignedData = await requestPresignedUrl(file.type, email, abortController.signal);
+        timings.presignEnd = performance.now();
 
         // Check if cancelled
         if (abortController.signal.aborted) {
-          return null
+          return null;
         }
 
         // Phase 2: Upload to R2
-        currentPhaseRef.current = "uploading"
+        currentPhaseRef.current = "uploading";
         setState((prev) => ({
           ...prev,
           status: "uploading",
           uploadId: presignedData.uploadId,
-        }))
+        }));
 
-        timings.uploadStart = performance.now()
+        timings.uploadStart = performance.now();
         try {
           await uploadToR2(presignedData.uploadUrl, file, (percent) => {
-            progressRef.current = percent
+            progressRef.current = percent;
             setState((prev) => ({
               ...prev,
               progress: percent,
-            }))
-          })
-          timings.uploadEnd = performance.now()
+            }));
+          });
+          timings.uploadEnd = performance.now();
         } catch (uploadError) {
-          timings.uploadEnd = performance.now()
+          timings.uploadEnd = performance.now();
           // Clean up partial upload on R2 failure (fire and forget)
-          cleanupUpload(presignedData.uploadId, presignedData.sessionToken)
-          throw uploadError
+          cleanupUpload(presignedData.uploadId, presignedData.sessionToken);
+          throw uploadError;
         }
 
         // Check if cancelled before confirmation
         if (abortController.signal.aborted) {
-          return null
+          return null;
         }
 
         // Phase 3: Confirm upload with server
-        await confirmUpload(presignedData.uploadId, abortController.signal)
+        await confirmUpload(presignedData.uploadId, abortController.signal);
 
         // Phase 4: Store session in localStorage
-        storeSession(presignedData.uploadId, presignedData.sessionToken)
+        storeSession(presignedData.uploadId, presignedData.sessionToken);
 
         // Track session creation
-        trackEvent("session_created", { upload_id: presignedData.uploadId })
+        trackEvent("session_created", { upload_id: presignedData.uploadId });
 
         // Upload complete - calculate all timings
-        const endTime = performance.now()
-        const totalDuration = Math.round(endTime - startTime)
-        const presignLatency = Math.round(timings.presignEnd - timings.presignStart)
-        const uploadDuration = Math.round(timings.uploadEnd - timings.uploadStart)
+        const endTime = performance.now();
+        const totalDuration = Math.round(endTime - startTime);
+        const presignLatency = Math.round(timings.presignEnd - timings.presignStart);
+        const uploadDuration = Math.round(timings.uploadEnd - timings.uploadStart);
 
         // Track upload completed with detailed timing breakdown
         trackEvent("upload_completed", {
@@ -424,7 +413,7 @@ export function useUpload(): UseUploadResult {
           // Session & context
           ...sessionInfo,
           ...analyticsContext,
-        })
+        });
 
         // Also track a separate stage timing event for detailed funnel analysis
         trackEvent("upload_stage_timing", {
@@ -433,7 +422,7 @@ export function useUpload(): UseUploadResult {
           upload_duration: uploadDuration,
           total_duration: totalDuration,
           ...sessionInfo,
-        })
+        });
 
         setState({
           status: "complete",
@@ -442,34 +431,34 @@ export function useUpload(): UseUploadResult {
           error: null,
           retryCount: 0,
           autoRetrying: false,
-        })
+        });
 
         return {
           uploadId: presignedData.uploadId,
           key: presignedData.key,
           sessionToken: presignedData.sessionToken,
-        }
+        };
       } catch (error) {
         // Handle cancellation separately (no error toast)
         if (
           error instanceof Error &&
-          (error.message === "Upload cancelled" ||
-            error.name === "AbortError")
+          (error.message === "Upload cancelled" || error.name === "AbortError")
         ) {
           // Use ref for accurate progress at cancellation time
-          trackEvent("upload_cancelled", { progressPercent: progressRef.current })
-          
-          progressRef.current = 0
-          setState(initialState)
-          return null
+          trackEvent("upload_cancelled", { progressPercent: progressRef.current });
+
+          progressRef.current = 0;
+          setState(initialState);
+          return null;
         }
 
         // Handle rate limit errors specifically
         if (error instanceof RateLimitError) {
-          const retryAfterMinutes = Math.ceil(error.retryAfter / 60)
-          const userMessage = retryAfterMinutes > 1
-            ? `Upload limit reached. Try again in ${retryAfterMinutes} minutes.`
-            : "You've reached the upload limit. Please try again later."
+          const retryAfterMinutes = Math.ceil(error.retryAfter / 60);
+          const userMessage =
+            retryAfterMinutes > 1
+              ? `Upload limit reached. Try again in ${retryAfterMinutes} minutes.`
+              : "You've reached the upload limit. Please try again later.";
 
           trackEvent("rate_limit_exceeded", {
             retryAfter: error.retryAfter,
@@ -477,24 +466,24 @@ export function useUpload(): UseUploadResult {
             file_size: file.size,
             ...sessionInfo,
             ...analyticsContext,
-          })
+          });
 
-          toast.error(userMessage, { duration: TOAST_ERROR_DURATION })
+          toast.error(userMessage, { duration: TOAST_ERROR_DURATION });
 
-          setState(prev => ({
+          setState((prev) => ({
             status: "error",
             progress: 0,
             uploadId: null,
             error: userMessage,
             retryCount: prev.retryCount + 1,
             autoRetrying: false,
-          }))
+          }));
 
-          return null
+          return null;
         }
 
         // Categorize the error for better handling and reporting
-        const categorizedError = categorizeError(error)
+        const categorizedError = categorizeError(error);
 
         trackEvent("upload_failed", {
           errorType: categorizedError.type,
@@ -504,7 +493,7 @@ export function useUpload(): UseUploadResult {
           phase: currentPhaseRef.current, // Use ref for accurate phase at error time
           ...sessionInfo,
           ...analyticsContext,
-        })
+        });
 
         // Report to Sentry with enhanced context (no PII)
         Sentry.captureException(error, {
@@ -524,29 +513,30 @@ export function useUpload(): UseUploadResult {
             // NO email, NO IP, NO identifiable info
           },
           fingerprint: ["upload-error", categorizedError.type],
-        })
+        });
 
         // Show user-friendly error
-        const userMessage = categorizedError.userMessage || getErrorMessage(categorizedError.message)
-        toast.error(userMessage, { duration: TOAST_ERROR_DURATION })
+        const userMessage =
+          categorizedError.userMessage || getErrorMessage(categorizedError.message);
+        toast.error(userMessage, { duration: TOAST_ERROR_DURATION });
 
-        setState(prev => ({
+        setState((prev) => ({
           status: "error",
           progress: 0,
           uploadId: null,
           error: userMessage,
           retryCount: prev.retryCount + 1,
           autoRetrying: false,
-        }))
+        }));
 
-        return null
+        return null;
       } finally {
-        abortControllerRef.current = null
-        xhrRef.current = null
+        abortControllerRef.current = null;
+        xhrRef.current = null;
       }
     },
-    [requestPresignedUrl, uploadToR2, confirmUpload, trackEvent, cleanupUpload]
-  )
+    [requestPresignedUrl, uploadToR2, confirmUpload, trackEvent, cleanupUpload],
+  );
 
   /**
    * Cancel the current upload
@@ -554,24 +544,24 @@ export function useUpload(): UseUploadResult {
   const cancelUpload = useCallback(() => {
     // Abort fetch request
     if (abortControllerRef.current) {
-      abortControllerRef.current.abort()
+      abortControllerRef.current.abort();
     }
 
     // Abort XMLHttpRequest
     if (xhrRef.current) {
-      xhrRef.current.abort()
+      xhrRef.current.abort();
     }
-  }, [])
+  }, []);
 
   /**
    * Reset upload state
    */
   const reset = useCallback(() => {
-    cancelUpload()
-    setState(initialState)
-    passedMilestonesRef.current.clear()
-    progressRef.current = 0
-  }, [cancelUpload])
+    cancelUpload();
+    setState(initialState);
+    passedMilestonesRef.current.clear();
+    progressRef.current = 0;
+  }, [cancelUpload]);
 
   return {
     state,
@@ -579,7 +569,7 @@ export function useUpload(): UseUploadResult {
     cancelUpload,
     reset,
     isOnline,
-  }
+  };
 }
 
 // =============================================================================
@@ -588,13 +578,13 @@ export function useUpload(): UseUploadResult {
 
 function getErrorMessage(errorType: string): string {
   if (errorType.includes("Network")) {
-    return "We couldn't upload your image. Please check your connection and try again!"
+    return "We couldn't upload your image. Please check your connection and try again!";
   }
   if (errorType.includes("timeout") || errorType.includes("timed out")) {
-    return "The upload took too long. Please check your connection and try again."
+    return "The upload took too long. Please check your connection and try again.";
   }
   if (errorType.includes("Server") || errorType.includes("500")) {
-    return "Something went wrong on our end. Let's give it another try!"
+    return "Something went wrong on our end. Let's give it another try!";
   }
-  return "We had trouble uploading your image. Let's try again!"
+  return "We had trouble uploading your image. Let's try again!";
 }

@@ -40,12 +40,8 @@
           "name": "downloads_purchase_id_purchases_id_fk",
           "tableFrom": "downloads",
           "tableTo": "purchases",
-          "columnsFrom": [
-            "purchase_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["purchase_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -110,12 +106,8 @@
           "name": "preferences_upload_id_uploads_id_fk",
           "tableFrom": "preferences",
           "tableTo": "uploads",
-          "columnsFrom": [
-            "upload_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["upload_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -123,12 +115,8 @@
           "name": "preferences_selected_result_id_results_id_fk",
           "tableFrom": "preferences",
           "tableTo": "results",
-          "columnsFrom": [
-            "selected_result_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["selected_result_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -214,12 +202,8 @@
           "name": "purchases_upload_id_uploads_id_fk",
           "tableFrom": "purchases",
           "tableTo": "uploads",
-          "columnsFrom": [
-            "upload_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["upload_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -229,9 +213,7 @@
         "purchases_stripe_session_id_unique": {
           "name": "purchases_stripe_session_id_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "stripe_session_id"
-          ]
+          "columns": ["stripe_session_id"]
         }
       },
       "policies": {},
@@ -304,12 +286,8 @@
           "name": "results_upload_id_uploads_id_fk",
           "tableFrom": "results",
           "tableTo": "uploads",
-          "columnsFrom": [
-            "upload_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["upload_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -426,9 +404,7 @@
         "uploads_session_token_unique": {
           "name": "uploads_session_token_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "session_token"
-          ]
+          "columns": ["session_token"]
         }
       },
       "policies": {},

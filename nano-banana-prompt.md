@@ -1,8 +1,4 @@
-Ricardo — cool, with that blog’s guidance the biggest upgrades are:
-	1.	Use references strategically (up to 5): make the ultrasound the “geometry lock”, optionally add 2–3 crops (face close-up, 3/4 angle, face+hand) as separate refs.
-	2.	Be explicit + structured when you need precision (JSON prompting works great).
-	3.	Strong negatives (Nano Banana Pro likes stamps/text/aged “rustic” vibes; you want none of that).
-	4.	Two-step pipeline: first get the best render, then run upscale/restore to 4K with a faithful prompt.
+Ricardo — cool, with that blog’s guidance the biggest upgrades are: 1. Use references strategically (up to 5): make the ultrasound the “geometry lock”, optionally add 2–3 crops (face close-up, 3/4 angle, face+hand) as separate refs. 2. Be explicit + structured when you need precision (JSON prompting works great). 3. Strong negatives (Nano Banana Pro likes stamps/text/aged “rustic” vibes; you want none of that). 4. Two-step pipeline: first get the best render, then run upscale/restore to 4K with a faithful prompt.
 
 Below are refined prompts that follow that.
 
@@ -12,19 +8,16 @@ Nano Banana Pro — best prompt (prose)
 
 Mode: Edit (image-to-image)
 Refs:
-	•	Ref1: full ultrasound frame (pose/framing lock)
-	•	Ref2: tight face crop (identity lock)
-	•	Ref3: face+hand crop (anatomy lock)
+• Ref1: full ultrasound frame (pose/framing lock)
+• Ref2: tight face crop (identity lock)
+• Ref3: face+hand crop (anatomy lock)
 (Optional Ref4/5: alternate crops if you have them)
 
 Prompt
 
 Edit task: Transform the provided 4D ultrasound into a single-frame ultra-realistic in-utero photograph.
 
-Reference priority:
-	1.	Keep the exact pose, head angle, facial proportions, and framing from Ref1.
-	2.	Match facial geometry from Ref2 (identity lock).
-	3.	Match hand/finger count and placement from Ref3 (anatomy lock, if visible).
+Reference priority: 1. Keep the exact pose, head angle, facial proportions, and framing from Ref1. 2. Match facial geometry from Ref2 (identity lock). 3. Match hand/finger count and placement from Ref3 (anatomy lock, if visible).
 
 What to change (only): Replace ultrasound material/shading with real photographic detail: realistic eyelids, lips, nose, soft cheeks; subtle peach fuzz; natural skin micro-texture and mild mottling; physically plausible subsurface scattering.
 
@@ -45,60 +38,59 @@ Nano Banana Pro — JSON prompt version (more “guide-aligned” control)
 Paste as JSON (if your UI supports it):
 
 {
-  "task": "edit_ultrasound_to_photoreal_inutero_photo",
-  "referencePriority": [
-    "Ref1: framing + pose lock",
-    "Ref2: face geometry / identity lock",
-    "Ref3: hand anatomy lock"
-  ],
-  "constraints": {
-    "keepPose": true,
-    "keepFraming": true,
-    "keepFacialProportions": true,
-    "noAnatomyChanges": true,
-    "minimalChanges": "only convert ultrasound rendering to photoreal"
-  },
-  "subject": {
-    "type": "late-term fetus",
-    "expression": "relaxed, eyes closed",
-    "details": ["natural eyelids", "natural lips", "soft cheeks", "subtle peach fuzz", "skin micro-texture"]
-  },
-  "environment": {
-    "setting": "inside womb",
-    "elements": ["amniotic fluid haze", "subtle floating specks"],
-    "forbidden": ["props", "extra objects", "text"]
-  },
-  "lighting": {
-    "type": "warm transillumination",
-    "tone": "amber/red",
-    "effects": ["soft bloom", "gentle falloff", "slight vignette"]
-  },
-  "camera": {
-    "style": "candid medical macro photo",
-    "focalRange": "50-85mm equivalent",
-    "depthOfField": "shallow (around f/2 look)"
-  },
-  "negatives": [
-    "date stamp",
-    "text",
-    "watermark",
-    "border",
-    "rustic",
-    "aged look",
-    "CGI",
-    "3D render",
-    "plastic skin",
-    "waxy skin",
-    "beauty filter",
-    "over-smoothed skin",
-    "over-sharpened",
-    "extra fingers",
-    "missing fingers",
-    "fused fingers",
-    "warped anatomy"
-  ]
+"task": "edit_ultrasound_to_photoreal_inutero_photo",
+"referencePriority": [
+"Ref1: framing + pose lock",
+"Ref2: face geometry / identity lock",
+"Ref3: hand anatomy lock"
+],
+"constraints": {
+"keepPose": true,
+"keepFraming": true,
+"keepFacialProportions": true,
+"noAnatomyChanges": true,
+"minimalChanges": "only convert ultrasound rendering to photoreal"
+},
+"subject": {
+"type": "late-term fetus",
+"expression": "relaxed, eyes closed",
+"details": ["natural eyelids", "natural lips", "soft cheeks", "subtle peach fuzz", "skin micro-texture"]
+},
+"environment": {
+"setting": "inside womb",
+"elements": ["amniotic fluid haze", "subtle floating specks"],
+"forbidden": ["props", "extra objects", "text"]
+},
+"lighting": {
+"type": "warm transillumination",
+"tone": "amber/red",
+"effects": ["soft bloom", "gentle falloff", "slight vignette"]
+},
+"camera": {
+"style": "candid medical macro photo",
+"focalRange": "50-85mm equivalent",
+"depthOfField": "shallow (around f/2 look)"
+},
+"negatives": [
+"date stamp",
+"text",
+"watermark",
+"border",
+"rustic",
+"aged look",
+"CGI",
+"3D render",
+"plastic skin",
+"waxy skin",
+"beauty filter",
+"over-smoothed skin",
+"over-sharpened",
+"extra fingers",
+"missing fingers",
+"fused fingers",
+"warped anatomy"
+]
 }
-
 
 ⸻
 
@@ -122,6 +114,7 @@ Here is the full guide from the provided URL, converted into a clean Markdown fo
 Following the file, I have also provided a **refined version** of the complex JSON prompt found in the guide, optimized for better clarity and strict JSON compliance.
 
 # Guide: How to Prompt Nano Banana Pro
+
 **Source:** [fofr.ai](https://www.fofr.ai/nano-banana-pro-guide)  
 **Date:** Nov 27, 2025  
 **Author:** fofr
@@ -137,9 +130,11 @@ There are no hard rules about how to get good images from Nano Banana Pro. Prett
 ### Example: Simple vs. Complex
 
 **Simple Prompt:**
+
 > "a photo"
 
 **Complex Prompt:**
+
 > "a photo of a black and white cat stealing turkey from a kitchen table while a labradoodle sleeps unaware underneath, it's a modern sleek kitchen in slate grey with floor uplighting and patterned floor tiles"
 
 ---
@@ -155,12 +150,14 @@ The simplest approach to learning about any model is to play with it. Try some m
 3.  **Final:** "A high end fashion photo outdoors, winter fashion shoot, daring and brave"
 
 ### Exercise: Recreate an Image
+
 Start from a real image and, using only words, try to recreate that image.
 
 **Example Prompt:**
+
 > "A landscape photo at dawn, there is a distant snow capped mountain range, in the foreground there is a lake with a jetty. The jetty is on the right side. Someone is standing at the end of the jetty. Early morning warm and vibrant pink light lights the underside of the grey clouds and the snowy peaks. The jetty is frosted. There is lots of dark grey cloud cover contrasting the light. Low angle photo. There's handles for a metal ladder just visible at the end of the jetty."
 
-*Note: The model may recognize famous locations even if not explicitly named.*
+_Note: The model may recognize famous locations even if not explicitly named._
 
 ---
 
@@ -169,6 +166,7 @@ Start from a real image and, using only words, try to recreate that image.
 You don't have to detail every aspect, but detail helps when you have exact specifications.
 
 **Detailed Prompt Example:**
+
 > "A realistic, wide-angle documentary photo of a chaotic family kitchen during the morning rush. The wooden dining table is cluttered with an overturned box of Cheerios, a large puddle of spilled milk, a pile of unfolded laundry, and scattered school papers. An orange tabby cat stands on top of the table, calmly drinking the spilled milk. Under the table, a golden retriever is licking a dirty plate. A toddler in a high chair is screaming and smearing oatmeal on their face. A young boy wearing a superhero cape runs through the background. The mother looks stressed, holding a cell phone to her ear while frantically wiping the table. The father stands in the background looking confused and holding a piece of burnt toast. Bright natural morning light, high detail, messy authentic home."
 
 ---
@@ -178,12 +176,14 @@ You don't have to detail every aspect, but detail helps when you have exact spec
 Sometimes it is easier to tell the model what you **don't** want to see.
 
 **Common Negatives:**
-* `no date stamp` (Nano Banana Pro likes to put these in the corner)
-* `no text`
-* `not rustic` (Prevents the "aged" look)
-* `no monkeys` (Essential when designing anything related to bananas!)
+
+- `no date stamp` (Nano Banana Pro likes to put these in the corner)
+- `no text`
+- `not rustic` (Prevents the "aged" look)
+- `no monkeys` (Essential when designing anything related to bananas!)
 
 **Example:**
+
 > **Prompt:** "A screenshot of the Google home page with a banana Google doodle, change I'm feeling lucky to be 'Go bananas'. No monkeys."
 
 ---
@@ -193,6 +193,7 @@ Sometimes it is easier to tell the model what you **don't** want to see.
 Using JSON allows you to provide structured detail (meaning, composition, subject, style) in a way the model easily understands but is less verbose than prose.
 
 ### Example JSON Prompt
+
 ```json
 {
   "promptDetails": {
@@ -254,8 +255,8 @@ Using JSON allows you to provide structured detail (meaning, composition, subjec
 
 Nano Banana Pro handles text well, including cursive, sans-serif, handwriting, or 3D word art.
 
-* **Prompt 1:** "Very neatly write 'Show text however you like' in slanted elaborate handwriting in the style of 1915"
-* **Prompt 2:** "Giant 3D word art in a 90s style saying 'Show text however you like'"
+- **Prompt 1:** "Very neatly write 'Show text however you like' in slanted elaborate handwriting in the style of 1915"
+- **Prompt 2:** "Giant 3D word art in a 90s style saying 'Show text however you like'"
 
 **Important:** For long text, ask for a "verbatim copy".
 
@@ -267,9 +268,9 @@ Nano Banana Pro handles text well, including cursive, sans-serif, handwriting, o
 
 You can use reference images (up to 5) to maintain character identity or style.
 
-* **Single Reference:** Run the model a few times to generate more angles of your character to use as future references.
-* **Multiple References:** Increases fidelity.
-* **Style Transfer:** Use references for branding, logos, or color schemes.
+- **Single Reference:** Run the model a few times to generate more angles of your character to use as future references.
+- **Multiple References:** Increases fidelity.
+- **Style Transfer:** Use references for branding, logos, or color schemes.
 
 **Example Use Case:**
 
@@ -293,8 +294,8 @@ Nano Banana Pro can use Google Search to find real-time info (e.g., current even
 
 ### Upscaling and Restoration
 
-* **Upscaling:** Give it a small image (e.g., 150x150) and prompt "Upscale to 4K".
-* **Restoration:** Upload an old photo and prompt "Restore this image".
+- **Upscaling:** Give it a small image (e.g., 150x150) and prompt "Upscale to 4K".
+- **Restoration:** Upload an old photo and prompt "Restore this image".
 
 ---
 
@@ -307,7 +308,7 @@ To get the best results:
 3. **Use reference images:** Use them for character consistency, style transfer, and object placement.
 4. **Use tools:** Enable Google Search for current events and use the model's native upscaling abilities.
 
-```
+````
 
 ---
 
@@ -410,13 +411,13 @@ Here is your refined prompt in the specific **Nano Banana Pro JSON format**.
   "negativePrompt": "plastic, wax, clay, illustration, cgi, 3d render, dry skin, artificial texture, sepia tone, ultrasound grain, noise, distortion, cartoon"
 }
 
-```
+````
 
 ---
 
 ### Option 2: The "Natural Language" Pro Prompt
 
-*If the tool you are using does not accept JSON, use this paragraph. It follows the guide's "Subject - Materiality - Lighting - Camera" formula.*
+_If the tool you are using does not accept JSON, use this paragraph. It follows the guide's "Subject - Materiality - Lighting - Camera" formula._
 
 > **"A hyper-realistic macro photograph of a fetus inside the womb, reconstructed from a 4D ultrasound. The subject is a human baby with eyes closed, featuring translucent, wet skin with visible pores and fine peach fuzz (lanugo). Materiality: The skin texture must exhibit strong subsurface scattering, appearing organic and fleshy, not plastic or waxy. Lighting: Cinematic, volumetric amber lighting filtering through the uterine wall, creating a warm, bioluminescent glow. Camera: Shot on a 100mm macro lens at f/2.8 with shallow depth of field, blurring the background amniotic fluid. 8k resolution, National Geographic medical photography style."**
 
@@ -424,6 +425,6 @@ Here is your refined prompt in the specific **Nano Banana Pro JSON format**.
 
 The guide emphasizes that for **consistency**, you must not just type the prompt but also **upload your image**.
 
-* **Input:** Upload your specific ultrasound image.
-* **Prompt Strength / Image Weight:** Set this to **High (around 60-70%)**. You want the AI to strictly follow the *structure* of the baby's face in your image but replace the *texture* with the description in the prompt.
-* **Upscale:** The guide notes that Nano Banana Pro is excellent at upscaling. If your result is good but blurry, run a second pass with the command: **"Upscale to 4K, sharpen details."**
+- **Input:** Upload your specific ultrasound image.
+- **Prompt Strength / Image Weight:** Set this to **High (around 60-70%)**. You want the AI to strictly follow the _structure_ of the baby's face in your image but replace the _texture_ with the description in the prompt.
+- **Upscale:** The guide notes that Nano Banana Pro is excellent at upscaling. If your result is good but blurry, run a second pass with the command: **"Upscale to 4K, sharpen details."**

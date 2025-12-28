@@ -22,11 +22,11 @@
  * @see https://ai.google.dev/gemini-api/docs/image-generation
  */
 
-import { Effect, Context, Layer, Schedule, Duration, pipe, Ref } from "effect"
-import { GeminiError, isRetryableGeminiError } from "../lib/errors"
-import { geminiRetrySchedule } from "../lib/retry"
-import { addEffectBreadcrumb, captureEffectError } from "../lib/sentry-effect"
-import { PostHogService } from "./PostHogService"
+import { Effect, Context, Layer, Schedule, Duration, pipe, Ref } from "effect";
+import { GeminiError, isRetryableGeminiError } from "../lib/errors";
+import { geminiRetrySchedule } from "../lib/retry";
+import { addEffectBreadcrumb, captureEffectError } from "../lib/sentry-effect";
+import { PostHogService } from "./PostHogService";
 import {
   getGeminiClient,
   IMAGEN_MODEL,
@@ -36,8 +36,8 @@ import {
   bufferToBase64,
   inferMimeType,
   type ImageGenerationConfig,
-} from "../lib/gemini"
-import { isGeminiConfigured, env } from "../lib/env"
+} from "../lib/gemini";
+import { isGeminiConfigured, env } from "../lib/env";
 
 // =============================================================================
 // Service Types
@@ -48,8 +48,8 @@ import { isGeminiConfigured, env } from "../lib/env"
  * Returns image data as a Buffer with its MIME type.
  */
 export interface GeneratedImage {
-  data: Buffer
-  mimeType: string
+  data: Buffer;
+  mimeType: string;
 }
 
 // =============================================================================
@@ -61,9 +61,9 @@ export interface GeneratedImage {
  */
 export interface GenerateImageOptions {
   /** Image configuration (aspect ratio, size) */
-  imageConfig?: ImageGenerationConfig
+  imageConfig?: ImageGenerationConfig;
   /** Upload ID for tracking retries in analytics (Story 4.3) */
-  uploadId?: string
+  uploadId?: string;
 }
 
 /**
@@ -87,8 +87,8 @@ export class GeminiService extends Context.Tag("GeminiService")<
     generateImage: (
       imageBuffer: Buffer,
       prompt: string,
-      options?: GenerateImageOptions
-    ) => Effect.Effect<GeneratedImage, GeminiError, PostHogService>
+      options?: GenerateImageOptions,
+    ) => Effect.Effect<GeneratedImage, GeminiError, PostHogService>;
 
     /**
      * Generate an image from a URL (fetches the image first).
@@ -101,8 +101,8 @@ export class GeminiService extends Context.Tag("GeminiService")<
     generateImageFromUrl: (
       imageUrl: string,
       prompt: string,
-      options?: GenerateImageOptions
-    ) => Effect.Effect<GeneratedImage, GeminiError, PostHogService>
+      options?: GenerateImageOptions,
+    ) => Effect.Effect<GeneratedImage, GeminiError, PostHogService>;
   }
 >() {}
 
@@ -116,16 +116,20 @@ export class GeminiService extends Context.Tag("GeminiService")<
  * Preserves originalError for Sentry logging.
  */
 function mapGeminiError(error: unknown): GeminiError {
-  const message = error instanceof Error ? error.message : String(error)
-  const errorStr = message.toLowerCase()
+  const message = error instanceof Error ? error.message : String(error);
+  const errorStr = message.toLowerCase();
 
   // Rate limiting (429 errors)
-  if (errorStr.includes("429") || errorStr.includes("resource_exhausted") || errorStr.includes("quota")) {
+  if (
+    errorStr.includes("429") ||
+    errorStr.includes("resource_exhausted") ||
+    errorStr.includes("quota")
+  ) {
     return new GeminiError({
       cause: "RATE_LIMITED",
       message: `Gemini API rate limit exceeded: ${message}`,
       originalError: error,
-    })
+    });
   }
 
   // Content policy violations
@@ -139,7 +143,7 @@ function mapGeminiError(error: unknown): GeminiError {
       cause: "CONTENT_POLICY",
       message: `Content was blocked by safety filters: ${message}`,
       originalError: error,
-    })
+    });
   }
 
   // Invalid input image
@@ -153,7 +157,7 @@ function mapGeminiError(error: unknown): GeminiError {
       cause: "INVALID_IMAGE",
       message: `Invalid or corrupted input image: ${message}`,
       originalError: error,
-    })
+    });
   }
 
   // Generic API error
@@ -161,7 +165,7 @@ function mapGeminiError(error: unknown): GeminiError {
     cause: "API_ERROR",
     message: `Gemini API error: ${message}`,
     originalError: error,
-  })
+  });
 }
 
 // =============================================================================
@@ -174,19 +178,19 @@ function mapGeminiError(error: unknown): GeminiError {
 const fetchImageBuffer = (url: string): Effect.Effect<Buffer, GeminiError> =>
   Effect.tryPromise({
     try: async () => {
-      const response = await fetch(url)
+      const response = await fetch(url);
       if (!response.ok) {
-        throw new Error(`Failed to fetch image: ${response.status} ${response.statusText}`)
+        throw new Error(`Failed to fetch image: ${response.status} ${response.statusText}`);
       }
-      const arrayBuffer = await response.arrayBuffer()
-      return Buffer.from(arrayBuffer)
+      const arrayBuffer = await response.arrayBuffer();
+      return Buffer.from(arrayBuffer);
     },
     catch: (e) =>
       new GeminiError({
         cause: "INVALID_IMAGE",
         message: `Failed to fetch image from URL: ${e}`,
       }),
-  })
+  });
 
 /**
  * Call the Gemini API to generate an image.
@@ -197,22 +201,22 @@ const fetchImageBuffer = (url: string): Effect.Effect<Buffer, GeminiError> =>
 const callGeminiApi = (
   imageBuffer: Buffer,
   prompt: string,
-  options?: GenerateImageOptions
+  options?: GenerateImageOptions,
 ): Effect.Effect<GeneratedImage, GeminiError> =>
   Effect.gen(function* () {
-    const client = getGeminiClient()
+    const client = getGeminiClient();
 
     if (!client) {
       return yield* Effect.fail(
         new GeminiError({
           cause: "API_ERROR",
           message: "Gemini API not configured. Set GEMINI_API_KEY in environment.",
-        })
-      )
+        }),
+      );
     }
 
     // Merge with default image config
-    const imageConfig = { ...DEFAULT_IMAGE_CONFIG, ...options?.imageConfig }
+    const imageConfig = { ...DEFAULT_IMAGE_CONFIG, ...options?.imageConfig };
 
     // Get the generative model with image generation support
     // Note: responseModalities must include 'image' for native image generation
@@ -225,11 +229,11 @@ const callGeminiApi = (
         // @ts-expect-error - responseModalities not in SDK types yet but supported by API
         responseModalities: ["text", "image"],
       },
-    })
+    });
 
     // Prepare image data for the API
-    const mimeType = inferMimeType(imageBuffer)
-    const base64Data = bufferToBase64(imageBuffer)
+    const mimeType = inferMimeType(imageBuffer);
+    const base64Data = bufferToBase64(imageBuffer);
 
     // Call the API with image and prompt
     const result = yield* Effect.tryPromise({
@@ -237,16 +241,16 @@ const callGeminiApi = (
         // For development/testing without API key, return mock response
         if (env.NODE_ENV === "development" && !isGeminiConfigured()) {
           console.warn(
-            `[GeminiService] DEV MODE: No GEMINI_API_KEY configured. Returning mock placeholder image.`
-          )
-          const mockPlaceholder = Buffer.from(`MOCK_GEMINI_OUTPUT_${Date.now()}`)
+            `[GeminiService] DEV MODE: No GEMINI_API_KEY configured. Returning mock placeholder image.`,
+          );
+          const mockPlaceholder = Buffer.from(`MOCK_GEMINI_OUTPUT_${Date.now()}`);
           return {
             data: mockPlaceholder,
             mimeType: "image/png",
-          }
+          };
         }
 
-        console.log(`[GeminiService] Calling ${IMAGEN_MODEL} with imageConfig:`, imageConfig)
+        console.log(`[GeminiService] Calling ${IMAGEN_MODEL} with imageConfig:`, imageConfig);
 
         const response = await model.generateContent([
           prompt,
@@ -256,39 +260,41 @@ const callGeminiApi = (
               data: base64Data,
             },
           },
-        ])
+        ]);
 
-        const generatedContent = response.response
+        const generatedContent = response.response;
 
         // Check for safety blocks
         if (generatedContent.promptFeedback?.blockReason) {
-          throw new Error(`Content blocked: ${generatedContent.promptFeedback.blockReason}`)
+          throw new Error(`Content blocked: ${generatedContent.promptFeedback.blockReason}`);
         }
 
         // Try to extract generated image from response
         // Nano Banana Pro returns images in inlineData
-        const candidates = generatedContent.candidates
+        const candidates = generatedContent.candidates;
         if (candidates && candidates.length > 0) {
-          const firstCandidate = candidates[0]
-          const parts = firstCandidate?.content?.parts
+          const firstCandidate = candidates[0];
+          const parts = firstCandidate?.content?.parts;
           if (parts) {
             for (const part of parts) {
               if ("inlineData" in part && part.inlineData && part.inlineData.data) {
-                const imageData = part.inlineData
-                console.log(`[GeminiService] Successfully generated image, mimeType: ${imageData.mimeType}`)
+                const imageData = part.inlineData;
+                console.log(
+                  `[GeminiService] Successfully generated image, mimeType: ${imageData.mimeType}`,
+                );
                 return {
                   data: Buffer.from(imageData.data, "base64"),
                   mimeType: imageData.mimeType ?? "image/png",
-                }
+                };
               }
             }
           }
         }
 
         // If no image in response, check for text response (might be an error or thinking)
-        let textResponse = ""
+        let textResponse = "";
         try {
-          textResponse = generatedContent.text()
+          textResponse = generatedContent.text();
         } catch {
           // No text available
         }
@@ -296,14 +302,14 @@ const callGeminiApi = (
         // If no image in response, this model may not have generated one
         throw new Error(
           `Model ${IMAGEN_MODEL} did not return generated image. ` +
-          `Text response: ${textResponse.substring(0, 200) || "(none)"}`
-        )
+            `Text response: ${textResponse.substring(0, 200) || "(none)"}`,
+        );
       },
       catch: mapGeminiError,
-    })
+    });
 
-    return result
-  })
+    return result;
+  });
 
 /**
  * Generate image with retry logic, Sentry logging, and PostHog analytics.
@@ -325,15 +331,15 @@ const callGeminiApi = (
 const generateImageWithRetry = (
   imageBuffer: Buffer,
   prompt: string,
-  options?: GenerateImageOptions
+  options?: GenerateImageOptions,
 ): Effect.Effect<GeneratedImage, GeminiError, PostHogService> =>
   Effect.gen(function* () {
-    const startTime = Date.now()
+    const startTime = Date.now();
     // Use Ref for thread-safe attempt tracking (fixes race condition)
-    const attemptRef = yield* Ref.make(0)
-    const posthog = yield* PostHogService
-    const uploadId = options?.uploadId
-    const distinctId = uploadId ?? `unknown-${Date.now()}`
+    const attemptRef = yield* Ref.make(0);
+    const posthog = yield* PostHogService;
+    const uploadId = options?.uploadId;
+    const distinctId = uploadId ?? `unknown-${Date.now()}`;
 
     // Create a retry schedule that logs each retry
     const retryScheduleWithLogging = pipe(
@@ -346,24 +352,20 @@ const generateImageWithRetry = (
         Effect.gen(function* () {
           // Only log/track for retryable errors
           if (!isRetryableGeminiError(error)) {
-            return
+            return;
           }
 
-          const attemptNumber = yield* Ref.updateAndGet(attemptRef, (n) => n + 1)
-          const timeSinceStart = Date.now() - startTime
+          const attemptNumber = yield* Ref.updateAndGet(attemptRef, (n) => n + 1);
+          const timeSinceStart = Date.now() - startTime;
 
           // Log retry to Sentry as breadcrumb (AC-4)
-          yield* addEffectBreadcrumb(
-            `Gemini API retry attempt ${attemptNumber}`,
-            "gemini",
-            {
-              attempt: attemptNumber,
-              error_type: error.cause,
-              error_message: error.message,
-              time_since_start_ms: timeSinceStart,
-              upload_id: uploadId,
-            }
-          )
+          yield* addEffectBreadcrumb(`Gemini API retry attempt ${attemptNumber}`, "gemini", {
+            attempt: attemptNumber,
+            error_type: error.cause,
+            error_message: error.message,
+            time_since_start_ms: timeSinceStart,
+            upload_id: uploadId,
+          });
 
           // Track retry in PostHog (AC-5)
           yield* posthog.capture("gemini_retry", distinctId, {
@@ -372,10 +374,10 @@ const generateImageWithRetry = (
             error_type: error.cause,
             previous_error_message: error.message,
             time_since_start_ms: timeSinceStart,
-          })
-        })
-      )
-    )
+          });
+        }),
+      ),
+    );
 
     // Execute with retry
     const result = yield* callGeminiApi(imageBuffer, prompt, options).pipe(
@@ -385,22 +387,22 @@ const generateImageWithRetry = (
       // Map timeout to GeminiError
       Effect.catchTag("TimeoutException", () =>
         Effect.gen(function* () {
-          const attemptNumber = yield* Ref.get(attemptRef)
+          const attemptNumber = yield* Ref.get(attemptRef);
           return yield* Effect.fail(
             new GeminiError({
               cause: "TIMEOUT",
               message: "Gemini API timed out after 60 seconds",
               attempt: attemptNumber + 1,
-            })
-          )
-        })
+            }),
+          );
+        }),
       ),
       // On final failure, log to Sentry and track exhaustion
       Effect.tapError((finalError) =>
         Effect.gen(function* () {
-          const totalDuration = Date.now() - startTime
-          const attemptNumber = yield* Ref.get(attemptRef)
-          const totalAttempts = attemptNumber + 1
+          const totalDuration = Date.now() - startTime;
+          const attemptNumber = yield* Ref.get(attemptRef);
+          const totalAttempts = attemptNumber + 1;
 
           // Only track exhaustion if we actually retried
           if (totalAttempts > 1 && isRetryableGeminiError(finalError)) {
@@ -410,7 +412,7 @@ const generateImageWithRetry = (
               final_error_type: finalError.cause,
               final_error_message: finalError.message,
               total_duration_ms: totalDuration,
-            })
+            });
           }
 
           // Capture final failure to Sentry with full context
@@ -420,13 +422,13 @@ const generateImageWithRetry = (
             total_attempts: totalAttempts,
             total_duration_ms: totalDuration,
             is_retryable: isRetryableGeminiError(finalError),
-          })
-        })
-      )
-    )
+          });
+        }),
+      ),
+    );
 
-    return result
-  })
+    return result;
+  });
 
 /**
  * Implementation of generateImage.
@@ -434,10 +436,10 @@ const generateImageWithRetry = (
 const generateImage = Effect.fn("GeminiService.generateImage")(function* (
   imageBuffer: Buffer,
   prompt: string,
-  options?: GenerateImageOptions
+  options?: GenerateImageOptions,
 ) {
-  return yield* generateImageWithRetry(imageBuffer, prompt, options)
-})
+  return yield* generateImageWithRetry(imageBuffer, prompt, options);
+});
 
 /**
  * Implementation of generateImageFromUrl.
@@ -445,14 +447,14 @@ const generateImage = Effect.fn("GeminiService.generateImage")(function* (
 const generateImageFromUrl = Effect.fn("GeminiService.generateImageFromUrl")(function* (
   imageUrl: string,
   prompt: string,
-  options?: GenerateImageOptions
+  options?: GenerateImageOptions,
 ) {
   // Fetch the image from URL
-  const imageBuffer = yield* fetchImageBuffer(imageUrl)
+  const imageBuffer = yield* fetchImageBuffer(imageUrl);
 
   // Generate the image
-  return yield* generateImageWithRetry(imageBuffer, prompt, options)
-})
+  return yield* generateImageWithRetry(imageBuffer, prompt, options);
+});
 
 // =============================================================================
 // Service Layer
@@ -464,7 +466,7 @@ const generateImageFromUrl = Effect.fn("GeminiService.generateImageFromUrl")(fun
 export const GeminiServiceLive = Layer.succeed(GeminiService, {
   generateImage,
   generateImageFromUrl,
-})
+});
 
 // =============================================================================
 // Test/Mock Implementation
@@ -479,21 +481,21 @@ export const GeminiServiceMock = Layer.succeed(GeminiService, {
   generateImage: (_imageBuffer: Buffer, _prompt: string, _options?: GenerateImageOptions) =>
     Effect.gen(function* () {
       // Access PostHogService to satisfy type requirement (no-op in mock)
-      yield* PostHogService
+      yield* PostHogService;
       return {
         data: Buffer.from("mock-generated-image-data"),
         mimeType: "image/png",
-      }
+      };
     }),
   generateImageFromUrl: (_imageUrl: string, _prompt: string, _options?: GenerateImageOptions) =>
     Effect.gen(function* () {
-      yield* PostHogService
+      yield* PostHogService;
       return {
         data: Buffer.from("mock-generated-image-data"),
         mimeType: "image/png",
-      }
+      };
     }),
-})
+});
 
 /**
  * Error mock for testing error scenarios.
@@ -503,12 +505,12 @@ export const GeminiServiceErrorMock = (cause: GeminiError["cause"], message: str
   Layer.succeed(GeminiService, {
     generateImage: (_imageBuffer?: Buffer, _prompt?: string, _options?: GenerateImageOptions) =>
       Effect.gen(function* () {
-        yield* PostHogService
-        return yield* Effect.fail(new GeminiError({ cause, message }))
+        yield* PostHogService;
+        return yield* Effect.fail(new GeminiError({ cause, message }));
       }),
     generateImageFromUrl: (_imageUrl?: string, _prompt?: string, _options?: GenerateImageOptions) =>
       Effect.gen(function* () {
-        yield* PostHogService
-        return yield* Effect.fail(new GeminiError({ cause, message }))
+        yield* PostHogService;
+        return yield* Effect.fail(new GeminiError({ cause, message }));
       }),
-  })
+  });

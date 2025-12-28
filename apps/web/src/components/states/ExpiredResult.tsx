@@ -1,7 +1,7 @@
-import { useNavigate } from "@tanstack/react-router"
-import { useEffect, useRef } from "react"
-import { Button } from "@/components/ui/button"
-import { posthog, isPostHogConfigured } from "@/lib/posthog"
+import { useNavigate } from "@tanstack/react-router";
+import { useEffect, useRef } from "react";
+import { Button } from "@/components/ui/button";
+import { posthog, isPostHogConfigured } from "@/lib/posthog";
 
 /**
  * Expired Result Component
@@ -14,31 +14,31 @@ import { posthog, isPostHogConfigured } from "@/lib/posthog"
  * - AC-5: Analytics tracking
  */
 interface ExpiredResultProps {
-  resultId?: string
-  source: "result" | "share"
+  resultId?: string;
+  source: "result" | "share";
 }
 
 export function ExpiredResult({ resultId, source }: ExpiredResultProps) {
-  const navigate = useNavigate()
-  const analyticsTrackedRef = useRef(false)
+  const navigate = useNavigate();
+  const analyticsTrackedRef = useRef(false);
 
   // Track expired page view (AC-5)
   useEffect(() => {
-    if (analyticsTrackedRef.current) return
-    analyticsTrackedRef.current = true
+    if (analyticsTrackedRef.current) return;
+    analyticsTrackedRef.current = true;
 
     if (isPostHogConfigured()) {
       posthog.capture("expired_result_viewed", {
         result_id: resultId,
         source,
         timestamp: new Date().toISOString(),
-      })
+      });
     }
-  }, [resultId, source])
+  }, [resultId, source]);
 
   const handleCreateNew = () => {
-    navigate({ to: "/" })
-  }
+    navigate({ to: "/" });
+  };
 
   return (
     <div className="min-h-screen bg-cream flex items-center justify-center p-4">
@@ -52,21 +52,19 @@ export function ExpiredResult({ resultId, source }: ExpiredResultProps) {
 
         {/* Message */}
         <div className="space-y-3">
-          <h1 className="font-display text-2xl text-charcoal">
-            This photo has moved on
-          </h1>
+          <h1 className="font-display text-2xl text-charcoal">This photo has moved on</h1>
           <p className="font-body text-warm-gray leading-relaxed">
-            Photos are automatically deleted after 30 days to protect your
-            privacy. The good news? You can create a new one anytime!
+            Photos are automatically deleted after 30 days to protect your privacy. The good news?
+            You can create a new one anytime!
           </p>
         </div>
 
         {/* Privacy reassurance */}
         <div className="bg-white rounded-xl p-4 text-left">
           <p className="text-sm text-warm-gray">
-            <span className="text-coral font-medium">Why we do this:</span> Your
-            ultrasound images are personal. We delete them automatically so you
-            don't have to worry about your data sitting on our servers.
+            <span className="text-coral font-medium">Why we do this:</span> Your ultrasound images
+            are personal. We delete them automatically so you don't have to worry about your data
+            sitting on our servers.
           </p>
         </div>
 
@@ -82,5 +80,5 @@ export function ExpiredResult({ resultId, source }: ExpiredResultProps) {
         </div>
       </div>
     </div>
-  )
+  );
 }

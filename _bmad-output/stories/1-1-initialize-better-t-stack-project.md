@@ -17,12 +17,12 @@ So that **I have a working monorepo ready for feature development**.
 
 ## Acceptance Criteria
 
-| # | Criterion | Status |
-|---|-----------|--------|
-| 1 | Project has `apps/web` (TanStack Start) and `packages/api` (Hono) | ✅ Done |
-| 2 | Effect is installed and configured | ✅ Done |
-| 3 | `bun run dev` starts both frontend and backend | ✅ Done |
-| 4 | TypeScript strict mode is enabled | ✅ Done |
+| #   | Criterion                                                         | Status  |
+| --- | ----------------------------------------------------------------- | ------- |
+| 1   | Project has `apps/web` (TanStack Start) and `packages/api` (Hono) | ✅ Done |
+| 2   | Effect is installed and configured                                | ✅ Done |
+| 3   | `bun run dev` starts both frontend and backend                    | ✅ Done |
+| 4   | TypeScript strict mode is enabled                                 | ✅ Done |
 
 ---
 
@@ -30,30 +30,31 @@ So that **I have a working monorepo ready for feature development**.
 
 ### ✅ Already Complete
 
-| Component | Location | Notes |
-|-----------|----------|-------|
-| TanStack Start frontend | `apps/web/` | React 19, TanStack Router, TanStack Query |
-| Hono backend | `apps/server/` | Basic routes, CORS, logger middleware |
-| Turborepo monorepo | Root `turbo.json` | Workspace scripts configured |
-| Drizzle ORM package | `packages/db/` | Schema empty, migrations not run |
-| API package | `packages/api/` | Health route exists |
-| shadcn/ui ready | `apps/web/` | CVA, clsx, tailwind-merge installed |
-| Dev scripts | `package.json` | `dev`, `dev:web`, `dev:server` work |
+| Component               | Location          | Notes                                     |
+| ----------------------- | ----------------- | ----------------------------------------- |
+| TanStack Start frontend | `apps/web/`       | React 19, TanStack Router, TanStack Query |
+| Hono backend            | `apps/server/`    | Basic routes, CORS, logger middleware     |
+| Turborepo monorepo      | Root `turbo.json` | Workspace scripts configured              |
+| Drizzle ORM package     | `packages/db/`    | Schema empty, migrations not run          |
+| API package             | `packages/api/`   | Health route exists                       |
+| shadcn/ui ready         | `apps/web/`       | CVA, clsx, tailwind-merge installed       |
+| Dev scripts             | `package.json`    | `dev`, `dev:web`, `dev:server` work       |
 
 ### ⚠️ Needs Completion
 
-| Item | Current State | Required State |
-|------|---------------|----------------|
-| Effect integration | Installed at root only | Integrated into `packages/api` services |
-| TypeScript strict | Unknown | `"strict": true` in all tsconfigs |
-| Database schema | Empty (`export {}`) | Base tables defined |
-| Effect services layer | Not exists | Service pattern for API endpoints |
+| Item                  | Current State          | Required State                          |
+| --------------------- | ---------------------- | --------------------------------------- |
+| Effect integration    | Installed at root only | Integrated into `packages/api` services |
+| TypeScript strict     | Unknown                | `"strict": true` in all tsconfigs       |
+| Database schema       | Empty (`export {}`)    | Base tables defined                     |
+| Effect services layer | Not exists             | Service pattern for API endpoints       |
 
 ---
 
 ## Implementation Tasks
 
 ### Task 1: Verify TypeScript Strict Mode
+
 **Estimate:** 5 min
 
 ```bash
@@ -62,6 +63,7 @@ grep -r '"strict"' apps/*/tsconfig.json packages/*/tsconfig.json
 ```
 
 If not enabled, add to each `tsconfig.json`:
+
 ```json
 {
   "compilerOptions": {
@@ -71,11 +73,13 @@ If not enabled, add to each `tsconfig.json`:
 ```
 
 ### Task 2: Set Up Effect in packages/api
+
 **Estimate:** 30 min
 
 The architecture specifies Effect for typed errors and service pattern.
 
 **2.1 Add Effect dependencies to packages/api:**
+
 ```bash
 cd packages/api
 bun add effect @effect/schema
@@ -141,6 +145,7 @@ export const runEffect = <A, E>(
 ```
 
 ### Task 3: Create Base Database Schema
+
 **Estimate:** 20 min
 
 Per architecture doc, create the uploads table in `packages/db/src/schema/index.ts`:
@@ -154,8 +159,8 @@ export const uploads = pgTable("uploads", {
   email: text("email").notNull(),
   sessionToken: text("session_token").notNull().unique(),
   originalUrl: text("original_url").notNull(),
-  status: text("status", { 
-    enum: ["pending", "processing", "completed", "failed"] 
+  status: text("status", {
+    enum: ["pending", "processing", "completed", "failed"]
   }).default("pending"),
   resultUrl: text("result_url"),
   previewUrl: text("preview_url"),
@@ -172,8 +177,8 @@ export const purchases = pgTable("purchases", {
   stripePaymentIntentId: text("stripe_payment_intent_id"),
   amount: integer("amount").notNull(), // cents
   currency: text("currency").default("usd"),
-  status: text("status", { 
-    enum: ["pending", "completed", "failed", "refunded"] 
+  status: text("status", {
+    enum: ["pending", "completed", "failed", "refunded"]
   }).default("pending"),
   isGift: boolean("is_gift").default(false),
   giftRecipientEmail: text("gift_recipient_email"),
@@ -189,12 +194,14 @@ export const downloads = pgTable("downloads", {
 ```
 
 **Install cuid2:**
+
 ```bash
 cd packages/db
 bun add @paralleldrive/cuid2
 ```
 
 ### Task 4: Verify Dev Server Startup
+
 **Estimate:** 5 min
 
 ```bash
@@ -240,12 +247,12 @@ From `_bmad-output/architecture.md`:
 
 ### File Paths
 
-| File | Purpose |
-|------|---------|
-| `packages/api/src/lib/errors.ts` | Effect typed errors |
+| File                                     | Purpose               |
+| ---------------------------------------- | --------------------- |
+| `packages/api/src/lib/errors.ts`         | Effect typed errors   |
 | `packages/api/src/lib/effect-runtime.ts` | Effect runtime helper |
-| `packages/api/src/services/index.ts` | Service definitions |
-| `packages/db/src/schema/index.ts` | Database tables |
+| `packages/api/src/services/index.ts`     | Service definitions   |
+| `packages/db/src/schema/index.ts`        | Database tables       |
 
 ---
 

@@ -79,20 +79,20 @@ so that **I can surprise the expecting parent**.
 
 ### What's Already Done
 
-| Feature | Status | Location |
-|---------|--------|----------|
-| Gift CTA section | ✅ Complete | share.$shareId.tsx |
+| Feature            | Status      | Location               |
+| ------------------ | ----------- | ---------------------- |
+| Gift CTA section   | ✅ Complete | share.$shareId.tsx     |
 | GiftCheckoutButton | ✅ Complete | GiftCheckoutButton.tsx |
-| Explanation text | ✅ Complete | share.$shareId.tsx |
-| Visual styling | ✅ Complete | share.$shareId.tsx |
+| Explanation text   | ✅ Complete | share.$shareId.tsx     |
+| Visual styling     | ✅ Complete | share.$shareId.tsx     |
 
 ### What Needs to Be Done
 
-| Feature | Status | Notes |
-|---------|--------|-------|
+| Feature            | Status      | Notes                                          |
+| ------------------ | ----------- | ---------------------------------------------- |
 | Analytics tracking | ✅ Complete | gift_cta_clicked, gift_purchase_started events |
-| Sentry breadcrumbs | ✅ Complete | Added for debugging (code review fix) |
-| Enhanced animation | ⏭️ Skipped | Optional per Dev Notes |
+| Sentry breadcrumbs | ✅ Complete | Added for debugging (code review fix)          |
+| Enhanced animation | ⏭️ Skipped  | Optional per Dev Notes                         |
 
 ### Analytics Enhancement
 
@@ -107,7 +107,7 @@ const handleGiftClick = useCallback(() => {
     })
   }
   addBreadcrumb("Gift CTA clicked", "checkout", { share_id: shareId })
-  
+
   // Existing checkout logic...
 }, [shareId, uploadId])
 ```
@@ -119,7 +119,7 @@ Add subtle pulse animation to draw attention:
 ```typescript
 <button
   onClick={handleGiftClick}
-  className="w-full py-4 bg-coral text-white font-body text-lg rounded-xl 
+  className="w-full py-4 bg-coral text-white font-body text-lg rounded-xl
              hover:bg-coral/90 transition-all min-h-[56px]
              animate-pulse-subtle"
 >
@@ -212,14 +212,14 @@ None - implementation was straightforward, most functionality already existed.
 
 ### Issues Found & Resolved
 
-| Severity | Issue | Resolution |
-|----------|-------|------------|
-| HIGH | H1: Duplicate analytics events at same moment | Moved `gift_purchase_started` to fire on "Continue to Payment" |
-| HIGH | H2: Task claimed "integration test" but was unit test | Updated task description to accurately reflect test type |
-| MEDIUM | M1: Missing Sentry breadcrumb | Added `addBreadcrumb` calls matching project patterns |
-| MEDIUM | M2: No test for PostHog disabled | Added test verifying component works without PostHog |
-| LOW | L1: Stale Dev Notes documentation | Updated "What Needs to Be Done" table |
-| LOW | L2: Email state persistence | Documented as existing behavior (not a bug) |
+| Severity | Issue                                                 | Resolution                                                     |
+| -------- | ----------------------------------------------------- | -------------------------------------------------------------- |
+| HIGH     | H1: Duplicate analytics events at same moment         | Moved `gift_purchase_started` to fire on "Continue to Payment" |
+| HIGH     | H2: Task claimed "integration test" but was unit test | Updated task description to accurately reflect test type       |
+| MEDIUM   | M1: Missing Sentry breadcrumb                         | Added `addBreadcrumb` calls matching project patterns          |
+| MEDIUM   | M2: No test for PostHog disabled                      | Added test verifying component works without PostHog           |
+| LOW      | L1: Stale Dev Notes documentation                     | Updated "What Needs to Be Done" table                          |
+| LOW      | L2: Email state persistence                           | Documented as existing behavior (not a bug)                    |
 
 ### Verification
 

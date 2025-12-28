@@ -83,35 +83,35 @@ export const Route = createFileRoute("/share/$shareId")({
 
 function SharePage() {
   const { shareId } = Route.useParams()
-  
+
   // Fetch shared result (public, no auth needed)
   const { data: result } = useQuery({
     queryKey: ["share", shareId],
     queryFn: () => fetch(`/api/share/${shareId}`).then((r) => r.json()),
   })
-  
+
   return (
     <div className="min-h-screen bg-cream">
       {/* Preview Image */}
-      <img 
-        src={result?.previewUrl} 
+      <img
+        src={result?.previewUrl}
         alt="AI-generated baby portrait"
         className="w-full max-w-md mx-auto rounded-2xl shadow-lg"
       />
-      
+
       {/* Gift CTA */}
       <div className="mt-6 p-4">
         <p className="text-warm-gray text-center mb-4">
           Someone created this beautiful portrait with babypeek!
         </p>
-        
+
         <GiftCheckoutButton shareId={shareId} uploadId={result?.uploadId} />
-        
+
         <p className="text-sm text-warm-gray/70 text-center mt-2">
           The HD photo will be sent to the parent
         </p>
       </div>
-      
+
       {/* Try it yourself CTA */}
       <div className="mt-8 text-center">
         <p className="text-warm-gray mb-2">Want your own?</p>
@@ -136,10 +136,10 @@ interface GiftCheckoutButtonProps {
 export function GiftCheckoutButton({ shareId, uploadId }: GiftCheckoutButtonProps) {
   const [showEmailModal, setShowEmailModal] = useState(false)
   const [email, setEmail] = useState("")
-  
+
   const handleGiftPurchase = async () => {
     posthog.capture("gift_purchase_started", { share_id: shareId })
-    
+
     const response = await fetch("/api/checkout", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -149,21 +149,21 @@ export function GiftCheckoutButton({ shareId, uploadId }: GiftCheckoutButtonProp
         purchaserEmail: email, // For receipt
       }),
     })
-    
+
     const { checkoutUrl } = await response.json()
     window.location.href = checkoutUrl
   }
-  
+
   return (
     <>
-      <Button 
+      <Button
         size="lg"
         className="w-full bg-coral hover:bg-coral/90"
         onClick={() => setShowEmailModal(true)}
       >
         🎁 Gift This Photo - $9.99
       </Button>
-      
+
       {/* Email capture modal */}
       <Dialog open={showEmailModal} onOpenChange={setShowEmailModal}>
         <DialogContent>
@@ -174,14 +174,14 @@ export function GiftCheckoutButton({ shareId, uploadId }: GiftCheckoutButtonProp
               The HD photo will be sent directly to the parent.
             </DialogDescription>
           </DialogHeader>
-          
+
           <Input
             type="email"
             placeholder="your@email.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
-          
+
           <DialogFooter>
             <Button onClick={handleGiftPurchase} disabled={!email}>
               Continue to Payment
@@ -203,16 +203,16 @@ export function GiftCheckoutButton({ shareId, uploadId }: GiftCheckoutButtonProp
 
 app.get("/:shareId", async (c) => {
   const shareId = c.req.param("shareId")
-  
+
   // shareId is the uploadId
   const upload = await db.query.uploads.findFirst({
     where: eq(uploads.id, shareId),
   })
-  
+
   if (!upload || !upload.previewUrl) {
     return c.json({ error: "Not found" }, 404)
   }
-  
+
   return c.json({
     shareId,
     uploadId: upload.id,
@@ -225,6 +225,7 @@ app.get("/:shareId", async (c) => {
 ### Gift Email Templates
 
 **Gift Confirmation (to purchaser):**
+
 ```html
 <h1>Thank You for Your Gift! 🎁</h1>
 <p>Your thoughtful gift has been sent!</p>
@@ -234,6 +235,7 @@ app.get("/:shareId", async (c) => {
 ```
 
 **Gift Notification (to recipient):**
+
 ```html
 <h1>Someone Special Gifted You! 🎉</h1>
 <p>A friend or family member just unlocked your HD baby portrait!</p>
@@ -335,6 +337,7 @@ N/A - Implementation completed without major issues.
 ### File List
 
 **New Files:**
+
 - `apps/web/src/routes/share.$shareId.tsx` - Share page with gift CTA
 - `apps/web/src/components/payment/GiftCheckoutButton.tsx` - Gift checkout button with email modal
 - `apps/web/src/components/payment/GiftCheckoutButton.test.tsx` - Tests for gift button
@@ -343,6 +346,7 @@ N/A - Implementation completed without major issues.
 - `packages/api/src/routes/share.test.ts` - Share route tests
 
 **Modified Files:**
+
 - `packages/api/src/services/PurchaseService.ts` - Added createGiftCheckout method + H2 duplicate check fix
 - `packages/api/src/services/PurchaseService.test.ts` - Added gift checkout tests + M2 duplicate prevention tests
 - `packages/api/src/services/StripeService.ts` - Added purchaserEmail support
@@ -357,7 +361,7 @@ N/A - Implementation completed without major issues.
 
 ## Change Log
 
-| Date | Change | Author |
-|------|--------|--------|
-| 2025-12-21 | Story implementation completed - all ACs satisfied | Claude Opus 4.5 |
+| Date       | Change                                                            | Author          |
+| ---------- | ----------------------------------------------------------------- | --------------- |
+| 2025-12-21 | Story implementation completed - all ACs satisfied                | Claude Opus 4.5 |
 | 2025-12-21 | Code review fixes: H2 duplicate check, M1 loading reset, M2 tests | Claude Opus 4.5 |

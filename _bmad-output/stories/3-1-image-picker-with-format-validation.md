@@ -25,7 +25,7 @@ so that **I can begin the transformation process**.
   - [x] Implement responsive container (full-width mobile, max-560px desktop)
 
 - [x] **Task 2: Implement file input with drag-drop zone** (AC: 4, 5)
-  - [x] Create visually hidden `<input type="file" accept="image/jpeg,image/png,image/heic,.heic">` 
+  - [x] Create visually hidden `<input type="file" accept="image/jpeg,image/png,image/heic,.heic">`
   - [x] Build drag-drop zone with 48px min-height touch target
   - [x] Implement `onDragEnter`, `onDragOver`, `onDragLeave`, `onDrop` handlers
   - [x] Add pulse animation on drag-over using Tailwind `animate-pulse` or custom keyframe
@@ -83,6 +83,7 @@ so that **I can begin the transformation process**.
 ### Design System Requirements
 
 **Colors:**
+
 ```css
 --color-primary: #E8927C;        /* Coral - borders, focus rings */
 --color-primary-light: #FEF3F0;  /* Light coral - hover states */
@@ -92,6 +93,7 @@ so that **I can begin the transformation process**.
 ```
 
 **Spacing:**
+
 ```css
 --space-4: 16px;   /* Internal padding */
 --space-6: 24px;   /* Desktop padding */
@@ -101,6 +103,7 @@ so that **I can begin the transformation process**.
 **Touch Target:** Minimum 48px height for interactive elements
 
 **Animation:**
+
 ```css
 /* Pulse on drag-over */
 @keyframes pulse {
@@ -113,15 +116,16 @@ so that **I can begin the transformation process**.
 
 Per architecture.md error handling rules, use warm, friendly copy:
 
-| Error | Message |
-|-------|---------|
-| Invalid type | "Please select a photo (JPEG, PNG, or HEIC)" |
+| Error          | Message                                                      |
+| -------------- | ------------------------------------------------------------ |
+| Invalid type   | "Please select a photo (JPEG, PNG, or HEIC)"                 |
 | File too large | "This image is too large (32MB). Please try one under 25MB." |
-| Generic | "We couldn't read that file. Let's try another!" |
+| Generic        | "We couldn't read that file. Let's try another!"             |
 
 ### Project Structure Notes
 
 **File Location:**
+
 ```
 apps/web/src/
 ├── components/
@@ -133,6 +137,7 @@ apps/web/src/
 ```
 
 **Naming Conventions:**
+
 - File: `image-uploader.tsx` (kebab-case)
 - Component: `ImageUploader` (PascalCase)
 - Functions: `handleFileSelect`, `validateFile` (camelCase)
@@ -140,6 +145,7 @@ apps/web/src/
 ### Dependencies
 
 No new dependencies required. Use native browser APIs:
+
 - `File` API for file handling
 - `FileReader` / `URL.createObjectURL` for preview
 - `DataTransfer` for drag-drop
@@ -147,6 +153,7 @@ No new dependencies required. Use native browser APIs:
 ### Future Stories (Out of Scope)
 
 This story does NOT include:
+
 - HEIC conversion (Story 3.2)
 - Image compression (Story 3.3)
 - Email capture (Story 3.4)
@@ -206,6 +213,7 @@ Claude 3.5 Sonnet (claude-sonnet-4-20250514)
 ### File List
 
 **New Files:**
+
 - `apps/web/src/components/upload/image-uploader.tsx` - Main component
 - `apps/web/src/components/upload/index.ts` - Barrel export
 - `apps/web/src/components/upload/image-uploader.test.tsx` - Unit tests (25 tests)
@@ -213,6 +221,7 @@ Claude 3.5 Sonnet (claude-sonnet-4-20250514)
 - `apps/web/vitest.config.ts` - Vitest configuration
 
 **Modified Files:**
+
 - `apps/web/package.json` - Added test scripts and vitest dependencies
 - `apps/web/src/hooks/use-analytics.ts` - Added new analytics event types
 
@@ -239,15 +248,15 @@ Claude 3.5 Sonnet (claude-sonnet-4-20250514)
 1. Added `sm:max-w-[560px] sm:mx-auto` to container for responsive max-width
 2. Added `useEffect` cleanup to revoke blob URLs on unmount (memory leak fix)
 3. Changed `focus-visible:ring-2` to `focus-visible:ring-[3px]`
-4. Changed `rounded-lg` to `rounded-[12px]` 
+4. Changed `rounded-lg` to `rounded-[12px]`
 5. Optimized `createMockFile` to use ArrayBuffer (test performance: 5.5s → 1.5s)
 6. Updated analytics to use `fileType` and `fileSizeMB` properties
 
 ## Change Log
 
-| Date | Change |
-|------|--------|
-| 2024-12-21 | Initial implementation of ImageUploader component with all acceptance criteria met |
-| 2024-12-21 | Added comprehensive test suite (25 tests) |
-| 2024-12-21 | Set up Vitest test infrastructure for apps/web |
-| 2024-12-21 | **Code Review:** Fixed 2 HIGH, 4 MEDIUM, 2 LOW issues (memory leak, responsive container, design system compliance, test performance)
+| Date       | Change                                                                                                                                |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| 2024-12-21 | Initial implementation of ImageUploader component with all acceptance criteria met                                                    |
+| 2024-12-21 | Added comprehensive test suite (25 tests)                                                                                             |
+| 2024-12-21 | Set up Vitest test infrastructure for apps/web                                                                                        |
+| 2024-12-21 | **Code Review:** Fixed 2 HIGH, 4 MEDIUM, 2 LOW issues (memory leak, responsive container, design system compliance, test performance) |

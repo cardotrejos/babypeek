@@ -17,13 +17,13 @@ So that **the app fails fast on missing or invalid config**.
 
 ## Acceptance Criteria
 
-| # | Criterion | Test |
-|---|-----------|------|
-| AC1 | `.env.example` file with all required variables | File exists with documented variables |
+| #   | Criterion                                               | Test                                                 |
+| --- | ------------------------------------------------------- | ---------------------------------------------------- |
+| AC1 | `.env.example` file with all required variables         | File exists with documented variables                |
 | AC2 | All environment variables validated with Zod at startup | App fails with descriptive error if validation fails |
-| AC3 | Missing required variables throw descriptive errors | Error message names the missing variable |
-| AC4 | Sensitive values are never logged | No secrets in console output |
-| AC5 | Type-safe `env` object is exported | `env.DATABASE_URL` has type `string` |
+| AC3 | Missing required variables throw descriptive errors     | Error message names the missing variable             |
+| AC4 | Sensitive values are never logged                       | No secrets in console output                         |
+| AC5 | Type-safe `env` object is exported                      | `env.DATABASE_URL` has type `string`                 |
 
 ---
 
@@ -101,6 +101,7 @@ NODE_ENV=development
 ### Current Implementation
 
 **Existing `env.ts` has:**
+
 - DATABASE_URL validation
 - R2 variables (optional)
 - Placeholder variables for future services
@@ -108,6 +109,7 @@ NODE_ENV=development
 - `checkR2Config()` helper
 
 **Needs Enhancement:**
+
 - Better error messages naming specific missing variables
 - Grouped validation by service
 - Safe logging helper
@@ -119,7 +121,7 @@ NODE_ENV=development
 const envSchema = z.object({
   // Required in all environments
   DATABASE_URL: z.string().url("DATABASE_URL must be a valid URL"),
-  
+
   // Required in production only
   STRIPE_SECRET_KEY: z.string()
     .startsWith("sk_", "STRIPE_SECRET_KEY must start with 'sk_'")
@@ -150,21 +152,23 @@ export const logEnvStatus = () => {
 ### Previous Story Learnings
 
 **From Story 1.3:**
+
 - `checkR2Config()` and `isR2Configured()` helpers already exist
 - R2 variables are optional in dev, should be required in production
 - `.env.example` was updated with R2 placeholders
 
 ### File Locations
 
-| File | Purpose |
-|------|---------|
-| `packages/api/src/lib/env.ts` | UPDATE: Enhance validation |
-| `apps/server/.env.example` | UPDATE: Comprehensive documentation |
-| `apps/server/.env` | Local environment (gitignored) |
+| File                          | Purpose                             |
+| ----------------------------- | ----------------------------------- |
+| `packages/api/src/lib/env.ts` | UPDATE: Enhance validation          |
+| `apps/server/.env.example`    | UPDATE: Comprehensive documentation |
+| `apps/server/.env`            | Local environment (gitignored)      |
 
 ### Testing Notes
 
 **Test Cases:**
+
 1. Start with all required variables → should succeed
 2. Remove DATABASE_URL → should fail with "DATABASE_URL is required"
 3. Set STRIPE_SECRET_KEY=invalid → should fail with format error
@@ -195,17 +199,17 @@ N/A
 
 ### File List
 
-| File | Action |
-|------|--------|
+| File                          | Action   |
+| ----------------------------- | -------- |
 | `packages/api/src/lib/env.ts` | Modified |
-| `apps/server/.env.example` | Modified |
+| `apps/server/.env.example`    | Modified |
 
 ---
 
 ## Change Log
 
-| Date | Change |
-|------|--------|
+| Date       | Change                                   |
+| ---------- | ---------------------------------------- |
 | 2024-12-20 | Story created with comprehensive context |
 
 ---

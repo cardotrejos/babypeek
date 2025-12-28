@@ -1,19 +1,19 @@
-import type { QueryClient } from "@tanstack/react-query"
+import type { QueryClient } from "@tanstack/react-query";
 
-import { ReactQueryDevtools } from "@tanstack/react-query-devtools"
-import { Outlet, createRootRouteWithContext } from "@tanstack/react-router"
-import { TanStackRouterDevtools } from "@tanstack/react-router-devtools"
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+import { Outlet, createRootRouteWithContext } from "@tanstack/react-router";
+import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 
-import { Toaster } from "@/components/ui/sonner"
-import { SessionRecoveryPrompt } from "@/components/session-recovery-prompt"
+import { Toaster } from "@/components/ui/sonner";
+import { SessionRecoveryPrompt } from "@/components/session-recovery-prompt";
 
 export interface RouterAppContext {
-  queryClient: QueryClient
+  queryClient: QueryClient;
 }
 
 export const Route = createRootRouteWithContext<RouterAppContext>()({
   component: RootDocument,
-})
+});
 
 function RootDocument() {
   return (
@@ -32,5 +32,5 @@ function RootDocument() {
       <TanStackRouterDevtools position="bottom-left" />
       <ReactQueryDevtools position="bottom" buttonPosition="bottom-right" />
     </>
-  )
+  );
 }

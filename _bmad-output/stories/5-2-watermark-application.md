@@ -51,7 +51,7 @@ so that **users can share without giving away the full image**.
   - [x] Update result record with previewUrl
   - [x] Update stage to 'watermarking' during this step
 
-- [x] **Task 6: Add WatermarkService to AppServicesLive** 
+- [x] **Task 6: Add WatermarkService to AppServicesLive**
   - [x] Export WatermarkServiceLive from services/index.ts
   - [x] Add to AppServicesLive layer merge
 
@@ -128,10 +128,10 @@ export const WatermarkServiceLive = Layer.succeed(
         // Generate watermark SVG
         const watermarkSvg = Buffer.from(`
           <svg width="${watermarkWidth}" height="${fontSize * 1.5}">
-            <text 
-              x="50%" 
-              y="50%" 
-              dominant-baseline="middle" 
+            <text
+              x="50%"
+              y="50%"
+              dominant-baseline="middle"
               text-anchor="middle"
               font-family="DM Sans, Arial, sans-serif"
               font-size="${fontSize}px"
@@ -180,13 +180,13 @@ export const WatermarkServiceLive = Layer.succeed(
     createPreview: (imageBuffer) =>
       Effect.gen(function* () {
         const service = yield* WatermarkService
-        
+
         // Step 1: Resize to 800px max
         const resized = yield* service.resize(imageBuffer, 800)
-        
+
         // Step 2: Apply watermark
         const preview = yield* service.apply(resized)
-        
+
         return preview
       })
   }
@@ -217,24 +217,24 @@ yield* ResultService.updatePreviewUrl(resultId, previewUrl)
 
 ### Watermark Specifications (from PRD/UX)
 
-| Spec | Value |
-|------|-------|
-| Opacity | 40% |
-| Position | Bottom-right corner |
-| Size | 15% of image width |
-| Text | "babypeek.com" |
-| Margin | 3% from edges |
-| Font | Arial (system fallback) |
+| Spec     | Value                   |
+| -------- | ----------------------- |
+| Opacity  | 40%                     |
+| Position | Bottom-right corner     |
+| Size     | 15% of image width      |
+| Text     | "babypeek.com"          |
+| Margin   | 3% from edges           |
+| Font     | Arial (system fallback) |
 
 ### Preview Specifications
 
-| Spec | Value |
-|------|-------|
-| Max dimension | 800px |
-| Aspect ratio | Preserved |
-| Format | JPEG |
-| Quality | 85% |
-| Storage path | `/results/{resultId}/preview.jpg` |
+| Spec          | Value                             |
+| ------------- | --------------------------------- |
+| Max dimension | 800px                             |
+| Aspect ratio  | Preserved                         |
+| Format        | JPEG                              |
+| Quality       | 85%                               |
+| Storage path  | `/results/{resultId}/preview.jpg` |
 
 ### R2 Storage Structure
 
@@ -270,6 +270,7 @@ packages/api/src/workflows/
 ### Architecture Note
 
 Two implementations exist for watermarking:
+
 1. **WatermarkService** (Effect-based) - For Effect pipelines, testing, future API endpoints
 2. **Inline in workflow** (async/await) - For the `workflow` library execution context
 
@@ -326,9 +327,11 @@ const preview = yield* watermarkService.createPreview(fullImageBuffer).pipe(
 **Review Outcome:** ✅ Approved with fixes applied
 
 ### Summary
+
 All 7 Acceptance Criteria verified as implemented. Code review found 3 MEDIUM and 4 LOW issues, all resolved.
 
 ### Action Items (All Resolved)
+
 - [x] **[MEDIUM]** Fixed JPEG quality inconsistency - unified to 85% [WatermarkService.ts:149]
 - [x] **[MEDIUM]** Documented intentional dual implementation (Effect service + workflow inline)
 - [x] **[MEDIUM]** Updated Task 2 subtask claim to match actual positioning approach
@@ -336,6 +339,7 @@ All 7 Acceptance Criteria verified as implemented. Code review found 3 MEDIUM an
 - [x] **[LOW]** Updated Task 7 to accurately describe test coverage
 
 ### Notes
+
 - Code duplication between WatermarkService (Effect) and workflow (async) is intentional due to different execution contexts
 - All unit tests pass (18 tests for WatermarkService)
 - Full test suite passes (228 API + 278 web tests)
@@ -373,10 +377,12 @@ N/A - No blocking issues encountered
 ### File List
 
 **New Files:**
+
 - `packages/api/src/services/WatermarkService.ts` - WatermarkService Effect service
 - `packages/api/src/services/WatermarkService.test.ts` - 18 unit tests
 
 **Modified Files:**
+
 - `packages/api/package.json` - Added sharp and @types/sharp dependencies
 - `packages/api/src/lib/errors.ts` - Added WatermarkError type
 - `packages/api/src/services/index.ts` - Export WatermarkService and add to AppServicesLive

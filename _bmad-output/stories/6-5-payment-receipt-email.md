@@ -34,7 +34,7 @@ so that **I have proof of payment**.
     - Prominent download button
     - 30-day access reminder
   - [x] Use inline CSS for email client compatibility
-  - [ ] Test rendering in common email clients *(manual testing - deferred)*
+  - [ ] Test rendering in common email clients _(manual testing - deferred)_
 
 - [x] **Task 3: Add email to webhook flow** (AC: 1, 6)
   - [x] Update webhook handler to call sendReceiptEmail after purchase created
@@ -67,6 +67,7 @@ so that **I have proof of payment**.
 ### Existing Code to Leverage
 
 **ResendService.sendReceiptEmail** already exists but needs enhancement:
+
 ```typescript
 sendReceiptEmail: (email: string, purchaseId: string, amount: number) => Effect.Effect<void, EmailError>
 ```
@@ -145,26 +146,26 @@ const generateReceiptHtml = (params: {
 </head>
 <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #FDF8F5;">
   <div style="background-color: white; border-radius: 16px; padding: 32px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
-    
+
     <!-- Header -->
     <h1 style="color: #E8927C; font-family: 'Playfair Display', Georgia, serif; font-size: 28px; margin-bottom: 8px; text-align: center;">
       Your HD Photo is Ready! 🎉
     </h1>
-    
+
     <p style="color: #6B5B5B; font-size: 16px; line-height: 1.6; text-align: center; margin-bottom: 24px;">
-      ${params.isGift 
+      ${params.isGift
         ? "Thank you for your thoughtful gift! The HD photo has been unlocked."
         : "Thank you for your purchase! Your beautiful HD photo is waiting for you."
       }
     </p>
-    
+
     <!-- Download Button -->
     <div style="text-align: center; margin: 32px 0;">
       <a href="${params.downloadUrl}" style="display: inline-block; background-color: #E8927C; color: white; text-decoration: none; padding: 16px 32px; border-radius: 8px; font-weight: 600; font-size: 16px;">
         Download HD Photo
       </a>
     </div>
-    
+
     <!-- Purchase Details -->
     <div style="background-color: #FDF8F5; border-radius: 8px; padding: 16px; margin-top: 24px;">
       <p style="color: #6B5B5B; font-size: 14px; margin: 4px 0;">
@@ -177,14 +178,14 @@ const generateReceiptHtml = (params: {
         <strong>Order ID:</strong> ${params.purchaseId}
       </p>
     </div>
-    
+
     <!-- Footer -->
     <p style="color: #9B8B8B; font-size: 12px; text-align: center; margin-top: 24px;">
       Your download link will remain active for 30 days.
       <br>
       Questions? Reply to this email.
     </p>
-    
+
   </div>
 </body>
 </html>
@@ -204,7 +205,7 @@ if (isGift) {
     amount: session.amount_total!,
     isGift: true,
   })
-  
+
   // Email 2: To recipient (download link)
   yield* ResendService.sendDownloadEmail(
     metadata.email, // original uploader's email

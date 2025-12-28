@@ -66,6 +66,7 @@ so that **I understand user behavior post-purchase**.
 ### Existing Code to Leverage
 
 **Downloads table already exists** (packages/db/src/schema/index.ts):
+
 ```typescript
 export const downloads = pgTable("downloads", {
   id: text("id").primaryKey().$defaultFn(() => createId()),
@@ -203,7 +204,7 @@ import { env } from "./env"
 /**
  * Hash an IP address for privacy-compliant storage
  * AC-4: Never store raw IP addresses
- * 
+ *
  * Uses SHA-256 with a server-side salt to:
  * - Prevent rainbow table attacks
  * - Allow abuse detection (same IP = same hash)
@@ -311,6 +312,7 @@ if (recentDownloads[0].count > 10) {
 ### Environment Variable
 
 Add to `.env.example`:
+
 ```bash
 # Used for hashing IPs (privacy)
 IP_HASH_SALT=your-random-salt-here
@@ -412,6 +414,7 @@ N/A - No blocking issues encountered
 **Outcome:** ✅ APPROVED (after fixes)
 
 **Issues Found & Fixed:**
+
 - [HIGH] Files not tracked by git → **FIXED**: Added to staging
 - [HIGH] AC-1 event name mismatch → **FIXED**: Updated AC to match implementation (download_initiated)
 - [MEDIUM] AC-2 missing resultId → **FIXED**: Added result_id to PostHog event
@@ -428,11 +431,13 @@ N/A - No blocking issues encountered
 ### File List
 
 **New Files:**
+
 - packages/api/src/services/DownloadService.ts
 - packages/api/src/services/DownloadService.test.ts
 - packages/api/src/lib/hash.ts
 - packages/api/src/lib/hash.test.ts
 
 **Modified Files:**
+
 - packages/api/src/routes/download.ts (added download tracking integration)
 - packages/api/src/lib/env.ts (added IP_HASH_SALT env variable)

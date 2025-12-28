@@ -1,17 +1,17 @@
-import posthog from "posthog-js"
-import { PostHogProvider as PHProvider } from "posthog-js/react"
-import { useEffect, type ReactNode } from "react"
+import posthog from "posthog-js";
+import { PostHogProvider as PHProvider } from "posthog-js/react";
+import { useEffect, type ReactNode } from "react";
 
 // PostHog configuration
-const POSTHOG_KEY = import.meta.env.VITE_POSTHOG_KEY
-const POSTHOG_HOST = import.meta.env.VITE_POSTHOG_HOST || "https://app.posthog.com"
+const POSTHOG_KEY = import.meta.env.VITE_POSTHOG_KEY;
+const POSTHOG_HOST = import.meta.env.VITE_POSTHOG_HOST || "https://app.posthog.com";
 
 // Initialize PostHog only once
-let isInitialized = false
+let isInitialized = false;
 
 function initPostHog() {
   if (isInitialized || typeof window === "undefined" || !POSTHOG_KEY) {
-    return
+    return;
   }
 
   posthog.init(POSTHOG_KEY, {
@@ -25,36 +25,36 @@ function initPostHog() {
     // Disable in development if no key
     loaded: (posthog) => {
       if (import.meta.env.DEV) {
-        console.log("📊 PostHog initialized")
+        console.log("📊 PostHog initialized");
       }
     },
-  })
+  });
 
-  isInitialized = true
+  isInitialized = true;
 }
 
 interface PostHogProviderProps {
-  children: ReactNode
+  children: ReactNode;
 }
 
 export function PostHogProvider({ children }: PostHogProviderProps) {
   useEffect(() => {
-    initPostHog()
-  }, [])
+    initPostHog();
+  }, []);
 
   // If no PostHog key, just render children without provider
   if (!POSTHOG_KEY) {
     if (import.meta.env.DEV) {
-      console.log("📊 PostHog not configured (VITE_POSTHOG_KEY missing)")
+      console.log("📊 PostHog not configured (VITE_POSTHOG_KEY missing)");
     }
-    return <>{children}</>
+    return <>{children}</>;
   }
 
-  return <PHProvider client={posthog}>{children}</PHProvider>
+  return <PHProvider client={posthog}>{children}</PHProvider>;
 }
 
 // Export posthog instance for direct access if needed
-export { posthog }
+export { posthog };
 
 // Check if PostHog is configured
-export const isPostHogConfigured = () => !!POSTHOG_KEY
+export const isPostHogConfigured = () => !!POSTHOG_KEY;

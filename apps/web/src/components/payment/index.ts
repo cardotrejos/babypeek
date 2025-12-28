@@ -1,2 +1,2 @@
-export { CheckoutButton } from "./CheckoutButton"
-export { GiftCheckoutButton } from "./GiftCheckoutButton"
+export { CheckoutButton } from "./CheckoutButton";
+export { GiftCheckoutButton } from "./GiftCheckoutButton";

@@ -1,30 +1,35 @@
-import { Effect, Context, Layer, Schedule } from "effect"
-import Stripe from "stripe"
-import { PaymentError } from "../lib/errors"
-import { env, isStripeConfigured } from "../lib/env"
+import { Effect, Context, Layer, Schedule } from "effect";
+import Stripe from "stripe";
+import { PaymentError } from "../lib/errors";
+import { env, isStripeConfigured } from "../lib/env";
 
 // Checkout session parameters
 export interface CheckoutSessionParams {
-  uploadId: string
-  email: string // Recipient email (original uploader for gifts)
-  type: "self" | "gift"
-  successUrl: string
-  cancelUrl: string
-  purchaserEmail?: string // Gift purchaser email (for receipt)
+  uploadId: string;
+  email: string; // Recipient email (original uploader for gifts)
+  type: "self" | "gift";
+  successUrl: string;
+  cancelUrl: string;
+  purchaserEmail?: string; // Gift purchaser email (for receipt)
 }
 
 // Stripe Service interface
 export class StripeService extends Context.Tag("StripeService")<
   StripeService,
   {
-    createCheckoutSession: (params: CheckoutSessionParams) => Effect.Effect<Stripe.Checkout.Session, PaymentError>
-    constructWebhookEvent: (payload: string, signature: string) => Effect.Effect<Stripe.Event, PaymentError>
-    retrieveSession: (sessionId: string) => Effect.Effect<Stripe.Checkout.Session, PaymentError>
+    createCheckoutSession: (
+      params: CheckoutSessionParams,
+    ) => Effect.Effect<Stripe.Checkout.Session, PaymentError>;
+    constructWebhookEvent: (
+      payload: string,
+      signature: string,
+    ) => Effect.Effect<Stripe.Event, PaymentError>;
+    retrieveSession: (sessionId: string) => Effect.Effect<Stripe.Checkout.Session, PaymentError>;
   }
 >() {}
 
 // Cached Stripe client
-let cachedStripe: Stripe | null = null
+let cachedStripe: Stripe | null = null;
 
 const getStripeClient = (): Effect.Effect<Stripe, PaymentError> => {
   if (!isStripeConfigured()) {
@@ -32,27 +37,27 @@ const getStripeClient = (): Effect.Effect<Stripe, PaymentError> => {
       new PaymentError({
         cause: "STRIPE_ERROR",
         message: "Stripe not configured - missing STRIPE_SECRET_KEY",
-      })
-    )
+      }),
+    );
   }
 
   if (!cachedStripe) {
-    cachedStripe = new Stripe(env.STRIPE_SECRET_KEY!)
+    cachedStripe = new Stripe(env.STRIPE_SECRET_KEY!);
   }
 
-  return Effect.succeed(cachedStripe)
-}
+  return Effect.succeed(cachedStripe);
+};
 
 const createCheckoutSession = Effect.fn("StripeService.createCheckoutSession")(function* (
-  params: CheckoutSessionParams
+  params: CheckoutSessionParams,
 ) {
-  const stripe = yield* getStripeClient()
-  
+  const stripe = yield* getStripeClient();
+
   // For gift purchases: purchaser gets Stripe receipt, recipient gets HD link
-  const isGift = params.type === "gift"
-  const customerEmail = isGift && params.purchaserEmail ? params.purchaserEmail : params.email
-  const productName = isGift ? "BabyPeek HD Photo Gift" : "BabyPeek HD Photo"
-  
+  const isGift = params.type === "gift";
+  const customerEmail = isGift && params.purchaserEmail ? params.purchaserEmail : params.email;
+  const productName = isGift ? "BabyPeek HD Photo Gift" : "BabyPeek HD Photo";
+
   return yield* Effect.tryPromise({
     try: () =>
       stripe.checkout.sessions.create({
@@ -87,20 +92,20 @@ const createCheckoutSession = Effect.fn("StripeService.createCheckoutSession")(f
     Effect.retry({ times: 2, schedule: Schedule.exponential("500 millis") }),
     Effect.timeout("30 seconds"),
     Effect.catchTag("TimeoutException", () =>
-      Effect.fail(new PaymentError({ cause: "STRIPE_ERROR", message: "Stripe API timed out" }))
-    )
-  )
-})
+      Effect.fail(new PaymentError({ cause: "STRIPE_ERROR", message: "Stripe API timed out" })),
+    ),
+  );
+});
 
 const constructWebhookEvent = Effect.fn("StripeService.constructWebhookEvent")(function* (
   payload: string,
-  signature: string
+  signature: string,
 ) {
-  const stripe = yield* getStripeClient()
+  const stripe = yield* getStripeClient();
   if (!env.STRIPE_WEBHOOK_SECRET) {
     return yield* Effect.fail(
-      new PaymentError({ cause: "WEBHOOK_INVALID", message: "Webhook secret not configured" })
-    )
+      new PaymentError({ cause: "WEBHOOK_INVALID", message: "Webhook secret not configured" }),
+    );
   }
   return yield* Effect.try({
     try: () => stripe.webhooks.constructEvent(payload, signature, env.STRIPE_WEBHOOK_SECRET!),
@@ -109,11 +114,11 @@ const constructWebhookEvent = Effect.fn("StripeService.constructWebhookEvent")(f
         cause: "WEBHOOK_INVALID",
         message: "Invalid webhook signature",
       }),
-  })
-})
+  });
+});
 
 const retrieveSession = Effect.fn("StripeService.retrieveSession")(function* (sessionId: string) {
-  const stripe = yield* getStripeClient()
+  const stripe = yield* getStripeClient();
   return yield* Effect.tryPromise({
     try: () => stripe.checkout.sessions.retrieve(sessionId),
     catch: (e) =>
@@ -125,14 +130,14 @@ const retrieveSession = Effect.fn("StripeService.retrieveSession")(function* (se
     Effect.retry({ times: 2, schedule: Schedule.exponential("500 millis") }),
     Effect.timeout("30 seconds"),
     Effect.catchTag("TimeoutException", () =>
-      Effect.fail(new PaymentError({ cause: "STRIPE_ERROR", message: "Stripe API timed out" }))
-    )
-  )
-})
+      Effect.fail(new PaymentError({ cause: "STRIPE_ERROR", message: "Stripe API timed out" })),
+    ),
+  );
+});
 
 // Stripe Service implementation
 export const StripeServiceLive = Layer.succeed(StripeService, {
   createCheckoutSession,
   constructWebhookEvent,
   retrieveSession,
-})
+});

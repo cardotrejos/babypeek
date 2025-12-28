@@ -1,14 +1,14 @@
-import { cn } from "@/lib/utils"
+import { cn } from "@/lib/utils";
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from "@/components/ui/accordion"
+} from "@/components/ui/accordion";
 
 interface FaqSectionProps {
-  id?: string
-  className?: string
+  id?: string;
+  className?: string;
 }
 
 /**
@@ -61,7 +61,7 @@ const faqItems = [
     answer:
       "We use advanced AI technology specifically trained to understand baby features from ultrasound images. Each result goes through quality checks to ensure you get the best possible portrait.",
   },
-]
+];
 
 export function FaqSection({ id, className }: FaqSectionProps) {
   return (
@@ -78,7 +78,7 @@ export function FaqSection({ id, className }: FaqSectionProps) {
                 "text-left text-base font-semibold text-charcoal",
                 "hover:text-coral hover:no-underline",
                 "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-coral focus-visible:ring-offset-2",
-                "min-h-[48px] py-4"
+                "min-h-[48px] py-4",
               )}
             >
               {item.question}
@@ -90,5 +90,5 @@ export function FaqSection({ id, className }: FaqSectionProps) {
         ))}
       </Accordion>
     </section>
-  )
+  );
 }

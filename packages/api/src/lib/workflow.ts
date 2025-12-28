@@ -25,15 +25,15 @@ export const PROCESS_IMAGE_STAGES = [
   "storing",
   "watermarking",
   "complete",
-] as const
+] as const;
 
-export type ProcessImageStage = (typeof PROCESS_IMAGE_STAGES)[number]
+export type ProcessImageStage = (typeof PROCESS_IMAGE_STAGES)[number];
 
 /**
  * Type for workflow run result from start()
  */
 export interface WorkflowRunResult {
-  runId: string
-  status: Promise<"running" | "completed" | "failed">
-  returnValue: Promise<unknown>
+  runId: string;
+  status: Promise<"running" | "completed" | "failed">;
+  returnValue: Promise<unknown>;
 }

@@ -129,7 +129,7 @@ const createFromWebhook = Effect.fn("PurchaseService.createFromWebhook")(functio
         message: `Failed to create purchase: ${String(e)}`,
       }),
   })
-  
+
   return purchase
 })
 
@@ -187,7 +187,7 @@ await posthog.shutdown()
 const handleCheckoutCompleted = (session: Stripe.Checkout.Session) =>
   Effect.gen(function* () {
     const { uploadId, email, type } = session.metadata!
-    
+
     // Create purchase record
     const purchase = yield* PurchaseService.createFromWebhook({
       uploadId,
@@ -198,10 +198,10 @@ const handleCheckoutCompleted = (session: Stripe.Checkout.Session) =>
       isGift: type === "gift",
       giftRecipientEmail: type === "gift" ? email : undefined,
     })
-    
+
     // Track analytics (PostHog)
     yield* Effect.promise(() => trackPurchaseCompleted(purchase))
-    
+
     return purchase
   })
 ```
@@ -240,14 +240,14 @@ packages/api/src/services/
 
 ### Issues Found & Resolved
 
-| # | Severity | Issue | Resolution |
-|---|----------|-------|------------|
-| 1 | HIGH | PostHog test missing - claimed test existed but didn't | ✅ Added 5 tests in webhook.test.ts for purchase_completed event |
-| 2 | HIGH | Integration test missing | ✅ Added tests verifying event properties and payment_intent handling |
-| 3 | MEDIUM | PostHog captureEvent not error-handled | ✅ Wrapped in try/catch with console.error fallback |
-| 4 | MEDIUM | Unsafe type cast on payment_intent | ✅ Added explicit null check with validation |
-| 5 | MEDIUM | Gift recipient email logic unclear | ✅ Added clarifying comment in code |
-| 6 | MEDIUM | File List incomplete | ✅ Updated File List below |
+| #   | Severity | Issue                                                  | Resolution                                                            |
+| --- | -------- | ------------------------------------------------------ | --------------------------------------------------------------------- |
+| 1   | HIGH     | PostHog test missing - claimed test existed but didn't | ✅ Added 5 tests in webhook.test.ts for purchase_completed event      |
+| 2   | HIGH     | Integration test missing                               | ✅ Added tests verifying event properties and payment_intent handling |
+| 3   | MEDIUM   | PostHog captureEvent not error-handled                 | ✅ Wrapped in try/catch with console.error fallback                   |
+| 4   | MEDIUM   | Unsafe type cast on payment_intent                     | ✅ Added explicit null check with validation                          |
+| 5   | MEDIUM   | Gift recipient email logic unclear                     | ✅ Added clarifying comment in code                                   |
+| 6   | MEDIUM   | File List incomplete                                   | ✅ Updated File List below                                            |
 
 ### Action Items
 
@@ -283,6 +283,7 @@ N/A
 - Full test suite (267 tests) passes with no regressions
 
 **Code Review Fixes (2024-12-21):**
+
 - Added 5 PostHog analytics tests to webhook.test.ts
 - Added try/catch error handling for PostHog captureEvent
 - Added payment_intent null validation

@@ -28,26 +28,26 @@ So that **I can easily browse on my phone**.
 
 ## Acceptance Criteria
 
-| # | Criterion | Test |
-|---|-----------|------|
-| AC1 | LCP is under 2.5s on mobile | Lighthouse mobile audit score > 90 |
-| AC2 | Layout is single-column with no horizontal scroll | Visual check on 375px viewport |
-| AC3 | Touch targets are at least 48px | Measure interactive elements |
-| AC4 | Bottom CTA button is thumb-reachable with safe area handling | Visual check on iOS/Android, respects notch |
-| AC5 | Page renders correctly on Safari iOS and Chrome Android | Device/emulator testing |
-| AC6 | Hero section visible above fold on mobile without scrolling | 375px viewport shows full hero |
-| AC7 | Layout structure supports content from Stories 2.2-2.6 | Placeholder sections for hero, gallery, trust, FAQ |
+| #   | Criterion                                                    | Test                                               |
+| --- | ------------------------------------------------------------ | -------------------------------------------------- |
+| AC1 | LCP is under 2.5s on mobile                                  | Lighthouse mobile audit score > 90                 |
+| AC2 | Layout is single-column with no horizontal scroll            | Visual check on 375px viewport                     |
+| AC3 | Touch targets are at least 48px                              | Measure interactive elements                       |
+| AC4 | Bottom CTA button is thumb-reachable with safe area handling | Visual check on iOS/Android, respects notch        |
+| AC5 | Page renders correctly on Safari iOS and Chrome Android      | Device/emulator testing                            |
+| AC6 | Hero section visible above fold on mobile without scrolling  | 375px viewport shows full hero                     |
+| AC7 | Layout structure supports content from Stories 2.2-2.6       | Placeholder sections for hero, gallery, trust, FAQ |
 
 ---
 
 ## Dependencies
 
-| Dependency | Status | Notes |
-|------------|--------|-------|
-| Font decision | **DECIDED** | Google Fonts CDN with preconnect (simpler than self-hosting) |
-| Design tokens | Ready | From UX Design Specification |
-| Placeholder images | Not needed | Use CSS background colors for layout |
-| Header component | Clarified | Landing uses minimal header (logo only) |
+| Dependency         | Status      | Notes                                                        |
+| ------------------ | ----------- | ------------------------------------------------------------ |
+| Font decision      | **DECIDED** | Google Fonts CDN with preconnect (simpler than self-hosting) |
+| Design tokens      | Ready       | From UX Design Specification                                 |
+| Placeholder images | Not needed  | Use CSS background colors for layout                         |
+| Header component   | Clarified   | Landing uses minimal header (logo only)                      |
 
 ---
 
@@ -108,6 +108,7 @@ So that **I can easily browse on my phone**.
 ### Architecture Requirements
 
 **From `architecture.md`:**
+
 - Frontend: TanStack Start + React + Tailwind + shadcn/ui
 - Bundle size target: <150KB initial
 - LCP target: <2.5s (NFR-1.1)
@@ -115,6 +116,7 @@ So that **I can easily browse on my phone**.
 - WCAG 2.1 Level AA compliance
 
 **Stack Already Configured:**
+
 - TanStack Start with Vite
 - Tailwind CSS with shadcn/ui (base-lyra style)
 - Component aliases: `@/components`, `@/lib/utils`
@@ -124,6 +126,7 @@ So that **I can easily browse on my phone**.
 **From `ux-design-specification.md`:**
 
 **Color System (Warm & Intimate):**
+
 ```css
 /* Primary: Coral */
 --color-coral: #E8927C;
@@ -141,16 +144,19 @@ So that **I can easily browse on my phone**.
 ```
 
 **Typography:**
+
 ```css
 --font-display: "Playfair Display", Georgia, serif;  /* Headlines */
 --font-body: "DM Sans", system-ui, sans-serif;       /* Body text */
 ```
 
 **Responsive Breakpoints:**
+
 - Mobile (default): < 640px - full-width, 16px padding
 - Tablet/Desktop (sm+): 640px+ - 560px max-width, 24px padding, centered
 
 **Touch Targets:**
+
 ```css
 .interactive { min-height: 48px; min-width: 48px; }
 .btn-primary { min-height: 56px; }
@@ -158,19 +164,20 @@ So that **I can easily browse on my phone**.
 
 ### File Locations
 
-| File | Purpose |
-|------|---------|
-| `apps/web/src/routes/index.tsx` | MODIFY: Landing page route |
-| `apps/web/src/routes/__root.tsx` | VERIFY: viewport meta tag |
-| `apps/web/src/index.css` | MODIFY: Add design system tokens |
-| `apps/web/src/components/landing/landing-layout.tsx` | NEW: Layout wrapper |
-| `apps/web/src/components/landing/landing-header.tsx` | NEW: Minimal header |
-| `apps/web/src/components/landing/index.ts` | NEW: Barrel export |
-| Google Fonts CDN | External - DM Sans + Playfair Display via preconnect |
+| File                                                 | Purpose                                              |
+| ---------------------------------------------------- | ---------------------------------------------------- |
+| `apps/web/src/routes/index.tsx`                      | MODIFY: Landing page route                           |
+| `apps/web/src/routes/__root.tsx`                     | VERIFY: viewport meta tag                            |
+| `apps/web/src/index.css`                             | MODIFY: Add design system tokens                     |
+| `apps/web/src/components/landing/landing-layout.tsx` | NEW: Layout wrapper                                  |
+| `apps/web/src/components/landing/landing-header.tsx` | NEW: Minimal header                                  |
+| `apps/web/src/components/landing/index.ts`           | NEW: Barrel export                                   |
+| Google Fonts CDN                                     | External - DM Sans + Playfair Display via preconnect |
 
 ### Project Structure Notes
 
 **Current Structure:**
+
 ```
 apps/web/src/
 ├── components/
@@ -185,6 +192,7 @@ apps/web/src/
 ```
 
 **Target Structure for Landing:**
+
 ```
 apps/web/src/
 ├── components/
@@ -213,7 +221,7 @@ apps/web/src/
   --color-coral-light: #FEF3F0;
   --color-warm-gray: #8B7E74;
   --color-charcoal: #2D2A26;
-  
+
   /* Typography */
   --font-display: "Playfair Display", Georgia, serif;
   --font-body: "DM Sans", system-ui, sans-serif;
@@ -226,12 +234,14 @@ apps/web/src/
 ```
 
 **This enables Tailwind utilities:**
+
 - `bg-cream`, `bg-coral`, `text-charcoal`, etc.
 - `font-display`, `font-body`
 
 ### Google Fonts Strategy (Implementation Decision)
 
 **Why Google Fonts CDN (chosen over self-hosting):**
+
 - Simpler implementation, no font file management
 - CDN-cached fonts often already in user's browser cache
 - Preconnect hints minimize connection overhead
@@ -239,6 +249,7 @@ apps/web/src/
 - Trade-off: External dependency vs. implementation simplicity
 
 **Implementation:**
+
 ```typescript
 // In __root.tsx head links
 { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -273,6 +284,7 @@ apps/web/src/
 ### Placeholder Content Structure
 
 **Hero Section (placeholder for Story 2.2):**
+
 ```typescript
 <section className="min-h-[60vh] flex flex-col justify-center">
   <h1 className="font-display text-3xl sm:text-4xl text-charcoal">
@@ -288,6 +300,7 @@ apps/web/src/
 ```
 
 **Section Placeholders:**
+
 ```typescript
 {/* Gallery - Story 2.3 */}
 <section id="gallery" className="py-12">
@@ -308,6 +321,7 @@ apps/web/src/
 ### Header Component Decision
 
 **Landing uses minimal header (not existing `header.tsx`):**
+
 - Logo only, no navigation
 - Transparent background that becomes solid on scroll (optional)
 - Maximizes hero viewport space
@@ -327,17 +341,18 @@ export function LandingHeader() {
 
 ### Performance Checklist
 
-| Check | Target | Measurement |
-|-------|--------|-------------|
-| LCP | <2.5s | Lighthouse mobile |
-| Performance Score | >90 | Lighthouse mobile |
-| CLS | <0.1 | Lighthouse |
-| FCP | <1.8s | Lighthouse |
-| Bundle size | <150KB | Build output |
+| Check             | Target | Measurement       |
+| ----------------- | ------ | ----------------- |
+| LCP               | <2.5s  | Lighthouse mobile |
+| Performance Score | >90    | Lighthouse mobile |
+| CLS               | <0.1   | Lighthouse        |
+| FCP               | <1.8s  | Lighthouse        |
+| Bundle size       | <150KB | Build output      |
 
 ### Accessibility Requirements
 
 **From UX Design:**
+
 - Color contrast 4.5:1 minimum (AA)
 - Charcoal on Cream: 12.6:1 (AAA)
 - White on Coral: 4.1:1 (AA)
@@ -347,6 +362,7 @@ export function LandingHeader() {
 ### Previous Epic Learnings
 
 **From Epic 1:**
+
 - Project uses Bun runtime with Turborepo
 - shadcn/ui components already installed (button, card, input, etc.)
 - PostHog analytics integrated via `use-analytics.ts` hook
@@ -357,6 +373,7 @@ export function LandingHeader() {
 ### Testing Notes
 
 **Manual Testing Checklist:**
+
 1. Open in Chrome DevTools mobile emulation (375px, 390px, 360px)
 2. Verify no horizontal scrollbar on any width
 3. Measure touch target sizes with inspector (all >= 48px)
@@ -366,6 +383,7 @@ export function LandingHeader() {
 7. Verify safe area handling on iPhone with notch (use simulator)
 
 **Devices to Test:**
+
 - iPhone SE (375px) - smallest common mobile
 - iPhone 14 (390px) - typical iPhone
 - Samsung Galaxy (360px) - smallest Android
@@ -391,7 +409,7 @@ export function LandingLayout({ children, className }: LandingLayoutProps) {
   return (
     <div className={cn("min-h-screen bg-cream", className)}>
       <LandingHeader />
-      <main 
+      <main
         className={cn(
           "px-4 sm:px-6",
           "sm:max-w-[560px] sm:mx-auto",
@@ -409,6 +427,7 @@ export function LandingLayout({ children, className }: LandingLayoutProps) {
 ### Viewport Meta Verification
 
 **Ensure `__root.tsx` has:**
+
 ```typescript
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <meta name="theme-color" content="#FDF8F5" />
@@ -443,14 +462,14 @@ Claude Sonnet 4 (Anthropic)
 
 ### File List
 
-| File | Action |
-|------|--------|
-| `apps/web/src/index.css` | Modified - Added design tokens, font declarations, touch target utilities |
-| `apps/web/src/routes/index.tsx` | Modified - Complete rewrite with LandingLayout and placeholder sections |
-| `apps/web/src/routes/__root.tsx` | Modified - Added viewport-fit, theme-color, Google Fonts preconnect |
+| File                                                 | Action                                                                                |
+| ---------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| `apps/web/src/index.css`                             | Modified - Added design tokens, font declarations, touch target utilities             |
+| `apps/web/src/routes/index.tsx`                      | Modified - Complete rewrite with LandingLayout and placeholder sections               |
+| `apps/web/src/routes/__root.tsx`                     | Modified - Added viewport-fit, theme-color, Google Fonts preconnect                   |
 | `apps/web/src/components/landing/landing-layout.tsx` | Created - Main layout with fixed CTA, added React import, aria-label, main-content id |
-| `apps/web/src/components/landing/landing-header.tsx` | Created - Minimal logo-only header |
-| `apps/web/src/components/landing/index.ts` | Created - Barrel exports |
+| `apps/web/src/components/landing/landing-header.tsx` | Created - Minimal logo-only header                                                    |
+| `apps/web/src/components/landing/index.ts`           | Created - Barrel exports                                                              |
 
 ---
 
@@ -461,20 +480,20 @@ Claude Sonnet 4 (Anthropic)
 
 ### Issues Found & Fixed
 
-| # | Severity | Issue | Resolution |
-|---|----------|-------|------------|
-| 1 | HIGH | Missing React type import for TypeScript in landing-layout.tsx | Added `import type React from "react"` |
-| 2 | MEDIUM | Missing skip link for keyboard navigation (WCAG 2.4.1) | Added skip link in __root.tsx with focus styles |
-| 3 | MEDIUM | CTA button missing aria-label | Added `aria-label={ctaText}` to Button |
-| 4 | LOW | Hardcoded copyright year 2024 | Changed to `{new Date().getFullYear()}` |
-| 5 | LOW | Dead code - handleCtaClick targeted non-existent #upload | Updated to scroll to #hero section |
+| #   | Severity | Issue                                                          | Resolution                                        |
+| --- | -------- | -------------------------------------------------------------- | ------------------------------------------------- |
+| 1   | HIGH     | Missing React type import for TypeScript in landing-layout.tsx | Added `import type React from "react"`            |
+| 2   | MEDIUM   | Missing skip link for keyboard navigation (WCAG 2.4.1)         | Added skip link in \_\_root.tsx with focus styles |
+| 3   | MEDIUM   | CTA button missing aria-label                                  | Added `aria-label={ctaText}` to Button            |
+| 4   | LOW      | Hardcoded copyright year 2024                                  | Changed to `{new Date().getFullYear()}`           |
+| 5   | LOW      | Dead code - handleCtaClick targeted non-existent #upload       | Updated to scroll to #hero section                |
 
 ### Deferred Items
 
-| # | Item | Reason |
-|---|------|--------|
-| 1 | Automated tests for landing components | Test infrastructure will be set up in dedicated testing story |
-| 2 | Lighthouse CI verification | Manual verification sufficient for MVP; CI integration in later sprint |
+| #   | Item                                   | Reason                                                                 |
+| --- | -------------------------------------- | ---------------------------------------------------------------------- |
+| 1   | Automated tests for landing components | Test infrastructure will be set up in dedicated testing story          |
+| 2   | Lighthouse CI verification             | Manual verification sufficient for MVP; CI integration in later sprint |
 
 ### Review Summary
 
@@ -486,12 +505,12 @@ All critical and medium-severity issues have been addressed. Build verified pass
 
 ## Change Log
 
-| Date | Change |
-|------|--------|
-| 2024-12-20 | Story created with comprehensive context |
-| 2024-12-20 | Party Mode review: Added scope clarification, dependencies, DoD, safe area handling, font self-hosting, header decision, AC6-AC7 |
+| Date       | Change                                                                                                                                                                                                         |
+| ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2024-12-20 | Story created with comprehensive context                                                                                                                                                                       |
+| 2024-12-20 | Party Mode review: Added scope clarification, dependencies, DoD, safe area handling, font self-hosting, header decision, AC6-AC7                                                                               |
 | 2024-12-20 | Implementation complete: All 6 tasks finished. Design tokens, landing layout, responsive container, safe area handling implemented. Font strategy adjusted to use Google Fonts with preconnect for simplicity. |
-| 2024-12-20 | Code review complete: Fixed 5 issues (1 HIGH, 2 MEDIUM, 2 LOW). Added React import, skip link, aria-label, dynamic copyright year, fixed dead code. Status → done |
+| 2024-12-20 | Code review complete: Fixed 5 issues (1 HIGH, 2 MEDIUM, 2 LOW). Added React import, skip link, aria-label, dynamic copyright year, fixed dead code. Status → done                                              |
 
 ---
 
@@ -511,6 +530,7 @@ All critical and medium-severity issues have been addressed. Build verified pass
 **Reviewed by:** Sally (UX), Winston (Architect), Amelia (DEV), Bob (SM)
 
 **Key improvements applied:**
+
 1. Added Scope Clarification section - layout only, content in later stories
 2. Added AC6 (hero above fold) and AC7 (supports future content)
 3. Added Dependencies table with decisions

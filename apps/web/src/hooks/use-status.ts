@@ -1,64 +1,71 @@
-import { useQuery } from "@tanstack/react-query"
-import { useCallback, useEffect, useRef } from "react"
+import { useQuery } from "@tanstack/react-query";
+import { useCallback, useEffect, useRef } from "react";
 
-import { useAnalytics } from "@/hooks/use-analytics"
-import { API_BASE_URL } from "@/lib/api-config"
-import { getSession } from "@/lib/session"
+import { useAnalytics } from "@/hooks/use-analytics";
+import { API_BASE_URL } from "@/lib/api-config";
+import { getSession } from "@/lib/session";
 
 // =============================================================================
 // Types
 // =============================================================================
 
-export type ProcessingStatus = "pending" | "processing" | "completed" | "failed"
-export type ProcessingStage = "validating" | "generating" | "storing" | "watermarking" | "complete" | "failed" | null
+export type ProcessingStatus = "pending" | "processing" | "completed" | "failed";
+export type ProcessingStage =
+  | "validating"
+  | "generating"
+  | "storing"
+  | "watermarking"
+  | "complete"
+  | "failed"
+  | null;
 
-export type PromptVersion = "v3" | "v3-json" | "v4" | "v4-json" | null
+export type PromptVersion = "v3" | "v3-json" | "v4" | "v4-json" | null;
 
 interface StatusApiResponse {
-  success: boolean
-  status: ProcessingStatus
-  stage: ProcessingStage
-  progress: number
-  resultId: string | null
-  resultUrl: string | null
-  promptVersion: PromptVersion
-  errorMessage: string | null
-  updatedAt: string
+  success: boolean;
+  status: ProcessingStatus;
+  stage: ProcessingStage;
+  progress: number;
+  resultId: string | null;
+  resultUrl: string | null;
+  promptVersion: PromptVersion;
+  errorMessage: string | null;
+  updatedAt: string;
   error?: {
-    code: string
-    message: string
-  }
+    code: string;
+    message: string;
+  };
 }
 
 export interface UseStatusResult {
   /** Current processing status */
-  status: ProcessingStatus | null
+  status: ProcessingStatus | null;
   /** Current processing stage for granular progress */
-  stage: ProcessingStage
+  stage: ProcessingStage;
   /** Progress percentage (0-100) */
-  progress: number
+  progress: number;
   /** Result ID when processing is complete */
-  resultId: string | null
+  resultId: string | null;
   /** Signed URL for the result image when processing is complete */
-  resultUrl: string | null
+  resultUrl: string | null;
   /** Which prompt version was used for generation */
-  promptVersion: PromptVersion
+  promptVersion: PromptVersion;
   /** Error message if processing failed */
-  errorMessage: string | null
+  errorMessage: string | null;
   /** Force an immediate status refetch */
-  refetch: () => Promise<unknown>
+  refetch: () => Promise<unknown>;
   /** Whether the initial fetch is loading */
-  isLoading: boolean
+  isLoading: boolean;
   /** Whether processing has completed successfully */
-  isComplete: boolean
+  isComplete: boolean;
   /** Whether processing has failed */
-  isFailed: boolean
+  isFailed: boolean;
   /** Whether polling is currently active */
-  isPolling: boolean
+  isPolling: boolean;
   /** Error from the query itself (network errors, etc) */
-  error: Error | null
+  error: Error | null;
   /** Last updated timestamp from server */
-  updatedAt: Date | null
+  updatedAt: Date | null;
 }
 
 // =============================================================================
@@ -66,10 +73,10 @@ export interface UseStatusResult {
 // =============================================================================
 
 /** Polling interval in milliseconds (2.5 seconds as per story AC-5) */
-const POLLING_INTERVAL = 2500
+const POLLING_INTERVAL = 2500;
 
 /** Sample rate for status_poll events (1 in N polls will be tracked to reduce volume) */
-const POLL_SAMPLE_RATE = 10
+const POLL_SAMPLE_RATE = 10;
 
 // =============================================================================
 // Hook
@@ -77,27 +84,27 @@ const POLL_SAMPLE_RATE = 10
 
 /**
  * Hook to poll for processing status updates.
- * 
+ *
  * Uses TanStack Query's refetchInterval to poll the status API
  * every 2-3 seconds until the job is complete or failed.
- * 
+ *
  * @param jobId - The job/upload ID to poll for, or null to disable
  * @returns Status information including stage, progress, and completion state
- * 
+ *
  * @example
  * ```tsx
  * const { status, stage, progress, isComplete, isFailed, resultId } = useStatus(jobId)
- * 
+ *
  * if (isComplete && resultId) {
  *   // Redirect to reveal page
  *   navigate(`/reveal/${resultId}`)
  * }
- * 
+ *
  * if (isFailed) {
  *   // Show error UI
  *   showError()
  * }
- * 
+ *
  * // Show progress bar
  * <ProgressBar value={progress} />
  * <p>Stage: {stage}</p>
@@ -105,39 +112,40 @@ const POLL_SAMPLE_RATE = 10
  */
 export function useStatus(jobId: string | null): UseStatusResult {
   // Get session token from localStorage
-  const sessionToken = jobId ? getSession(jobId) : null
-  const { trackEvent } = useAnalytics()
+  const sessionToken = jobId ? getSession(jobId) : null;
+  const { trackEvent } = useAnalytics();
 
   // Track when polling started for duration calculation
-  const pollingStartTimeRef = useRef<number | null>(null)
+  const pollingStartTimeRef = useRef<number | null>(null);
   // Track if we've already fired completion/failure events
-  const completionTrackedRef = useRef<boolean>(false)
+  const completionTrackedRef = useRef<boolean>(false);
   // Counter for sampling status_poll events
-  const pollCountRef = useRef<number>(0)
+  const pollCountRef = useRef<number>(0);
 
   // Memoize trackEvent to prevent unnecessary effect re-runs
-  const stableTrackEvent = useCallback(trackEvent, [trackEvent])
+  const stableTrackEvent = useCallback(trackEvent, [trackEvent]);
 
   const { data, isLoading, error, isFetching, refetch } = useQuery<StatusApiResponse>({
     queryKey: ["status", jobId],
     queryFn: async (): Promise<StatusApiResponse> => {
       if (!jobId || !sessionToken) {
-        throw new Error("Missing job ID or session")
+        throw new Error("Missing job ID or session");
       }
 
       const response = await fetch(`${API_BASE_URL}/api/status/${jobId}`, {
         headers: {
           "X-Session-Token": sessionToken,
         },
-      })
+      });
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}))
-        const errorMessage = errorData.error?.message || `Failed to fetch status: ${response.status}`
-        throw new Error(errorMessage)
+        const errorData = await response.json().catch(() => ({}));
+        const errorMessage =
+          errorData.error?.message || `Failed to fetch status: ${response.status}`;
+        throw new Error(errorMessage);
       }
 
-      return response.json()
+      return response.json();
     },
 
     // Only enable when we have both jobId and sessionToken
@@ -145,12 +153,12 @@ export function useStatus(jobId: string | null): UseStatusResult {
 
     // Poll every 2.5 seconds until complete or failed
     refetchInterval: (query) => {
-      const data = query.state.data
+      const data = query.state.data;
       // Stop polling when complete or failed
       if (data?.status === "completed" || data?.status === "failed") {
-        return false
+        return false;
       }
-      return POLLING_INTERVAL
+      return POLLING_INTERVAL;
     },
 
     // Keep previous data while fetching to prevent flicker
@@ -165,66 +173,65 @@ export function useStatus(jobId: string | null): UseStatusResult {
 
     // Stale time of 2 seconds - since we're polling frequently anyway
     staleTime: 2000,
-  })
+  });
 
   // Derive computed states
-  const isComplete = data?.status === "completed"
-  const isFailed = data?.status === "failed"
-  const isPolling = isFetching && !isLoading && !isComplete && !isFailed
+  const isComplete = data?.status === "completed";
+  const isFailed = data?.status === "failed";
+  const isPolling = isFetching && !isLoading && !isComplete && !isFailed;
 
   // Analytics tracking effect
   useEffect(() => {
-    if (!data || !jobId) return
+    if (!data || !jobId) return;
 
     // Track polling start time on first data
     if (pollingStartTimeRef.current === null && data.status === "processing") {
-      pollingStartTimeRef.current = Date.now()
+      pollingStartTimeRef.current = Date.now();
     }
 
     // Sample status_poll events (1 in N to reduce volume)
-    pollCountRef.current += 1
+    pollCountRef.current += 1;
     if (pollCountRef.current % POLL_SAMPLE_RATE === 0 && data.status === "processing") {
       stableTrackEvent("status_poll", {
         upload_id: jobId,
         stage: data.stage,
         progress: data.progress,
-      })
+      });
     }
 
     // Track completion events (only once)
     if (data.status === "completed" && !completionTrackedRef.current) {
-      completionTrackedRef.current = true
+      completionTrackedRef.current = true;
       const totalDuration = pollingStartTimeRef.current
         ? Date.now() - pollingStartTimeRef.current
-        : 0
+        : 0;
 
       stableTrackEvent("status_complete", {
         upload_id: jobId,
         result_id: data.resultId,
         total_duration_ms: totalDuration,
-      })
+      });
     }
 
     // Track failure events (only once)
     if (data.status === "failed" && !completionTrackedRef.current) {
-      completionTrackedRef.current = true
+      completionTrackedRef.current = true;
 
       stableTrackEvent("status_failed", {
         upload_id: jobId,
         final_stage: data.stage,
         final_progress: data.progress,
         error_message: data.errorMessage,
-      })
+      });
     }
-
-  }, [data, jobId, stableTrackEvent])
+  }, [data, jobId, stableTrackEvent]);
 
   // Reset tracking refs when jobId changes
   useEffect(() => {
-    pollingStartTimeRef.current = null
-    completionTrackedRef.current = false
-    pollCountRef.current = 0
-  }, [jobId])
+    pollingStartTimeRef.current = null;
+    completionTrackedRef.current = false;
+    pollCountRef.current = 0;
+  }, [jobId]);
 
   return {
     status: data?.status ?? null,
@@ -241,7 +248,7 @@ export function useStatus(jobId: string | null): UseStatusResult {
     isPolling,
     error: error as Error | null,
     updatedAt: data?.updatedAt ? new Date(data.updatedAt) : null,
-  }
+  };
 }
 
 // =============================================================================
@@ -254,19 +261,19 @@ export function useStatus(jobId: string | null): UseStatusResult {
 export function getStageLabel(stage: ProcessingStage): string {
   switch (stage) {
     case "validating":
-      return "Preparing your image..."
+      return "Preparing your image...";
     case "generating":
-      return "Creating your portrait..."
+      return "Creating your portrait...";
     case "storing":
-      return "Saving your masterpiece..."
+      return "Saving your masterpiece...";
     case "watermarking":
-      return "Adding final touches..."
+      return "Adding final touches...";
     case "complete":
-      return "Complete!"
+      return "Complete!";
     case "failed":
-      return "Something went wrong"
+      return "Something went wrong";
     default:
-      return "Processing..."
+      return "Processing...";
   }
 }
 
@@ -276,18 +283,18 @@ export function getStageLabel(stage: ProcessingStage): string {
 export function getStageEmoji(stage: ProcessingStage): string {
   switch (stage) {
     case "validating":
-      return "🔍"
+      return "🔍";
     case "generating":
-      return "🎨"
+      return "🎨";
     case "storing":
-      return "💾"
+      return "💾";
     case "watermarking":
-      return "✨"
+      return "✨";
     case "complete":
-      return "🎉"
+      return "🎉";
     case "failed":
-      return "😢"
+      return "😢";
     default:
-      return "⏳"
+      return "⏳";
   }
 }

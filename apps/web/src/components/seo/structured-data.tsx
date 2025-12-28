@@ -12,16 +12,12 @@
  */
 
 interface StructuredDataProps {
-  siteUrl: string
-  siteName: string
-  description: string
+  siteUrl: string;
+  siteName: string;
+  description: string;
 }
 
-export function StructuredData({
-  siteUrl,
-  siteName,
-  description,
-}: StructuredDataProps) {
+export function StructuredData({ siteUrl, siteName, description }: StructuredDataProps) {
   const structuredData = {
     "@context": "https://schema.org",
     "@graph": [
@@ -56,12 +52,12 @@ export function StructuredData({
         description: description,
       },
     ],
-  }
+  };
 
   return (
     <script
       type="application/ld+json"
       dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
     />
-  )
+  );
 }

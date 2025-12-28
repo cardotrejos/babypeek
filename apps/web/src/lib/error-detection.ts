@@ -10,21 +10,16 @@
  * Note: Specifically excludes session-related expiry errors
  */
 export function isExpiredError(error: unknown): boolean {
-  if (!(error instanceof Error)) return false
+  if (!(error instanceof Error)) return false;
 
-  const lowerMessage = error.message.toLowerCase()
+  const lowerMessage = error.message.toLowerCase();
 
   // Exclude session expiry - that's a different error type
   if (lowerMessage.includes("session")) {
-    return false
+    return false;
   }
 
-  const expiredMessages = [
-    "not found",
-    "no longer available",
-    "expired",
-    "result not found",
-  ]
+  const expiredMessages = ["not found", "no longer available", "expired", "result not found"];
 
-  return expiredMessages.some((msg) => lowerMessage.includes(msg))
+  return expiredMessages.some((msg) => lowerMessage.includes(msg));
 }

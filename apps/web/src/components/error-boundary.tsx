@@ -1,9 +1,9 @@
-import * as Sentry from "@sentry/react"
-import type { ReactNode } from "react"
+import * as Sentry from "@sentry/react";
+import type { ReactNode } from "react";
 
 interface ErrorFallbackProps {
-  error: Error
-  resetError?: () => void
+  error: Error;
+  resetError?: () => void;
 }
 
 /**
@@ -13,9 +13,7 @@ function ErrorFallback({ error, resetError }: ErrorFallbackProps) {
   return (
     <div className="flex min-h-[400px] flex-col items-center justify-center p-8 text-center">
       <div className="mb-6 text-6xl">😔</div>
-      <h1 className="mb-2 text-2xl font-bold text-gray-900">
-        Something went wrong
-      </h1>
+      <h1 className="mb-2 text-2xl font-bold text-gray-900">Something went wrong</h1>
       <p className="mb-6 max-w-md text-gray-600">
         We've been notified and are working on it. Please try again in a moment.
       </p>
@@ -40,17 +38,17 @@ function ErrorFallback({ error, resetError }: ErrorFallbackProps) {
         </details>
       )}
     </div>
-  )
+  );
 }
 
 interface ErrorBoundaryProps {
-  children: ReactNode
-  fallback?: ReactNode
+  children: ReactNode;
+  fallback?: ReactNode;
 }
 
 /**
  * Error boundary that catches React errors and reports to Sentry
- * 
+ *
  * @example
  * <ErrorBoundary>
  *   <App />
@@ -65,14 +63,14 @@ export function ErrorBoundary({ children, fallback }: ErrorBoundaryProps) {
       onError={(error, componentStack) => {
         // Log to console in development
         if (import.meta.env.DEV) {
-          console.error("Error caught by boundary:", error)
-          console.error("Component stack:", componentStack)
+          console.error("Error caught by boundary:", error);
+          console.error("Component stack:", componentStack);
         }
       }}
     >
       {children}
     </Sentry.ErrorBoundary>
-  )
+  );
 }
 
 /**
@@ -80,13 +78,13 @@ export function ErrorBoundary({ children, fallback }: ErrorBoundaryProps) {
  */
 export function withErrorBoundary<P extends object>(
   Component: React.ComponentType<P>,
-  fallback?: ReactNode
+  fallback?: ReactNode,
 ) {
   return function WrappedComponent(props: P) {
     return (
       <ErrorBoundary fallback={fallback}>
         <Component {...props} />
       </ErrorBoundary>
-    )
-  }
+    );
+  };
 }

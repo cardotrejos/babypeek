@@ -91,10 +91,10 @@ export async function processImage(file: File): Promise<File> {
     const heic2any = await import('heic2any')
     file = await heic2any({ blob: file, toType: 'image/jpeg' })
   }
-  
+
   // 2. Compress if > 2MB (Story 3.3 - out of scope for this story)
   // ...
-  
+
   return file
 }
 ```
@@ -106,6 +106,7 @@ export async function processImage(file: File): Promise<File> {
 **Bundle Size:** ~380KB (will be lazy-loaded, not in initial bundle)
 
 **API:**
+
 ```typescript
 import heic2any from 'heic2any'
 
@@ -117,6 +118,7 @@ const jpegBlob = await heic2any({
 ```
 
 **Important:** Returns a Blob, need to convert back to File:
+
 ```typescript
 const jpegFile = new File([jpegBlob], file.name.replace(/\.heic$/i, '.jpg'), {
   type: 'image/jpeg'
@@ -126,21 +128,23 @@ const jpegFile = new File([jpegBlob], file.name.replace(/\.heic$/i, '.jpg'), {
 ### HEIC Detection Edge Cases
 
 HEIC files can have:
+
 - MIME type: `image/heic` or `image/heif`
 - Extension: `.heic` or `.heif` (case insensitive)
 - Sometimes incorrect MIME type (especially on Windows)
 
 **Detection Logic:**
+
 ```typescript
 function isHeicFile(file: File): boolean {
   const heicMimeTypes = ['image/heic', 'image/heif']
   const heicExtensions = ['.heic', '.heif']
-  
+
   const hasHeicMime = heicMimeTypes.includes(file.type)
-  const hasHeicExt = heicExtensions.some(ext => 
+  const hasHeicExt = heicExtensions.some(ext =>
     file.name.toLowerCase().endsWith(ext)
   )
-  
+
   return hasHeicMime || hasHeicExt
 }
 ```
@@ -148,12 +152,14 @@ function isHeicFile(file: File): boolean {
 ### Performance Considerations
 
 **Memory Usage:**
+
 - HEIC conversion is memory-intensive (loads full image into RAM)
 - Mobile Safari has stricter memory limits
 - Files >15MB may cause issues on older iPhones
 - Use Web Worker if available (future optimization)
 
 **Bundle Size:**
+
 - Initial bundle target: <150KB (NFR-1.6)
 - heic2any is ~380KB but lazy-loaded on demand
 - Only loads when user selects a HEIC file
@@ -163,11 +169,11 @@ function isHeicFile(file: File): boolean {
 
 Per architecture.md error handling rules:
 
-| Error | Message |
-|-------|---------|
+| Error             | Message                                                             |
+| ----------------- | ------------------------------------------------------------------- |
 | Conversion failed | "We couldn't convert that image. Please try a JPEG or PNG instead." |
-| Memory issue | "This image is too complex to process. Please try a smaller image." |
-| Generic | "Something went wrong. Let's try another image!" |
+| Memory issue      | "This image is too complex to process. Please try a smaller image." |
+| Generic           | "Something went wrong. Let's try another image!"                    |
 
 ### Processing Indicator Design
 
@@ -182,6 +188,7 @@ Per UX design specification:
 ### Project Structure Notes
 
 **New Files:**
+
 ```
 apps/web/src/
 ├── hooks/
@@ -194,6 +201,7 @@ apps/web/src/
 ```
 
 **Naming Conventions:**
+
 - File: `use-image-processor.ts` (kebab-case)
 - Hook: `useImageProcessor` (camelCase)
 - Function: `processImage` (camelCase)
@@ -202,6 +210,7 @@ apps/web/src/
 ### Dependencies on Story 3.1
 
 This story builds on Story 3.1 (Image Picker with Format Validation):
+
 - Uses existing `ImageUploader` component
 - Adds processing step between file selection and parent callback
 - Reuses validation logic (HEIC is already accepted)
@@ -210,6 +219,7 @@ This story builds on Story 3.1 (Image Picker with Format Validation):
 ### Future Stories (Out of Scope)
 
 This story does NOT include:
+
 - Image compression (Story 3.3) - will be integrated later
 - Email capture (Story 3.4)
 - Actual upload to R2 (Story 3.5)
@@ -218,6 +228,7 @@ This story does NOT include:
 ### Testing Strategy
 
 **Mock heic2any:**
+
 ```typescript
 vi.mock('heic2any', () => ({
   default: vi.fn().mockImplementation(async ({ blob }) => {
@@ -228,6 +239,7 @@ vi.mock('heic2any', () => ({
 ```
 
 **Test File Creation:**
+
 ```typescript
 function createMockHeicFile(sizeInMB: number = 1): File {
   const size = sizeInMB * 1024 * 1024
@@ -250,6 +262,7 @@ function createMockHeicFile(sizeInMB: number = 1): File {
 ### Previous Story Intelligence (Story 3.1)
 
 **Key Learnings from Story 3.1:**
+
 1. File validation should check BOTH MIME type AND extension (HEIC edge cases)
 2. Memory leaks: Always cleanup URL.createObjectURL with useEffect
 3. Use `focus-visible:ring-[3px]` for 3px focus ring per design system
@@ -258,6 +271,7 @@ function createMockHeicFile(sizeInMB: number = 1): File {
 6. Analytics: Use camelCase properties (fileType, fileSizeMB)
 
 **Existing Code Patterns to Follow:**
+
 - Toast notifications via `sonner` library
 - Analytics via `useAnalytics` hook from `@/hooks/use-analytics`
 - Error tracking integrated with Sentry
@@ -272,7 +286,7 @@ Claude 3.5 Sonnet (claude-sonnet-4-20250514)
 ### Debug Log References
 
 - Build validation: `bun run build` - SUCCESS (main bundle 65.32 kB gzip, well under 150KB)
-- heic2any NOT in initial bundle - verified via grep on dist/client/assets/*.js
+- heic2any NOT in initial bundle - verified via grep on dist/client/assets/\*.js
 - Test run: `bun run test` - 82/82 tests passed (55 web + 27 api)
 
 ### Completion Notes List
@@ -322,6 +336,7 @@ Claude 3.5 Sonnet (claude-sonnet-4-20250514)
 ### File List
 
 **New Files:**
+
 - `apps/web/src/hooks/use-image-processor.ts` - Image processing hook with HEIC conversion
 - `apps/web/src/hooks/use-image-processor.test.ts` - Unit tests (26 tests)
 - `apps/web/src/components/upload/processing-indicator.tsx` - Processing overlay component
@@ -329,6 +344,7 @@ Claude 3.5 Sonnet (claude-sonnet-4-20250514)
 - `apps/web/src/types/heic2any.d.ts` - Type definitions for heic2any library
 
 **Modified Files:**
+
 - `apps/web/package.json` - Added heic2any dependency
 - `apps/web/src/components/upload/image-uploader.tsx` - Integrated processing hook + indicator
 - `apps/web/src/components/upload/image-uploader.test.tsx` - Updated tests for async HEIC handling (29 tests)
@@ -371,10 +387,10 @@ Claude 3.5 Sonnet (claude-sonnet-4-20250514)
 
 ## Change Log
 
-| Date | Change |
-|------|--------|
-| 2024-12-21 | Initial implementation of HEIC conversion with all acceptance criteria met |
-| 2024-12-21 | Added comprehensive test suite (30 new tests) |
-| 2024-12-21 | Integrated ProcessingIndicator with ImageUploader |
-| 2024-12-21 | Verified bundle size compliance (<150KB initial bundle) |
+| Date       | Change                                                                                         |
+| ---------- | ---------------------------------------------------------------------------------------------- |
+| 2024-12-21 | Initial implementation of HEIC conversion with all acceptance criteria met                     |
+| 2024-12-21 | Added comprehensive test suite (30 new tests)                                                  |
+| 2024-12-21 | Integrated ProcessingIndicator with ImageUploader                                              |
+| 2024-12-21 | Verified bundle size compliance (<150KB initial bundle)                                        |
 | 2024-12-21 | **Code Review:** Fixed 4 MEDIUM, 4 LOW issues (type safety, tests, consistency, documentation) |

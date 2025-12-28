@@ -111,7 +111,7 @@ Workflow starts
     ├─ Storing (80%)
     │
     └─ Complete (100%)
-    
+
 On TimeoutException:
     │
     ├─ Mark job as 'failed'
@@ -146,38 +146,38 @@ import { Effect, Duration } from 'effect'
 export const processImageWorkflow = (uploadId: string) =>
   Effect.gen(function* () {
     const startTime = Date.now()
-    
+
     // Stage 1: Validate
     yield* UploadService.updateStage(uploadId, 'validating', 10)
     const upload = yield* UploadService.getById(uploadId)
-    
+
     // Stage 2: Generate
     yield* UploadService.updateStage(uploadId, 'generating', 30)
     const imageBuffer = yield* GeminiService.generateImage(
-      upload.originalUrl, 
+      upload.originalUrl,
       getPrompt('v1')
     )
     yield* UploadService.updateStage(uploadId, 'generating', 70)
-    
+
     // Stage 3: Store
     yield* UploadService.updateStage(uploadId, 'storing', 80)
     const result = yield* ResultService.create({
       uploadId,
       fullImageBuffer: imageBuffer
     })
-    
+
     // Stage 4: Watermark (Story 5.2)
     yield* UploadService.updateStage(uploadId, 'watermarking', 90)
     // ... watermarking
-    
+
     // Stage 5: Complete
     yield* UploadService.updateStage(uploadId, 'complete', 100)
-    
+
     return result
   }).pipe(
     // 90 second total timeout
     Effect.timeout(Duration.seconds(90)),
-    
+
     // Handle timeout
     Effect.catchTag('TimeoutException', () =>
       Effect.gen(function* () {
@@ -213,7 +213,7 @@ export const processImageWorkflow = (uploadId: string) =>
         return yield* Effect.fail(timeoutError)
       })
     ),
-    
+
     // Handle other errors
     Effect.catchAll((error) =>
       Effect.gen(function* () {
@@ -259,39 +259,39 @@ const retryRoutes = new Hono()
 retryRoutes.post('/:jobId', async (c) => {
   const jobId = c.req.param('jobId')
   const token = c.req.header('X-Session-Token')
-  
+
   const program = Effect.gen(function* () {
     // Validate token
     if (!token) {
       return yield* Effect.fail(new UnauthorizedError({ reason: 'MISSING_TOKEN' }))
     }
-    
+
     // Get upload and verify token
     const upload = yield* UploadService.getByIdWithAuth(jobId, token)
-    
+
     // Only allow retry for failed jobs
     if (upload.status !== 'failed') {
-      return yield* Effect.fail(new ValidationError({ 
-        field: 'status', 
-        message: 'Can only retry failed jobs' 
+      return yield* Effect.fail(new ValidationError({
+        field: 'status',
+        message: 'Can only retry failed jobs'
       }))
     }
-    
+
     // Reset upload state
     yield* UploadService.resetForRetry(jobId)
-    
+
     // Trigger new workflow
     const workflowRunId = yield* triggerWorkflow(jobId)
-    
+
     // Update with new workflow ID
     yield* UploadService.startProcessing(jobId, workflowRunId)
-    
+
     // Track analytics
     yield* PostHogService.capture('processing_retry', token, {
       upload_id: jobId,
       previous_error: upload.errorMessage,
     })
-    
+
     return {
       success: true,
       jobId,
@@ -300,7 +300,7 @@ retryRoutes.post('/:jobId', async (c) => {
   }).pipe(
     Effect.provide(AppServicesLive)
   )
-  
+
   const result = await Effect.runPromise(program).catch(handleErrors(c))
   return c.json(result)
 })
@@ -334,7 +334,7 @@ function ProcessingPage() {
   const { jobId } = Route.useParams()
   const { status, stage, progress, isComplete, isFailed, error } = useStatus(jobId)
   const [isRetrying, setIsRetrying] = useState(false)
-  
+
   const handleRetry = async () => {
     setIsRetrying(true)
     try {
@@ -345,11 +345,11 @@ function ProcessingPage() {
           'X-Session-Token': sessionToken ?? '',
         },
       })
-      
+
       if (!response.ok) {
         throw new Error('Retry failed')
       }
-      
+
       // Reset status to trigger fresh polling
       // TanStack Query will auto-refetch
       trackEvent({
@@ -362,29 +362,29 @@ function ProcessingPage() {
       setIsRetrying(false)
     }
   }
-  
+
   // Show error state for failed jobs
   if (isFailed) {
     return (
       <div className="flex flex-col items-center gap-6 p-8">
         <div className="text-6xl">😔</div>
-        
+
         <h2 className="text-xl font-semibold text-center">
           This is taking longer than expected
         </h2>
-        
+
         <p className="text-muted-foreground text-center max-w-md">
           Something went wrong with your image. Don't worry - let's give it another try!
         </p>
-        
-        <Button 
+
+        <Button
           onClick={handleRetry}
           disabled={isRetrying}
           className="bg-coral hover:bg-coral/90"
         >
           {isRetrying ? 'Starting...' : "Let's try again"}
         </Button>
-        
+
         <p className="text-sm text-muted-foreground">
           If this keeps happening, your image might not be compatible.
           <br />
@@ -393,7 +393,7 @@ function ProcessingPage() {
       </div>
     )
   }
-  
+
   // Show processing UI (Story 5.1)
   return (
     <div>
@@ -456,6 +456,7 @@ yield* PostHogService.capture('processing_retry', uploadId, {
 ### Risk Mitigation (from Risk Register)
 
 **Risk #4: 90s processing timeout**
+
 - User expectations: Clear messaging about wait time
 - Graceful degradation: Retry option
 - Monitoring: Sentry alerts for high timeout rate
@@ -476,19 +477,19 @@ describe('processImageWorkflow timeout', () => {
           Effect.provide(SlowGeminiServiceMock)
         )
       )
-      
+
       // Advance clock past 90s
       yield* TestClock.adjust(Duration.seconds(91))
-      
+
       // Join fiber and expect timeout error
       const result = yield* Fiber.join(fiber).pipe(
         Effect.either
       )
-      
+
       expect(result._tag).toBe('Left')
       expect(result.left._tag).toBe('ProcessingError')
     })
-    
+
     await Effect.runPromise(program)
   })
 })
@@ -533,11 +534,13 @@ N/A - Implementation completed without blocking issues.
 ### File List
 
 **New Files:**
+
 - `packages/api/src/routes/retry.ts` - Retry endpoint implementation
 - `packages/api/src/routes/retry.test.ts` - Retry route tests
 - `packages/api/src/routes/process-timeout.test.ts` - Timeout functionality tests
 
 **Modified Files:**
+
 - `packages/api/src/lib/errors.ts` - Extended ProcessingError with uploadId, lastStage, lastProgress fields
 - `packages/api/src/routes/process.ts` - Added 90s timeout with Effect.timeout, timeout handling, warm error responses
 - `packages/api/src/services/UploadService.ts` - Added resetForRetry method
@@ -570,14 +573,14 @@ N/A - Implementation completed without blocking issues.
 
 ### Issues Found & Fixed
 
-| Severity | Issue | Status |
-|----------|-------|--------|
-| HIGH | Random endpoint selection (`Math.random()`) in frontend - non-deterministic behavior | FIXED |
-| HIGH | Tests were mostly documentation tests (self-referential) | FIXED |
-| MEDIUM | Frontend timeout message didn't exactly match AC-2 wording | FIXED |
-| MEDIUM | PostHog calls without configuration check | FIXED |
-| MEDIUM | ResultService.test.ts mock missing `resetForRetry` method | FIXED |
-| LOW | Story file date said 2024 instead of 2025 | FIXED |
+| Severity | Issue                                                                                | Status |
+| -------- | ------------------------------------------------------------------------------------ | ------ |
+| HIGH     | Random endpoint selection (`Math.random()`) in frontend - non-deterministic behavior | FIXED  |
+| HIGH     | Tests were mostly documentation tests (self-referential)                             | FIXED  |
+| MEDIUM   | Frontend timeout message didn't exactly match AC-2 wording                           | FIXED  |
+| MEDIUM   | PostHog calls without configuration check                                            | FIXED  |
+| MEDIUM   | ResultService.test.ts mock missing `resetForRetry` method                            | FIXED  |
+| LOW      | Story file date said 2024 instead of 2025                                            | FIXED  |
 
 ### Verification
 

@@ -66,11 +66,13 @@ so that **purchases are recorded reliably**.
 ### Existing Code to Leverage
 
 **StripeService.constructWebhookEvent** already exists:
+
 ```typescript
 constructWebhookEvent: (payload: string, signature: string) => Effect.Effect<Stripe.Event, PaymentError>
 ```
 
 **Environment configuration:**
+
 - STRIPE_WEBHOOK_SECRET - webhook signing secret
 
 ### Webhook Handler Pattern
@@ -96,7 +98,7 @@ app.post("/stripe", async (c) => {
   const program = pipe(
     // 1. Verify signature
     StripeService.constructWebhookEvent(payload, signature),
-    
+
     // 2. Handle event based on type
     Effect.flatMap((event) => {
       if (event.type === "checkout.session.completed") {
@@ -104,7 +106,7 @@ app.post("/stripe", async (c) => {
       }
       return Effect.succeed({ handled: false })
     }),
-    
+
     Effect.provide(StripeServiceLive)
   )
 
@@ -128,19 +130,19 @@ app.post("/stripe", async (c) => {
 const handleCheckoutCompleted = (session: Stripe.Checkout.Session) =>
   Effect.gen(function* () {
     const { uploadId, email, type } = session.metadata!
-    
+
     // Check for existing purchase (idempotency)
     const existing = yield* Effect.promise(() =>
       db.query.purchases.findFirst({
         where: eq(purchases.stripeSessionId, session.id)
       })
     )
-    
+
     if (existing) {
       yield* Effect.log(`Duplicate webhook for session ${session.id}, skipping`)
       return { handled: true, duplicate: true }
     }
-    
+
     // Create purchase record (Story 6.4)
     yield* PurchaseService.createFromWebhook({
       uploadId,
@@ -150,10 +152,10 @@ const handleCheckoutCompleted = (session: Stripe.Checkout.Session) =>
       currency: session.currency!,
       isGift: type === "gift",
     })
-    
+
     // Send emails (Story 6.5)
     yield* ResendService.sendReceiptEmail(email, session.id, session.amount_total!)
-    
+
     return { handled: true }
   })
 ```
@@ -179,11 +181,11 @@ packages/api/src/services/
 
 ### Stripe Webhook Events to Handle
 
-| Event | Action |
-|-------|--------|
-| checkout.session.completed | Create purchase, send emails |
+| Event                         | Action                         |
+| ----------------------------- | ------------------------------ |
+| checkout.session.completed    | Create purchase, send emails   |
 | payment_intent.payment_failed | Log for monitoring (no action) |
-| checkout.session.expired | Log for monitoring (no action) |
+| checkout.session.expired      | Log for monitoring (no action) |
 
 ### Dependencies
 
@@ -227,6 +229,7 @@ No blocking issues encountered during development.
 - ✅ TypeScript compiles without errors
 
 **Implementation Notes:**
+
 - The webhook updates existing "pending" purchases created during checkout (Story 6.1)
 - Stories 6.4 (purchase record creation) and 6.5 (receipt email) will extend this handler
 - Duplicate events are handled gracefully with logging for monitoring
@@ -234,10 +237,12 @@ No blocking issues encountered during development.
 ### File List
 
 **New Files:**
+
 - `packages/api/src/routes/webhook.ts` - Stripe webhook handler route
 - `packages/api/src/routes/webhook.test.ts` - 13 unit tests for webhook
 
 **Modified Files:**
+
 - `packages/api/src/index.ts` - Export webhookRoutes
 - `apps/server/src/index.ts` - Mount webhook route at `/api/webhook`
 
@@ -249,21 +254,22 @@ No blocking issues encountered during development.
 
 ### Issues Found & Resolved
 
-| Severity | Issue | Resolution |
-|----------|-------|------------|
-| 🔴 HIGH | Idempotency logic race condition | Fixed: Now checks for ANY existing purchase |
-| 🟡 MEDIUM | Missing success logging | Fixed: Added addBreadcrumb for success |
-| 🟡 MEDIUM | No Sentry integration tests | Fixed: Added 2 new tests |
-| 🟡 MEDIUM | Edge case - no purchase found | Fixed: Added warning log |
+| Severity  | Issue                            | Resolution                                  |
+| --------- | -------------------------------- | ------------------------------------------- |
+| 🔴 HIGH   | Idempotency logic race condition | Fixed: Now checks for ANY existing purchase |
+| 🟡 MEDIUM | Missing success logging          | Fixed: Added addBreadcrumb for success      |
+| 🟡 MEDIUM | No Sentry integration tests      | Fixed: Added 2 new tests                    |
+| 🟡 MEDIUM | Edge case - no purchase found    | Fixed: Added warning log                    |
 
 ### Post-Review Stats
+
 - Tests: 13 (was 11, +2 Sentry tests)
 - All acceptance criteria verified ✅
 - All HIGH/MEDIUM issues resolved ✅
 
 ## Change Log
 
-| Date | Description |
-|------|-------------|
-| 2024-12-21 | Story 6.3: Implemented Stripe webhook handler with signature verification, idempotency, and Sentry logging. |
+| Date       | Description                                                                                                  |
+| ---------- | ------------------------------------------------------------------------------------------------------------ |
+| 2024-12-21 | Story 6.3: Implemented Stripe webhook handler with signature verification, idempotency, and Sentry logging.  |
 | 2024-12-21 | Code Review: Fixed idempotency race condition, added success logging, added Sentry tests. 4 issues resolved. |
