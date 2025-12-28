@@ -98,11 +98,11 @@ export function DeleteDataButton({ uploadId, sessionToken }: DeleteDataButtonPro
             variant="ghost"
             size="sm"
             className="text-red-500 hover:text-red-600 hover:bg-red-50"
-          />
+          >
+            Delete My Data
+          </Button>
         }
-      >
-        Delete My Data
-      </AlertDialogTrigger>
+      />
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>Delete Your Data?</AlertDialogTitle>
