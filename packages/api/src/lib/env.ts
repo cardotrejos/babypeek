@@ -37,6 +37,10 @@ const envSchema = z.object({
     .string()
     .startsWith("whsec_", "STRIPE_WEBHOOK_SECRET must start with 'whsec_'")
     .optional(),
+  STRIPE_PRICE_ID: z
+    .string()
+    .startsWith("price_", "STRIPE_PRICE_ID must start with 'price_'")
+    .optional(),
 
   // ─────────────────────────────────────────────────────────────────────────────
   // Resend Email (Optional in dev, required in production)
@@ -128,6 +132,7 @@ export const env = parsed.success
       GEMINI_API_KEY: undefined,
       STRIPE_SECRET_KEY: undefined,
       STRIPE_WEBHOOK_SECRET: undefined,
+      STRIPE_PRICE_ID: undefined,
       RESEND_API_KEY: undefined,
       POSTHOG_KEY: undefined,
       SENTRY_DSN: undefined,
