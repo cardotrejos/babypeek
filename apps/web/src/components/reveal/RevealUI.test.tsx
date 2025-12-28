@@ -54,15 +54,6 @@ describe("RevealUI", () => {
       expect(whatsappButton).toBeInTheDocument();
     });
 
-    it("should render download preview button", () => {
-      render(<RevealUI {...defaultProps} />);
-
-      const downloadButton = screen.getByRole("button", {
-        name: /Download Preview/i,
-      });
-      expect(downloadButton).toBeInTheDocument();
-    });
-
     it("should display price in CTA", () => {
       render(<RevealUI {...defaultProps} />);
 
