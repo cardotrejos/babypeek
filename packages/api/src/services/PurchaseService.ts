@@ -126,14 +126,10 @@ const createCheckout = (stripeService: StripeService["Type"]) =>
     }
 
     // Build success/cancel URLs
-    // Extract resultId from resultUrl path: results/{resultId}/full.jpg
-    // Result page uses resultId, not uploadId, for the URL
-    const resultIdMatch = upload.resultUrl?.match(/results\/([^/]+)\//);
-    const resultId = resultIdMatch?.[1] ?? uploadId;
-
     const successUrl = `${env.APP_URL}/checkout-success?session_id={CHECKOUT_SESSION_ID}`;
     // Story 6.6: Include cancelled=true for graceful failure handling
-    const cancelUrl = `${env.APP_URL}/result/${resultId}?cancelled=true`;
+    // Use /preview/ (public, no session required) so cancel works on any device
+    const cancelUrl = `${env.APP_URL}/preview/${uploadId}?cancelled=true`;
 
     // Create Stripe checkout session
     const session = yield* stripeService.createCheckoutSession({
