@@ -7,23 +7,39 @@ import { PostHogServiceMock } from "./PostHogService"
 import { ResultError, NotFoundError, R2Error } from "../lib/errors"
 
 // Mock the database module with proper promise chain
-vi.mock("@babypeek/db", () => ({
-  db: {
-    query: {
-      uploads: {
-        findFirst: vi.fn(),
+vi.mock("@babypeek/db", () => {
+  // Create a thenable object that can be awaited
+  const createThenable = <T>(value: T) => ({
+    then: (resolve: (val: T) => void) => Promise.resolve(value).then(resolve),
+  })
+
+  return {
+    db: {
+      query: {
+        uploads: {
+          findFirst: vi.fn(),
+        },
+        results: {
+          findFirst: vi.fn(),
+          findMany: vi.fn(),
+        },
       },
-    },
-    update: vi.fn(() => ({
-      set: vi.fn(() => ({
-        where: vi.fn(() => ({
-          returning: vi.fn(() => Promise.resolve([{ id: "test-upload-id" }])),
+      insert: vi.fn(() => ({
+        values: vi.fn(() => ({
+          returning: vi.fn(() => Promise.resolve([{ id: "test-result-id" }])),
         })),
       })),
-    })),
-  },
-  uploads: { id: "id" },
-}))
+      update: vi.fn(() => ({
+        set: vi.fn(() => ({
+          where: vi.fn(() => createThenable(undefined)),
+        })),
+      })),
+    },
+    uploads: { id: "id" },
+    results: { id: "id", uploadId: "uploadId" },
+    eq: vi.fn(),
+  }
+})
 
 // Mock env module
 vi.mock("../lib/env", () => ({
@@ -107,6 +123,8 @@ describe("ResultService", () => {
         uploadId: "test-upload-id",
         fullImageBuffer: Buffer.from("test-image-data"),
         mimeType: "image/jpeg",
+        promptVersion: "v3",
+        variantIndex: 1,
       }
 
       const program = Effect.gen(function* () {
@@ -123,28 +141,28 @@ describe("ResultService", () => {
 
       expect(result.resultId).toBeDefined()
       expect(result.uploadId).toBe("test-upload-id")
-      expect(result.resultUrl).toContain("results/")
-      expect(result.resultUrl).toContain("/full.jpg")
+      expect(result.resultUrl).toContain("results/test-upload-id/")
+      expect(result.resultUrl).toContain("_v1.jpg")
       expect(result.fileSizeBytes).toBe(testParams.fullImageBuffer.length)
     })
 
-    it("fails with ResultError NOT_FOUND when uploadId doesn't exist", async () => {
-      // Create a mock that returns empty array (simulating upload not found)
+    it("fails with ResultError DB_FAILED when insert returns empty", async () => {
+      // Create a mock that returns empty array (simulating DB insert failure)
       const dbModule = await import("@babypeek/db")
-      const originalUpdate = dbModule.db.update
+      const originalInsert = dbModule.db.insert
 
-      // Temporarily override update to return empty result
-      ;(dbModule.db as { update: typeof originalUpdate }).update = vi.fn(() => ({
-        set: vi.fn(() => ({
-          where: vi.fn(() => ({
-            returning: vi.fn(() => Promise.resolve([])), // Empty = not found
-          })),
+      // Temporarily override insert to return empty result
+      ;(dbModule.db as { insert: typeof originalInsert }).insert = vi.fn(() => ({
+        values: vi.fn(() => ({
+          returning: vi.fn(() => Promise.resolve([])), // Empty = insert failed
         })),
-      })) as unknown as typeof originalUpdate
+      })) as unknown as typeof originalInsert
 
       const testParams: CreateResultParams = {
-        uploadId: "non-existent-upload-id",
+        uploadId: "test-upload-id",
         fullImageBuffer: Buffer.from("test-image-data"),
+        promptVersion: "v3",
+        variantIndex: 1,
       }
 
       const program = Effect.gen(function* () {
@@ -160,12 +178,12 @@ describe("ResultService", () => {
       const result = await Effect.runPromise(Effect.either(program))
 
       // Restore original
-      ;(dbModule.db as { update: typeof originalUpdate }).update = originalUpdate
+      ;(dbModule.db as { insert: typeof originalInsert }).insert = originalInsert
 
       expect(result._tag).toBe("Left")
       if (result._tag === "Left") {
         expect(result.left).toBeInstanceOf(ResultError)
-        expect((result.left as ResultError).cause).toBe("NOT_FOUND")
+        expect((result.left as ResultError).cause).toBe("DB_FAILED")
       }
     })
 
@@ -173,6 +191,8 @@ describe("ResultService", () => {
       const testParams: CreateResultParams = {
         uploadId: "test-upload-id",
         fullImageBuffer: Buffer.from("test-image-data"),
+        promptVersion: "v3",
+        variantIndex: 1,
       }
 
       const program = Effect.gen(function* () {
@@ -198,6 +218,8 @@ describe("ResultService", () => {
       const testParams: CreateResultParams = {
         uploadId: "test-upload-id",
         fullImageBuffer: Buffer.from("test-image-data"),
+        promptVersion: "v3",
+        variantIndex: 1,
       }
 
       const program = Effect.gen(function* () {
@@ -240,6 +262,8 @@ describe("ResultService", () => {
       const testParams: CreateResultParams = {
         uploadId: "test-upload-id",
         fullImageBuffer: Buffer.from("test-image-data"),
+        promptVersion: "v3",
+        variantIndex: 1,
       }
 
       const program = Effect.gen(function* () {
@@ -254,8 +278,8 @@ describe("ResultService", () => {
 
       const result = await Effect.runPromise(program)
 
-      // Verify the key pattern
-      expect(uploadedKey).toMatch(/^results\/[a-z0-9]+\/full\.jpg$/)
+      // Verify the key pattern: results/{uploadId}/{resultId}_v{variantIndex}.jpg
+      expect(uploadedKey).toMatch(/^results\/test-upload-id\/[a-z0-9]+_v1\.jpg$/)
       expect(result.resultUrl).toBe(uploadedKey)
     })
 
@@ -279,6 +303,8 @@ describe("ResultService", () => {
         uploadId: "test-upload-id",
         fullImageBuffer: Buffer.from("test-image-data"),
         mimeType: "image/png",
+        promptVersion: "v3",
+        variantIndex: 1,
       }
 
       const program = Effect.gen(function* () {
@@ -315,6 +341,8 @@ describe("ResultService", () => {
       const testParams: CreateResultParams = {
         uploadId: "test-upload-id",
         fullImageBuffer: Buffer.from("test-image-data"),
+        promptVersion: "v3",
+        variantIndex: 1,
         // No mimeType provided
       }
 
