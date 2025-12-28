@@ -35,6 +35,23 @@ export interface DownloadEmailParams {
   isGift?: boolean;
 }
 
+// HD download email with all variants (after purchase)
+export interface HDDownloadEmailParams {
+  email: string;
+  uploadId: string;
+  purchaseId: string;
+  amount: number; // cents
+  isGift: boolean;
+  // All 4 result variants with download URLs
+  variants: Array<{
+    resultId: string;
+    downloadUrl: string;
+    previewUrl: string;
+    promptVersion: string;
+    variantIndex: number;
+  }>;
+}
+
 // Resend Service interface
 export class ResendService extends Context.Tag("ResendService")<
   ResendService,
@@ -42,6 +59,8 @@ export class ResendService extends Context.Tag("ResendService")<
     sendResultEmail: (email: string, resultId: string) => Effect.Effect<void, EmailError>;
     sendReceiptEmail: (params: ReceiptEmailParams) => Effect.Effect<void, EmailError>;
     sendDownloadEmail: (params: DownloadEmailParams) => Effect.Effect<void, EmailError>;
+    // HD download email with all 4 variants after purchase
+    sendHDDownloadEmail: (params: HDDownloadEmailParams) => Effect.Effect<void, EmailError>;
     // Story 6.7: Gift purchase emails
     sendGiftConfirmationEmail: (params: GiftConfirmationParams) => Effect.Effect<void, EmailError>;
     sendGiftNotificationEmail: (params: GiftNotificationParams) => Effect.Effect<void, EmailError>;
@@ -558,11 +577,222 @@ const sendGiftNotificationEmail = Effect.fn("ResendService.sendGiftNotificationE
   );
 });
 
+/**
+ * Style labels for email display
+ */
+const STYLE_LABELS: Record<string, string> = {
+  v3: "Style A - Classic",
+  "v3-json": "Style B - Soft",
+  v4: "Style C - Detailed",
+  "v4-json": "Style D - Artistic",
+};
+
+/**
+ * Generate HD download email HTML with all 4 variants
+ * Shows preview thumbnails with download buttons for each style
+ */
+export const generateHDDownloadHtml = (params: {
+  amount: string;
+  date: string;
+  purchaseId: string;
+  isGift: boolean;
+  variants: Array<{
+    downloadUrl: string;
+    previewUrl: string;
+    promptVersion: string;
+    variantIndex: number;
+  }>;
+}) => `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #FDF8F5;">
+  <div style="background-color: white; border-radius: 16px; padding: 32px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+    
+    <!-- Header -->
+    <div style="text-align: center; margin-bottom: 24px;">
+      <span style="font-size: 48px;">👶✨</span>
+    </div>
+    
+    <h1 style="color: #E8927C; font-family: 'Playfair Display', Georgia, serif; font-size: 28px; margin-bottom: 8px; text-align: center;">
+      ${params.isGift ? "Your Gift is Ready! 🎁" : "Your HD Photos Are Ready! 🎉"}
+    </h1>
+    
+    <p style="color: #6B5B5B; font-size: 16px; line-height: 1.6; text-align: center; margin-bottom: 32px;">
+      ${
+        params.isGift
+          ? "Someone special unlocked your HD baby portraits! All 4 beautiful styles are now available to download."
+          : "Thank you for your purchase! All 4 HD portrait styles are ready - download your favorites below."
+      }
+    </p>
+    
+    <!-- All 4 Variants Grid -->
+    <div style="margin: 24px 0;">
+      <h2 style="color: #6B5B5B; font-size: 16px; text-align: center; margin-bottom: 16px;">
+        Your Portrait Collection
+      </h2>
+      
+      <!-- 2x2 Grid of variants -->
+      <table cellpadding="0" cellspacing="8" border="0" width="100%">
+        <tr>
+          ${params.variants
+            .slice(0, 2)
+            .map(
+              (v) => `
+            <td width="50%" valign="top" style="text-align: center; padding: 8px;">
+              <div style="background: #FDF8F5; border-radius: 12px; padding: 12px;">
+                <img src="${v.previewUrl}" alt="${STYLE_LABELS[v.promptVersion] || `Style ${v.variantIndex}`}" 
+                     style="width: 100%; max-width: 200px; border-radius: 8px; margin-bottom: 12px;">
+                <p style="color: #6B5B5B; font-size: 12px; margin: 0 0 8px 0; font-weight: 600;">
+                  ${STYLE_LABELS[v.promptVersion] || `Style ${v.variantIndex}`}
+                </p>
+                <a href="${v.downloadUrl}" 
+                   style="display: inline-block; background-color: #E8927C; color: white; text-decoration: none; padding: 8px 16px; border-radius: 6px; font-size: 12px; font-weight: 600;">
+                  Download HD
+                </a>
+              </div>
+            </td>
+          `,
+            )
+            .join("")}
+        </tr>
+        <tr>
+          ${params.variants
+            .slice(2, 4)
+            .map(
+              (v) => `
+            <td width="50%" valign="top" style="text-align: center; padding: 8px;">
+              <div style="background: #FDF8F5; border-radius: 12px; padding: 12px;">
+                <img src="${v.previewUrl}" alt="${STYLE_LABELS[v.promptVersion] || `Style ${v.variantIndex}`}" 
+                     style="width: 100%; max-width: 200px; border-radius: 8px; margin-bottom: 12px;">
+                <p style="color: #6B5B5B; font-size: 12px; margin: 0 0 8px 0; font-weight: 600;">
+                  ${STYLE_LABELS[v.promptVersion] || `Style ${v.variantIndex}`}
+                </p>
+                <a href="${v.downloadUrl}" 
+                   style="display: inline-block; background-color: #E8927C; color: white; text-decoration: none; padding: 8px 16px; border-radius: 6px; font-size: 12px; font-weight: 600;">
+                  Download HD
+                </a>
+              </div>
+            </td>
+          `,
+            )
+            .join("")}
+        </tr>
+      </table>
+    </div>
+    
+    <!-- Tips -->
+    <div style="background-color: #E8F5E9; border-radius: 8px; padding: 16px; margin-top: 24px;">
+      <p style="color: #2E7D32; font-size: 14px; margin: 0;">
+        💡 <strong>Tip:</strong> Download all 4 styles - each one captures a unique personality!
+      </p>
+    </div>
+    
+    <!-- Purchase Details -->
+    <div style="background-color: #FDF8F5; border-radius: 8px; padding: 16px; margin-top: 24px;">
+      <p style="color: #6B5B5B; font-size: 14px; margin: 4px 0;">
+        <strong>Amount:</strong> ${params.amount}
+      </p>
+      <p style="color: #6B5B5B; font-size: 14px; margin: 4px 0;">
+        <strong>Date:</strong> ${params.date}
+      </p>
+      <p style="color: #6B5B5B; font-size: 14px; margin: 4px 0;">
+        <strong>Order ID:</strong> ${params.purchaseId}
+      </p>
+    </div>
+    
+    <!-- Expiration Notice -->
+    <div style="background-color: #FEF3CD; border-radius: 8px; padding: 12px 16px; margin-top: 16px; border-left: 4px solid #F0AD4E;">
+      <p style="color: #856404; font-size: 14px; margin: 0;">
+        ⏰ <strong>Important:</strong> Download links expire in 30 days. Save your favorites now!
+      </p>
+    </div>
+    
+    <!-- Footer -->
+    <p style="color: #9B8B8B; font-size: 12px; text-align: center; margin-top: 24px;">
+      We'd love to see your nursery photos! Tag us @babypeek 📸
+      <br><br>
+      Questions? Reply to this email.
+      <br>
+      Made with 💕 by BabyPeek
+    </p>
+    
+  </div>
+</body>
+</html>
+`;
+
+/**
+ * Send HD download email with all 4 variants after purchase
+ * Includes preview thumbnails and individual download links for each style
+ */
+const sendHDDownloadEmail = Effect.fn("ResendService.sendHDDownloadEmail")(function* (
+  params: HDDownloadEmailParams,
+) {
+  const resend = yield* getResendClient();
+
+  const formattedAmount = `$${(params.amount / 100).toFixed(2)}`;
+  const purchaseDate = new Date().toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+
+  const subject = params.isGift
+    ? "🎁 Your gifted HD portraits are ready!"
+    : "📸 Your HD Baby Portraits Are Ready!";
+
+  const result = yield* Effect.tryPromise({
+    try: () =>
+      resend.emails.send({
+        from: getFromEmail(),
+        to: params.email,
+        subject,
+        html: generateHDDownloadHtml({
+          amount: formattedAmount,
+          date: purchaseDate,
+          purchaseId: params.purchaseId,
+          isGift: params.isGift,
+          variants: params.variants,
+        }),
+      }),
+    catch: (e) =>
+      new EmailError({
+        cause: "SEND_FAILED",
+        message: String(e),
+      }),
+  }).pipe(
+    Effect.retry({ times: 2, schedule: Schedule.exponential("500 millis") }),
+    Effect.timeout("30 seconds"),
+    Effect.catchTag("TimeoutException", () =>
+      Effect.fail(new EmailError({ cause: "SEND_FAILED", message: "Email send timed out" })),
+    ),
+  );
+
+  // Log for debugging
+  yield* Effect.log(
+    `HD download email sent: messageId=${result.data?.id}, purchaseId=${params.purchaseId}, variants=${params.variants.length}`,
+  );
+
+  // Track email sent
+  captureEvent("hd_download_email_sent", params.uploadId, {
+    upload_id: params.uploadId,
+    purchase_id: params.purchaseId,
+    is_gift: params.isGift,
+    variant_count: params.variants.length,
+    message_id: result.data?.id,
+  });
+});
+
 // Resend Service implementation
 export const ResendServiceLive = Layer.succeed(ResendService, {
   sendResultEmail,
   sendReceiptEmail,
   sendDownloadEmail,
+  sendHDDownloadEmail,
   sendGiftConfirmationEmail,
   sendGiftNotificationEmail,
 });
