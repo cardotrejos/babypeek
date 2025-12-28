@@ -42,7 +42,9 @@ const getStripeClient = (): Effect.Effect<Stripe, PaymentError> => {
   }
 
   if (!cachedStripe) {
-    cachedStripe = new Stripe(env.STRIPE_SECRET_KEY!);
+    cachedStripe = new Stripe(env.STRIPE_SECRET_KEY!, {
+      apiVersion: "2025-12-15.clover",
+    });
   }
 
   return Effect.succeed(cachedStripe);
@@ -76,6 +78,8 @@ const createCheckoutSession = Effect.fn("StripeService.createCheckoutSession")(f
         success_url: params.successUrl,
         cancel_url: params.cancelUrl,
         customer_email: customerEmail,
+        // Allow customers to enter promo/discount codes
+        allow_promotion_codes: true,
         metadata: {
           uploadId: params.uploadId,
           email: params.email, // Recipient email (for HD download link)
