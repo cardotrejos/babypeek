@@ -124,12 +124,6 @@ export function RevealUI({
         <Button variant="outline" className="flex-1" onClick={onShare}>
           Share
         </Button>
-        <DownloadPreviewButton
-          previewUrl={previewUrl}
-          resultId={resultId}
-          variant="ghost"
-          className="flex-1"
-        />
       </div>
 
       {/* Share buttons section (Story 8.1) */}
