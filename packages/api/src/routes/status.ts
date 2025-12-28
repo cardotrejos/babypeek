@@ -1,8 +1,10 @@
 import { Hono } from "hono"
 import { Effect } from "effect"
+import { eq } from "drizzle-orm"
 
 import { UploadService, UploadServiceLive } from "../services/UploadService"
 import { R2Service, R2ServiceLive } from "../services/R2Service"
+import { db, results } from "@babypeek/db"
 
 const app = new Hono()
 
@@ -76,32 +78,76 @@ app.get("/:jobId", async (c) => {
     // Get upload with session token verification
     const upload = yield* uploadService.getByIdWithAuth(jobId, sessionToken)
 
-    // Determine resultId and generate signed URL if completed
+    // Determine resultId and generate signed URLs if completed
     let resultId: string | null = null
     let resultUrl: string | null = null
     let originalUrl: string | null = null
     let previewUrl: string | null = null
     
-    if (upload.status === "completed" && upload.resultUrl) {
-      // Extract resultId from resultUrl path: results/{resultId}/full.jpg
-      const match = upload.resultUrl.match(/results\/([^/]+)\//)
-      resultId = match?.[1] ?? upload.id
-      
-      // Generate signed URL for PREVIEW (watermarked) - this is what unpaid users see
-      // The frontend should show preview until payment, then show full
-      if (upload.previewUrl) {
-        const previewSignedUrl = yield* r2Service.getDownloadUrl(upload.previewUrl, 60 * 60).pipe(
+    // Array of all results (4 variants)
+    interface ResultVariant {
+      resultId: string
+      resultUrl: string
+      previewUrl: string | null
+      promptVersion: string
+      variantIndex: number
+    }
+    let allResults: ResultVariant[] = []
+    
+    if (upload.status === "completed") {
+      // Fetch all results from the results table
+      const resultRows = yield* Effect.promise(() =>
+        db.query.results.findMany({
+          where: eq(results.uploadId, jobId),
+          orderBy: (results, { asc }) => [asc(results.variantIndex)],
+        })
+      )
+
+      // Generate signed URLs for all results
+      for (const result of resultRows) {
+        const signedUrl = yield* r2Service.getDownloadUrl(result.resultUrl, 60 * 60).pipe(
           Effect.catchAll(() => Effect.succeed(null as string | null))
         )
-        previewUrl = previewSignedUrl
+        
+        let resultPreviewUrl: string | null = null
+        if (result.previewUrl) {
+          resultPreviewUrl = yield* r2Service.getDownloadUrl(result.previewUrl, 60 * 60).pipe(
+            Effect.catchAll(() => Effect.succeed(null as string | null))
+          )
+        }
+
+        if (signedUrl) {
+          allResults.push({
+            resultId: result.id,
+            resultUrl: signedUrl,
+            previewUrl: resultPreviewUrl,
+            promptVersion: result.promptVersion,
+            variantIndex: result.variantIndex,
+          })
+        }
       }
-      
-      // Also generate signed URL for FULL image (used after payment)
-      const fullR2Key = `results/${resultId}/full.jpg`
-      const signedUrlResult = yield* r2Service.getDownloadUrl(fullR2Key, 60 * 60).pipe(
-        Effect.catchAll(() => Effect.succeed(null as string | null))
-      )
-      resultUrl = signedUrlResult
+
+      // Set primary result (first variant) for backward compatibility
+      if (allResults.length > 0 && allResults[0]) {
+        resultId = allResults[0].resultId
+        resultUrl = allResults[0].resultUrl
+        previewUrl = allResults[0].previewUrl
+      } else if (upload.resultUrl) {
+        // Fallback to old single-result format for existing uploads
+        const match = upload.resultUrl.match(/results\/([^/]+)\//)
+        resultId = match?.[1] ?? upload.id
+        
+        const signedUrlResult = yield* r2Service.getDownloadUrl(upload.resultUrl, 60 * 60).pipe(
+          Effect.catchAll(() => Effect.succeed(null as string | null))
+        )
+        resultUrl = signedUrlResult
+
+        if (upload.previewUrl) {
+          previewUrl = yield* r2Service.getDownloadUrl(upload.previewUrl, 60 * 60).pipe(
+            Effect.catchAll(() => Effect.succeed(null as string | null))
+          )
+        }
+      }
 
       // Generate a signed URL for the original image (Story 5.5 - comparison slider)
       if (upload.originalUrl) {
@@ -118,10 +164,12 @@ app.get("/:jobId", async (c) => {
       stage: upload.stage,
       progress: upload.progress ?? 0,
       resultId,
-      resultUrl,        // Full unwatermarked image (for paid users)
-      previewUrl,       // Watermarked preview (for unpaid users)
+      resultUrl,        // Full unwatermarked image (for paid users) - first variant
+      previewUrl,       // Watermarked preview (for unpaid users) - first variant
       originalUrl,
       promptVersion: upload.promptVersion ?? null,
+      // All 4 variants
+      results: allResults,
       errorMessage: upload.status === "failed" ? (upload.errorMessage ?? "Processing failed. Please try again.") : null,
       updatedAt: upload.updatedAt.toISOString(),
     }

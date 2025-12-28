@@ -6,15 +6,19 @@ import { UploadService } from "../services/UploadService"
 import { PostHogService } from "../services/PostHogService"
 import { GeminiService } from "../services/GeminiService"
 import { R2Service } from "../services/R2Service"
-import { ResultService } from "../services/ResultService"
+import { ResultService, type CreatedResult } from "../services/ResultService"
 import { AppServicesLive } from "../services"
 import { UnauthorizedError, NotFoundError, AlreadyProcessingError, ProcessingError } from "../lib/errors"
 import { rateLimitMiddleware } from "../middleware/rate-limit"
-import { getPrompt } from "../prompts/baby-portrait"
+import { getPrompt, type PromptVersion } from "../prompts/baby-portrait"
 import { captureEffectError } from "../lib/sentry-effect"
 
 // Processing timeout constant (FR-2.3: Complete processing in <90 seconds)
-const PROCESSING_TIMEOUT_MS = 90_000
+// Increased to 180s for generating 4 images
+const PROCESSING_TIMEOUT_MS = 180_000
+
+// Prompt variants to generate (4 different styles)
+const PROMPT_VARIANTS: PromptVersion[] = ["v3", "v3-json", "v4", "v4-json"]
 
 const app = new Hono()
 
@@ -111,6 +115,9 @@ app.post("/", async (c) => {
       return yield* Effect.fail(new UnauthorizedError({ reason: "INVALID_TOKEN" }))
     }
 
+    // Track overall processing start time
+    const processingStartTime = Date.now()
+
     // Track processing start
     yield* posthog.capture("processing_started", sessionToken, {
       upload_id: uploadId,
@@ -144,39 +151,64 @@ app.post("/", async (c) => {
     }
 
     // Update stage: generating
-    yield* uploadService.updateStage(uploadId, "generating", 30)
+    yield* uploadService.updateStage(uploadId, "generating", 20)
 
-    // Get the prompt and call Gemini
-    const prompt = getPrompt("v3")
-    const startTime = Date.now()
+    // Generate 4 different images with different prompt variants
+    const createdResults: CreatedResult[] = []
+    const totalVariants = PROMPT_VARIANTS.length
+    const generationStartTime = Date.now()
 
-    const generatedImage = yield* gemini.generateImageFromUrl(imageUrl, prompt)
+    for (let i = 0; i < totalVariants; i++) {
+      const promptVersion = PROMPT_VARIANTS[i] as PromptVersion
+      const variantIndex = i + 1
+      const prompt = getPrompt(promptVersion)
+      
+      // Update progress (20-80% range for generation)
+      const progress = 20 + Math.floor((i / totalVariants) * 60)
+      yield* uploadService.updateStage(uploadId, "generating", progress)
 
-    const durationMs = Date.now() - startTime
+      const variantStartTime = Date.now()
+      
+      // Generate image with this prompt variant
+      const generatedImage = yield* gemini.generateImageFromUrl(imageUrl, prompt)
+      
+      const variantDurationMs = Date.now() - variantStartTime
 
-    // Track Gemini success
-    yield* posthog.capture("gemini_call_completed", sessionToken, {
-      upload_id: uploadId,
-      duration_ms: durationMs,
-      image_size_bytes: generatedImage.data.length,
-    })
+      // Track individual Gemini call
+      yield* posthog.capture("gemini_call_completed", sessionToken, {
+        upload_id: uploadId,
+        variant_index: variantIndex,
+        prompt_version: promptVersion,
+        duration_ms: variantDurationMs,
+        image_size_bytes: generatedImage.data.length,
+      })
 
-    // Update stage: storing
-    yield* uploadService.updateStage(uploadId, "storing", 80)
+      // Store result in R2
+      const createdResult = yield* resultService.create({
+        uploadId,
+        fullImageBuffer: generatedImage.data,
+        mimeType: generatedImage.mimeType,
+        promptVersion,
+        variantIndex,
+        generationTimeMs: variantDurationMs,
+      })
 
-    // Store result in R2
-    const createdResult = yield* resultService.create({
-      uploadId,
-      fullImageBuffer: generatedImage.data,
-      mimeType: generatedImage.mimeType,
-    })
+      createdResults.push(createdResult)
 
-    // Track result storage
-    yield* posthog.capture("result_stored", sessionToken, {
-      upload_id: uploadId,
-      result_id: createdResult.resultId,
-      file_size_bytes: createdResult.fileSizeBytes,
-    })
+      // Track result storage
+      yield* posthog.capture("result_stored", sessionToken, {
+        upload_id: uploadId,
+        result_id: createdResult.resultId,
+        variant_index: variantIndex,
+        prompt_version: promptVersion,
+        file_size_bytes: createdResult.fileSizeBytes,
+      })
+    }
+
+    const totalGenerationTime = Date.now() - generationStartTime
+
+    // Update stage: storing (final cleanup)
+    yield* uploadService.updateStage(uploadId, "storing", 90)
 
     // Update stage: complete
     yield* uploadService.updateStage(uploadId, "complete", 100)
@@ -184,13 +216,21 @@ app.post("/", async (c) => {
     // Track processing complete
     yield* posthog.capture("processing_completed", sessionToken, {
       upload_id: uploadId,
-      result_id: createdResult.resultId,
-      total_duration_ms: Date.now() - startTime,
+      result_count: createdResults.length,
+      result_ids: createdResults.map(r => r.resultId),
+      total_generation_time_ms: totalGenerationTime,
+      total_duration_ms: Date.now() - processingStartTime,
     })
 
+    // Return first result ID for backward compatibility, plus all results
     return {
-      resultId: createdResult.resultId,
-      resultUrl: createdResult.resultUrl,
+      resultId: createdResults[0]?.resultId ?? "",
+      resultUrl: createdResults[0]?.resultUrl ?? "",
+      results: createdResults.map(r => ({
+        resultId: r.resultId,
+        promptVersion: r.promptVersion,
+        variantIndex: r.variantIndex,
+      })),
     }
   })
 

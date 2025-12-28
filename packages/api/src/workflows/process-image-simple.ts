@@ -7,13 +7,18 @@
  * Uses Nano Banana Pro (gemini-3-pro-image-preview) with in-utero style prompts.
  */
 
-import { db, uploads } from "@babypeek/db"
+import { db, uploads, results } from "@babypeek/db"
 import { eq } from "drizzle-orm"
+import { createId } from "@paralleldrive/cuid2"
 import { S3Client, PutObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3"
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner"
 import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from "@google/generative-ai"
 import { Jimp, intToRGBA, rgbaToInt } from "jimp"
-import { GEMINI_MODEL, PROMPTS, DEFAULT_PROMPT, type PromptVersion } from "./config"
+import { Resend } from "resend"
+import { GEMINI_MODEL, PROMPTS, type PromptVersion } from "./config"
+
+// All prompt variants to generate
+const PROMPT_VARIANTS: PromptVersion[] = ["v3", "v3-json", "v4", "v4-json"]
 
 // Re-export for route
 export type { PromptVersion }
@@ -30,6 +35,7 @@ export interface ProcessImageInput {
 export interface ProcessImageOutput {
   success: boolean
   resultId?: string
+  resultIds?: string[]
   error?: string
 }
 
@@ -44,6 +50,9 @@ function getEnv() {
     R2_SECRET_ACCESS_KEY: process.env.R2_SECRET_ACCESS_KEY!,
     R2_BUCKET_NAME: process.env.R2_BUCKET_NAME!,
     GEMINI_API_KEY: process.env.GEMINI_API_KEY!,
+    RESEND_API_KEY: process.env.RESEND_API_KEY,
+    FROM_EMAIL: process.env.FROM_EMAIL || "hello@babypeek.io",
+    APP_URL: process.env.APP_URL || "https://babypeek.io",
   }
 }
 
@@ -87,7 +96,8 @@ async function updateUploadStage(
     .where(eq(uploads.id, uploadId))
 }
 
-async function savePromptVersion(
+// Kept for potential single-variant mode (currently unused - we generate all 4)
+async function _savePromptVersion(
   uploadId: string,
   promptVersion: string
 ): Promise<void> {
@@ -103,6 +113,7 @@ async function savePromptVersion(
   
   console.log(`[workflow] Saved promptVersion: ${promptVersion} for upload: ${uploadId}`)
 }
+void _savePromptVersion // prevent unused warning
 
 async function getOriginalImageUrl(uploadId: string): Promise<string | null> {
   "use step"
@@ -236,7 +247,8 @@ async function generateWithGemini(
   }
 }
 
-async function storeResult(
+// Kept for potential single-variant mode (currently unused - we use storeResultVariant)
+async function _storeResult(
   uploadId: string,
   imageData: Buffer,
   mimeType: string
@@ -273,6 +285,65 @@ async function storeResult(
   
   return resultId
 }
+void _storeResult // prevent unused warning
+
+/**
+ * Store a result variant in R2 and the results table
+ */
+async function storeResultVariant(
+  uploadId: string,
+  imageData: Buffer,
+  mimeType: string,
+  promptVersion: PromptVersion,
+  variantIndex: number,
+  generationTimeMs: number
+): Promise<string> {
+  "use step"
+  
+  const env = getEnv()
+  const client = getR2Client()
+  const resultId = createId()
+  const key = `results/${uploadId}/${resultId}_v${variantIndex}.jpg`
+  
+  console.log(`[workflow] Storing variant ${variantIndex} to R2: ${key}`)
+  
+  // Upload to R2
+  await client.send(
+    new PutObjectCommand({
+      Bucket: env.R2_BUCKET_NAME,
+      Key: key,
+      Body: imageData,
+      ContentType: mimeType,
+    })
+  )
+  
+  // Insert into results table
+  await db.insert(results).values({
+    id: resultId,
+    uploadId,
+    resultUrl: key,
+    promptVersion,
+    variantIndex,
+    fileSizeBytes: imageData.length,
+    generationTimeMs,
+  })
+  
+  // Update uploads table with first result for backward compatibility
+  if (variantIndex === 1) {
+    await db
+      .update(uploads)
+      .set({
+        resultUrl: key,
+        promptVersion,
+        updatedAt: new Date(),
+      })
+      .where(eq(uploads.id, uploadId))
+  }
+  
+  console.log(`[workflow] Variant ${variantIndex} stored, resultId: ${resultId}`)
+  
+  return resultId
+}
 
 async function markFailed(uploadId: string, error: string): Promise<void> {
   "use step"
@@ -300,6 +371,85 @@ async function updatePreviewUrl(uploadId: string, previewUrl: string): Promise<v
       updatedAt: new Date(),
     })
     .where(eq(uploads.id, uploadId))
+}
+
+/**
+ * Send email notification when generation completes
+ */
+async function sendCompletionEmail(uploadId: string, resultId: string): Promise<void> {
+  "use step"
+  
+  const env = getEnv()
+  
+  // Skip if Resend not configured
+  if (!env.RESEND_API_KEY) {
+    console.log("[workflow] Resend not configured, skipping email")
+    return
+  }
+  
+  // Get upload to find email
+  const upload = await db.query.uploads.findFirst({
+    where: eq(uploads.id, uploadId),
+  })
+  
+  if (!upload?.email) {
+    console.log("[workflow] No email found for upload, skipping notification")
+    return
+  }
+  
+  const resend = new Resend(env.RESEND_API_KEY)
+  const resultUrl = `${env.APP_URL}/result/${resultId}`
+  
+  try {
+    await resend.emails.send({
+      from: `BabyPeek <${env.FROM_EMAIL}>`,
+      to: upload.email,
+      subject: "Your BabyPeek portraits are ready! ✨",
+      html: `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #FDF8F5;">
+  <div style="background-color: white; border-radius: 16px; padding: 32px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+    
+    <div style="text-align: center; margin-bottom: 24px;">
+      <span style="font-size: 48px;">👶</span>
+    </div>
+    
+    <h1 style="color: #E8927C; font-family: 'Playfair Display', Georgia, serif; font-size: 28px; margin-bottom: 8px; text-align: center;">
+      Your Baby Portraits Are Ready!
+    </h1>
+    
+    <p style="color: #6B5B5B; font-size: 16px; line-height: 1.6; text-align: center; margin-bottom: 24px;">
+      We've created 4 beautiful AI-generated portraits of your baby in different styles. Come see the magic!
+    </p>
+    
+    <div style="text-align: center; margin: 32px 0;">
+      <a href="${resultUrl}" style="display: inline-block; background-color: #E8927C; color: white; text-decoration: none; padding: 16px 32px; border-radius: 8px; font-weight: 600; font-size: 16px;">
+        View Your Portraits
+      </a>
+    </div>
+    
+    <p style="color: #9B8B8B; font-size: 12px; text-align: center; margin-top: 24px;">
+      This link will remain active for 30 days.
+      <br>
+      Questions? Reply to this email.
+    </p>
+    
+  </div>
+</body>
+</html>
+      `,
+    })
+    
+    console.log(`[workflow] Completion email sent to ${upload.email}`)
+  } catch (error) {
+    console.error("[workflow] Failed to send completion email:", error)
+    // Non-fatal - don't fail the workflow for email issues
+  }
 }
 
 /**
@@ -426,18 +576,13 @@ export async function processImageWorkflowSimple(
 ): Promise<ProcessImageOutput> {
   "use workflow"
   
-  const { uploadId, promptVersion } = input
-  // Get prompt from config (plain constants work in workflow)
-  const prompt = promptVersion ? PROMPTS[promptVersion] : DEFAULT_PROMPT
-  console.log(`[workflow] Starting for upload: ${uploadId}, prompt: ${promptVersion || "default (v4)"}`)
+  const { uploadId } = input
+  // Note: promptVersion from input is ignored - we always generate all 4 variants
+  console.log(`[workflow] Starting for upload: ${uploadId}, generating 4 variants`)
   
   try {
     // Stage 1: Validating
-    await updateUploadStage(uploadId, "validating", 10, "processing")
-    
-    // Save which prompt version is being used (for tracking/analytics)
-    const usedPromptVersion = promptVersion || 'none'
-    await savePromptVersion(uploadId, usedPromptVersion)
+    await updateUploadStage(uploadId, "validating", 5, "processing")
     
     // Get original image URL
     const imageUrl = await getOriginalImageUrl(uploadId)
@@ -446,42 +591,88 @@ export async function processImageWorkflowSimple(
       return { success: false, error: "Original image not found" }
     }
     
-    // Stage 2: Generating (this is the main AI step)
-    await updateUploadStage(uploadId, "generating", 30)
+    // Stage 2: Generating all 4 variants
+    const resultIds: string[] = []
+    let firstResultId: string | undefined
+    let firstImageData: Buffer | undefined
     
-    const generatedImage = await generateWithGemini(imageUrl, prompt)
-    if (!generatedImage) {
-      await markFailed(uploadId, "Failed to generate image with Gemini")
-      return { success: false, error: "Failed to generate image" }
+    for (let i = 0; i < PROMPT_VARIANTS.length; i++) {
+      const variant = PROMPT_VARIANTS[i] as PromptVersion
+      const variantIndex = i + 1
+      
+      // Update progress (5-80% range for generation, divided among 4 variants)
+      const progress = 5 + Math.floor((i / PROMPT_VARIANTS.length) * 75)
+      await updateUploadStage(uploadId, "generating", progress)
+      
+      console.log(`[workflow] Generating variant ${variantIndex}/${PROMPT_VARIANTS.length}: ${variant}`)
+      
+      const prompt = PROMPTS[variant]
+      const startTime = Date.now()
+      
+      const generatedImage = await generateWithGemini(imageUrl, prompt)
+      
+      if (!generatedImage) {
+        console.error(`[workflow] Failed to generate variant ${variantIndex}, skipping`)
+        continue
+      }
+      
+      const generationTimeMs = Date.now() - startTime
+      
+      // Store the variant
+      const resultId = await storeResultVariant(
+        uploadId,
+        generatedImage.data,
+        generatedImage.mimeType,
+        variant,
+        variantIndex,
+        generationTimeMs
+      )
+      
+      resultIds.push(resultId)
+      
+      // Keep first result for watermark preview and backward compatibility
+      if (!firstResultId) {
+        firstResultId = resultId
+        firstImageData = generatedImage.data
+      }
+      
+      console.log(`[workflow] Variant ${variantIndex} complete: ${resultId} (${generationTimeMs}ms)`)
     }
     
-    // Stage 3: Storing
-    await updateUploadStage(uploadId, "storing", 70)
+    // Check if we got at least one result
+    if (resultIds.length === 0) {
+      await markFailed(uploadId, "Failed to generate any images")
+      return { success: false, error: "Failed to generate any images" }
+    }
     
-    const resultId = await storeResult(
-      uploadId,
-      generatedImage.data,
-      generatedImage.mimeType
-    )
+    console.log(`[workflow] Generated ${resultIds.length} variants`)
     
-    // Stage 4: Watermarking (AC: 5.2)
+    // Stage 3: Watermarking (create preview from first result)
     await updateUploadStage(uploadId, "watermarking", 90)
     
-    const previewKey = await createAndStorePreview(resultId, generatedImage.data)
-    if (previewKey) {
-      // Update database with preview URL
-      await updatePreviewUrl(uploadId, previewKey)
-      console.log(`[workflow] Preview stored at: ${previewKey}`)
-    } else {
-      console.log(`[workflow] Preview creation skipped (non-fatal)`)
+    if (firstResultId && firstImageData) {
+      const previewKey = await createAndStorePreview(firstResultId, firstImageData)
+      if (previewKey) {
+        await updatePreviewUrl(uploadId, previewKey)
+        console.log(`[workflow] Preview stored at: ${previewKey}`)
+      }
     }
     
     // Mark complete
     await updateUploadStage(uploadId, "complete", 100, "completed")
     
-    console.log(`[workflow] Completed for upload: ${uploadId}, result: ${resultId}`)
+    // Send completion email
+    if (firstResultId) {
+      await sendCompletionEmail(uploadId, firstResultId)
+    }
     
-    return { success: true, resultId }
+    console.log(`[workflow] Completed for upload: ${uploadId}, results: ${resultIds.join(", ")}`)
+    
+    return { 
+      success: true, 
+      resultId: firstResultId,
+      resultIds,
+    }
     
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error)

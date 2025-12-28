@@ -28,6 +28,8 @@ interface RevealUIProps {
   retryCount?: number
   /** Callback when checkout starts (Story 6.6) */
   onCheckoutStart?: () => void
+  /** Callback to start over with a new upload */
+  onStartOver?: () => void
 }
 
 /**
@@ -54,6 +56,7 @@ export function RevealUI({
   onToggleComparison,
   retryCount = 0,
   onCheckoutStart,
+  onStartOver,
 }: RevealUIProps) {
   const sessionToken = getSession(uploadId)
 
@@ -149,6 +152,17 @@ export function RevealUI({
           data-testid="compare-toggle"
         >
           {showComparison ? "Hide Comparison" : "Compare with Original"}
+        </Button>
+      )}
+
+      {/* Start Over / Try Again button */}
+      {onStartOver && (
+        <Button
+          variant="outline"
+          className="w-full"
+          onClick={onStartOver}
+        >
+          Try with a Different Photo
         </Button>
       )}
 

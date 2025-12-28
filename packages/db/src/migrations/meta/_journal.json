@@ -15,6 +15,13 @@
       "when": 1766347441518,
       "tag": "0001_sparkling_mesmero",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1766934438915,
+      "tag": "0002_nifty_tombstone",
+      "breakpoints": true
     }
   ]
 }
