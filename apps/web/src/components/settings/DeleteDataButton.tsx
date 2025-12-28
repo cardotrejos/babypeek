@@ -93,7 +93,13 @@ export function DeleteDataButton({ uploadId, sessionToken }: DeleteDataButtonPro
   return (
     <AlertDialog open={isOpen} onOpenChange={setIsOpen}>
       <AlertDialogTrigger
-        render={<Button variant="ghost" size="sm" className="text-red-500 hover:text-red-600 hover:bg-red-50" />}
+        render={
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-red-500 hover:text-red-600 hover:bg-red-50"
+          />
+        }
       >
         Delete My Data
       </AlertDialogTrigger>

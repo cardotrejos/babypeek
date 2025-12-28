@@ -243,7 +243,7 @@ function ResultPage() {
     : (selectedResult?.previewUrl ?? selectedResult?.resultUrl ?? statusData?.resultUrl ?? null);
 
   // Preload the image (AC-6)
-  const { isLoaded: imageLoaded, isLoading: imageLoading } = usePreloadImage(previewUrl);
+  const { isLoaded: imageLoaded } = usePreloadImage(previewUrl);
 
   // Track preload start time when we have a URL
   useEffect(() => {
@@ -338,15 +338,19 @@ function ResultPage() {
     });
   }, [uploadId, resultId]);
 
-  // Loading state
-  if (isLoading || imageLoading) {
+  // Loading state - show gallery with skeletons
+  if (isLoading) {
     return (
-      <div className="min-h-screen bg-cream flex items-center justify-center p-4">
-        <div className="text-center space-y-4">
-          <div className="size-12 animate-spin rounded-full border-4 border-coral border-t-transparent mx-auto" />
-          <p className="font-body text-warm-gray">
-            {isLoading ? "Loading your portrait..." : "Preparing the reveal..."}
-          </p>
+      <div className="min-h-screen bg-cream flex flex-col items-center justify-start p-4 pt-8">
+        <div className="w-full max-w-md mx-auto space-y-6">
+          {/* Header */}
+          <div className="text-center">
+            <h1 className="font-display text-2xl text-charcoal mb-2">Your Baby Portraits</h1>
+            <p className="text-sm text-warm-gray">Loading your portraits...</p>
+          </div>
+
+          {/* Gallery with skeletons */}
+          <ResultsGallery results={[]} selectedIndex={0} onSelect={() => {}} hasPurchased={false} />
         </div>
       </div>
     );
@@ -421,12 +425,8 @@ function ResultPage() {
       <div className="w-full max-w-md mx-auto space-y-6">
         {/* Header */}
         <div className="text-center">
-          <h1 className="font-display text-2xl text-charcoal mb-2">
-            Your Baby Portraits
-          </h1>
-          <p className="text-sm text-warm-gray">
-            Tap to select your favorite style
-          </p>
+          <h1 className="font-display text-2xl text-charcoal mb-2">Your Baby Portraits</h1>
+          <p className="text-sm text-warm-gray">Tap to select your favorite style</p>
         </div>
 
         {/* Comparison slider view (Story 5.5) */}
