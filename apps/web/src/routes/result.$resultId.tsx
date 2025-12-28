@@ -7,7 +7,7 @@ import { getSession, getJobData } from "@/lib/session"
 import { posthog, isPostHogConfigured } from "@/lib/posthog"
 import { addBreadcrumb, isSentryConfigured, Sentry } from "@/lib/sentry"
 import { usePreloadImage } from "@/hooks/use-preload-image"
-import { RevealAnimation, RevealUI, BeforeAfterSlider, ResultsGallery, type ResultVariant } from "@/components/reveal"
+import { RevealAnimation, RevealUI, BeforeAfterSlider, ResultsGallery, PreferenceFeedback, type ResultVariant } from "@/components/reveal"
 import { API_BASE_URL } from "@/lib/api-config"
 import { getPaymentErrorMessage } from "@/lib/payment-errors"
 import { isExpiredError } from "@/lib/error-detection"
@@ -66,6 +66,10 @@ function ResultPage() {
   const [retryCount, setRetryCount] = useState(0)
   // Track which result variant is selected (0-3)
   const [selectedVariantIndex, setSelectedVariantIndex] = useState(0)
+  // Track if user has actively selected a variant (for showing feedback prompt)
+  const [hasUserSelectedVariant, setHasUserSelectedVariant] = useState(false)
+  // Track if feedback has been submitted
+  const [feedbackSubmitted, setFeedbackSubmitted] = useState(false)
 
   // Track if we came from session recovery
   const sessionRecoveryTrackedRef = useRef(false)
@@ -389,12 +393,27 @@ function ResultPage() {
           />
           {/* Show gallery if multiple results */}
           {hasMultipleResults && showRevealUI && (
-            <ResultsGallery
-              results={allResults}
-              selectedIndex={selectedVariantIndex}
-              onSelect={setSelectedVariantIndex}
-              uploadId={uploadId ?? undefined}
-            />
+            <>
+              <ResultsGallery
+                results={allResults}
+                selectedIndex={selectedVariantIndex}
+                onSelect={(index) => {
+                  setSelectedVariantIndex(index)
+                  setHasUserSelectedVariant(true)
+                  setFeedbackSubmitted(false)
+                }}
+                uploadId={uploadId ?? undefined}
+              />
+              {/* Show preference feedback after user selects a variant */}
+              {hasUserSelectedVariant && !feedbackSubmitted && selectedResult && (
+                <PreferenceFeedback
+                  uploadId={uploadId ?? ""}
+                  selectedResultId={selectedResult.resultId}
+                  promptVersion={selectedResult.promptVersion}
+                  onSubmit={() => setFeedbackSubmitted(true)}
+                />
+              )}
+            </>
           )}
           <RevealUI
             resultId={currentResultId}
@@ -419,12 +438,27 @@ function ResultPage() {
           <div className="space-y-4">
             {/* Show gallery if multiple results */}
             {hasMultipleResults && showRevealUI && (
-              <ResultsGallery
-                results={allResults}
-                selectedIndex={selectedVariantIndex}
-                onSelect={setSelectedVariantIndex}
-                uploadId={uploadId ?? undefined}
-              />
+              <>
+                <ResultsGallery
+                  results={allResults}
+                  selectedIndex={selectedVariantIndex}
+                  onSelect={(index) => {
+                    setSelectedVariantIndex(index)
+                    setHasUserSelectedVariant(true)
+                    setFeedbackSubmitted(false) // Reset feedback if they change selection
+                  }}
+                  uploadId={uploadId ?? undefined}
+                />
+                {/* Show preference feedback after user selects a variant */}
+                {hasUserSelectedVariant && !feedbackSubmitted && selectedResult && (
+                  <PreferenceFeedback
+                    uploadId={uploadId ?? ""}
+                    selectedResultId={selectedResult.resultId}
+                    promptVersion={selectedResult.promptVersion}
+                    onSubmit={() => setFeedbackSubmitted(true)}
+                  />
+                )}
+              </>
             )}
             <RevealUI
               resultId={currentResultId}

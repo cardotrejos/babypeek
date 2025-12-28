@@ -22,6 +22,13 @@
       "when": 1766934438915,
       "tag": "0002_nifty_tombstone",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1766935825595,
+      "tag": "0003_spotty_frank_castle",
+      "breakpoints": true
     }
   ]
 }

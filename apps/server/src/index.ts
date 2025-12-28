@@ -3,7 +3,7 @@ import { Hono } from "hono"
 import { cors } from "hono/cors"
 import { logger } from "hono/logger"
 
-import { healthRoutes, storageRoutes, uploadRoutes, processRoutes, processWorkflowRoutes, statusRoutes, retryRoutes, checkoutRoutes, webhookRoutes, shareRoutes, downloadRoutes, dataRoutes, cleanupRoutes } from "@babypeek/api"
+import { healthRoutes, storageRoutes, uploadRoutes, processRoutes, processWorkflowRoutes, statusRoutes, retryRoutes, checkoutRoutes, webhookRoutes, shareRoutes, downloadRoutes, dataRoutes, cleanupRoutes, preferencesRoutes } from "@babypeek/api"
 
 const app = new Hono()
 
@@ -32,6 +32,7 @@ app.route("/api/share", shareRoutes)
 app.route("/api/download", downloadRoutes)
 app.route("/api/data", dataRoutes)
 app.route("/api/cron/cleanup", cleanupRoutes)
+app.route("/api/preferences", preferencesRoutes)
 
 // Root endpoint
 app.get("/", (c) => {

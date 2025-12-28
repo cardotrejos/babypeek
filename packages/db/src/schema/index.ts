@@ -119,6 +119,42 @@ export const downloads = pgTable("downloads", {
   ipHash: text("ip_hash"), // Hashed for privacy, used for abuse detection
 })
 
+// Preference reason enum values (for tracking why users prefer certain results)
+export const preferenceReasonValues = [
+  "more_realistic",
+  "better_lighting",
+  "cuter_expression",
+  "clearer_details",
+  "better_colors",
+  "more_natural",
+  "other",
+] as const
+export type PreferenceReason = typeof preferenceReasonValues[number]
+
+/**
+ * Preferences table - tracks which result variants users prefer and why
+ * Used for A/B testing prompts and improving generation quality
+ */
+export const preferences = pgTable("preferences", {
+  id: text("id").primaryKey().$defaultFn(() => createId()),
+  
+  // Link to upload and selected result
+  uploadId: text("upload_id").notNull().references(() => uploads.id),
+  selectedResultId: text("selected_result_id").notNull().references(() => results.id),
+  
+  // Which prompt version was selected
+  selectedPromptVersion: text("selected_prompt_version", { enum: promptVersionValues }).notNull(),
+  
+  // Why they preferred it (optional quick feedback)
+  reason: text("reason", { enum: preferenceReasonValues }),
+  
+  // All variants that were shown (for context)
+  shownVariants: text("shown_variants").notNull(), // JSON array of prompt versions shown
+  
+  // Timestamps
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+})
+
 // Type exports for use in application code
 export type Upload = typeof uploads.$inferSelect
 export type NewUpload = typeof uploads.$inferInsert
@@ -128,3 +164,5 @@ export type Purchase = typeof purchases.$inferSelect
 export type NewPurchase = typeof purchases.$inferInsert
 export type Download = typeof downloads.$inferSelect
 export type NewDownload = typeof downloads.$inferInsert
+export type Preference = typeof preferences.$inferSelect
+export type NewPreference = typeof preferences.$inferInsert
