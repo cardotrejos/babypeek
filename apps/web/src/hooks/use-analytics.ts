@@ -1,5 +1,6 @@
 import { usePostHog } from "posthog-js/react";
 import { useCallback } from "react";
+import { trackFBViewContent, trackFBInitiateCheckout } from "@/lib/facebook-pixel";
 
 // =============================================================================
 // Analytics Event Types
@@ -188,15 +189,29 @@ export function useAnalytics() {
   );
 
   const trackRevealViewed = useCallback(
-    (jobId: string) => {
+    (jobId: string, uploadId?: string) => {
       trackEvent("reveal_viewed", { job_id: jobId });
+      // Also track ViewContent on Facebook for ad optimization
+      trackFBViewContent({
+        resultId: jobId,
+        uploadId,
+        contentName: "Baby Portrait Preview",
+      });
     },
     [trackEvent],
   );
 
   const trackCheckoutStarted = useCallback(
-    (price: number, type: "self" | "gift") => {
+    (price: number, type: "self" | "gift", uploadId?: string, resultId?: string) => {
       trackEvent("checkout_started", { price, type });
+      // Also track InitiateCheckout on Facebook for ad optimization
+      if (resultId || uploadId) {
+        trackFBInitiateCheckout({
+          resultId: resultId || uploadId || "",
+          uploadId,
+          value: price,
+        });
+      }
     },
     [trackEvent],
   );

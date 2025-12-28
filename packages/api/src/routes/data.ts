@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import { Effect } from "effect";
 import { eq } from "drizzle-orm";
-import { db, uploads, purchases, downloads } from "@babypeek/db";
+import { db, uploads, purchases, downloads, results, preferences } from "@babypeek/db";
 import { R2Service, R2ServiceLive } from "../services/R2Service";
 import { NotFoundError } from "../lib/errors";
 import { addBreadcrumb, captureException } from "../middleware/sentry";
@@ -96,7 +96,17 @@ app.delete("/:token", async (c) => {
         .where(eq(purchases.uploadId, uploadId)),
     );
 
-    // 5. Delete upload record (this cascade-affects nothing now since we handled refs)
+    // 5. Delete preferences for this upload (must delete before results due to FK)
+    yield* Effect.promise(() =>
+      db.delete(preferences).where(eq(preferences.uploadId, uploadId)),
+    );
+
+    // 6. Delete results for this upload (must delete before uploads due to FK)
+    yield* Effect.promise(() =>
+      db.delete(results).where(eq(results.uploadId, uploadId)),
+    );
+
+    // 7. Delete upload record (this cascade-affects nothing now since we handled refs)
     yield* Effect.promise(() => db.delete(uploads).where(eq(uploads.id, uploadId)));
 
     // AC-4: Log successful deletion for audit

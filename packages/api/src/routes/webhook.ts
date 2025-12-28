@@ -10,6 +10,7 @@ import { R2Service, R2ServiceLive } from "../services/R2Service";
 import { PaymentError } from "../lib/errors";
 import { captureException, addBreadcrumb } from "../middleware/sentry";
 import { captureEvent } from "../services/PostHogService";
+import { trackPurchaseEvent } from "../services/FacebookConversionsService";
 
 const app = new Hono();
 
@@ -216,6 +217,23 @@ const handleCheckoutCompleted = (session: Stripe.Checkout.Session) =>
     } catch (analyticsError) {
       console.error("PostHog analytics error:", analyticsError);
     }
+
+    // Track purchase in Facebook Conversions API (server-side)
+    // This provides more reliable attribution than client-side Pixel alone
+    yield* Effect.promise(async () => {
+      try {
+        await trackPurchaseEvent({
+          value: (session.amount_total || 0) / 100, // Convert cents to dollars
+          currency: session.currency?.toUpperCase() || "USD",
+          uploadId,
+          email: session.customer_email || email,
+          stripeSessionId: session.id,
+        });
+      } catch (fbError) {
+        // Log but don't fail - FB tracking is supplementary
+        console.error("Facebook Conversions API error:", fbError);
+      }
+    });
 
     yield* Effect.log(`Checkout completed for session ${session.id}, purchase ${purchase.id}`);
     return { handled: true, purchaseId: purchase.id };
