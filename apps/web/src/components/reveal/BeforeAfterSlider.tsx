@@ -77,15 +77,6 @@ export function BeforeAfterSlider({
     [calculatePosition],
   );
 
-  const handleTouchMove = useCallback(
-    (e: React.TouchEvent) => {
-      if (!isDragging) return;
-      e.preventDefault(); // Prevent scrolling while dragging
-      setPosition(calculatePosition(e.touches[0].clientX));
-    },
-    [isDragging, calculatePosition],
-  );
-
   // Keyboard handlers (Task 4)
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     const step = 5; // 5% per key press
@@ -142,13 +133,12 @@ export function BeforeAfterSlider({
     <div
       ref={containerRef}
       className={cn(
-        "relative w-full aspect-[4/3] rounded-2xl overflow-hidden cursor-ew-resize select-none",
+        "relative w-full aspect-[4/3] rounded-2xl overflow-hidden cursor-ew-resize select-none touch-none",
         "focus:outline-none focus-visible:ring-2 focus-visible:ring-coral focus-visible:ring-offset-2",
         className,
       )}
       onMouseDown={handleMouseDown}
       onTouchStart={handleTouchStart}
-      onTouchMove={handleTouchMove}
       onKeyDown={handleKeyDown}
       // Prevent right-click context menu
       onContextMenu={(e) => !allowImageSave && e.preventDefault()}

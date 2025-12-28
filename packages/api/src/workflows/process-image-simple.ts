@@ -391,6 +391,8 @@ async function updatePreviewUrl(uploadId: string, previewUrl: string): Promise<v
     .where(eq(uploads.id, uploadId));
 }
 
+
+
 /**
  * Send email notification when generation completes
  */
@@ -474,11 +476,9 @@ async function sendCompletionEmail(uploadId: string, resultId: string): Promise<
  * Create watermarked preview and store in R2.
  *
  * Watermark Specs (from PRD):
- * - Opacity: 40%
- * - Position: Bottom-right corner
- * - Size: 15% of image width
- * - Text: "babypeek.io"
- * - Margin: 3% from edges
+ * - Diagonal "babypeek.io" text pattern across entire image
+ * - Opacity: 30% (visible but not intrusive)
+ * - Covers entire image to prevent cropping
  *
  * Preview Specs:
  * - Max dimension: 800px
@@ -487,6 +487,7 @@ async function sendCompletionEmail(uploadId: string, resultId: string): Promise<
  * @see Story 5.2 - Watermark Application
  */
 async function createAndStorePreview(
+  uploadId: string,
   resultId: string,
   fullImageDataBase64: string,
 ): Promise<string | null> {
@@ -524,44 +525,163 @@ async function createAndStorePreview(
     const imageWidth = image.width;
     const imageHeight = image.height;
 
-    // Watermark config
-    const widthPercent = 0.2; // 20% of image width for visibility
-    const marginPercent = 0.03;
+    // Watermark text parameters
+    const text = "babypeek.io";
+    const opacity = 0.3; // 30% opacity
+    const charWidth = Math.max(8, Math.floor(imageWidth / 50)); // ~2% of image width per char
+    const spacing = Math.floor(imageWidth / 4); // Space between watermark repetitions
 
-    // Calculate watermark rectangle dimensions
-    const rectWidth = Math.floor(imageWidth * widthPercent);
-    const rectHeight = Math.floor(rectWidth * 0.25); // 4:1 aspect ratio
+    // Simple pixel-based text rendering for "babypeek.io"
+    // Each letter is a simple 5x7 pixel pattern scaled up
+    const letterPatterns: Record<string, number[][]> = {
+      b: [
+        [1, 1, 1, 0, 0],
+        [1, 0, 0, 1, 0],
+        [1, 1, 1, 0, 0],
+        [1, 0, 0, 1, 0],
+        [1, 0, 0, 1, 0],
+        [1, 1, 1, 0, 0],
+        [0, 0, 0, 0, 0],
+      ],
+      a: [
+        [0, 1, 1, 0, 0],
+        [1, 0, 0, 1, 0],
+        [1, 0, 0, 1, 0],
+        [1, 1, 1, 1, 0],
+        [1, 0, 0, 1, 0],
+        [1, 0, 0, 1, 0],
+        [0, 0, 0, 0, 0],
+      ],
+      y: [
+        [1, 0, 0, 1, 0],
+        [1, 0, 0, 1, 0],
+        [0, 1, 1, 0, 0],
+        [0, 0, 1, 0, 0],
+        [0, 0, 1, 0, 0],
+        [0, 0, 1, 0, 0],
+        [0, 0, 0, 0, 0],
+      ],
+      p: [
+        [1, 1, 1, 0, 0],
+        [1, 0, 0, 1, 0],
+        [1, 0, 0, 1, 0],
+        [1, 1, 1, 0, 0],
+        [1, 0, 0, 0, 0],
+        [1, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0],
+      ],
+      e: [
+        [1, 1, 1, 1, 0],
+        [1, 0, 0, 0, 0],
+        [1, 1, 1, 0, 0],
+        [1, 0, 0, 0, 0],
+        [1, 0, 0, 0, 0],
+        [1, 1, 1, 1, 0],
+        [0, 0, 0, 0, 0],
+      ],
+      k: [
+        [1, 0, 0, 1, 0],
+        [1, 0, 1, 0, 0],
+        [1, 1, 0, 0, 0],
+        [1, 0, 1, 0, 0],
+        [1, 0, 0, 1, 0],
+        [1, 0, 0, 1, 0],
+        [0, 0, 0, 0, 0],
+      ],
+      ".": [
+        [0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0],
+        [0, 1, 0, 0, 0],
+        [0, 0, 0, 0, 0],
+      ],
+      i: [
+        [0, 1, 0, 0, 0],
+        [0, 0, 0, 0, 0],
+        [0, 1, 0, 0, 0],
+        [0, 1, 0, 0, 0],
+        [0, 1, 0, 0, 0],
+        [0, 1, 0, 0, 0],
+        [0, 0, 0, 0, 0],
+      ],
+      o: [
+        [0, 1, 1, 0, 0],
+        [1, 0, 0, 1, 0],
+        [1, 0, 0, 1, 0],
+        [1, 0, 0, 1, 0],
+        [1, 0, 0, 1, 0],
+        [0, 1, 1, 0, 0],
+        [0, 0, 0, 0, 0],
+      ],
+    };
 
-    // Calculate margin (3% from edges)
-    const margin = Math.floor(Math.min(imageWidth, imageHeight) * marginPercent);
+    // Scale factor for letters
+    const scale = Math.max(1, Math.floor(charWidth / 5));
 
-    // Calculate position for bottom-right with margin
-    const startX = Math.max(0, imageWidth - rectWidth - margin);
-    const startY = Math.max(0, imageHeight - rectHeight - margin);
+    // Draw watermark text at a specific position
+    const drawWatermarkAt = (startX: number, startY: number) => {
+      let xOffset = 0;
 
-    console.log(
-      `[workflow] Watermark area: ${startX},${startY} -> ${startX + rectWidth},${startY + rectHeight}`,
-    );
+      for (const char of text) {
+        const pattern = letterPatterns[char];
+        if (!pattern) continue;
 
-    // Step 2: Apply watermark - draw semi-transparent diagonal lines pattern
-    // This creates a visible "watermark" effect without needing text rendering
-    for (let y = startY; y < startY + rectHeight && y < imageHeight; y++) {
-      for (let x = startX; x < startX + rectWidth && x < imageWidth; x++) {
-        // Create diagonal stripe pattern (every 4 pixels)
-        const isStripe = (x + y) % 8 < 4;
-        if (isStripe) {
-          // Get current pixel color and blend with white
-          const rgba = intToRGBA(image.getPixelColor(x, y));
-          const blendedR = Math.floor(rgba.r * 0.6 + 255 * 0.4);
-          const blendedG = Math.floor(rgba.g * 0.6 + 255 * 0.4);
-          const blendedB = Math.floor(rgba.b * 0.6 + 255 * 0.4);
-          const newColor = rgbaToInt(blendedR, blendedG, blendedB, rgba.a);
-          image.setPixelColor(newColor, x, y);
+        for (let py = 0; py < pattern.length; py++) {
+          const row = pattern[py];
+          if (!row) continue;
+          for (let px = 0; px < row.length; px++) {
+            if (row[px]) {
+              // Draw scaled pixel
+              for (let sy = 0; sy < scale; sy++) {
+                for (let sx = 0; sx < scale; sx++) {
+                  const x = startX + xOffset + px * scale + sx;
+                  const y = startY + py * scale + sy;
+
+                  if (x >= 0 && x < imageWidth && y >= 0 && y < imageHeight) {
+                    const rgba = intToRGBA(image.getPixelColor(x, y));
+
+                    // White text with opacity blending
+                    const blendFactor = 1 - opacity;
+                    const blendedR = Math.floor(rgba.r * blendFactor + 255 * opacity);
+                    const blendedG = Math.floor(rgba.g * blendFactor + 255 * opacity);
+                    const blendedB = Math.floor(rgba.b * blendFactor + 255 * opacity);
+
+                    const newColor = rgbaToInt(blendedR, blendedG, blendedB, rgba.a);
+                    image.setPixelColor(newColor, x, y);
+                  }
+                }
+              }
+            }
+          }
+        }
+
+        xOffset += 6 * scale; // Move to next character position
+      }
+    };
+
+    // Draw watermarks in a diagonal pattern across the entire image
+    // This makes it very difficult to crop out
+    for (
+      let diagOffset = -imageHeight;
+      diagOffset < imageWidth + imageHeight;
+      diagOffset += spacing
+    ) {
+      // Draw along diagonal lines
+      const startX = diagOffset;
+      const startY = Math.floor(imageHeight * 0.3); // Start from 30% down
+
+      // Multiple rows of watermarks
+      for (let row = 0; row < 3; row++) {
+        const rowY = startY + row * spacing * 0.7;
+        if (rowY >= 0 && rowY < imageHeight - 7 * scale) {
+          drawWatermarkAt(startX + row * spacing * 0.3, Math.floor(rowY));
         }
       }
     }
 
-    console.log(`[workflow] Watermark applied`);
+    console.log(`[workflow] Watermark applied with diagonal text pattern`);
 
     // Convert to JPEG buffer
     const previewBuffer = await image.getBuffer("image/jpeg", { quality: 85 });
@@ -569,8 +689,8 @@ async function createAndStorePreview(
 
     console.log(`[workflow] Preview created, size: ${preview.length} bytes`);
 
-    // Step 3: Store preview in R2
-    const previewKey = `results/${resultId}/preview.jpg`;
+    // Step 3: Store preview in R2 - use uploadId in path for consistency
+    const previewKey = `results/${uploadId}/${resultId}_preview.jpg`;
 
     await client.send(
       new PutObjectCommand({
@@ -582,6 +702,16 @@ async function createAndStorePreview(
     );
 
     console.log(`[workflow] Preview stored at: ${previewKey}`);
+
+    // Step 4: Update the results table with the preview URL
+    await db
+      .update(results)
+      .set({
+        previewUrl: previewKey,
+      })
+      .where(eq(results.id, resultId));
+
+    console.log(`[workflow] Updated result ${resultId} with previewUrl: ${previewKey}`);
 
     return previewKey;
   } catch (error) {
@@ -617,15 +747,16 @@ export async function processImageWorkflowSimple(
 
     // Stage 2: Generating all 4 variants
     const resultIds: string[] = [];
+    // Store generated image data for each variant (for watermarking later)
+    const generatedImages: Array<{ resultId: string; imageData: string }> = [];
     let firstResultId: string | undefined;
-    let firstImageDataBase64: string | undefined;
 
     for (let i = 0; i < PROMPT_VARIANTS.length; i++) {
       const variant = PROMPT_VARIANTS[i] as PromptVersion;
       const variantIndex = i + 1;
 
-      // Update progress (5-80% range for generation, divided among 4 variants)
-      const progress = 5 + Math.floor((i / PROMPT_VARIANTS.length) * 75);
+      // Update progress (5-70% range for generation, divided among 4 variants)
+      const progress = 5 + Math.floor((i / PROMPT_VARIANTS.length) * 65);
       await updateUploadStage(uploadId, "generating", progress);
 
       console.log(
@@ -655,11 +786,11 @@ export async function processImageWorkflowSimple(
       );
 
       resultIds.push(resultId);
+      generatedImages.push({ resultId, imageData: generatedImage.data });
 
-      // Keep first result for watermark preview and backward compatibility
+      // Keep first result ID for backward compatibility
       if (!firstResultId) {
         firstResultId = resultId;
-        firstImageDataBase64 = generatedImage.data;
       }
 
       console.log(
@@ -675,15 +806,34 @@ export async function processImageWorkflowSimple(
 
     console.log(`[workflow] Generated ${resultIds.length} variants`);
 
-    // Stage 3: Watermarking (create preview from first result)
-    await updateUploadStage(uploadId, "watermarking", 90);
+    // Stage 3: Watermarking - create preview for EACH variant
+    await updateUploadStage(uploadId, "watermarking", 75);
 
-    if (firstResultId && firstImageDataBase64) {
-      const previewKey = await createAndStorePreview(firstResultId, firstImageDataBase64);
+    let firstPreviewKey: string | null = null;
+
+    for (let i = 0; i < generatedImages.length; i++) {
+      const { resultId, imageData } = generatedImages[i]!;
+
+      // Update progress (75-95% range for watermarking, divided among variants)
+      const progress = 75 + Math.floor((i / generatedImages.length) * 20);
+      await updateUploadStage(uploadId, "watermarking", progress);
+
+      console.log(`[workflow] Creating watermark for variant ${i + 1}/${generatedImages.length}: ${resultId}`);
+
+      const previewKey = await createAndStorePreview(uploadId, resultId, imageData);
       if (previewKey) {
-        await updatePreviewUrl(uploadId, previewKey);
         console.log(`[workflow] Preview stored at: ${previewKey}`);
+
+        // Keep first preview for backward compatibility with uploads table
+        if (!firstPreviewKey) {
+          firstPreviewKey = previewKey;
+        }
       }
+    }
+
+    // Update uploads table with first preview URL for backward compatibility
+    if (firstPreviewKey) {
+      await updatePreviewUrl(uploadId, firstPreviewKey);
     }
 
     // Mark complete
