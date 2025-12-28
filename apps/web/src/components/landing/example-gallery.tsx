@@ -4,13 +4,27 @@ import { cn } from "@/lib/utils"
 
 /**
  * Example data for gallery cards
- * Using placeholder gradients until real images are available
+ * Real before/after examples from 4D ultrasounds
  */
 const examples = [
-  { id: 1, label: "Example 1" },
-  { id: 2, label: "Example 2" },
-  { id: 3, label: "Example 3" },
-  { id: 4, label: "Example 4" },
+  {
+    id: 1,
+    label: "Example 1",
+    before: "/images/examples/4d-ultra.jpeg",
+    after: "/images/examples/result-1.jpeg",
+  },
+  {
+    id: 2,
+    label: "Example 2",
+    before: "/images/examples/4d-ultra.jpeg",
+    after: "/images/examples/result-2.jpeg",
+  },
+  {
+    id: 3,
+    label: "Example 3",
+    before: "/images/examples/4d-ultra-2.jpeg",
+    after: "/images/examples/result-3.jpeg",
+  },
 ]
 
 interface ExampleGalleryProps {
@@ -68,37 +82,36 @@ export function ExampleGallery({ className }: ExampleGalleryProps) {
         {examples.map((example, index) => (
           <GalleryCard
             key={example.id}
-            index={index + 1}
+            before={example.before}
+            after={example.after}
             label={example.label}
             loading={index < 2 ? "eager" : "lazy"}
           />
         ))}
       </div>
+      {/* Permission disclaimer */}
+      <p className="text-center text-xs text-warm-gray/70 mt-4 italic">
+        Photos shared with permission from the families.
+      </p>
     </div>
   )
 }
 
 interface GalleryCardProps {
-  index: number
+  before: string
+  after: string
   label: string
   /**
-   * Loading strategy for images. Currently passed through for when real images
-   * are added (hasRealImages flag). First 2 cards use "eager", rest use "lazy".
+   * Loading strategy for images. First 2 cards use "eager", rest use "lazy".
    */
   loading?: "eager" | "lazy"
 }
 
 /**
  * GalleryCard Component
- * Displays a single before/after transformation example.
- * 
- * Uses placeholder gradients until real images are available.
- * Reserves aspect ratio to prevent layout shift.
+ * Displays a single before/after transformation example with real images.
  */
-function GalleryCard({ index, label, loading = "lazy" }: GalleryCardProps) {
-  // Flag for when real images become available
-  const hasRealImages = false
-
+function GalleryCard({ before, after, label, loading = "lazy" }: GalleryCardProps) {
   return (
     <div
       className={cn(
@@ -110,43 +123,14 @@ function GalleryCard({ index, label, loading = "lazy" }: GalleryCardProps) {
       <div className="grid grid-cols-2 gap-1 p-2">
         {/* Before image */}
         <div className="relative aspect-[4/3] rounded-lg overflow-hidden">
-          {hasRealImages ? (
-            <picture>
-              <source
-                srcSet={`/images/examples/example-${index}-before.webp`}
-                type="image/webp"
-              />
-              <img
-                src={`/images/examples/example-${index}-before.jpg`}
-                alt={`${label}: Original 4D ultrasound`}
-                className="w-full h-full object-cover"
-                loading={loading}
-                width={140}
-                height={105}
-              />
-            </picture>
-          ) : (
-            <div
-              className="w-full h-full bg-gradient-to-br from-warm-gray/20 to-charcoal/10 flex items-center justify-center"
-              role="img"
-              aria-label={`${label}: Original 4D ultrasound (placeholder)`}
-            >
-              <svg
-                className="w-8 h-8 text-warm-gray/40"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                aria-hidden="true"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={1.5}
-                  d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                />
-              </svg>
-            </div>
-          )}
+          <img
+            src={before}
+            alt={`${label}: Original 4D ultrasound`}
+            className="w-full h-full object-cover"
+            loading={loading}
+            width={140}
+            height={105}
+          />
           <span className="absolute bottom-1 left-1 px-2 py-0.5 bg-black/50 text-white text-xs rounded font-body">
             Before
           </span>
@@ -154,43 +138,14 @@ function GalleryCard({ index, label, loading = "lazy" }: GalleryCardProps) {
 
         {/* After image */}
         <div className="relative aspect-[4/3] rounded-lg overflow-hidden">
-          {hasRealImages ? (
-            <picture>
-              <source
-                srcSet={`/images/examples/example-${index}-after.webp`}
-                type="image/webp"
-              />
-              <img
-                src={`/images/examples/example-${index}-after.jpg`}
-                alt={`${label}: AI-generated baby portrait`}
-                className="w-full h-full object-cover"
-                loading={loading}
-                width={140}
-                height={105}
-              />
-            </picture>
-          ) : (
-            <div
-              className="w-full h-full bg-gradient-to-br from-coral-light to-cream flex items-center justify-center"
-              role="img"
-              aria-label={`${label}: AI-generated baby portrait (placeholder)`}
-            >
-              <svg
-                className="w-8 h-8 text-coral/40"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                aria-hidden="true"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={1.5}
-                  d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                />
-              </svg>
-            </div>
-          )}
+          <img
+            src={after}
+            alt={`${label}: AI-generated baby portrait`}
+            className="w-full h-full object-cover"
+            loading={loading}
+            width={140}
+            height={105}
+          />
           <span className="absolute bottom-1 left-1 px-2 py-0.5 bg-coral/80 text-white text-xs rounded font-body">
             After
           </span>
