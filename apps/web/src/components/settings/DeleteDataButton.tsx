@@ -4,7 +4,6 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
-  AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
@@ -94,16 +93,10 @@ export function DeleteDataButton({ uploadId, sessionToken }: DeleteDataButtonPro
   return (
     <AlertDialog open={isOpen} onOpenChange={setIsOpen}>
       <AlertDialogTrigger
-        render={
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-red-500 hover:text-red-600 hover:bg-red-50"
-          >
-            Delete My Data
-          </Button>
-        }
-      />
+        render={<Button variant="ghost" size="sm" className="text-red-500 hover:text-red-600 hover:bg-red-50" />}
+      >
+        Delete My Data
+      </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>Delete Your Data?</AlertDialogTitle>
@@ -114,13 +107,16 @@ export function DeleteDataButton({ uploadId, sessionToken }: DeleteDataButtonPro
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
-          <AlertDialogAction
-            onClick={handleDelete}
+          <Button
+            onClick={(e) => {
+              e.preventDefault();
+              handleDelete();
+            }}
             disabled={isDeleting}
             className="bg-red-500 hover:bg-red-600"
           >
             {isDeleting ? "Deleting..." : "Delete Everything"}
-          </AlertDialogAction>
+          </Button>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>

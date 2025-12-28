@@ -8,7 +8,6 @@ import { posthog, isPostHogConfigured } from "@/lib/posthog";
 import { addBreadcrumb, isSentryConfigured, Sentry } from "@/lib/sentry";
 import { usePreloadImage } from "@/hooks/use-preload-image";
 import {
-  RevealAnimation,
   RevealUI,
   BeforeAfterSlider,
   ResultsGallery,
@@ -233,11 +232,9 @@ function ResultPage() {
   const hasPurchased = downloadStatus?.canDownload === true;
 
   // Extract preview URL from status data
-  // Use selected variant if multiple results exist
   // SECURITY: Use watermarked previewUrl for unpaid users, not resultUrl
   const allResults = statusData?.results ?? [];
-  const hasMultipleResults = allResults.length > 1;
-  const selectedResult = hasMultipleResults ? allResults[selectedVariantIndex] : null;
+  const selectedResult = allResults[selectedVariantIndex] ?? null;
 
   // SECURITY: Show watermarked preview unless user has purchased
   // If purchased, show HD version (resultUrl), otherwise show watermarked (previewUrl)
@@ -410,12 +407,30 @@ function ResultPage() {
   // Get the current result ID for the selected variant
   const currentResultId = selectedResult?.resultId ?? resultId;
 
-  // Reveal animation (AC-1 to AC-7) or Comparison slider (Story 5.5)
+  // Trigger reveal UI immediately (no animation delay needed)
+  useEffect(() => {
+    if (imageLoaded && !showRevealUI) {
+      setShowRevealUI(true);
+      handleRevealComplete();
+    }
+  }, [imageLoaded, showRevealUI, handleRevealComplete]);
+
+  // Clean gallery-first layout
   return (
-    <div className="min-h-screen bg-cream flex items-center justify-center p-4">
-      {showComparison && originalUrl ? (
-        // Comparison slider view (Story 5.5)
-        <div className="relative w-full max-w-md mx-auto space-y-4">
+    <div className="min-h-screen bg-cream flex flex-col items-center justify-start p-4 pt-8">
+      <div className="w-full max-w-md mx-auto space-y-6">
+        {/* Header */}
+        <div className="text-center">
+          <h1 className="font-display text-2xl text-charcoal mb-2">
+            Your Baby Portraits
+          </h1>
+          <p className="text-sm text-warm-gray">
+            Tap to select your favorite style
+          </p>
+        </div>
+
+        {/* Comparison slider view (Story 5.5) */}
+        {showComparison && originalUrl ? (
           <BeforeAfterSlider
             beforeImage={originalUrl}
             afterImage={previewUrl}
@@ -423,93 +438,45 @@ function ResultPage() {
             afterLabel="AI Portrait"
             allowImageSave={hasPurchased}
           />
-          {/* Show gallery if multiple results */}
-          {hasMultipleResults && showRevealUI && (
-            <>
-              <ResultsGallery
-                results={allResults}
-                selectedIndex={selectedVariantIndex}
-                onSelect={(index) => {
-                  setSelectedVariantIndex(index);
-                  setHasUserSelectedVariant(true);
-                  setFeedbackSubmitted(false);
-                }}
-                uploadId={uploadId ?? undefined}
-                hasPurchased={hasPurchased}
-              />
-              {/* Show preference feedback after user selects a variant */}
-              {hasUserSelectedVariant && !feedbackSubmitted && selectedResult && (
-                <PreferenceFeedback
-                  uploadId={uploadId ?? ""}
-                  selectedResultId={selectedResult.resultId}
-                  promptVersion={selectedResult.promptVersion}
-                  onSubmit={() => setFeedbackSubmitted(true)}
-                />
-              )}
-            </>
-          )}
-          <RevealUI
-            resultId={currentResultId}
-            uploadId={uploadId ?? ""}
-            previewUrl={previewUrl}
-            onShare={handleShare}
-            hasOriginalImage={!!originalUrl}
-            showComparison={showComparison}
-            onToggleComparison={handleToggleComparison}
-            retryCount={retryCount}
-            onCheckoutStart={handleCheckoutStart}
-            onStartOver={handleStartOver}
+        ) : (
+          /* Gallery - always show 4 images */
+          <ResultsGallery
+            results={allResults}
+            selectedIndex={selectedVariantIndex}
+            onSelect={(index) => {
+              setSelectedVariantIndex(index);
+              setHasUserSelectedVariant(true);
+              setFeedbackSubmitted(false);
+            }}
+            uploadId={uploadId ?? undefined}
+            hasPurchased={hasPurchased}
           />
-        </div>
-      ) : (
-        // Reveal animation view
-        <RevealAnimation
-          imageUrl={previewUrl}
-          alt="Your AI-generated baby portrait"
-          onRevealComplete={handleRevealComplete}
-          allowImageSave={hasPurchased}
-        >
-          <div className="space-y-4">
-            {/* Show gallery if multiple results */}
-            {hasMultipleResults && showRevealUI && (
-              <>
-                <ResultsGallery
-                  results={allResults}
-                  selectedIndex={selectedVariantIndex}
-                  onSelect={(index) => {
-                    setSelectedVariantIndex(index);
-                    setHasUserSelectedVariant(true);
-                    setFeedbackSubmitted(false); // Reset feedback if they change selection
-                  }}
-                  uploadId={uploadId ?? undefined}
-                  hasPurchased={hasPurchased}
-                />
-                {/* Show preference feedback after user selects a variant */}
-                {hasUserSelectedVariant && !feedbackSubmitted && selectedResult && (
-                  <PreferenceFeedback
-                    uploadId={uploadId ?? ""}
-                    selectedResultId={selectedResult.resultId}
-                    promptVersion={selectedResult.promptVersion}
-                    onSubmit={() => setFeedbackSubmitted(true)}
-                  />
-                )}
-              </>
-            )}
-            <RevealUI
-              resultId={currentResultId}
-              uploadId={uploadId ?? ""}
-              previewUrl={previewUrl}
-              onShare={handleShare}
-              hasOriginalImage={!!originalUrl}
-              showComparison={showComparison}
-              onToggleComparison={handleToggleComparison}
-              retryCount={retryCount}
-              onCheckoutStart={handleCheckoutStart}
-              onStartOver={handleStartOver}
-            />
-          </div>
-        </RevealAnimation>
-      )}
+        )}
+
+        {/* Preference feedback after user selects a variant */}
+        {hasUserSelectedVariant && !feedbackSubmitted && selectedResult && (
+          <PreferenceFeedback
+            uploadId={uploadId ?? ""}
+            selectedResultId={selectedResult.resultId}
+            promptVersion={selectedResult.promptVersion}
+            onSubmit={() => setFeedbackSubmitted(true)}
+          />
+        )}
+
+        {/* Action buttons - always visible */}
+        <RevealUI
+          resultId={currentResultId}
+          uploadId={uploadId ?? ""}
+          previewUrl={previewUrl}
+          onShare={handleShare}
+          hasOriginalImage={!!originalUrl}
+          showComparison={showComparison}
+          onToggleComparison={handleToggleComparison}
+          retryCount={retryCount}
+          onCheckoutStart={handleCheckoutStart}
+          onStartOver={handleStartOver}
+        />
+      </div>
     </div>
   );
 }
