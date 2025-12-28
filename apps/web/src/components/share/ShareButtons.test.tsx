@@ -54,7 +54,7 @@ describe("ShareButtons", () => {
 
     // Mock window.open
     mockOpen = vi.fn()
-    global.open = mockOpen
+    global.open = mockOpen as typeof global.open
 
     // Mock location href setter
     Object.defineProperty(window, "location", {
@@ -272,7 +272,7 @@ describe("ShareButtons", () => {
       const button = screen.getByTestId("share-whatsapp")
       fireEvent.click(button)
 
-      const expectedUrl = "https://babypeek.com/share/test-upload-123"
+      const expectedUrl = "https://babypeek.io/share/test-upload-123"
       expect(mockOpen).toHaveBeenCalledWith(
         expect.stringContaining(encodeURIComponent(expectedUrl)),
         expect.any(String),
@@ -342,7 +342,7 @@ describe("ShareButtons", () => {
 
         await vi.waitFor(() => {
           expect(navigator.clipboard.writeText).toHaveBeenCalledWith(
-            "https://babypeek.com/share/test-upload-123"
+            "https://babypeek.io/share/test-upload-123"
           )
         })
       })
