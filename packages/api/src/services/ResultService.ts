@@ -1,7 +1,7 @@
 import { Effect, Context, Layer } from "effect"
 import { eq } from "drizzle-orm"
 import { createId } from "@paralleldrive/cuid2"
-import { db, uploads, results, type Upload, type PromptVersion } from "@babypeek/db"
+import { db, uploads, results, type PromptVersion } from "@babypeek/db"
 import { NotFoundError, UnauthorizedError, ResultError, R2Error } from "../lib/errors"
 import { R2Service } from "./R2Service"
 
@@ -265,18 +265,16 @@ const createResult = (r2Service: R2Service["Type"]) =>
 
     // Step 3: Update upload record with first result URL (for backward compatibility)
     if (variantIndex === 1) {
-      yield* Effect.tryPromise({
-        try: () =>
-          db
-            .update(uploads)
-            .set({
-              resultUrl: r2Key,
-              promptVersion,
-              updatedAt: new Date(),
-            })
-            .where(eq(uploads.id, uploadId)),
-        catch: () => Effect.succeed(null), // Non-critical, don't fail
-      })
+      yield* Effect.promise(() =>
+        db
+          .update(uploads)
+          .set({
+            resultUrl: r2Key,
+            promptVersion,
+            updatedAt: new Date(),
+          })
+          .where(eq(uploads.id, uploadId))
+      ).pipe(Effect.catchAll(() => Effect.void)) // Non-critical, don't fail
     }
 
     return {
