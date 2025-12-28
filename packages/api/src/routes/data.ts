@@ -86,14 +86,9 @@ app.delete("/:token", async (c) => {
       );
     }
 
-    // 4. Anonymize purchase records (keep for accounting, but remove PII)
+    // 4. Delete purchase records (after downloads are deleted, FK satisfied)
     yield* Effect.promise(() =>
-      db
-        .update(purchases)
-        .set({
-          giftRecipientEmail: null, // Clear gift recipient email
-        })
-        .where(eq(purchases.uploadId, uploadId)),
+      db.delete(purchases).where(eq(purchases.uploadId, uploadId)),
     );
 
     // 5. Delete preferences for this upload (must delete before results due to FK)
