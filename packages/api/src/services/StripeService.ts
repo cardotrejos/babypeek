@@ -58,22 +58,26 @@ const createCheckoutSession = Effect.fn("StripeService.createCheckoutSession")(f
   // For gift purchases: purchaser gets Stripe receipt, recipient gets HD link
   const isGift = params.type === "gift";
   const customerEmail = isGift && params.purchaserEmail ? params.purchaserEmail : params.email;
-  const productName = isGift ? "BabyPeek HD Photo Gift" : "BabyPeek HD Photo";
+
+  // Use Stripe Price ID if configured, otherwise fall back to price_data (dev only)
+  const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = env.STRIPE_PRICE_ID
+    ? [{ price: env.STRIPE_PRICE_ID, quantity: 1 }]
+    : [
+        {
+          price_data: {
+            currency: "usd",
+            product_data: { name: isGift ? "BabyPeek HD Photo Gift" : "BabyPeek HD Photo" },
+            unit_amount: env.PRODUCT_PRICE_CENTS,
+          },
+          quantity: 1,
+        },
+      ];
 
   return yield* Effect.tryPromise({
     try: () =>
       stripe.checkout.sessions.create({
         payment_method_types: ["card"],
-        line_items: [
-          {
-            price_data: {
-              currency: "usd",
-              product_data: { name: productName },
-              unit_amount: env.PRODUCT_PRICE_CENTS,
-            },
-            quantity: 1,
-          },
-        ],
+        line_items: lineItems,
         mode: "payment",
         success_url: params.successUrl,
         cancel_url: params.cancelUrl,
