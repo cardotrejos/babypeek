@@ -41,6 +41,7 @@
     "@effect/schema": "^0.75.5",
     "dotenv": "catalog:",
     "effect": "^3.19.13",
+    "posthog-js": "^1.310.1",
     "zod": "catalog:"
   },
   "devDependencies": {
