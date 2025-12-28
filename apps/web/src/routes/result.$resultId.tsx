@@ -347,6 +347,15 @@ function ResultPage() {
     });
   }, [uploadId, resultId]);
 
+  // Trigger reveal UI immediately (no animation delay needed)
+  // NOTE: This hook must be BEFORE any conditional returns to comply with Rules of Hooks
+  useEffect(() => {
+    if (imageLoaded && !showRevealUI) {
+      setShowRevealUI(true);
+      handleRevealComplete();
+    }
+  }, [imageLoaded, showRevealUI, handleRevealComplete]);
+
   // Loading state - show gallery with skeletons
   if (isLoading) {
     return (
@@ -419,14 +428,6 @@ function ResultPage() {
 
   // Get the current result ID for the selected variant
   const currentResultId = selectedResult?.resultId ?? resultId;
-
-  // Trigger reveal UI immediately (no animation delay needed)
-  useEffect(() => {
-    if (imageLoaded && !showRevealUI) {
-      setShowRevealUI(true);
-      handleRevealComplete();
-    }
-  }, [imageLoaded, showRevealUI, handleRevealComplete]);
 
   // Clean gallery-first layout
   return (
