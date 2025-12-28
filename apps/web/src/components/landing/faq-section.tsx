@@ -32,6 +32,21 @@ const faqItems = [
       "Simply upload your 4D ultrasound image, and our AI transforms it into a beautiful, photorealistic portrait of your baby in about 60 seconds. You'll see a stunning reveal, then you can share it with family or purchase the HD version.",
   },
   {
+    question: "What kind of ultrasound works best?",
+    answer:
+      "The clearer the face in your 4D ultrasound, the better the result. Look for images where the baby's face is visible without obstructions (like hands covering the face or the umbilical cord). A clear view of the nose, lips, and closed eyes gives the best results.",
+  },
+  {
+    question: "Why can't the AI predict skin color or hair?",
+    answer:
+      "Ultrasound images only show shapes and structures - they don't contain color information. The AI focuses on transforming the facial features you can see in the ultrasound into a realistic portrait, but it cannot determine genetic traits like skin tone, eye color, or hair color.",
+  },
+  {
+    question: "What if my ultrasound quality is low?",
+    answer:
+      "Low quality or blurry ultrasounds may produce less accurate results. If the baby's face isn't clearly visible in your image, the AI has less information to work with. For best results, use a clear 4D ultrasound image where facial features are distinguishable.",
+  },
+  {
     question: "How much does it cost?",
     answer:
       "You can preview your baby's portrait for free! The HD download is $9.99 - a small price for such a special keepsake. We also offer gift options so grandparents and family can purchase it for you.",
