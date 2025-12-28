@@ -52,6 +52,7 @@ interface StatusData {
   progress: number;
   resultId: string | null;
   resultUrl: string | null;
+  previewUrl: string | null; // Watermarked preview URL
   originalUrl: string | null;
   promptVersion: string | null;
   errorMessage: string | null;
@@ -237,10 +238,10 @@ function ResultPage() {
   const selectedResult = allResults[selectedVariantIndex] ?? null;
 
   // SECURITY: Show watermarked preview unless user has purchased
-  // If purchased, show HD version (resultUrl), otherwise show watermarked (previewUrl)
+  // The API now only returns resultUrl for paid users, so we safely use previewUrl for unpaid
   const previewUrl = hasPurchased
-    ? (selectedResult?.resultUrl ?? statusData?.resultUrl ?? null)
-    : (selectedResult?.previewUrl ?? selectedResult?.resultUrl ?? statusData?.resultUrl ?? null);
+    ? (selectedResult?.resultUrl ?? selectedResult?.previewUrl ?? statusData?.resultUrl ?? statusData?.previewUrl ?? null)
+    : (selectedResult?.previewUrl ?? statusData?.previewUrl ?? null);
 
   // Preload the image (AC-6)
   const { isLoaded: imageLoaded } = usePreloadImage(previewUrl);
