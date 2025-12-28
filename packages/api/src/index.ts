@@ -23,3 +23,4 @@ export { default as downloadRoutes } from "./routes/download";
 export { default as dataRoutes } from "./routes/data";
 export { default as cleanupRoutes } from "./routes/cleanup";
 export { default as preferencesRoutes } from "./routes/preferences";
+export { default as previewRoutes } from "./routes/preview";

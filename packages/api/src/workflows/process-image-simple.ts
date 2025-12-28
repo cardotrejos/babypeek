@@ -396,7 +396,7 @@ async function updatePreviewUrl(uploadId: string, previewUrl: string): Promise<v
 /**
  * Send email notification when generation completes
  */
-async function sendCompletionEmail(uploadId: string, resultId: string): Promise<void> {
+async function sendCompletionEmail(uploadId: string, _resultId: string): Promise<void> {
   "use step";
 
   const env = getEnv();
@@ -418,7 +418,8 @@ async function sendCompletionEmail(uploadId: string, resultId: string): Promise<
   }
 
   const resend = new Resend(env.RESEND_API_KEY);
-  const resultUrl = `${env.APP_URL}/result/${resultId}`;
+  // Use public preview URL (no session required) so email links work on any device
+  const previewUrl = `${env.APP_URL}/preview/${uploadId}`;
 
   try {
     await resend.emails.send({
@@ -448,7 +449,7 @@ async function sendCompletionEmail(uploadId: string, resultId: string): Promise<
     </p>
     
     <div style="text-align: center; margin: 32px 0;">
-      <a href="${resultUrl}" style="display: inline-block; background-color: #E8927C; color: white; text-decoration: none; padding: 16px 32px; border-radius: 8px; font-weight: 600; font-size: 16px;">
+      <a href="${previewUrl}" style="display: inline-block; background-color: #E8927C; color: white; text-decoration: none; padding: 16px 32px; border-radius: 8px; font-weight: 600; font-size: 16px;">
         View Your Portraits
       </a>
     </div>
