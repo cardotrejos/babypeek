@@ -7,7 +7,7 @@ import { getSession, getJobData } from "@/lib/session"
 import { posthog, isPostHogConfigured } from "@/lib/posthog"
 import { addBreadcrumb, isSentryConfigured, Sentry } from "@/lib/sentry"
 import { usePreloadImage } from "@/hooks/use-preload-image"
-import { RevealAnimation, RevealUI, BeforeAfterSlider } from "@/components/reveal"
+import { RevealAnimation, RevealUI, BeforeAfterSlider, ResultsGallery, type ResultVariant } from "@/components/reveal"
 import { API_BASE_URL } from "@/lib/api-config"
 import { getPaymentErrorMessage } from "@/lib/payment-errors"
 import { isExpiredError } from "@/lib/error-detection"
@@ -50,6 +50,8 @@ interface StatusData {
   promptVersion: string | null
   errorMessage: string | null
   updatedAt: string
+  // All 4 result variants
+  results?: ResultVariant[]
 }
 
 function ResultPage() {
@@ -62,6 +64,8 @@ function ResultPage() {
   const [preloadStartTime, setPreloadStartTime] = useState<number | null>(null)
   const [showComparison, setShowComparison] = useState(false)
   const [retryCount, setRetryCount] = useState(0)
+  // Track which result variant is selected (0-3)
+  const [selectedVariantIndex, setSelectedVariantIndex] = useState(0)
 
   // Track if we came from session recovery
   const sessionRecoveryTrackedRef = useRef(false)
@@ -195,7 +199,13 @@ function ResultPage() {
   })
 
   // Extract preview URL from status data
-  const previewUrl = statusData?.resultUrl ?? null
+  // Use selected variant if multiple results exist
+  const allResults = statusData?.results ?? []
+  const hasMultipleResults = allResults.length > 1
+  const selectedResult = hasMultipleResults 
+    ? allResults[selectedVariantIndex] 
+    : null
+  const previewUrl = selectedResult?.resultUrl ?? statusData?.resultUrl ?? null
 
   // Preload the image (AC-6)
   const { isLoaded: imageLoaded, isLoading: imageLoading } = usePreloadImage(
@@ -362,6 +372,9 @@ function ResultPage() {
   // Extract original URL for comparison slider
   const originalUrl = statusData?.originalUrl ?? null
 
+  // Get the current result ID for the selected variant
+  const currentResultId = selectedResult?.resultId ?? resultId
+
   // Reveal animation (AC-1 to AC-7) or Comparison slider (Story 5.5)
   return (
     <div className="min-h-screen bg-cream flex items-center justify-center p-4">
@@ -374,8 +387,17 @@ function ResultPage() {
             beforeLabel="Your Ultrasound"
             afterLabel="AI Portrait"
           />
+          {/* Show gallery if multiple results */}
+          {hasMultipleResults && showRevealUI && (
+            <ResultsGallery
+              results={allResults}
+              selectedIndex={selectedVariantIndex}
+              onSelect={setSelectedVariantIndex}
+              uploadId={uploadId ?? undefined}
+            />
+          )}
           <RevealUI
-            resultId={resultId}
+            resultId={currentResultId}
             uploadId={uploadId ?? ""}
             previewUrl={previewUrl}
             onShare={handleShare}
@@ -384,6 +406,7 @@ function ResultPage() {
             onToggleComparison={handleToggleComparison}
             retryCount={retryCount}
             onCheckoutStart={handleCheckoutStart}
+            onStartOver={handleStartOver}
           />
         </div>
       ) : (
@@ -393,17 +416,29 @@ function ResultPage() {
           alt="Your AI-generated baby portrait"
           onRevealComplete={handleRevealComplete}
         >
-          <RevealUI
-            resultId={resultId}
-            uploadId={uploadId ?? ""}
-            previewUrl={previewUrl}
-            onShare={handleShare}
-            hasOriginalImage={!!originalUrl}
-            showComparison={showComparison}
-            onToggleComparison={handleToggleComparison}
-            retryCount={retryCount}
-            onCheckoutStart={handleCheckoutStart}
-          />
+          <div className="space-y-4">
+            {/* Show gallery if multiple results */}
+            {hasMultipleResults && showRevealUI && (
+              <ResultsGallery
+                results={allResults}
+                selectedIndex={selectedVariantIndex}
+                onSelect={setSelectedVariantIndex}
+                uploadId={uploadId ?? undefined}
+              />
+            )}
+            <RevealUI
+              resultId={currentResultId}
+              uploadId={uploadId ?? ""}
+              previewUrl={previewUrl}
+              onShare={handleShare}
+              hasOriginalImage={!!originalUrl}
+              showComparison={showComparison}
+              onToggleComparison={handleToggleComparison}
+              retryCount={retryCount}
+              onCheckoutStart={handleCheckoutStart}
+              onStartOver={handleStartOver}
+            />
+          </div>
         </RevealAnimation>
       )}
     </div>

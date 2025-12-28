@@ -80,6 +80,32 @@ export const purchases = pgTable("purchases", {
 })
 
 /**
+ * Results table - stores multiple AI-generated images per upload
+ * Each upload can have up to 4 results from different prompt versions
+ */
+export const results = pgTable("results", {
+  id: text("id").primaryKey().$defaultFn(() => createId()),
+  
+  // Link to upload
+  uploadId: text("upload_id").notNull().references(() => uploads.id),
+  
+  // Result details
+  resultUrl: text("result_url").notNull(), // R2 key for full resolution
+  previewUrl: text("preview_url"), // R2 key for watermarked preview
+  promptVersion: text("prompt_version", { enum: promptVersionValues }).notNull(),
+  
+  // Generation order (1-4)
+  variantIndex: integer("variant_index").notNull(),
+  
+  // Metadata
+  fileSizeBytes: integer("file_size_bytes"),
+  generationTimeMs: integer("generation_time_ms"),
+  
+  // Timestamps
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+})
+
+/**
  * Downloads table - tracks HD image downloads (for analytics & re-download support)
  */
 export const downloads = pgTable("downloads", {
@@ -96,6 +122,8 @@ export const downloads = pgTable("downloads", {
 // Type exports for use in application code
 export type Upload = typeof uploads.$inferSelect
 export type NewUpload = typeof uploads.$inferInsert
+export type Result = typeof results.$inferSelect
+export type NewResult = typeof results.$inferInsert
 export type Purchase = typeof purchases.$inferSelect
 export type NewPurchase = typeof purchases.$inferInsert
 export type Download = typeof downloads.$inferSelect
