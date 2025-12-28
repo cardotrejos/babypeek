@@ -104,7 +104,7 @@ describe("ShareButtons", () => {
       )
       expect(mockOpen).toHaveBeenCalledWith(
         expect.stringContaining(
-          encodeURIComponent("https://babypeek.com/share/test-upload-123")
+          encodeURIComponent("https://babypeek.io/share/test-upload-123")
         ),
         "_blank",
         "noopener,noreferrer"
@@ -184,7 +184,7 @@ describe("ShareButtons", () => {
         // iOS uses &body= (ampersand)
         expect(locationHref).toContain("sms:&body=")
         expect(locationHref).toContain(
-          encodeURIComponent("https://babypeek.com/share/test-upload-123")
+          encodeURIComponent("https://babypeek.io/share/test-upload-123")
         )
       })
 
@@ -245,7 +245,7 @@ describe("ShareButtons", () => {
         // Android uses ?body= (question mark)
         expect(locationHref).toContain("sms:?body=")
         expect(locationHref).toContain(
-          encodeURIComponent("https://babypeek.com/share/test-upload-123")
+          encodeURIComponent("https://babypeek.io/share/test-upload-123")
         )
       })
 
