@@ -8,150 +8,150 @@
 // You should NOT make any changes in this file as it will be overwritten.
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
-import { Route as rootRouteImport } from "./routes/__root";
-import { Route as CheckoutSuccessRouteImport } from "./routes/checkout-success";
-import { Route as IndexRouteImport } from "./routes/index";
-import { Route as ShareShareIdRouteImport } from "./routes/share.$shareId";
-import { Route as ResultResultIdRouteImport } from "./routes/result.$resultId";
-import { Route as ProcessingJobIdRouteImport } from "./routes/processing.$jobId";
-import { Route as DownloadUploadIdRouteImport } from "./routes/download.$uploadId";
+import { Route as rootRouteImport } from './routes/__root'
+import { Route as CheckoutSuccessRouteImport } from './routes/checkout-success'
+import { Route as IndexRouteImport } from './routes/index'
+import { Route as ShareShareIdRouteImport } from './routes/share.$shareId'
+import { Route as ResultResultIdRouteImport } from './routes/result.$resultId'
+import { Route as ProcessingJobIdRouteImport } from './routes/processing.$jobId'
+import { Route as DownloadUploadIdRouteImport } from './routes/download.$uploadId'
 
 const CheckoutSuccessRoute = CheckoutSuccessRouteImport.update({
-  id: "/checkout-success",
-  path: "/checkout-success",
+  id: '/checkout-success',
+  path: '/checkout-success',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 const IndexRoute = IndexRouteImport.update({
-  id: "/",
-  path: "/",
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 const ShareShareIdRoute = ShareShareIdRouteImport.update({
-  id: "/share/$shareId",
-  path: "/share/$shareId",
+  id: '/share/$shareId',
+  path: '/share/$shareId',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 const ResultResultIdRoute = ResultResultIdRouteImport.update({
-  id: "/result/$resultId",
-  path: "/result/$resultId",
+  id: '/result/$resultId',
+  path: '/result/$resultId',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 const ProcessingJobIdRoute = ProcessingJobIdRouteImport.update({
-  id: "/processing/$jobId",
-  path: "/processing/$jobId",
+  id: '/processing/$jobId',
+  path: '/processing/$jobId',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 const DownloadUploadIdRoute = DownloadUploadIdRouteImport.update({
-  id: "/download/$uploadId",
-  path: "/download/$uploadId",
+  id: '/download/$uploadId',
+  path: '/download/$uploadId',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 
 export interface FileRoutesByFullPath {
-  "/": typeof IndexRoute;
-  "/checkout-success": typeof CheckoutSuccessRoute;
-  "/download/$uploadId": typeof DownloadUploadIdRoute;
-  "/processing/$jobId": typeof ProcessingJobIdRoute;
-  "/result/$resultId": typeof ResultResultIdRoute;
-  "/share/$shareId": typeof ShareShareIdRoute;
+  '/': typeof IndexRoute
+  '/checkout-success': typeof CheckoutSuccessRoute
+  '/download/$uploadId': typeof DownloadUploadIdRoute
+  '/processing/$jobId': typeof ProcessingJobIdRoute
+  '/result/$resultId': typeof ResultResultIdRoute
+  '/share/$shareId': typeof ShareShareIdRoute
 }
 export interface FileRoutesByTo {
-  "/": typeof IndexRoute;
-  "/checkout-success": typeof CheckoutSuccessRoute;
-  "/download/$uploadId": typeof DownloadUploadIdRoute;
-  "/processing/$jobId": typeof ProcessingJobIdRoute;
-  "/result/$resultId": typeof ResultResultIdRoute;
-  "/share/$shareId": typeof ShareShareIdRoute;
+  '/': typeof IndexRoute
+  '/checkout-success': typeof CheckoutSuccessRoute
+  '/download/$uploadId': typeof DownloadUploadIdRoute
+  '/processing/$jobId': typeof ProcessingJobIdRoute
+  '/result/$resultId': typeof ResultResultIdRoute
+  '/share/$shareId': typeof ShareShareIdRoute
 }
 export interface FileRoutesById {
-  __root__: typeof rootRouteImport;
-  "/": typeof IndexRoute;
-  "/checkout-success": typeof CheckoutSuccessRoute;
-  "/download/$uploadId": typeof DownloadUploadIdRoute;
-  "/processing/$jobId": typeof ProcessingJobIdRoute;
-  "/result/$resultId": typeof ResultResultIdRoute;
-  "/share/$shareId": typeof ShareShareIdRoute;
+  __root__: typeof rootRouteImport
+  '/': typeof IndexRoute
+  '/checkout-success': typeof CheckoutSuccessRoute
+  '/download/$uploadId': typeof DownloadUploadIdRoute
+  '/processing/$jobId': typeof ProcessingJobIdRoute
+  '/result/$resultId': typeof ResultResultIdRoute
+  '/share/$shareId': typeof ShareShareIdRoute
 }
 export interface FileRouteTypes {
-  fileRoutesByFullPath: FileRoutesByFullPath;
+  fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    | "/"
-    | "/checkout-success"
-    | "/download/$uploadId"
-    | "/processing/$jobId"
-    | "/result/$resultId"
-    | "/share/$shareId";
-  fileRoutesByTo: FileRoutesByTo;
+    | '/'
+    | '/checkout-success'
+    | '/download/$uploadId'
+    | '/processing/$jobId'
+    | '/result/$resultId'
+    | '/share/$shareId'
+  fileRoutesByTo: FileRoutesByTo
   to:
-    | "/"
-    | "/checkout-success"
-    | "/download/$uploadId"
-    | "/processing/$jobId"
-    | "/result/$resultId"
-    | "/share/$shareId";
+    | '/'
+    | '/checkout-success'
+    | '/download/$uploadId'
+    | '/processing/$jobId'
+    | '/result/$resultId'
+    | '/share/$shareId'
   id:
-    | "__root__"
-    | "/"
-    | "/checkout-success"
-    | "/download/$uploadId"
-    | "/processing/$jobId"
-    | "/result/$resultId"
-    | "/share/$shareId";
-  fileRoutesById: FileRoutesById;
+    | '__root__'
+    | '/'
+    | '/checkout-success'
+    | '/download/$uploadId'
+    | '/processing/$jobId'
+    | '/result/$resultId'
+    | '/share/$shareId'
+  fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute;
-  CheckoutSuccessRoute: typeof CheckoutSuccessRoute;
-  DownloadUploadIdRoute: typeof DownloadUploadIdRoute;
-  ProcessingJobIdRoute: typeof ProcessingJobIdRoute;
-  ResultResultIdRoute: typeof ResultResultIdRoute;
-  ShareShareIdRoute: typeof ShareShareIdRoute;
+  IndexRoute: typeof IndexRoute
+  CheckoutSuccessRoute: typeof CheckoutSuccessRoute
+  DownloadUploadIdRoute: typeof DownloadUploadIdRoute
+  ProcessingJobIdRoute: typeof ProcessingJobIdRoute
+  ResultResultIdRoute: typeof ResultResultIdRoute
+  ShareShareIdRoute: typeof ShareShareIdRoute
 }
 
-declare module "@tanstack/react-router" {
+declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    "/checkout-success": {
-      id: "/checkout-success";
-      path: "/checkout-success";
-      fullPath: "/checkout-success";
-      preLoaderRoute: typeof CheckoutSuccessRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/": {
-      id: "/";
-      path: "/";
-      fullPath: "/";
-      preLoaderRoute: typeof IndexRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/share/$shareId": {
-      id: "/share/$shareId";
-      path: "/share/$shareId";
-      fullPath: "/share/$shareId";
-      preLoaderRoute: typeof ShareShareIdRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/result/$resultId": {
-      id: "/result/$resultId";
-      path: "/result/$resultId";
-      fullPath: "/result/$resultId";
-      preLoaderRoute: typeof ResultResultIdRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/processing/$jobId": {
-      id: "/processing/$jobId";
-      path: "/processing/$jobId";
-      fullPath: "/processing/$jobId";
-      preLoaderRoute: typeof ProcessingJobIdRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/download/$uploadId": {
-      id: "/download/$uploadId";
-      path: "/download/$uploadId";
-      fullPath: "/download/$uploadId";
-      preLoaderRoute: typeof DownloadUploadIdRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
+    '/checkout-success': {
+      id: '/checkout-success'
+      path: '/checkout-success'
+      fullPath: '/checkout-success'
+      preLoaderRoute: typeof CheckoutSuccessRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/share/$shareId': {
+      id: '/share/$shareId'
+      path: '/share/$shareId'
+      fullPath: '/share/$shareId'
+      preLoaderRoute: typeof ShareShareIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/result/$resultId': {
+      id: '/result/$resultId'
+      path: '/result/$resultId'
+      fullPath: '/result/$resultId'
+      preLoaderRoute: typeof ResultResultIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/processing/$jobId': {
+      id: '/processing/$jobId'
+      path: '/processing/$jobId'
+      fullPath: '/processing/$jobId'
+      preLoaderRoute: typeof ProcessingJobIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/download/$uploadId': {
+      id: '/download/$uploadId'
+      path: '/download/$uploadId'
+      fullPath: '/download/$uploadId'
+      preLoaderRoute: typeof DownloadUploadIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -162,7 +162,7 @@ const rootRouteChildren: RootRouteChildren = {
   ProcessingJobIdRoute: ProcessingJobIdRoute,
   ResultResultIdRoute: ResultResultIdRoute,
   ShareShareIdRoute: ShareShareIdRoute,
-};
+}
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
-  ._addFileTypes<FileRouteTypes>();
+  ._addFileTypes<FileRouteTypes>()

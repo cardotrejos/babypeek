@@ -117,16 +117,11 @@ export function ResultsGallery({
     }
   };
 
-  if (results.length === 0) {
-    return null;
-  }
-
-  // Always show 4 slots - either with results or empty placeholders
+  // Always show 4 slots - either with results or loading skeletons
   const slots = Array.from({ length: 4 }, (_, i) => results[i] || null);
 
   return (
     <div className={cn("space-y-3", className)}>
-      <p className="text-sm text-warm-gray text-center">Choose your favorite style</p>
       <div className="grid grid-cols-2 gap-2">
         {slots.map((result, index) => {
           const label = result
