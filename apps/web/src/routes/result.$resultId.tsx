@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { getSession, getJobData } from "@/lib/session";
 // Note: clearSession will be used in Epic 6 after payment completes (Story 5.7: AC7)
 import { posthog, isPostHogConfigured } from "@/lib/posthog";
+import { trackFBViewContent } from "@/lib/facebook-pixel";
 import { addBreadcrumb, isSentryConfigured, Sentry } from "@/lib/sentry";
 import { usePreloadImage } from "@/hooks/use-preload-image";
 import {
@@ -266,6 +267,13 @@ function ResultPage() {
           reveal_preload_time_ms: preloadTime,
         });
       }
+
+      // Facebook Pixel: ViewContent event - user is viewing their portrait
+      trackFBViewContent({
+        resultId,
+        uploadId: uploadId ?? undefined,
+        contentName: "Baby Portrait Preview",
+      });
     }
   }, [imageLoaded, revealStartTime, resultId, uploadId, preloadStartTime]);
 

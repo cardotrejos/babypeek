@@ -1,8 +1,9 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useCallback, useState } from "react";
+import { useEffect, useCallback, useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { DownloadButton } from "@/components/download";
 import { posthog, isPostHogConfigured } from "@/lib/posthog";
+import { trackFBPurchase, generateEventId } from "@/lib/facebook-pixel";
 import { getSession } from "@/lib/session";
 import { toast } from "sonner";
 
@@ -45,13 +46,38 @@ function CheckoutSuccessPage() {
     }
   }, []);
 
-  // Track checkout completion
+  // Track purchase event only once
+  const purchaseTrackedRef = useRef(false);
+
+  // Track checkout completion (PostHog + Facebook Pixel)
   useEffect(() => {
-    if (session_id && isPostHogConfigured()) {
+    // Only track once per page load
+    if (!session_id || purchaseTrackedRef.current) return;
+    purchaseTrackedRef.current = true;
+
+    // PostHog tracking
+    if (isPostHogConfigured()) {
       posthog.capture("checkout_completed", {
         session_id,
         upload_id: uploadId,
       });
+    }
+
+    // Facebook Pixel Purchase event (most important for ad optimization!)
+    const eventId = generateEventId();
+    trackFBPurchase({
+      value: 9.99,
+      uploadId: uploadId ?? undefined,
+      sessionId: session_id,
+      transactionId: eventId,
+    });
+
+    // Store event ID for server-side deduplication
+    try {
+      sessionStorage.setItem("fb_purchase_event_id", eventId);
+      sessionStorage.setItem("fb_purchase_session_id", session_id);
+    } catch {
+      // sessionStorage may not be available
     }
   }, [session_id, uploadId]);
 

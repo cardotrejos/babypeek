@@ -2,6 +2,7 @@ import { useState, useCallback, type ComponentPropsWithoutRef } from "react";
 import { Button } from "@/components/ui/button";
 import { API_BASE_URL } from "@/lib/api-config";
 import { posthog, isPostHogConfigured } from "@/lib/posthog";
+import { trackFBInitiateCheckout } from "@/lib/facebook-pixel";
 import { getSession } from "@/lib/session";
 
 // Price from env or default $9.99
@@ -51,6 +52,14 @@ export function CheckoutButton({
         retry_count: retryCount,
       });
     }
+
+    // Facebook Pixel: InitiateCheckout event
+    trackFBInitiateCheckout({
+      resultId: uploadId,
+      uploadId,
+      value: PRICE_CENTS / 100,
+      retryCount,
+    });
 
     try {
       // Get session token for authentication

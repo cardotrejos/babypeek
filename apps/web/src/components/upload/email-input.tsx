@@ -4,6 +4,7 @@ import { z } from "zod";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAnalytics } from "@/hooks/use-analytics";
+import { trackFBLead } from "@/lib/facebook-pixel";
 import { cn } from "@/lib/utils";
 
 // =============================================================================
@@ -98,6 +99,11 @@ export function EmailInput({
       });
     } else {
       trackEvent("email_entered", { emailValid: true });
+
+      // Facebook Pixel: Lead event - user submitted valid email
+      trackFBLead({
+        source: "upload_form",
+      });
     }
   }, [value, validateEmail, onValidityChange, trackEvent]);
 

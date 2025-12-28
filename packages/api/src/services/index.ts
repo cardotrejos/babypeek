@@ -15,6 +15,7 @@ export * from "./RateLimitService";
 export * from "./WatermarkService";
 export * from "./PurchaseService";
 export * from "./CleanupService";
+export * from "./FacebookConversionsService";
 
 // =============================================================================
 // Import Layers for Composition

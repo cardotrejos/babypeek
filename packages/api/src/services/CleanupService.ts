@@ -1,6 +1,6 @@
 import { Effect, Context, Layer } from "effect";
 import { lt, eq } from "drizzle-orm";
-import { db, uploads, purchases, downloads } from "@babypeek/db";
+import { db, uploads, purchases, downloads, results, preferences } from "@babypeek/db";
 import { R2Service } from "./R2Service";
 import { CleanupError } from "../lib/errors";
 
@@ -147,7 +147,29 @@ const cleanupSingleUpload = (
         }),
     });
 
-    // 5. Delete upload record
+    // 5. Delete preferences for this upload (must delete before results due to FK)
+    yield* Effect.tryPromise({
+      try: () => db.delete(preferences).where(eq(preferences.uploadId, uploadId)),
+      catch: (e) =>
+        new CleanupError({
+          cause: "DB_FAILED",
+          message: `Failed to delete preferences: ${e}`,
+          uploadId,
+        }),
+    });
+
+    // 6. Delete results for this upload (must delete before uploads due to FK)
+    yield* Effect.tryPromise({
+      try: () => db.delete(results).where(eq(results.uploadId, uploadId)),
+      catch: (e) =>
+        new CleanupError({
+          cause: "DB_FAILED",
+          message: `Failed to delete results: ${e}`,
+          uploadId,
+        }),
+    });
+
+    // 7. Delete upload record
     yield* Effect.tryPromise({
       try: () => db.delete(uploads).where(eq(uploads.id, uploadId)),
       catch: (e) =>

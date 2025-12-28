@@ -43,8 +43,8 @@
   </text>
   
   <!-- Call to action -->
-  <rect x="400" y="440" width="400" height="60" rx="30" fill="#E8927C"/>
-  <text x="600" y="480" 
+  <rect x="400" y="410" width="400" height="60" rx="30" fill="#E8927C"/>
+  <text x="600" y="450" 
         font-family="DM Sans, system-ui, sans-serif" 
         font-size="24" 
         font-weight="600"
@@ -55,33 +55,34 @@
   
   <!-- Decorative elements: ultrasound-to-photo flow -->
   <g opacity="0.6">
-    <circle cx="200" cy="500" r="40" fill="#E8927C" opacity="0.3"/>
-    <text x="200" y="510" font-size="24" text-anchor="middle" fill="#6B5B5B">Ultrasound</text>
+    <circle cx="420" cy="520" r="40" fill="#E8927C" opacity="0.3"/>
+    <text x="420" y="530" font-size="24" text-anchor="middle" fill="#6B5B5B">Ultrasound</text>
     
-    <path d="M260 500 L340 500" stroke="#E8927C" stroke-width="2" stroke-dasharray="8,4"/>
-    <polygon points="340,495 355,500 340,505" fill="#E8927C"/>
+    <path d="M480 520 L560 520" stroke="#E8927C" stroke-width="2" stroke-dasharray="8,4"/>
+    <polygon points="560,515 575,520 560,525" fill="#E8927C"/>
     
-    <circle cx="380" cy="500" r="30" fill="#E8927C" opacity="0.4"/>
-    <text x="380" y="508" font-size="16" text-anchor="middle" fill="white">AI</text>
+    <circle cx="600" cy="520" r="30" fill="#E8927C" opacity="0.4"/>
+    <text x="600" y="528" font-size="16" text-anchor="middle" fill="white">AI</text>
     
-    <path d="M420 500 L500 500" stroke="#E8927C" stroke-width="2" stroke-dasharray="8,4"/>
-    <polygon points="500,495 515,500 500,505" fill="#E8927C"/>
+    <path d="M640 520 L720 520" stroke="#E8927C" stroke-width="2" stroke-dasharray="8,4"/>
+    <polygon points="720,515 735,520 720,525" fill="#E8927C"/>
     
-    <circle cx="560" cy="500" r="40" fill="#E8927C" opacity="0.3"/>
-    <text x="560" y="510" font-size="24" text-anchor="middle" fill="#6B5B5B">Portrait</text>
+    <circle cx="780" cy="520" r="40" fill="#E8927C" opacity="0.3"/>
+    <text x="780" y="530" font-size="24" text-anchor="middle" fill="#6B5B5B">Portrait</text>
   </g>
   
   <!-- Trust badge area -->
-  <g transform="translate(750, 480)">
+  <g transform="translate(600, 580)">
     <text x="0" y="0" 
           font-family="DM Sans, system-ui, sans-serif" 
           font-size="18" 
-          fill="#9B8B8B">
+          fill="#9B8B8B"
+          text-anchor="middle">
       Trusted by 10,000+ parents
     </text>
-    <g transform="translate(0, 30)">
-      <text font-size="20" fill="#F0AD4E">&#9733;&#9733;&#9733;&#9733;&#9733;</text>
-      <text x="110" y="0" font-size="16" fill="#9B8B8B">4.9/5</text>
+    <g transform="translate(0, 25)">
+      <text font-size="20" fill="#F0AD4E" text-anchor="middle" x="-35">&#9733;&#9733;&#9733;&#9733;&#9733;</text>
+      <text x="55" y="0" font-size="16" fill="#9B8B8B" text-anchor="middle">4.9/5</text>
     </g>
   </g>
 </svg>
