@@ -1,9 +1,12 @@
 import { Hono } from "hono";
 import { Effect, Layer } from "effect";
 import Stripe from "stripe";
+import { eq } from "drizzle-orm";
+import { db, results } from "@babypeek/db";
 import { StripeService, StripeServiceLive } from "../services/StripeService";
 import { PurchaseService, PurchaseServiceLive } from "../services/PurchaseService";
 import { ResendService, ResendServiceLive } from "../services/ResendService";
+import { R2Service, R2ServiceLive } from "../services/R2Service";
 import { PaymentError } from "../lib/errors";
 import { captureException, addBreadcrumb } from "../middleware/sentry";
 import { captureEvent } from "../services/PostHogService";
@@ -12,12 +15,13 @@ const app = new Hono();
 
 /**
  * Handle checkout.session.completed event from Stripe.
- * Creates/updates purchase record, sends receipt email, and tracks analytics (Story 6.4, 6.5).
+ * Creates/updates purchase record, sends HD download email with all variants, and tracks analytics.
  */
 const handleCheckoutCompleted = (session: Stripe.Checkout.Session) =>
   Effect.gen(function* () {
     const purchaseService = yield* PurchaseService;
     const resendService = yield* ResendService;
+    const r2Service = yield* R2Service;
 
     // Extract metadata from session
     const { uploadId, email, type } = session.metadata || {};
@@ -52,15 +56,53 @@ const handleCheckoutCompleted = (session: Stripe.Checkout.Session) =>
       giftRecipientEmail: isGift ? email : undefined,
     });
 
-    // Story 6.5 & 6.7: Send emails after purchase created
-    // Handle email errors gracefully - don't fail webhook on email errors
+    // Fetch all result variants for this upload
+    const resultRows = yield* Effect.promise(() =>
+      db.query.results.findMany({
+        where: eq(results.uploadId, uploadId),
+        orderBy: (results, { asc }) => [asc(results.variantIndex)],
+      }),
+    );
+
+    // Generate signed URLs for all variants (HD + preview)
+    const variants = yield* Effect.all(
+      resultRows.map((result) =>
+        Effect.gen(function* () {
+          // Generate 7-day signed URLs for HD downloads
+          const hdUrl = yield* r2Service
+            .getDownloadUrl(result.resultUrl, 7 * 24 * 60 * 60)
+            .pipe(Effect.catchAll(() => Effect.succeed(null as string | null)));
+
+          // Generate signed URL for preview (for email thumbnails)
+          let previewUrl: string | null = null;
+          if (result.previewUrl) {
+            previewUrl = yield* r2Service
+              .getDownloadUrl(result.previewUrl, 7 * 24 * 60 * 60)
+              .pipe(Effect.catchAll(() => Effect.succeed(null as string | null)));
+          }
+
+          return {
+            resultId: result.id,
+            downloadUrl: hdUrl || "",
+            previewUrl: previewUrl || hdUrl || "", // Fallback to HD if no preview
+            promptVersion: result.promptVersion,
+            variantIndex: result.variantIndex,
+          };
+        }),
+      ),
+    );
+
+    // Filter out variants without valid URLs
+    const validVariants = variants.filter((v) => v.downloadUrl);
+
+    // Email handling
     const purchaserEmail = session.customer_email;
     const recipientEmail = email; // Original uploader's email from metadata
     const appUrl = process.env.APP_URL || "https://babypeek.io";
 
     yield* Effect.gen(function* () {
       if (isGift && recipientEmail && purchaserEmail) {
-        // Story 6.7: Gift purchase - send two separate emails
+        // Story 6.7: Gift purchase - send emails to both parties
 
         // AC-4: Send gift confirmation to purchaser (thank-you tone)
         yield* resendService.sendGiftConfirmationEmail({
@@ -69,41 +111,69 @@ const handleCheckoutCompleted = (session: Stripe.Checkout.Session) =>
           amount: session.amount_total || 0,
         });
 
-        // AC-3: Send gift notification to recipient (celebratory, surprise tone)
-        yield* resendService.sendGiftNotificationEmail({
-          email: recipientEmail,
-          uploadId,
-          downloadUrl: `${appUrl}/download/${uploadId}`,
-        });
+        // Send HD download email with all variants to recipient
+        if (validVariants.length > 0) {
+          yield* resendService.sendHDDownloadEmail({
+            email: recipientEmail,
+            uploadId,
+            purchaseId: purchase.id,
+            amount: session.amount_total || 0,
+            isGift: true,
+            variants: validVariants,
+          });
+        } else {
+          // Fallback to simple notification if no variants found
+          yield* resendService.sendGiftNotificationEmail({
+            email: recipientEmail,
+            uploadId,
+            downloadUrl: `${appUrl}/download/${uploadId}`,
+          });
+        }
 
         yield* Effect.log(
-          `Gift emails sent for purchase ${purchase.id}: confirmation to purchaser, notification to recipient`,
+          `Gift emails sent for purchase ${purchase.id}: confirmation to purchaser, HD download to recipient (${validVariants.length} variants)`,
         );
 
-        // Track gift emails sent
         captureEvent("gift_emails_sent", uploadId, {
           upload_id: uploadId,
           is_gift: true,
           email_provider: "resend",
-          emails_sent: ["gift_confirmation", "gift_notification"],
+          variant_count: validVariants.length,
+          emails_sent: ["gift_confirmation", "hd_download"],
         });
       } else if (purchaserEmail) {
-        // Regular purchase - send receipt to customer
-        yield* resendService.sendReceiptEmail({
-          email: purchaserEmail,
-          purchaseId: purchase.id,
-          uploadId,
-          amount: session.amount_total || 0,
-          isGift: false,
-        });
+        // Regular purchase - send HD download email with all variants
+        if (validVariants.length > 0) {
+          yield* resendService.sendHDDownloadEmail({
+            email: purchaserEmail,
+            uploadId,
+            purchaseId: purchase.id,
+            amount: session.amount_total || 0,
+            isGift: false,
+            variants: validVariants,
+          });
 
-        yield* Effect.log(`Receipt email sent for purchase ${purchase.id}`);
+          yield* Effect.log(
+            `HD download email sent for purchase ${purchase.id} (${validVariants.length} variants)`,
+          );
+        } else {
+          // Fallback to simple receipt if no variants found
+          yield* resendService.sendReceiptEmail({
+            email: purchaserEmail,
+            purchaseId: purchase.id,
+            uploadId,
+            amount: session.amount_total || 0,
+            isGift: false,
+          });
 
-        // Track email sent (AC-5)
-        captureEvent("receipt_email_sent", uploadId, {
+          yield* Effect.log(`Fallback receipt email sent for purchase ${purchase.id}`);
+        }
+
+        captureEvent("hd_email_sent", uploadId, {
           upload_id: uploadId,
           is_gift: false,
           email_provider: "resend",
+          variant_count: validVariants.length,
           recipient_type: "purchaser",
         });
       }
@@ -123,8 +193,7 @@ const handleCheckoutCompleted = (session: Stripe.Checkout.Session) =>
       ),
     );
 
-    // Track purchase_completed event in PostHog (AC-4)
-    // Using try/catch to ensure analytics failures don't break the webhook
+    // Track purchase_completed event in PostHog
     try {
       captureEvent("purchase_completed", uploadId, {
         upload_id: uploadId,
@@ -133,9 +202,9 @@ const handleCheckoutCompleted = (session: Stripe.Checkout.Session) =>
         is_gift: purchase.isGift,
         stripe_session_id: session.id,
         payment_method: session.payment_method_types?.[0] || "card",
+        variant_count: validVariants.length,
       });
 
-      // Story 6.7: Track gift_purchase_completed for separate gift funnel (AC-6)
       if (isGift) {
         captureEvent("gift_purchase_completed", uploadId, {
           upload_id: uploadId,
@@ -145,7 +214,6 @@ const handleCheckoutCompleted = (session: Stripe.Checkout.Session) =>
         });
       }
     } catch (analyticsError) {
-      // Log but don't fail - analytics is non-critical
       console.error("PostHog analytics error:", analyticsError);
     }
 
@@ -210,6 +278,7 @@ app.post("/stripe", async (c) => {
     return { handled: false };
   }).pipe(
     Effect.provide(ResendServiceLive),
+    Effect.provide(R2ServiceLive),
     Effect.provide(PurchaseServiceLive.pipe(Layer.provide(StripeServiceLive))),
     Effect.provide(StripeServiceLive),
   );
