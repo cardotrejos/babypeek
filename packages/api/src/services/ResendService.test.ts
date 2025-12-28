@@ -381,7 +381,7 @@ describe("ResendService", () => {
         })
 
         expect(html).toContain("Questions? Reply to this email")
-        expect(html).toContain("Made with 💕 by babypeek")
+        expect(html).toContain("Made with 💕 by BabyPeek")
       })
     })
 
