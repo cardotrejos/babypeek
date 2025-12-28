@@ -40,7 +40,7 @@ workflow_status:
       command: "/bmad:bmm:workflows:brainstorming"
       status: "complete"
       output: "_bmad-output/analysis/brainstorming-session-2024-12-20.md"
-      
+
     - id: "product-brief"
       name: "Product Brief"
       agent: "analyst"
@@ -57,7 +57,7 @@ workflow_status:
       status: "complete"
       completed: "2024-12-20"
       output: "_bmad-output/prd.md"
-      
+
     - id: "create-ux-design"
       name: "UX Design"
       agent: "ux-designer"
@@ -77,7 +77,7 @@ workflow_status:
       status: "complete"
       completed: "2024-12-20"
       output: "_bmad-output/architecture.md"
-      
+
     - id: "create-epics-and-stories"
       name: "Epics & Stories"
       agent: "pm"
@@ -85,21 +85,21 @@ workflow_status:
       status: "in-progress"
       output: "_bmad-output/epics.md"
       note: "Epics 1-2 stories complete, ready for implementation"
-      
+
     - id: "test-design"
       name: "Test Design Review"
       agent: "tea"
       command: "/bmad:bmm:workflows:testarch-test-design"
       status: "recommended"
       output: null
-      
+
     - id: "validate-architecture"
       name: "Architecture Validation"
       agent: "architect"
       command: "/bmad:bmm:workflows:validate-architecture"
       status: "optional"
       output: null
-      
+
     - id: "implementation-readiness"
       name: "Implementation Readiness Check"
       agent: "architect"

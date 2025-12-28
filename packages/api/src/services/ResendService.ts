@@ -1,55 +1,55 @@
-import { Effect, Context, Layer, Schedule } from "effect"
-import { Resend } from "resend"
-import { EmailError } from "../lib/errors"
-import { env, isResendConfigured } from "../lib/env"
-import { captureEvent } from "./PostHogService"
+import { Effect, Context, Layer, Schedule } from "effect";
+import { Resend } from "resend";
+import { EmailError } from "../lib/errors";
+import { env, isResendConfigured } from "../lib/env";
+import { captureEvent } from "./PostHogService";
 
 // Receipt email params interface (Story 6.5)
 export interface ReceiptEmailParams {
-  email: string
-  purchaseId: string
-  uploadId: string
-  amount: number // cents
-  isGift: boolean
+  email: string;
+  purchaseId: string;
+  uploadId: string;
+  amount: number; // cents
+  isGift: boolean;
 }
 
 // Gift confirmation params (Story 6.7 - AC-4)
 export interface GiftConfirmationParams {
-  email: string       // Purchaser email
-  purchaseId: string
-  amount: number      // cents
+  email: string; // Purchaser email
+  purchaseId: string;
+  amount: number; // cents
 }
 
 // Gift notification params (Story 6.7 - AC-3)
 export interface GiftNotificationParams {
-  email: string       // Recipient email (original uploader)
-  uploadId: string
-  downloadUrl: string
+  email: string; // Recipient email (original uploader)
+  uploadId: string;
+  downloadUrl: string;
 }
 
 // Download email params interface (Story 7.4)
 export interface DownloadEmailParams {
-  email: string
-  uploadId: string
-  downloadUrl: string
-  isGift?: boolean
+  email: string;
+  uploadId: string;
+  downloadUrl: string;
+  isGift?: boolean;
 }
 
 // Resend Service interface
 export class ResendService extends Context.Tag("ResendService")<
   ResendService,
   {
-    sendResultEmail: (email: string, resultId: string) => Effect.Effect<void, EmailError>
-    sendReceiptEmail: (params: ReceiptEmailParams) => Effect.Effect<void, EmailError>
-    sendDownloadEmail: (params: DownloadEmailParams) => Effect.Effect<void, EmailError>
+    sendResultEmail: (email: string, resultId: string) => Effect.Effect<void, EmailError>;
+    sendReceiptEmail: (params: ReceiptEmailParams) => Effect.Effect<void, EmailError>;
+    sendDownloadEmail: (params: DownloadEmailParams) => Effect.Effect<void, EmailError>;
     // Story 6.7: Gift purchase emails
-    sendGiftConfirmationEmail: (params: GiftConfirmationParams) => Effect.Effect<void, EmailError>
-    sendGiftNotificationEmail: (params: GiftNotificationParams) => Effect.Effect<void, EmailError>
+    sendGiftConfirmationEmail: (params: GiftConfirmationParams) => Effect.Effect<void, EmailError>;
+    sendGiftNotificationEmail: (params: GiftNotificationParams) => Effect.Effect<void, EmailError>;
   }
 >() {}
 
 // Cached Resend client
-let cachedResend: Resend | null = null
+let cachedResend: Resend | null = null;
 
 const getResendClient = (): Effect.Effect<Resend, EmailError> => {
   if (!isResendConfigured()) {
@@ -57,22 +57,25 @@ const getResendClient = (): Effect.Effect<Resend, EmailError> => {
       new EmailError({
         cause: "SEND_FAILED",
         message: "Resend not configured - missing RESEND_API_KEY",
-      })
-    )
+      }),
+    );
   }
 
   if (!cachedResend) {
-    cachedResend = new Resend(env.RESEND_API_KEY!)
+    cachedResend = new Resend(env.RESEND_API_KEY!);
   }
 
-  return Effect.succeed(cachedResend)
-}
+  return Effect.succeed(cachedResend);
+};
 
 // From email configuration using env
-const getFromEmail = () => `BabyPeek <${env.FROM_EMAIL}>`
+const getFromEmail = () => `BabyPeek <${env.FROM_EMAIL}>`;
 
-const sendResultEmail = Effect.fn("ResendService.sendResultEmail")(function* (email: string, resultId: string) {
-  const resend = yield* getResendClient()
+const sendResultEmail = Effect.fn("ResendService.sendResultEmail")(function* (
+  email: string,
+  resultId: string,
+) {
+  const resend = yield* getResendClient();
   yield* Effect.tryPromise({
     try: () =>
       resend.emails.send({
@@ -95,20 +98,20 @@ const sendResultEmail = Effect.fn("ResendService.sendResultEmail")(function* (em
     Effect.retry({ times: 2, schedule: Schedule.exponential("500 millis") }),
     Effect.timeout("30 seconds"),
     Effect.catchTag("TimeoutException", () =>
-      Effect.fail(new EmailError({ cause: "SEND_FAILED", message: "Email send timed out" }))
-    )
-  )
-})
+      Effect.fail(new EmailError({ cause: "SEND_FAILED", message: "Email send timed out" })),
+    ),
+  );
+});
 
 /**
  * Generate receipt email HTML template (Story 6.5 - AC-4: warm, congratulatory tone)
  */
 export const generateReceiptHtml = (params: {
-  amount: string
-  date: string
-  downloadUrl: string
-  isGift: boolean
-  purchaseId: string
+  amount: string;
+  date: string;
+  downloadUrl: string;
+  isGift: boolean;
+  purchaseId: string;
 }) => `
 <!DOCTYPE html>
 <html>
@@ -125,9 +128,10 @@ export const generateReceiptHtml = (params: {
     </h1>
     
     <p style="color: #6B5B5B; font-size: 16px; line-height: 1.6; text-align: center; margin-bottom: 24px;">
-      ${params.isGift 
-        ? "Thank you for your thoughtful gift! The HD photo has been unlocked."
-        : "Thank you for your purchase! Your beautiful HD photo is waiting for you."
+      ${
+        params.isGift
+          ? "Thank you for your thoughtful gift! The HD photo has been unlocked."
+          : "Thank you for your purchase! Your beautiful HD photo is waiting for you."
       }
     </p>
     
@@ -161,7 +165,7 @@ export const generateReceiptHtml = (params: {
   </div>
 </body>
 </html>
-`
+`;
 
 /**
  * Send receipt email with enhanced template (Story 6.5)
@@ -171,17 +175,17 @@ export const generateReceiptHtml = (params: {
  * AC-4: Warm, congratulatory tone
  */
 const sendReceiptEmail = Effect.fn("ResendService.sendReceiptEmail")(function* (
-  params: ReceiptEmailParams
+  params: ReceiptEmailParams,
 ) {
-  const resend = yield* getResendClient()
-  
-  const formattedAmount = `$${(params.amount / 100).toFixed(2)}`
-  const downloadUrl = `${env.APP_URL}/download/${params.uploadId}`
+  const resend = yield* getResendClient();
+
+  const formattedAmount = `$${(params.amount / 100).toFixed(2)}`;
+  const downloadUrl = `${env.APP_URL}/download/${params.uploadId}`;
   const purchaseDate = new Date().toLocaleDateString("en-US", {
     year: "numeric",
     month: "long",
     day: "numeric",
-  })
+  });
 
   const result = yield* Effect.tryPromise({
     try: () =>
@@ -206,13 +210,15 @@ const sendReceiptEmail = Effect.fn("ResendService.sendReceiptEmail")(function* (
     Effect.retry({ times: 2, schedule: Schedule.exponential("500 millis") }),
     Effect.timeout("30 seconds"),
     Effect.catchTag("TimeoutException", () =>
-      Effect.fail(new EmailError({ cause: "SEND_FAILED", message: "Email send timed out" }))
-    )
-  )
-  
+      Effect.fail(new EmailError({ cause: "SEND_FAILED", message: "Email send timed out" })),
+    ),
+  );
+
   // H1 Fix: Log Resend message ID for debugging (Story 6.5 AC-5)
-  yield* Effect.log(`Receipt email sent: messageId=${result.data?.id}, purchaseId=${params.purchaseId}`)
-})
+  yield* Effect.log(
+    `Receipt email sent: messageId=${result.data?.id}, purchaseId=${params.purchaseId}`,
+  );
+});
 
 /**
  * Generate download email HTML template (Story 7.4)
@@ -222,9 +228,9 @@ const sendReceiptEmail = Effect.fn("ResendService.sendReceiptEmail")(function* (
  * AC-5: Consistent brand styling with receipt email
  */
 export const generateDownloadHtml = (params: {
-  downloadUrl: string
-  isGift: boolean
-  expiresInDays?: number
+  downloadUrl: string;
+  isGift: boolean;
+  expiresInDays?: number;
 }) => `
 <!DOCTYPE html>
 <html>
@@ -242,17 +248,15 @@ export const generateDownloadHtml = (params: {
     
     <!-- Celebratory headline (AC-2) -->
     <h1 style="color: #E8927C; font-family: 'Playfair Display', Georgia, serif; font-size: 28px; margin-bottom: 8px; text-align: center;">
-      ${params.isGift 
-        ? "Someone Gifted You a Special Photo! 🎁"
-        : "Your HD Photo is Ready! 🎉"
-      }
+      ${params.isGift ? "Someone Gifted You a Special Photo! 🎁" : "Your HD Photo is Ready! 🎉"}
     </h1>
     
     <!-- Warm message (AC-2) -->
     <p style="color: #6B5B5B; font-size: 16px; line-height: 1.6; text-align: center; margin-bottom: 32px;">
-      ${params.isGift
-        ? "A loved one purchased the HD version of your baby portrait as a gift. It's waiting for you!"
-        : "Your beautiful HD baby portrait is ready to download. We hope it brings you joy!"
+      ${
+        params.isGift
+          ? "A loved one purchased the HD version of your baby portrait as a gift. It's waiting for you!"
+          : "Your beautiful HD baby portrait is ready to download. We hope it brings you joy!"
       }
     </p>
     
@@ -294,21 +298,21 @@ export const generateDownloadHtml = (params: {
   </div>
 </body>
 </html>
-`
+`;
 
 /**
  * Send download email with enhanced template (Story 7.4)
  * AC-1: Email sent via Resend after purchase complete
  */
 const sendDownloadEmail = Effect.fn("ResendService.sendDownloadEmail")(function* (
-  params: DownloadEmailParams
+  params: DownloadEmailParams,
 ) {
-  const resend = yield* getResendClient()
-  const isGift = params.isGift ?? false
-  
+  const resend = yield* getResendClient();
+  const isGift = params.isGift ?? false;
+
   const subject = isGift
     ? "🎁 Someone gifted you a special photo!"
-    : "📸 Your HD photo is ready to download!"
+    : "📸 Your HD photo is ready to download!";
 
   const result = yield* Effect.tryPromise({
     try: () =>
@@ -331,30 +335,32 @@ const sendDownloadEmail = Effect.fn("ResendService.sendDownloadEmail")(function*
     Effect.retry({ times: 2, schedule: Schedule.exponential("500 millis") }),
     Effect.timeout("30 seconds"),
     Effect.catchTag("TimeoutException", () =>
-      Effect.fail(new EmailError({ cause: "SEND_FAILED", message: "Email send timed out" }))
-    )
-  )
-  
+      Effect.fail(new EmailError({ cause: "SEND_FAILED", message: "Email send timed out" })),
+    ),
+  );
+
   // Log Resend message ID for debugging (Story 7.4 AC-1)
-  yield* Effect.log(`Download email sent: messageId=${result.data?.id}, uploadId=${params.uploadId}, isGift=${isGift}`)
-  
+  yield* Effect.log(
+    `Download email sent: messageId=${result.data?.id}, uploadId=${params.uploadId}, isGift=${isGift}`,
+  );
+
   // Story 7.4 Task 4: Track download_email_sent event in PostHog
   captureEvent("download_email_sent", params.uploadId, {
     upload_id: params.uploadId,
     is_gift: isGift,
     recipient_type: isGift ? "gift_recipient" : "purchaser",
     message_id: result.data?.id,
-  })
-})
+  });
+});
 
 /**
  * Generate gift confirmation email HTML (Story 6.7 - AC-4: warm, thank-you tone)
  * Sent to the gift purchaser
  */
 const generateGiftConfirmationHtml = (params: {
-  amount: string
-  date: string
-  purchaseId: string
+  amount: string;
+  date: string;
+  purchaseId: string;
 }) => `
 <!DOCTYPE html>
 <html>
@@ -411,15 +417,13 @@ const generateGiftConfirmationHtml = (params: {
   </div>
 </body>
 </html>
-`
+`;
 
 /**
  * Generate gift notification email HTML (Story 6.7 - AC-3: celebratory, surprise tone)
  * Sent to the gift recipient (original uploader)
  */
-const generateGiftNotificationHtml = (params: {
-  downloadUrl: string
-}) => `
+const generateGiftNotificationHtml = (params: { downloadUrl: string }) => `
 <!DOCTYPE html>
 <html>
 <head>
@@ -469,22 +473,22 @@ const generateGiftNotificationHtml = (params: {
   </div>
 </body>
 </html>
-`
+`;
 
 /**
  * Send gift confirmation email to purchaser (Story 6.7 - AC-4)
  */
 const sendGiftConfirmationEmail = Effect.fn("ResendService.sendGiftConfirmationEmail")(function* (
-  params: GiftConfirmationParams
+  params: GiftConfirmationParams,
 ) {
-  const resend = yield* getResendClient()
-  
-  const formattedAmount = `$${(params.amount / 100).toFixed(2)}`
+  const resend = yield* getResendClient();
+
+  const formattedAmount = `$${(params.amount / 100).toFixed(2)}`;
   const purchaseDate = new Date().toLocaleDateString("en-US", {
     year: "numeric",
     month: "long",
     day: "numeric",
-  })
+  });
 
   const result = yield* Effect.tryPromise({
     try: () =>
@@ -507,21 +511,23 @@ const sendGiftConfirmationEmail = Effect.fn("ResendService.sendGiftConfirmationE
     Effect.retry({ times: 2, schedule: Schedule.exponential("500 millis") }),
     Effect.timeout("30 seconds"),
     Effect.catchTag("TimeoutException", () =>
-      Effect.fail(new EmailError({ cause: "SEND_FAILED", message: "Email send timed out" }))
-    )
-  )
-  
+      Effect.fail(new EmailError({ cause: "SEND_FAILED", message: "Email send timed out" })),
+    ),
+  );
+
   // Log Resend message ID for debugging
-  yield* Effect.log(`Gift confirmation email sent: messageId=${result.data?.id}, purchaseId=${params.purchaseId}`)
-})
+  yield* Effect.log(
+    `Gift confirmation email sent: messageId=${result.data?.id}, purchaseId=${params.purchaseId}`,
+  );
+});
 
 /**
  * Send gift notification email to recipient (Story 6.7 - AC-3)
  */
 const sendGiftNotificationEmail = Effect.fn("ResendService.sendGiftNotificationEmail")(function* (
-  params: GiftNotificationParams
+  params: GiftNotificationParams,
 ) {
-  const resend = yield* getResendClient()
+  const resend = yield* getResendClient();
 
   const result = yield* Effect.tryPromise({
     try: () =>
@@ -542,13 +548,15 @@ const sendGiftNotificationEmail = Effect.fn("ResendService.sendGiftNotificationE
     Effect.retry({ times: 2, schedule: Schedule.exponential("500 millis") }),
     Effect.timeout("30 seconds"),
     Effect.catchTag("TimeoutException", () =>
-      Effect.fail(new EmailError({ cause: "SEND_FAILED", message: "Email send timed out" }))
-    )
-  )
-  
+      Effect.fail(new EmailError({ cause: "SEND_FAILED", message: "Email send timed out" })),
+    ),
+  );
+
   // Log Resend message ID for debugging
-  yield* Effect.log(`Gift notification email sent: messageId=${result.data?.id}, uploadId=${params.uploadId}`)
-})
+  yield* Effect.log(
+    `Gift notification email sent: messageId=${result.data?.id}, uploadId=${params.uploadId}`,
+  );
+});
 
 // Resend Service implementation
 export const ResendServiceLive = Layer.succeed(ResendService, {
@@ -557,4 +565,4 @@ export const ResendServiceLive = Layer.succeed(ResendService, {
   sendDownloadEmail,
   sendGiftConfirmationEmail,
   sendGiftNotificationEmail,
-})
+});

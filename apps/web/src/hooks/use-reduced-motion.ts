@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect } from "react";
 
 /**
  * Hook to detect user's reduced motion preference
@@ -8,25 +8,25 @@ import { useState, useEffect } from "react"
  * Listens for changes so UI updates if user toggles setting at runtime
  */
 export function useReducedMotion(): boolean {
-  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false)
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
 
   useEffect(() => {
     // SSR safety check
-    if (typeof window === "undefined") return
+    if (typeof window === "undefined") return;
 
-    const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)")
+    const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
 
     // Set initial value
-    setPrefersReducedMotion(mediaQuery.matches)
+    setPrefersReducedMotion(mediaQuery.matches);
 
     // Listen for changes (user can toggle setting)
     const handler = (event: MediaQueryListEvent) => {
-      setPrefersReducedMotion(event.matches)
-    }
+      setPrefersReducedMotion(event.matches);
+    };
 
-    mediaQuery.addEventListener("change", handler)
-    return () => mediaQuery.removeEventListener("change", handler)
-  }, [])
+    mediaQuery.addEventListener("change", handler);
+    return () => mediaQuery.removeEventListener("change", handler);
+  }, []);
 
-  return prefersReducedMotion
+  return prefersReducedMotion;
 }

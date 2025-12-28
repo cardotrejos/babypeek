@@ -1,11 +1,11 @@
-import { createFileRoute, useNavigate, Link } from "@tanstack/react-router"
-import { useQuery } from "@tanstack/react-query"
-import { useEffect, useRef } from "react"
-import { Button } from "@/components/ui/button"
-import { GiftCheckoutButton } from "@/components/payment/GiftCheckoutButton"
-import { ExpiredResult } from "@/components/states"
-import { API_BASE_URL } from "@/lib/api-config"
-import { posthog, isPostHogConfigured } from "@/lib/posthog"
+import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
+import { useEffect, useRef } from "react";
+import { Button } from "@/components/ui/button";
+import { GiftCheckoutButton } from "@/components/payment/GiftCheckoutButton";
+import { ExpiredResult } from "@/components/states";
+import { API_BASE_URL } from "@/lib/api-config";
+import { posthog, isPostHogConfigured } from "@/lib/posthog";
 
 /**
  * Share Page
@@ -25,21 +25,21 @@ import { posthog, isPostHogConfigured } from "@/lib/posthog"
  */
 export const Route = createFileRoute("/share/$shareId")({
   component: SharePage,
-})
+});
 
 interface ShareData {
-  shareId: string
-  uploadId: string
-  previewUrl: string
+  shareId: string;
+  uploadId: string;
+  previewUrl: string;
 }
 
 function SharePage() {
-  const { shareId } = Route.useParams()
-  const navigate = useNavigate()
+  const { shareId } = Route.useParams();
+  const navigate = useNavigate();
 
   const handleGoHome = () => {
-    navigate({ to: "/" })
-  }
+    navigate({ to: "/" });
+  };
 
   // Fetch shared result (public, no auth needed)
   const {
@@ -49,40 +49,40 @@ function SharePage() {
   } = useQuery<ShareData>({
     queryKey: ["share", shareId],
     queryFn: async () => {
-      const response = await fetch(`${API_BASE_URL}/api/share/${shareId}`)
+      const response = await fetch(`${API_BASE_URL}/api/share/${shareId}`);
 
       if (!response.ok) {
         if (response.status === 404) {
-          throw new Error("This portrait is no longer available")
+          throw new Error("This portrait is no longer available");
         }
-        throw new Error("Failed to load portrait")
+        throw new Error("Failed to load portrait");
       }
 
-      return response.json()
+      return response.json();
     },
     retry: 1,
     staleTime: 5 * 60 * 1000, // 5 minutes
-  })
+  });
 
   // Story 8.4 - Analytics: Track share page view (with dedup)
-  const analyticsTrackedRef = useRef(false)
+  const analyticsTrackedRef = useRef(false);
   useEffect(() => {
     if (isPostHogConfigured() && result && !analyticsTrackedRef.current) {
-      analyticsTrackedRef.current = true
+      analyticsTrackedRef.current = true;
       posthog.capture("share_page_viewed", {
         share_id: shareId,
         referrer: document.referrer || "direct",
-      })
+      });
     }
-  }, [shareId, result])
+  }, [shareId, result]);
 
   // Update document title for users (AC-4 partial - crawlers need server-side)
   useEffect(() => {
-    document.title = "See what AI created! ✨ | BabyPeek"
+    document.title = "See what AI created! ✨ | BabyPeek";
     return () => {
-      document.title = "BabyPeek | Transform Your 4D Ultrasound into a Baby Portrait"
-    }
-  }, [])
+      document.title = "BabyPeek | Transform Your 4D Ultrasound into a Baby Portrait";
+    };
+  }, []);
 
   // Loading state
   if (isLoading) {
@@ -93,12 +93,12 @@ function SharePage() {
           <p className="font-body text-warm-gray">Loading portrait...</p>
         </div>
       </div>
-    )
+    );
   }
 
   // Error state - Story 8.8 AC-4: Same experience for expired share links
   if (error || !result) {
-    return <ExpiredResult resultId={shareId} source="share" />
+    return <ExpiredResult resultId={shareId} source="share" />;
   }
 
   return (
@@ -122,7 +122,7 @@ function SharePage() {
             className="w-full rounded-2xl shadow-lg"
             onError={(e) => {
               // Fallback to placeholder on image load error
-              e.currentTarget.src = "/og-image.png"
+              e.currentTarget.src = "/og-image.png";
             }}
           />
           {/* Watermark overlay indicator */}
@@ -174,5 +174,5 @@ function SharePage() {
         </footer>
       </div>
     </div>
-  )
+  );
 }

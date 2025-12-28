@@ -92,11 +92,11 @@ GET /api/status/:jobId → { status, stage, progress, resultId? }
 ```typescript
 // packages/db/src/schema/index.ts
 export const uploadStageValues = [
-  'validating', 
-  'generating', 
+  'validating',
+  'generating',
   'storing',
-  'watermarking', 
-  'complete', 
+  'watermarking',
+  'complete',
   'failed'
 ] as const
 
@@ -110,6 +110,7 @@ export const uploads = pgTable("uploads", {
 ```
 
 Migration:
+
 ```sql
 ALTER TABLE uploads ADD COLUMN stage TEXT;
 ALTER TABLE uploads ADD COLUMN progress INTEGER DEFAULT 0;
@@ -171,23 +172,23 @@ const statusRoutes = new Hono()
 statusRoutes.get('/:jobId', async (c) => {
   const jobId = c.req.param('jobId')
   const token = c.req.header('X-Session-Token')
-  
+
   const program = Effect.gen(function* () {
     // Validate token
     if (!token) {
       return yield* Effect.fail(new UnauthorizedError({ reason: 'MISSING_TOKEN' }))
     }
-    
+
   // Get upload with session verification
   const upload = yield* UploadService.getByIdWithAuth(jobId, token)
-    
+
     // Get result if completed
   let resultId = null
   if (upload.status === 'completed') {
     // If using a results table, resolve its id. Otherwise, return uploadId.
     resultId = upload.resultUrl ? upload.id : null
   }
-    
+
     return {
       success: true,
       status: upload.status,
@@ -199,7 +200,7 @@ statusRoutes.get('/:jobId', async (c) => {
   }).pipe(
     Effect.provide(AppServicesLive)
   )
-  
+
   const result = await Effect.runPromise(program).catch((e) => {
     if (e instanceof UnauthorizedError) {
       return c.json({ success: false, error: { code: 'UNAUTHORIZED' } }, 401)
@@ -209,7 +210,7 @@ statusRoutes.get('/:jobId', async (c) => {
     }
     throw e
   })
-  
+
   return c.json(result)
 })
 
@@ -224,23 +225,23 @@ updateStage: (uploadId: string, stage: UploadStage, progress: number) =>
   Effect.gen(function* () {
     // Validate progress bounds
     const clampedProgress = Math.max(0, Math.min(100, progress))
-    
+
     const [updated] = yield* Effect.tryPromise({
       try: () => db.update(uploads)
-        .set({ 
+        .set({
           stage,
           progress: clampedProgress,
           updatedAt: new Date(),
           // Auto-update status based on stage
-          status: stage === 'complete' ? 'completed' 
-               : stage === 'failed' ? 'failed' 
+          status: stage === 'complete' ? 'completed'
+               : stage === 'failed' ? 'failed'
                : 'processing'
         })
         .where(eq(uploads.id, uploadId))
         .returning(),
       catch: (e) => new UploadStatusError({ cause: 'DB_FAILED', message: String(e) })
     })
-    
+
     return updated
   })
 ```
@@ -254,30 +255,30 @@ export const processImageWorkflow = (uploadId: string) =>
     // Stage 1: Validate (10%)
     yield* UploadService.updateStage(uploadId, 'validating', 10)
     const upload = yield* UploadService.getById(uploadId)
-    
+
     // Stage 2: Generate with Gemini (30-70%)
     yield* UploadService.updateStage(uploadId, 'generating', 30)
     const imageBuffer = yield* GeminiService.generateImage(
-      upload.originalUrl, 
+      upload.originalUrl,
       getPrompt('v1')
     )
     yield* UploadService.updateStage(uploadId, 'generating', 70)
-    
+
     // Stage 3: Store in R2 (80%)
     yield* UploadService.updateStage(uploadId, 'storing', 80)
     const result = yield* ResultService.create({
       uploadId,
       fullImageBuffer: imageBuffer
     })
-    
+
     // Stage 4: Watermark (90%) - Story 5.2
     yield* UploadService.updateStage(uploadId, 'watermarking', 90)
     // ... watermarking logic
-    
+
     // Stage 5: Complete (100%)
     yield* UploadService.updateStage(uploadId, 'complete', 100)
     yield* UploadService.updateStatus(uploadId, 'completed')
-    
+
     return result
   }).pipe(
     Effect.catchAll((error) =>
@@ -320,28 +321,28 @@ interface UseStatusResult {
 
 export function useStatus(jobId: string | null): UseStatusResult {
   const sessionToken = jobId ? getSession(jobId) : null
-  
+
   const { data, isLoading, error } = useQuery({
     queryKey: ['status', jobId],
     queryFn: async (): Promise<StatusResponse> => {
       if (!jobId || !sessionToken) {
         throw new Error('Missing job ID or session')
       }
-      
+
       const response = await fetch(`/api/status/${jobId}`, {
         headers: {
           'X-Session-Token': sessionToken,
         },
       })
-      
+
       if (!response.ok) {
         throw new Error('Failed to fetch status')
       }
-      
+
       return response.json()
     },
     enabled: !!jobId && !!sessionToken,
-    
+
     // Poll every 2.5 seconds until complete or failed
     refetchInterval: (query) => {
       const data = query.state.data
@@ -350,14 +351,14 @@ export function useStatus(jobId: string | null): UseStatusResult {
       }
       return 2500 // 2.5 seconds
     },
-    
+
     // Keep previous data while fetching
     placeholderData: (prev) => prev,
   })
-  
+
   const isComplete = data?.status === 'completed'
   const isFailed = data?.status === 'failed'
-  
+
   return {
     status: data?.status ?? null,
     stage: data?.stage ?? null,
@@ -378,7 +379,7 @@ export function useStatus(jobId: string | null): UseStatusResult {
 useQuery({
   queryKey: ['status', jobId],
   queryFn: () => api.status[jobId].get(),
-  refetchInterval: (data) => 
+  refetchInterval: (data) =>
     data?.status === 'completed' ? false : 2000,
 });
 ```
@@ -496,15 +497,17 @@ None - implementation completed without blocking issues.
 ### File List
 
 **New Files:**
+
 - packages/api/src/routes/status.ts - GET /api/status/:jobId endpoint
 - packages/api/src/routes/status.test.ts - Status endpoint unit tests (rewritten during code review)
 - apps/web/src/hooks/use-status.ts - Status polling hook with TanStack Query
 - apps/web/src/hooks/use-status.test.ts - useStatus hook unit tests
 - packages/db/src/migrations/0000_nasty_korvac.sql - Database migration
-- packages/db/src/migrations/meta/_journal.json - Drizzle migration journal
+- packages/db/src/migrations/meta/\_journal.json - Drizzle migration journal
 - packages/db/src/migrations/meta/0000_snapshot.json - Drizzle migration snapshot
 
 **Modified Files:**
+
 - packages/db/src/schema/index.ts - Added stage/progress columns and UploadStage type
 - packages/api/src/lib/errors.ts - Added UploadStatusError
 - packages/api/src/services/UploadService.ts - Added updateStage, getByIdWithAuth, stage validation
@@ -516,4 +519,4 @@ None - implementation completed without blocking issues.
 - apps/server/src/index.ts - Mounted /api/status route
 - apps/web/src/hooks/use-analytics.ts - Added status_poll, status_complete, status_failed events
 - bun.lock - Updated dependencies
-- _bmad-output/stories/sprint-status.yaml - Updated story status
+- \_bmad-output/stories/sprint-status.yaml - Updated story status

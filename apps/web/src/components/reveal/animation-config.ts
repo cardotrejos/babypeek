@@ -9,7 +9,7 @@
  */
 
 // CSS easeOutCubic: cubic-bezier(0.33, 1, 0.68, 1)
-export const EASE_OUT_CUBIC = "cubic-bezier(0.33, 1, 0.68, 1)"
+export const EASE_OUT_CUBIC = "cubic-bezier(0.33, 1, 0.68, 1)";
 
 export const revealAnimation = {
   blur: {
@@ -34,6 +34,6 @@ export const revealAnimation = {
   uiDelay: 3500,
   // Small delay to ensure DOM is ready before starting animation
   startDelay: 50,
-} as const
+} as const;
 
-export type RevealAnimationConfig = typeof revealAnimation
+export type RevealAnimationConfig = typeof revealAnimation;

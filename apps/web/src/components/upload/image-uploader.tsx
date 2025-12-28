@@ -1,27 +1,22 @@
-import { useCallback, useEffect, useRef, useState } from "react"
-import { toast } from "sonner"
-import { ImageIcon, UploadIcon, XIcon } from "lucide-react"
+import { useCallback, useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
+import { ImageIcon, UploadIcon, XIcon } from "lucide-react";
 
-import { Button } from "@/components/ui/button"
-import { ProcessingIndicator } from "@/components/upload/processing-indicator"
-import { useAnalytics } from "@/hooks/use-analytics"
-import { useImageProcessor } from "@/hooks/use-image-processor"
-import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button";
+import { ProcessingIndicator } from "@/components/upload/processing-indicator";
+import { useAnalytics } from "@/hooks/use-analytics";
+import { useImageProcessor } from "@/hooks/use-image-processor";
+import { cn } from "@/lib/utils";
 
 // =============================================================================
 // Constants
 // =============================================================================
 
-const MAX_FILE_SIZE = 25 * 1024 * 1024 // 25MB in bytes
+const MAX_FILE_SIZE = 25 * 1024 * 1024; // 25MB in bytes
 
-const ALLOWED_MIME_TYPES = [
-  "image/jpeg",
-  "image/png",
-  "image/heic",
-  "image/heif",
-] as const
+const ALLOWED_MIME_TYPES = ["image/jpeg", "image/png", "image/heic", "image/heif"] as const;
 
-const ALLOWED_EXTENSIONS = [".jpg", ".jpeg", ".png", ".heic", ".heif"] as const
+const ALLOWED_EXTENSIONS = [".jpg", ".jpeg", ".png", ".heic", ".heif"] as const;
 
 // =============================================================================
 // Types
@@ -29,25 +24,25 @@ const ALLOWED_EXTENSIONS = [".jpg", ".jpeg", ".png", ".heic", ".heif"] as const
 
 export interface ImageUploaderProps {
   /** Callback when a valid file is selected (after processing) */
-  onFileSelect: (file: File) => void
+  onFileSelect: (file: File) => void;
   /** Optional callback when file is cleared */
-  onFileClear?: () => void
+  onFileClear?: () => void;
   /** Optional callback when processing starts (e.g., HEIC conversion) */
-  onProcessingStart?: () => void
+  onProcessingStart?: () => void;
   /** Optional callback when processing ends */
-  onProcessingEnd?: () => void
+  onProcessingEnd?: () => void;
   /** Optional className for the container */
-  className?: string
+  className?: string;
   /** Whether the component is disabled */
-  disabled?: boolean
+  disabled?: boolean;
   /** Whether to process images (convert HEIC, etc.) - defaults to true */
-  processImages?: boolean
+  processImages?: boolean;
 }
 
 interface ValidationResult {
-  valid: boolean
-  error?: string
-  errorType?: "file_type" | "file_size"
+  valid: boolean;
+  error?: string;
+  errorType?: "file_type" | "file_size";
 }
 
 // =============================================================================
@@ -55,26 +50,26 @@ interface ValidationResult {
 // =============================================================================
 
 function getFileExtension(filename: string): string {
-  const lastDot = filename.lastIndexOf(".")
-  if (lastDot === -1) return ""
-  return filename.slice(lastDot).toLowerCase()
+  const lastDot = filename.lastIndexOf(".");
+  if (lastDot === -1) return "";
+  return filename.slice(lastDot).toLowerCase();
 }
 
 function formatFileSize(bytes: number): string {
-  const mb = bytes / (1024 * 1024)
-  return `${mb.toFixed(1)}MB`
+  const mb = bytes / (1024 * 1024);
+  return `${mb.toFixed(1)}MB`;
 }
 
 function validateFile(file: File): ValidationResult {
   // Check file type - validate both MIME type and extension
   // HEIC files sometimes have incorrect MIME types
-  const extension = getFileExtension(file.name)
+  const extension = getFileExtension(file.name);
   const hasValidMimeType = ALLOWED_MIME_TYPES.includes(
-    file.type as (typeof ALLOWED_MIME_TYPES)[number]
-  )
+    file.type as (typeof ALLOWED_MIME_TYPES)[number],
+  );
   const hasValidExtension = ALLOWED_EXTENSIONS.includes(
-    extension as (typeof ALLOWED_EXTENSIONS)[number]
-  )
+    extension as (typeof ALLOWED_EXTENSIONS)[number],
+  );
 
   // Accept if either MIME type OR extension is valid (handles edge cases)
   if (!hasValidMimeType && !hasValidExtension) {
@@ -82,20 +77,20 @@ function validateFile(file: File): ValidationResult {
       valid: false,
       error: "Please select a photo (JPEG, PNG, or HEIC)",
       errorType: "file_type",
-    }
+    };
   }
 
   // Check file size
   if (file.size > MAX_FILE_SIZE) {
-    const fileSize = formatFileSize(file.size)
+    const fileSize = formatFileSize(file.size);
     return {
       valid: false,
       error: `This image is too large (${fileSize}). Please try one under 25MB.`,
       errorType: "file_size",
-    }
+    };
   }
 
-  return { valid: true }
+  return { valid: true };
 }
 
 // =============================================================================
@@ -111,28 +106,28 @@ export function ImageUploader({
   disabled = false,
   processImages = true,
 }: ImageUploaderProps) {
-  const [isDragging, setIsDragging] = useState(false)
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
-  const [selectedFile, setSelectedFile] = useState<File | null>(null)
-  const fileInputRef = useRef<HTMLInputElement>(null)
-  const { trackEvent } = useAnalytics()
-  const { processImage, isProcessing, processingProgress } = useImageProcessor()
+  const [isDragging, setIsDragging] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const { trackEvent } = useAnalytics();
+  const { processImage, isProcessing, processingProgress } = useImageProcessor();
 
   // Cleanup preview URL on unmount or when clearing
   const cleanupPreview = useCallback(() => {
     if (previewUrl) {
-      URL.revokeObjectURL(previewUrl)
+      URL.revokeObjectURL(previewUrl);
     }
-  }, [previewUrl])
+  }, [previewUrl]);
 
   // Cleanup on unmount to prevent memory leaks
   useEffect(() => {
     return () => {
       if (previewUrl) {
-        URL.revokeObjectURL(previewUrl)
+        URL.revokeObjectURL(previewUrl);
       }
-    }
-  }, [previewUrl])
+    };
+  }, [previewUrl]);
 
   const handleFileSelect = useCallback(
     async (file: File) => {
@@ -140,9 +135,9 @@ export function ImageUploader({
       trackEvent("upload_started", {
         file_type: file.type,
         file_size: file.size,
-      })
+      });
 
-      const validation = validateFile(file)
+      const validation = validateFile(file);
 
       if (!validation.valid) {
         // Track validation error
@@ -150,60 +145,68 @@ export function ImageUploader({
           type: validation.errorType,
           file_type: file.type,
           file_size: file.size,
-        })
+        });
 
         toast.error(validation.error, {
           duration: 5000,
-        })
-        return
+        });
+        return;
       }
 
       // Process image (convert HEIC if needed)
-      let processedFile = file
+      let processedFile = file;
       if (processImages) {
         try {
-          onProcessingStart?.()
-          const result = await processImage(file)
-          processedFile = result.file
+          onProcessingStart?.();
+          const result = await processImage(file);
+          processedFile = result.file;
         } catch {
           // Error is already handled in useImageProcessor (toast + Sentry)
           // Just clear the processing state and don't proceed
-          onProcessingEnd?.()
-          return
+          onProcessingEnd?.();
+          return;
         } finally {
-          onProcessingEnd?.()
+          onProcessingEnd?.();
         }
       }
 
       // Cleanup previous preview
-      cleanupPreview()
+      cleanupPreview();
 
       // Generate preview URL
-      const url = URL.createObjectURL(processedFile)
-      setPreviewUrl(url)
-      setSelectedFile(processedFile)
+      const url = URL.createObjectURL(processedFile);
+      setPreviewUrl(url);
+      setSelectedFile(processedFile);
 
       // Track successful file selection
       trackEvent("upload_file_selected", {
         fileType: processedFile.type,
         fileSizeMB: Number((processedFile.size / (1024 * 1024)).toFixed(2)),
-      })
+      });
 
       // Notify parent with processed file
-      onFileSelect(processedFile)
+      onFileSelect(processedFile);
     },
-    [onFileSelect, onProcessingStart, onProcessingEnd, processImages, processImage, trackEvent, cleanupPreview]
-  )
+    [
+      onFileSelect,
+      onProcessingStart,
+      onProcessingEnd,
+      processImages,
+      processImage,
+      trackEvent,
+      cleanupPreview,
+    ],
+  );
 
   const handleClear = useCallback(() => {
-    cleanupPreview()
-    setPreviewUrl(null)
-    setSelectedFile(null)
+    cleanupPreview();
+    setPreviewUrl(null);
+    setSelectedFile(null);
     if (fileInputRef.current) {
-      fileInputRef.current.value = ""
+      fileInputRef.current.value = "";
     }
-    onFileClear?.()
-  }, [cleanupPreview, onFileClear])
+    onFileClear?.();
+  }, [cleanupPreview, onFileClear]);
 
   // =============================================================================
   // Event Handlers
@@ -211,74 +214,74 @@ export function ImageUploader({
 
   const handleInputChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
-      const file = e.target.files?.[0]
+      const file = e.target.files?.[0];
       if (file) {
-        handleFileSelect(file)
+        handleFileSelect(file);
       }
     },
-    [handleFileSelect]
-  )
+    [handleFileSelect],
+  );
 
   const handleDragEnter = useCallback((e: React.DragEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    setIsDragging(true)
-  }, [])
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  }, []);
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    setIsDragging(true)
-  }, [])
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  }, []);
 
   const handleDragLeave = useCallback((e: React.DragEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
+    e.preventDefault();
+    e.stopPropagation();
     // Only set dragging to false if we're leaving the drop zone entirely
     if (e.currentTarget.contains(e.relatedTarget as Node)) {
-      return
+      return;
     }
-    setIsDragging(false)
-  }, [])
+    setIsDragging(false);
+  }, []);
 
   const handleDrop = useCallback(
     (e: React.DragEvent) => {
-      e.preventDefault()
-      e.stopPropagation()
-      setIsDragging(false)
+      e.preventDefault();
+      e.stopPropagation();
+      setIsDragging(false);
 
-      if (disabled || isProcessing) return
+      if (disabled || isProcessing) return;
 
-      const file = e.dataTransfer.files?.[0]
+      const file = e.dataTransfer.files?.[0];
       if (file) {
-        handleFileSelect(file)
+        handleFileSelect(file);
       }
     },
-    [disabled, isProcessing, handleFileSelect]
-  )
+    [disabled, isProcessing, handleFileSelect],
+  );
 
   const handleClick = useCallback(() => {
     if (!disabled && !isProcessing) {
-      fileInputRef.current?.click()
+      fileInputRef.current?.click();
     }
-  }, [disabled, isProcessing])
+  }, [disabled, isProcessing]);
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
       if ((e.key === "Enter" || e.key === " ") && !disabled && !isProcessing) {
-        e.preventDefault()
-        fileInputRef.current?.click()
+        e.preventDefault();
+        fileInputRef.current?.click();
       }
     },
-    [disabled, isProcessing]
-  )
+    [disabled, isProcessing],
+  );
 
   // =============================================================================
   // Render
   // =============================================================================
 
-  const hasPreview = previewUrl && selectedFile
-  const isDisabled = disabled || isProcessing
+  const hasPreview = previewUrl && selectedFile;
+  const isDisabled = disabled || isProcessing;
 
   return (
     <div className={cn("w-full sm:max-w-[560px] sm:mx-auto", className)}>
@@ -322,7 +325,7 @@ export function ImageUploader({
           // Focus state
           "focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-coral focus-visible:ring-offset-2",
           // Disabled/Processing state
-          isDisabled && "cursor-not-allowed opacity-50"
+          isDisabled && "cursor-not-allowed opacity-50",
         )}
       >
         {/* Processing overlay */}
@@ -346,17 +349,15 @@ export function ImageUploader({
                 variant="ghost"
                 size="icon-sm"
                 onClick={(e) => {
-                  e.stopPropagation()
-                  handleClear()
+                  e.stopPropagation();
+                  handleClear();
                 }}
                 aria-label="Remove selected image"
               >
                 <XIcon className="size-4" />
               </Button>
             </div>
-            <p className="mt-2 text-center text-sm text-warm-gray">
-              Click or drop to change image
-            </p>
+            <p className="mt-2 text-center text-sm text-warm-gray">Click or drop to change image</p>
           </div>
         ) : (
           // Empty state
@@ -365,14 +366,10 @@ export function ImageUploader({
               className={cn(
                 "flex size-16 items-center justify-center rounded-full",
                 "bg-coral-light text-coral transition-colors",
-                isDragging && "bg-coral text-white"
+                isDragging && "bg-coral text-white",
               )}
             >
-              {isDragging ? (
-                <UploadIcon className="size-7" />
-              ) : (
-                <ImageIcon className="size-7" />
-              )}
+              {isDragging ? <UploadIcon className="size-7" /> : <ImageIcon className="size-7" />}
             </div>
             <div className="text-center">
               <p className="font-medium text-charcoal">
@@ -393,5 +390,5 @@ export function ImageUploader({
           : "No image selected. Tap to upload your 4D ultrasound image."}
       </div>
     </div>
-  )
+  );
 }

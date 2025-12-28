@@ -139,8 +139,8 @@ import { ExpiredResult } from "@/components/states/ExpiredResult"
 // In the error handling section
 if (queryError) {
   // Check if it's an expiration (404)
-  const isExpired = queryError instanceof Error && 
-    (queryError.message.includes("not found") || 
+  const isExpired = queryError instanceof Error &&
+    (queryError.message.includes("not found") ||
      queryError.message.includes("Result not found"))
 
   if (isExpired) {
@@ -159,7 +159,7 @@ The share page already handles 404 errors. Update the error message:
 // apps/web/src/routes/share.$shareId.tsx
 // In the error state section
 if (error || !result) {
-  const isExpired = error instanceof Error && 
+  const isExpired = error instanceof Error &&
     error.message.includes("no longer available")
 
   return (
@@ -175,7 +175,7 @@ if (error || !result) {
             {isExpired ? "This photo has moved on" : "Portrait Not Found"}
           </h1>
           <p className="font-body text-warm-gray">
-            {isExpired 
+            {isExpired
               ? "Photos are automatically deleted after 30 days to protect privacy."
               : "This portrait may have expired or been removed."}
           </p>
@@ -197,15 +197,15 @@ Detect expired vs other errors:
 // apps/web/src/lib/error-detection.ts
 export function isExpiredError(error: unknown): boolean {
   if (!(error instanceof Error)) return false
-  
+
   const expiredMessages = [
     "not found",
-    "no longer available", 
+    "no longer available",
     "expired",
     "Result not found",
   ]
-  
-  return expiredMessages.some((msg) => 
+
+  return expiredMessages.some((msg) =>
     error.message.toLowerCase().includes(msg.toLowerCase())
   )
 }
@@ -228,12 +228,12 @@ apps/web/src/routes/
 
 ### Warm Messaging Variants
 
-| Context | Message |
-|---------|---------|
-| Result Page | "This photo has moved on" |
-| Share Page | "This photo has moved on" |
+| Context     | Message                                                                   |
+| ----------- | ------------------------------------------------------------------------- |
+| Result Page | "This photo has moved on"                                                 |
+| Share Page  | "This photo has moved on"                                                 |
 | Explanation | "Photos are automatically deleted after 30 days to protect your privacy." |
-| CTA | "Create a New Portrait ✨" |
+| CTA         | "Create a New Portrait ✨"                                                |
 
 ### Analytics Events
 
@@ -248,7 +248,7 @@ posthog.capture("expired_result_viewed", {
 ### Edge Cases
 
 1. **Bookmarked old URL:** Shows expired message with CTA
-2. **Share link in chat history:** Shows expired message with CTA  
+2. **Share link in chat history:** Shows expired message with CTA
 3. **Email download link (30+ days):** Download endpoint returns 404, show expired
 
 ### Dependencies
@@ -259,6 +259,7 @@ posthog.capture("expired_result_viewed", {
 ### Parallel Work
 
 Can be developed in parallel with:
+
 - Story 8.6 (Delete Button)
 - Story 8.7 (Auto-Delete)
 
@@ -293,6 +294,7 @@ N/A - Clean implementation without debugging issues
 ### File List
 
 **New Files:**
+
 - `apps/web/src/components/states/ExpiredResult.tsx` - Reusable expired result component
 - `apps/web/src/components/states/ExpiredResult.test.tsx` - Unit tests (10 tests)
 - `apps/web/src/components/states/index.ts` - Barrel export
@@ -300,6 +302,7 @@ N/A - Clean implementation without debugging issues
 - `apps/web/src/lib/error-detection.test.ts` - Unit tests (9 tests)
 
 **Modified Files:**
+
 - `apps/web/src/routes/result.$resultId.tsx` - Added ExpiredResult for 404 errors
 - `apps/web/src/routes/share.$shareId.tsx` - Replaced inline error state with ExpiredResult
 
@@ -314,16 +317,19 @@ N/A - Clean implementation without debugging issues
 **Outcome:** Approved (after fixes)
 
 ### Findings Summary
+
 - **0 Critical** - All tasks properly implemented
 - **3 Medium** - Fixed automatically
 - **3 Low** - Fixed or noted
 
 ### Action Items
+
 - [x] M1: Fixed misleading test name ("returns false" but expected true)
 - [x] M2: Fixed false positive - session expiry now excluded from `isExpiredError()`
 - [x] M3: Test coverage adequate (unit tests cover component and utility behavior)
 - [x] L3: Added timestamp to analytics event per spec
 
 ### Notes
+
 - L1 (AC wording): "This photo has moved on" vs "This photo has expired" - acceptable creative deviation
 - L2 (CTA text): Consistent "Create a New Portrait ✨" across all expired states is better UX than varying text

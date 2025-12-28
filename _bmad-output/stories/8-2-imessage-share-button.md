@@ -57,8 +57,8 @@ so that **I can reach family who use iPhones**.
 // apps/web/src/lib/device-detection.ts
 export function isIOS(): boolean {
   if (typeof window === "undefined") return false
-  
-  return /iPad|iPhone|iPod/.test(navigator.userAgent) || 
+
+  return /iPad|iPhone|iPod/.test(navigator.userAgent) ||
     (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1)
 }
 
@@ -78,7 +78,7 @@ export function isMobile(): boolean {
 // Add to ShareButtons.tsx
 const handleIMessageShare = useCallback(() => {
   const deviceType = isIOS() ? "ios" : isAndroid() ? "android" : "desktop"
-  
+
   if (isPostHogConfigured()) {
     posthog.capture("share_clicked", {
       result_id: resultId,
@@ -111,6 +111,7 @@ const handleIMessageShare = useCallback(() => {
 ### SMS URL Formats
 
 **iOS (iMessage):**
+
 ```
 sms:&body=Look%20at%20this%20AI%20baby%20portrait!%20https%3A%2F%2Fbabypeek.com%2Fshare%2F{uploadId}
 ```
@@ -129,11 +130,11 @@ apps/web/src/components/share/
 
 ### Platform Behavior
 
-| Platform | Button Label | Opens | URL Scheme |
-|----------|--------------|-------|------------|
-| iOS | iMessage | Messages app | `sms:&body=` |
-| Android | Message | SMS app | `sms:?body=` |
-| Desktop | Hidden | N/A | N/A |
+| Platform | Button Label | Opens        | URL Scheme   |
+| -------- | ------------ | ------------ | ------------ |
+| iOS      | iMessage     | Messages app | `sms:&body=` |
+| Android  | Message      | SMS app      | `sms:?body=` |
+| Desktop  | Hidden       | N/A          | N/A          |
 
 ### Dependencies
 
@@ -143,6 +144,7 @@ apps/web/src/components/share/
 ### Parallel Work
 
 Can be developed in parallel with:
+
 - Story 8.1 (WhatsApp Share)
 - Story 8.3 (Copy Link)
 
@@ -185,7 +187,7 @@ N/A - Implementation proceeded without issues
 
 ## Change Log
 
-| Date | Change |
-|------|--------|
-| 2025-12-21 | Story implementation complete - all ACs satisfied |
+| Date       | Change                                                                                      |
+| ---------- | ------------------------------------------------------------------------------------------- |
+| 2025-12-21 | Story implementation complete - all ACs satisfied                                           |
 | 2025-12-21 | Code review: improved device detection tests to mock navigator, added index.ts to File List |

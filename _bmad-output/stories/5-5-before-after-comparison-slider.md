@@ -98,7 +98,7 @@ export function BeforeAfterSlider({
   // Calculate position from pointer event
   const calculatePosition = useCallback((clientX: number) => {
     if (!containerRef.current) return position
-    
+
     const rect = containerRef.current.getBoundingClientRect()
     const x = clientX - rect.left
     const percentage = (x / rect.width) * 100
@@ -161,7 +161,7 @@ export function BeforeAfterSlider({
       document.addEventListener('mouseup', handleMouseUp)
       document.addEventListener('touchend', handleMouseUp)
     }
-    
+
     return () => {
       document.removeEventListener('mousemove', handleMouseMove)
       document.removeEventListener('mouseup', handleMouseUp)
@@ -201,9 +201,9 @@ export function BeforeAfterSlider({
           src={beforeImage}
           alt={beforeLabel}
           className="absolute inset-0 w-full h-full object-cover"
-          style={{ 
-            width: `${100 / (position / 100)}%`, 
-            maxWidth: 'none' 
+          style={{
+            width: `${100 / (position / 100)}%`,
+            maxWidth: 'none'
           }}
         />
       </div>
@@ -251,6 +251,7 @@ export function BeforeAfterSlider({
 ### UX Spec Reference (BeforeAfterSlider)
 
 From UX design spec:
+
 - Touch-friendly handle
 - Smooth scrubbing
 - Keyboard accessible
@@ -360,10 +361,12 @@ None - implementation proceeded without blockers.
 ### File List
 
 **New Files:**
+
 - `apps/web/src/components/reveal/BeforeAfterSlider.tsx` - Main slider component
 - `apps/web/src/components/reveal/BeforeAfterSlider.test.tsx` - 25 unit tests
 
 **Modified Files:**
+
 - `apps/web/src/components/reveal/index.ts` - Export BeforeAfterSlider and DownloadPreviewButton
 - `apps/web/src/components/reveal/RevealUI.tsx` - Comparison toggle props + DownloadPreviewButton integration
 - `apps/web/src/components/reveal/RevealUI.test.tsx` - Tests for comparison toggle
@@ -385,6 +388,7 @@ None - implementation proceeded without blockers.
 ### Review Summary
 
 All 4 Acceptance Criteria verified as implemented:
+
 - AC-1: ✅ Drag interaction works (mouse + touch)
 - AC-2: ✅ 48px touch target (w-12 h-12)
 - AC-3: ✅ Keyboard controls (ArrowLeft/Right, Home/End)
@@ -392,13 +396,13 @@ All 4 Acceptance Criteria verified as implemented:
 
 ### Issues Found & Fixed
 
-| Severity | Issue | Resolution |
-|----------|-------|------------|
-| MEDIUM | Missing `will-change-transform` CSS | Added to handle grip for GPU acceleration |
-| MEDIUM | Non-null assertion `uploadId!` | Changed to `uploadId ?? ""` for safer handling |
-| LOW | Test count docs inaccurate | Updated to "13 tests for RevealUI" |
-| LOW | Change Log year wrong (2024) | Fixed to 2025 |
-| LOW | Missing test IDs on images | Added `data-testid` to before/after images |
+| Severity | Issue                               | Resolution                                     |
+| -------- | ----------------------------------- | ---------------------------------------------- |
+| MEDIUM   | Missing `will-change-transform` CSS | Added to handle grip for GPU acceleration      |
+| MEDIUM   | Non-null assertion `uploadId!`      | Changed to `uploadId ?? ""` for safer handling |
+| LOW      | Test count docs inaccurate          | Updated to "13 tests for RevealUI"             |
+| LOW      | Change Log year wrong (2024)        | Fixed to 2025                                  |
+| LOW      | Missing test IDs on images          | Added `data-testid` to before/after images     |
 
 ### Test Results
 

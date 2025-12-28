@@ -1,5 +1,5 @@
 // @ts-nocheck - nitro v3 alpha types
-import { defineConfig } from "nitro"
+import { defineConfig } from "nitro";
 
 export default defineConfig({
   modules: ["workflow/nitro"],
@@ -7,4 +7,4 @@ export default defineConfig({
     "/**": "./src/index.ts",
   },
   preset: "vercel",
-})
+});

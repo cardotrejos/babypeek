@@ -1,4 +1,4 @@
-import { useEffect, useCallback, useRef } from "react"
+import { useEffect, useCallback, useRef } from "react";
 
 /**
  * Hook to detect page visibility changes (user backgrounds/returns to app)
@@ -24,37 +24,37 @@ import { useEffect, useCallback, useRef } from "react"
 export function useVisibilityChange(
   onVisible: () => void,
   options?: {
-    onHidden?: () => void
-    enabled?: boolean
-  }
+    onHidden?: () => void;
+    enabled?: boolean;
+  },
 ): void {
-  const { onHidden, enabled = true } = options ?? {}
+  const { onHidden, enabled = true } = options ?? {};
 
   // Refs to avoid stale closures in event handler
-  const onVisibleRef = useRef(onVisible)
-  const onHiddenRef = useRef(onHidden)
+  const onVisibleRef = useRef(onVisible);
+  const onHiddenRef = useRef(onHidden);
 
   // Update refs when callbacks change
   useEffect(() => {
-    onVisibleRef.current = onVisible
-    onHiddenRef.current = onHidden
-  }, [onVisible, onHidden])
+    onVisibleRef.current = onVisible;
+    onHiddenRef.current = onHidden;
+  }, [onVisible, onHidden]);
 
   const handleVisibilityChange = useCallback(() => {
     if (document.visibilityState === "visible") {
-      onVisibleRef.current()
+      onVisibleRef.current();
     } else if (document.visibilityState === "hidden" && onHiddenRef.current) {
-      onHiddenRef.current()
+      onHiddenRef.current();
     }
-  }, [])
+  }, []);
 
   useEffect(() => {
     // Skip if disabled or SSR
-    if (!enabled || typeof document === "undefined") return
+    if (!enabled || typeof document === "undefined") return;
 
-    document.addEventListener("visibilitychange", handleVisibilityChange)
+    document.addEventListener("visibilitychange", handleVisibilityChange);
     return () => {
-      document.removeEventListener("visibilitychange", handleVisibilityChange)
-    }
-  }, [enabled, handleVisibilityChange])
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [enabled, handleVisibilityChange]);
 }

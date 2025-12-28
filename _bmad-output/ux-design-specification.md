@@ -19,29 +19,35 @@ status: complete
 ## Executive Summary
 
 ### Project Vision
+
 babypeek transforms 4D ultrasound images into photorealistic "baby's first photo" using AI. The product creates an emotional, shareable moment for expecting parents.
 
 ### Target Users
 
 **Maria (Primary):** 28, first-time mom, tech-savvy, shares everything on WhatsApp
+
 - Emotional state: Excited, hopeful, slightly anxious
 - Needs: Quick results, easy sharing, beautiful output
 
 **Carlos (Secondary):** 55, soon-to-be grandfather, moderate tech skills
+
 - Emotional state: Proud, wants to participate
 - Needs: Simple flow, clear gift option
 
 **Rosa (Tertiary):** 32, discovers via viral share
+
 - Emotional state: Curious, "I want that too"
 - Needs: Fast path from discovery to upload
 
 ### Key Design Challenges
+
 1. **60-second wait:** Keep users engaged during processing
 2. **Mobile upload:** Handle HEIC, large files, network issues
 3. **Watermark balance:** Shareable but drives purchase
 4. **Gift flow:** Clear for non-tech-savvy users
 
 ### Design Opportunities
+
 1. **Emotional waiting:** Transform wait into anticipation
 2. **Reveal animation:** Peak emotional moment
 3. **Native share:** Leverage platform sharing
@@ -62,22 +68,24 @@ Upload → Wait (anticipation builds) → REVEAL (emotional peak) → Share/Purc
 ### Platform Strategy
 
 **Mobile Web (PWA-ready)**
+
 - Primary: Safari iOS, Chrome Android
 - Secondary: Desktop browsers
 - No native app initially (faster to market)
 
 ### Effortless Interactions
 
-| Action | Taps Required |
-|--------|---------------|
-| Upload image | 2 (button + select) |
-| Enter email | 1 (keyboard appears) |
-| View result | 0 (auto-navigation) |
-| Share to WhatsApp | 2 |
-| Purchase (Apple Pay) | 2 |
-| Download HD | 1 |
+| Action               | Taps Required        |
+| -------------------- | -------------------- |
+| Upload image         | 2 (button + select)  |
+| Enter email          | 1 (keyboard appears) |
+| View result          | 0 (auto-navigation)  |
+| Share to WhatsApp    | 2                    |
+| Purchase (Apple Pay) | 2                    |
+| Download HD          | 1                    |
 
 ### Critical Success Moments
+
 1. **First impression:** "This looks trustworthy and magical"
 2. **Upload complete:** "It's working, I'm excited"
 3. **The reveal:** "Oh my god, that's my baby"
@@ -99,29 +107,29 @@ Curiosity → Hope → Anticipation → AWE → Joy → Pride → Connection →
 
 ### Primary Emotions
 
-| Emotion | When | Design Response |
-|---------|------|-----------------|
-| **Wonder** | Reveal | Blur-to-sharp animation, pause before UI |
-| **Joy** | After reveal | Celebration (subtle confetti), warm copy |
-| **Connection** | Sharing | Easy share to family groups |
+| Emotion        | When         | Design Response                          |
+| -------------- | ------------ | ---------------------------------------- |
+| **Wonder**     | Reveal       | Blur-to-sharp animation, pause before UI |
+| **Joy**        | After reveal | Celebration (subtle confetti), warm copy |
+| **Connection** | Sharing      | Easy share to family groups              |
 
 ### Supporting Emotions
 
-| Emotion | When | Design Response |
-|---------|------|-----------------|
-| Curiosity | Landing | Compelling before/after examples |
-| Trust | Upload | Privacy assurances, familiar UI |
-| Anticipation | Wait | Engaging progress, hopeful copy |
-| Pride | After share | Positive feedback on share |
+| Emotion      | When        | Design Response                  |
+| ------------ | ----------- | -------------------------------- |
+| Curiosity    | Landing     | Compelling before/after examples |
+| Trust        | Upload      | Privacy assurances, familiar UI  |
+| Anticipation | Wait        | Engaging progress, hopeful copy  |
+| Pride        | After share | Positive feedback on share       |
 
 ### Emotions to Avoid
 
-| Emotion | Trigger | Prevention |
-|---------|---------|------------|
-| Anxiety | Long wait | Show progress, estimated time |
-| Confusion | Unclear next step | Single prominent CTA |
-| Frustration | Errors | Graceful handling, warm copy |
-| Disappointment | Poor quality | Quality checks, refund option |
+| Emotion        | Trigger           | Prevention                    |
+| -------------- | ----------------- | ----------------------------- |
+| Anxiety        | Long wait         | Show progress, estimated time |
+| Confusion      | Unclear next step | Single prominent CTA          |
+| Frustration    | Errors            | Graceful handling, warm copy  |
+| Disappointment | Poor quality      | Quality checks, refund option |
 
 ### Emotional Design Principles
 
@@ -139,11 +147,13 @@ Curiosity → Hope → Anticipation → AWE → Joy → Pride → Connection →
 ### Pregnancy App Patterns (What.to.Expect, Flo)
 
 **Adopt:**
+
 - Warm, reassuring color palette
 - Milestone celebration moments
 - Simple, focused task flows
 
 **Avoid:**
+
 - Information overload
 - Medical anxiety triggers
 - Complex onboarding
@@ -151,11 +161,13 @@ Curiosity → Hope → Anticipation → AWE → Joy → Pride → Connection →
 ### AI Image Generation Patterns (Midjourney, DALL-E)
 
 **Adopt:**
+
 - Clear progress indicators
 - Before/after comparisons
 - Easy sharing mechanics
 
 **Avoid:**
+
 - Technical complexity
 - Multiple option overload
 - Subscription-first approach
@@ -163,11 +175,13 @@ Curiosity → Hope → Anticipation → AWE → Joy → Pride → Connection →
 ### Emotional/Gift Experience Patterns (Unwrap, Celebration apps)
 
 **Adopt:**
+
 - Reveal animations
 - Anticipation building
 - Gift messaging
 
 **Avoid:**
+
 - Over-the-top animations
 - Forced social actions
 - Confusing gift flows
@@ -179,6 +193,7 @@ Curiosity → Hope → Anticipation → AWE → Joy → Pride → Connection →
 ### System Choice: shadcn/ui + Tailwind CSS
 
 **Rationale:**
+
 - Speed: Pre-built, accessible components
 - Customization: Full control over styling
 - React ecosystem: Works with TanStack Start
@@ -187,6 +202,7 @@ Curiosity → Hope → Anticipation → AWE → Joy → Pride → Connection →
 ### Typography
 
 **Font Stack:**
+
 ```css
 --font-display: "Playfair Display", Georgia, serif;  /* Headlines */
 --font-body: "DM Sans", system-ui, sans-serif;       /* Body text */
@@ -194,6 +210,7 @@ Curiosity → Hope → Anticipation → AWE → Joy → Pride → Connection →
 ```
 
 **Scale:**
+
 ```css
 --text-xs: 12px;
 --text-sm: 14px;
@@ -228,6 +245,7 @@ Curiosity → Hope → Anticipation → AWE → Joy → Pride → Connection →
 ```
 
 **Contrast Ratios:**
+
 - Charcoal on Cream: 12.6:1 ✅ AAA
 - White on Coral: 4.1:1 ✅ AA
 - Coral on Cream: 3.2:1 ✅ AA (large text)
@@ -297,13 +315,14 @@ Curiosity → Hope → Anticipation → AWE → Joy → Pride → Connection →
 
 **3-Stage Progress:**
 
-| Stage | Duration | Message | Visual |
-|-------|----------|---------|--------|
-| 1. Preparing | 0-20s | "Analyzing your ultrasound..." | Scan animation |
-| 2. Creating | 20-60s | "Creating your baby's portrait..." | Particle effect |
-| 3. Finishing | 60-90s | "Adding final touches..." | Polish animation |
+| Stage        | Duration | Message                            | Visual           |
+| ------------ | -------- | ---------------------------------- | ---------------- |
+| 1. Preparing | 0-20s    | "Analyzing your ultrasound..."     | Scan animation   |
+| 2. Creating  | 20-60s   | "Creating your baby's portrait..." | Particle effect  |
+| 3. Finishing | 60-90s   | "Adding final touches..."          | Polish animation |
 
 **Engagement Elements:**
+
 - Reassuring copy that changes
 - Subtle background animation
 - Progress percentage (when estimable)
@@ -312,6 +331,7 @@ Curiosity → Hope → Anticipation → AWE → Joy → Pride → Connection →
 ### Reveal Animation
 
 **Sequence:**
+
 1. Screen dims slightly (0.3s)
 2. Image appears blurred (instant)
 3. Blur slowly clears (2s ease-out)
@@ -330,12 +350,14 @@ const RevealAnimation = {
 ### Share Flow
 
 **Immediate Post-Reveal:**
+
 1. "Share your baby's first photo"
 2. WhatsApp button (primary)
 3. Copy link button (secondary)
 4. Native share fallback
 
 **Watermark Strategy:**
+
 - Position: Bottom-right corner
 - Opacity: 40%
 - Size: 15% of image width
@@ -373,12 +395,12 @@ graph TD
 
 ### Error Recovery
 
-| Error | Response |
-|-------|----------|
-| Upload fails | "Let's try again" + retry button |
-| Processing fails | "We couldn't process this image" + refund/retry |
-| Payment fails | "Payment didn't go through" + retry + alternatives |
-| Network lost | Session recovery on return |
+| Error            | Response                                           |
+| ---------------- | -------------------------------------------------- |
+| Upload fails     | "Let's try again" + retry button                   |
+| Processing fails | "We couldn't process this image" + refund/retry    |
+| Payment fails    | "Payment didn't go through" + retry + alternatives |
+| Network lost     | Session recovery on return                         |
 
 ---
 
@@ -386,60 +408,69 @@ graph TD
 
 ### shadcn/ui Components (Customized)
 
-| Component | Customization |
-|-----------|---------------|
-| Button | Coral primary, glow hover |
-| Input | Cream background, warm focus |
-| Dialog | Centered, overlay blur |
-| Toast | Right side, warm colors |
-| Progress | Coral fill, stage indicators |
+| Component | Customization                |
+| --------- | ---------------------------- |
+| Button    | Coral primary, glow hover    |
+| Input     | Cream background, warm focus |
+| Dialog    | Centered, overlay blur       |
+| Toast     | Right side, warm colors      |
+| Progress  | Coral fill, stage indicators |
 
 ### Custom Components (Build from Scratch)
 
 #### 1. ImageUploader
+
 - Drag-drop zone with camera roll fallback
 - HEIC detection and conversion
 - Client-side compression
 - Progress with percentage
 
 #### 2. ProcessingScreen
+
 - 3-stage progress indicator
 - Engaging wait messaging
 - Background animation
 - Timer/estimate display
 
 #### 3. RevealAnimation
+
 - Blur-to-sharp transition
 - Zoom settle effect
 - Delayed UI appearance
 - Sound option (optional)
 
 #### 4. BeforeAfterSlider
+
 - Touch-friendly handle
 - Smooth scrubbing
 - Keyboard accessible
 
 #### 5. ShareSheet
+
 - Platform-aware buttons
 - Watermarked preview
 - Copy link feedback
 
 #### 6. PaymentModal
+
 - Apple Pay / Google Pay primary
 - Card fallback
 - Gift toggle
 
 #### 7. DownloadButton
+
 - Progress indicator
 - Save to camera roll
 - Re-download support
 
 #### 8. GiftCard
+
 - Preview image
 - Gift message
 - Purchase CTA
 
 #### 9. TrustBadges
+
 - Privacy assurance
 - Secure payment
 - Data deletion promise
@@ -450,56 +481,56 @@ graph TD
 
 ### Button Hierarchy
 
-| Type | Use | Style |
-|------|-----|-------|
-| Primary | Main CTA | Coral, glow hover |
-| Secondary | Alternative action | Outlined |
-| Ghost | Tertiary | Text only |
-| Danger | Destructive | Red variant |
+| Type      | Use                | Style             |
+| --------- | ------------------ | ----------------- |
+| Primary   | Main CTA           | Coral, glow hover |
+| Secondary | Alternative action | Outlined          |
+| Ghost     | Tertiary           | Text only         |
+| Danger    | Destructive        | Red variant       |
 
 ### Feedback Patterns
 
-| Action | Feedback |
-|--------|----------|
-| Button click | Ripple + state change |
-| Form submit | Loading spinner |
-| Upload complete | ✨ + "Ready!" |
-| Purchase complete | 🎉 + confetti |
-| Error | 😕 + warm error message |
+| Action            | Feedback                |
+| ----------------- | ----------------------- |
+| Button click      | Ripple + state change   |
+| Form submit       | Loading spinner         |
+| Upload complete   | ✨ + "Ready!"           |
+| Purchase complete | 🎉 + confetti           |
+| Error             | 😕 + warm error message |
 
 ### Form Patterns
 
-| Field | Behavior |
-|-------|----------|
-| Email | Validation on blur, real-time format check |
-| Payment | Stripe Elements, Apple Pay priority |
+| Field   | Behavior                                   |
+| ------- | ------------------------------------------ |
+| Email   | Validation on blur, real-time format check |
+| Payment | Stripe Elements, Apple Pay priority        |
 
 ### Loading States
 
-| Context | Pattern |
-|---------|---------|
-| Page load | Skeleton shimmer |
+| Context       | Pattern               |
+| ------------- | --------------------- |
+| Page load     | Skeleton shimmer      |
 | Button action | Spinner replaces text |
-| Processing | Stage progress |
-| Image load | Blur placeholder |
+| Processing    | Stage progress        |
+| Image load    | Blur placeholder      |
 
 ### Toast Notifications
 
-| Type | Position | Duration |
-|------|----------|----------|
-| Success | Top-right | 3s |
-| Error | Top-right | 5s |
-| Info | Top-right | 4s |
+| Type    | Position  | Duration |
+| ------- | --------- | -------- |
+| Success | Top-right | 3s       |
+| Error   | Top-right | 5s       |
+| Info    | Top-right | 4s       |
 
 ### Micro-interactions
 
-| Element | Interaction |
-|---------|-------------|
-| Upload zone | Pulse on drag over |
-| Progress stages | Slide transition |
-| Reveal | Blur-to-sharp + zoom |
-| Share button | Ripple + glow |
-| Purchase | Confetti on success |
+| Element         | Interaction          |
+| --------------- | -------------------- |
+| Upload zone     | Pulse on drag over   |
+| Progress stages | Slide transition     |
+| Reveal          | Blur-to-sharp + zoom |
+| Share button    | Ripple + glow        |
+| Purchase        | Confetti on success  |
 
 ---
 
@@ -510,6 +541,7 @@ graph TD
 **Mobile-First Philosophy:**
 
 babypeek is designed mobile-first because:
+
 - Primary action (sharing) happens on mobile
 - WhatsApp/Messages are mobile apps
 - Emotional moments captured on phones
@@ -517,11 +549,11 @@ babypeek is designed mobile-first because:
 
 **Device Adaptations:**
 
-| Device | Layout | Key Adaptations |
-|--------|--------|-----------------|
-| **Mobile (320-767px)** | Single column, full-width | Native feel, thumb-zone CTAs |
-| **Tablet (768-1023px)** | Centered, 560px max | More breathing room |
-| **Desktop (1024px+)** | Centered, 560px max | Same as tablet, larger images |
+| Device                  | Layout                    | Key Adaptations               |
+| ----------------------- | ------------------------- | ----------------------------- |
+| **Mobile (320-767px)**  | Single column, full-width | Native feel, thumb-zone CTAs  |
+| **Tablet (768-1023px)** | Centered, 560px max       | More breathing room           |
+| **Desktop (1024px+)**   | Centered, 560px max       | Same as tablet, larger images |
 
 ### Breakpoint Strategy
 
@@ -539,12 +571,12 @@ babypeek is designed mobile-first because:
 
 **Responsive Rules:**
 
-| Element | Mobile | Tablet/Desktop |
-|---------|--------|----------------|
-| Container padding | 16px | 24px |
-| Max content width | 100% | 560px |
-| Button width | 100% | Auto (min 280px) |
-| Font size (hero) | 32px | 48px |
+| Element           | Mobile | Tablet/Desktop   |
+| ----------------- | ------ | ---------------- |
+| Container padding | 16px   | 24px             |
+| Max content width | 100%   | 560px            |
+| Button width      | 100%   | Auto (min 280px) |
+| Font size (hero)  | 32px   | 48px             |
 
 ### Accessibility Strategy
 
@@ -552,11 +584,11 @@ babypeek is designed mobile-first because:
 
 **Color Contrast:**
 
-| Combination | Ratio | Status |
-|-------------|-------|--------|
-| Charcoal on Cream | 12.6:1 | ✅ AAA |
-| Coral on Cream | 3.2:1 | ✅ AA (large text) |
-| White on Coral | 4.1:1 | ✅ AA |
+| Combination       | Ratio  | Status             |
+| ----------------- | ------ | ------------------ |
+| Charcoal on Cream | 12.6:1 | ✅ AAA             |
+| Coral on Cream    | 3.2:1  | ✅ AA (large text) |
+| White on Coral    | 4.1:1  | ✅ AA              |
 
 **Touch Targets:**
 
@@ -568,12 +600,12 @@ babypeek is designed mobile-first because:
 
 **Keyboard Navigation:**
 
-| Action | Key |
-|--------|-----|
-| Navigate | Tab / Shift+Tab |
-| Activate | Enter / Space |
-| Close modal | Escape |
-| Move slider | Arrow keys |
+| Action      | Key             |
+| ----------- | --------------- |
+| Navigate    | Tab / Shift+Tab |
+| Activate    | Enter / Space   |
+| Close modal | Escape          |
+| Move slider | Arrow keys      |
 
 **Focus Management:**
 
@@ -607,21 +639,21 @@ babypeek is designed mobile-first because:
 
 **Device Test Matrix:**
 
-| Device | Screen | Priority |
-|--------|--------|----------|
-| iPhone SE | 375px | High |
-| iPhone 14 | 390px | High |
-| Samsung Galaxy | 360px | High |
-| iPad | 768px | Medium |
-| Desktop | 1440px | Low |
+| Device         | Screen | Priority |
+| -------------- | ------ | -------- |
+| iPhone SE      | 375px  | High     |
+| iPhone 14      | 390px  | High     |
+| Samsung Galaxy | 360px  | High     |
+| iPad           | 768px  | Medium   |
+| Desktop        | 1440px | Low      |
 
 **Accessibility Testing:**
 
-| Tool | When |
-|------|------|
-| axe DevTools | Every PR |
-| Lighthouse | Every PR |
-| VoiceOver | Before launch |
+| Tool          | When          |
+| ------------- | ------------- |
+| axe DevTools  | Every PR      |
+| Lighthouse    | Every PR      |
+| VoiceOver     | Before launch |
 | Keyboard-only | Every feature |
 
 ### Implementation Guidelines
@@ -654,13 +686,13 @@ babypeek is designed mobile-first because:
 
 **Component A11y Checklist:**
 
-| Component | Required |
-|-----------|----------|
-| Button | `aria-label` if icon-only |
-| Input | `aria-describedby`, `aria-invalid` |
-| Modal | Focus trap, `aria-modal`, Escape closes |
-| Toast | `role="alert"`, `aria-live` |
-| Image | Descriptive `alt` text |
+| Component | Required                                |
+| --------- | --------------------------------------- |
+| Button    | `aria-label` if icon-only               |
+| Input     | `aria-describedby`, `aria-invalid`      |
+| Modal     | Focus trap, `aria-modal`, Escape closes |
+| Toast     | `role="alert"`, `aria-live`             |
+| Image     | Descriptive `alt` text                  |
 
 ---
 
@@ -686,14 +718,14 @@ babypeek is designed mobile-first because:
 
 ### Copy Tone
 
-| Context | Tone |
-|---------|------|
-| Landing | Warm, magical, inviting |
-| Upload | Reassuring, simple |
-| Processing | Hopeful, engaging |
-| Reveal | Minimal (let image speak) |
-| Purchase | Clear value, no pressure |
-| Error | Empathetic, helpful |
+| Context    | Tone                      |
+| ---------- | ------------------------- |
+| Landing    | Warm, magical, inviting   |
+| Upload     | Reassuring, simple        |
+| Processing | Hopeful, engaging         |
+| Reveal     | Minimal (let image speak) |
+| Purchase   | Clear value, no pressure  |
+| Error      | Empathetic, helpful       |
 
 ---
 
@@ -702,6 +734,7 @@ babypeek is designed mobile-first because:
 ### Selected Direction: Warm & Intimate
 
 **Characteristics:**
+
 - Cream background (#FDF8F5)
 - Coral primary (#E8927C)
 - Serif headlines (Playfair Display)
@@ -710,6 +743,7 @@ babypeek is designed mobile-first because:
 - Gentle animations
 
 **Why This Direction:**
+
 - Matches emotional nature of product
 - Appeals to expecting parents
 - Differentiates from clinical/tech aesthetic
@@ -717,4 +751,4 @@ babypeek is designed mobile-first because:
 
 ---
 
-*UX Design Specification Complete. Ready for Architecture and Development.*
+_UX Design Specification Complete. Ready for Architecture and Development._

@@ -109,28 +109,28 @@ const MAX_REQUESTS = 10
 function checkRateLimit(ipHash: string): { allowed: boolean; remaining: number; resetAt: number } {
   const now = Date.now()
   const window = rateLimitStore.get(ipHash)
-  
+
   if (!window || now - window.windowStart >= WINDOW_SIZE_MS) {
     // New window
     rateLimitStore.set(ipHash, { count: 1, windowStart: now })
     return { allowed: true, remaining: 9, resetAt: now + WINDOW_SIZE_MS }
   }
-  
+
   if (window.count >= MAX_REQUESTS) {
     // Rate limited
-    return { 
-      allowed: false, 
-      remaining: 0, 
-      resetAt: window.windowStart + WINDOW_SIZE_MS 
+    return {
+      allowed: false,
+      remaining: 0,
+      resetAt: window.windowStart + WINDOW_SIZE_MS
     }
   }
-  
+
   // Increment
   window.count++
-  return { 
-    allowed: true, 
-    remaining: MAX_REQUESTS - window.count, 
-    resetAt: window.windowStart + WINDOW_SIZE_MS 
+  return {
+    allowed: true,
+    remaining: MAX_REQUESTS - window.count,
+    resetAt: window.windowStart + WINDOW_SIZE_MS
   }
 }
 ```
@@ -168,22 +168,22 @@ export function middleware(request: NextRequest) {
   if (!request.nextUrl.pathname.startsWith('/api/upload')) {
     return NextResponse.next()
   }
-  
+
   const ip = getClientIP(request)
   const ipHash = hashIP(ip)
   const now = Date.now()
-  
+
   // Check rate limit
   const window = rateLimitStore.get(ipHash)
-  
+
   // ... rate limit logic ...
-  
+
   // Add headers
   const response = NextResponse.next()
   response.headers.set('X-RateLimit-Limit', MAX_REQUESTS.toString())
   response.headers.set('X-RateLimit-Remaining', remaining.toString())
   response.headers.set('X-RateLimit-Reset', resetAt.toString())
-  
+
   return response
 }
 
@@ -219,14 +219,14 @@ export function rateLimitMiddleware() {
   return async (c: Context, next: Next) => {
     const ip = getClientIP(c)
     const ipHash = hashIP(ip)
-    
+
     const { allowed, remaining, resetAt } = checkRateLimit(ipHash)
-    
+
     // Always set headers
     c.header('X-RateLimit-Limit', MAX_REQUESTS.toString())
     c.header('X-RateLimit-Remaining', remaining.toString())
     c.header('X-RateLimit-Reset', resetAt.toString())
-    
+
     if (!allowed) {
       return c.json(
         {
@@ -237,7 +237,7 @@ export function rateLimitMiddleware() {
         429
       )
     }
-    
+
     await next()
   }
 }
@@ -275,7 +275,7 @@ export const RateLimitServiceLive = Layer.succeed(RateLimitService, {
       const window = store.get(key)
       // ... return current state
     }),
-    
+
   increment: (key) =>
     Effect.sync(() => {
       // Check and increment
@@ -298,15 +298,15 @@ export function getClientIP(c: Context): string {
   // 2. Standard proxy: X-Forwarded-For (first IP)
   // 3. Nginx: X-Real-IP
   // 4. Direct connection (fallback)
-  
+
   const cfIP = c.req.header('cf-connecting-ip')
   if (cfIP) return cfIP
-  
+
   const forwardedFor = c.req.header('x-forwarded-for')
   if (forwardedFor) {
     return forwardedFor.split(',')[0]?.trim() || 'unknown'
   }
-  
+
   return c.req.header('x-real-ip') || 'unknown'
 }
 
@@ -334,40 +334,40 @@ X-RateLimit-Reset: 1703185200  # Unix timestamp when window resets
 // In useUpload.ts - handle 429 response
 const startUpload = async (file: File, email: string) => {
   // ... existing code ...
-  
+
   const response = await fetch('/api/upload', { ... })
-  
+
   if (response.status === 429) {
     const data = await response.json()
     const retryAfterMinutes = Math.ceil(data.retryAfter / 60)
-    
+
     setState({
       status: 'error',
       error: `Upload limit reached. Try again in ${retryAfterMinutes} minutes.`,
       progress: 0,
       uploadId: null,
     })
-    
+
     trackEvent({
       name: 'rate_limit_exceeded',
       properties: {
         retryAfter: data.retryAfter,
       }
     })
-    
+
     return null
   }
-  
+
   // ... continue with upload
 }
 ```
 
 ### Error Copy (Warm Tone)
 
-| Scenario | Message |
-|----------|---------|
+| Scenario     | Message                                                    |
+| ------------ | ---------------------------------------------------------- |
 | Rate limited | "You've reached the upload limit. Please try again later." |
-| With time | "Upload limit reached. Try again in X minutes." |
+| With time    | "Upload limit reached. Try again in X minutes."            |
 
 ### Environment Variables
 
@@ -425,42 +425,42 @@ describe('rateLimitMiddleware', () => {
     // Clear rate limit store between tests
     rateLimitStore.clear()
   })
-  
+
   it('allows first 10 requests', async () => {
     for (let i = 0; i < 10; i++) {
       const response = await makeUploadRequest()
       expect(response.status).toBe(200)
     }
   })
-  
+
   it('blocks 11th request with 429', async () => {
     // Make 10 requests
     for (let i = 0; i < 10; i++) {
       await makeUploadRequest()
     }
-    
+
     // 11th should fail
     const response = await makeUploadRequest()
     expect(response.status).toBe(429)
     expect(response.body.code).toBe('RATE_LIMIT_EXCEEDED')
   })
-  
+
   it('includes rate limit headers', async () => {
     const response = await makeUploadRequest()
     expect(response.headers['x-ratelimit-limit']).toBe('10')
     expect(response.headers['x-ratelimit-remaining']).toBeDefined()
     expect(response.headers['x-ratelimit-reset']).toBeDefined()
   })
-  
+
   it('resets after window expires', async () => {
     // Fill up limit
     for (let i = 0; i < 10; i++) {
       await makeUploadRequest()
     }
-    
+
     // Advance time past window
     vi.advanceTimersByTime(60 * 60 * 1000 + 1)
-    
+
     // Should be allowed again
     const response = await makeUploadRequest()
     expect(response.status).toBe(200)
@@ -472,12 +472,12 @@ describe('rateLimitMiddleware', () => {
 
 ```typescript
 // Track rate limit events
-| { name: 'rate_limit_exceeded'; properties: { 
-    ipHash: string; 
+| { name: 'rate_limit_exceeded'; properties: {
+    ipHash: string;
     retryAfter: number;
     endpoint: string;
   } }
-| { name: 'rate_limit_warning'; properties: { 
+| { name: 'rate_limit_warning'; properties: {
     remaining: number;  // Track when user approaches limit
   } }
 ```

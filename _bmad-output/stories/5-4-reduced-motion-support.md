@@ -76,7 +76,7 @@ export function useReducedMotion(): boolean {
     if (typeof window === 'undefined') return
 
     const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
-    
+
     // Set initial value
     setPrefersReducedMotion(mediaQuery.matches)
 
@@ -103,7 +103,7 @@ export function RevealAnimation({ imageUrl, alt, onRevealComplete }: RevealAnima
   const prefersReducedMotion = useReducedMotion()
   const [isRevealing, setIsRevealing] = useState(false)
   const [showUI, setShowUI] = useState(false)
-  
+
   useEffect(() => {
     if (prefersReducedMotion) {
       // Immediately show everything
@@ -112,20 +112,20 @@ export function RevealAnimation({ imageUrl, alt, onRevealComplete }: RevealAnima
       onRevealComplete?.()
       return
     }
-    
+
     // Normal animation timing
     const startTimeout = setTimeout(() => setIsRevealing(true), 50)
     const uiTimeout = setTimeout(() => {
       setShowUI(true)
       onRevealComplete?.()
     }, 3500)
-    
+
     return () => {
       clearTimeout(startTimeout)
       clearTimeout(uiTimeout)
     }
   }, [prefersReducedMotion, onRevealComplete])
-  
+
   return (
     <div className="relative w-full max-w-md mx-auto">
       <img
@@ -148,7 +148,7 @@ export function RevealAnimation({ imageUrl, alt, onRevealComplete }: RevealAnima
           willChange: 'transform, filter, opacity',
         }}
       />
-      
+
       {/* UI - immediate in reduced motion, delayed otherwise */}
       {showUI && (
         <div className={cn(
@@ -178,7 +178,7 @@ export function RevealAnimation({ imageUrl, alt, onRevealComplete }: RevealAnima
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
-  
+
   /* Allow subtle opacity transitions (they don't cause motion sickness) */
   .safe-transition {
     transition-duration: 150ms !important;
@@ -195,7 +195,7 @@ import { useReducedMotion } from '@/hooks/use-reduced-motion'
 
 export function ProcessingScreen({ stage, progress }: ProcessingScreenProps) {
   const prefersReducedMotion = useReducedMotion()
-  
+
   return (
     <div className="...">
       {/* Spinner - static in reduced motion */}
@@ -204,10 +204,10 @@ export function ProcessingScreen({ stage, progress }: ProcessingScreenProps) {
       ) : (
         <div className="size-16 animate-spin rounded-full border-4 border-coral border-t-transparent" />
       )}
-      
+
       {/* Progress bar - keeps animation (shows real progress) */}
       <div className="w-full bg-charcoal/10 rounded-full h-3">
-        <div 
+        <div
           className={cn(
             "bg-coral h-full rounded-full",
             !prefersReducedMotion && "transition-all duration-500"
@@ -215,7 +215,7 @@ export function ProcessingScreen({ stage, progress }: ProcessingScreenProps) {
           style={{ width: `${progress}%` }}
         />
       </div>
-      
+
       {/* Baby facts - static in reduced motion */}
       <BabyFacts static={prefersReducedMotion} />
     </div>
@@ -233,17 +233,17 @@ interface BabyFactsProps {
 
 export function BabyFacts({ static: isStatic }: BabyFactsProps) {
   const [currentFact, setCurrentFact] = useState(0)
-  
+
   useEffect(() => {
     if (isStatic) return // Don't rotate when static
-    
+
     const interval = setInterval(() => {
       setCurrentFact((prev) => (prev + 1) % babyFacts.length)
     }, 10000)
-    
+
     return () => clearInterval(interval)
   }, [isStatic])
-  
+
   return (
     <div className={cn(
       "mt-8 p-4 bg-rose/30 rounded-xl max-w-md text-center",
@@ -308,11 +308,13 @@ Rendering tab → Emulate CSS media feature → prefers-reduced-motion: reduce
 ### Safe vs Unsafe Animations
 
 **Safe (keep even with reduced motion):**
+
 - Opacity fades (don't cause vestibular issues)
 - Progress bar movement (shows real state)
 - Color changes
 
 **Unsafe (disable with reduced motion):**
+
 - Spinning/rotating
 - Zooming/scaling
 - Blur transitions
@@ -377,10 +379,12 @@ Claude Opus 4.5
 ### File List
 
 **NEW:**
+
 - apps/web/src/hooks/use-reduced-motion.ts
 - apps/web/src/hooks/use-reduced-motion.test.ts
 
 **MODIFIED:**
+
 - apps/web/src/components/reveal/RevealAnimation.tsx
 - apps/web/src/components/processing/ProcessingScreen.tsx
 - apps/web/src/components/processing/BabyFacts.tsx
@@ -395,12 +399,12 @@ Claude Opus 4.5
 
 ### Issues Found & Resolved
 
-| # | Severity | Issue | Resolution |
-|---|----------|-------|------------|
-| 1 | MEDIUM | Missing tests for BabyFacts `static` prop | ✅ Added 3 tests for static mode |
-| 2 | LOW | RevealAnimation UI overlay always had animate-fade-in | ✅ Added conditional class |
-| 3 | LOW | Background overlay had hardcoded transition | ✅ Added prefersReducedMotion check |
-| 4 | LOW | `.safe-transition` class unused | Kept as-is (available for future use) |
+| #   | Severity | Issue                                                 | Resolution                            |
+| --- | -------- | ----------------------------------------------------- | ------------------------------------- |
+| 1   | MEDIUM   | Missing tests for BabyFacts `static` prop             | ✅ Added 3 tests for static mode      |
+| 2   | LOW      | RevealAnimation UI overlay always had animate-fade-in | ✅ Added conditional class            |
+| 3   | LOW      | Background overlay had hardcoded transition           | ✅ Added prefersReducedMotion check   |
+| 4   | LOW      | `.safe-transition` class unused                       | Kept as-is (available for future use) |
 
 ### Action Items
 

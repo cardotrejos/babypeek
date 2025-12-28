@@ -1,27 +1,21 @@
-import { cn } from "@/lib/utils"
+import { cn } from "@/lib/utils";
 
 interface HeroImageProps {
-  className?: string
+  className?: string;
 }
 
 /**
  * HeroImage Component
  * Displays a before/after comparison for the landing page hero section.
- * 
+ *
  * Uses real example images from 4D ultrasounds.
  * Optimized for LCP with eager loading and high fetch priority.
- * 
+ *
  * @see Story 2.2 - Hero Section with Value Proposition
  */
 export function HeroImage({ className }: HeroImageProps) {
   return (
-    <div
-      className={cn(
-        "relative aspect-video rounded-xl overflow-hidden",
-        "shadow-lg",
-        className
-      )}
-    >
+    <div className={cn("relative aspect-video rounded-xl overflow-hidden", "shadow-lg", className)}>
       {/* Main "After" image - the result */}
       <img
         src="/images/examples/result-1.jpeg"
@@ -43,10 +37,8 @@ export function HeroImage({ className }: HeroImageProps) {
 
       {/* Label */}
       <div className="absolute bottom-4 right-4 px-3 py-1.5 bg-coral/90 rounded-lg shadow-md">
-        <span className="text-white font-body text-xs font-medium">
-          Before → After
-        </span>
+        <span className="text-white font-body text-xs font-medium">Before → After</span>
       </div>
     </div>
-  )
+  );
 }

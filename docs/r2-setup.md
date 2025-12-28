@@ -24,6 +24,7 @@
 ## 3. Get Account ID
 
 Your Account ID is in the URL when viewing R2:
+
 ```
 https://dash.cloudflare.com/{ACCOUNT_ID}/r2/...
 ```
@@ -112,13 +113,16 @@ The app will store files in this structure:
 ## Troubleshooting
 
 ### "Storage service not configured"
-- Check that all R2_* environment variables are set
+
+- Check that all R2\_\* environment variables are set
 - Restart the server after adding env vars
 
 ### "CORS error when uploading"
+
 - Verify CORS policy includes your origin
 - Check browser console for specific CORS error
 
 ### "Access Denied"
+
 - Verify API token has Object Read & Write permissions
 - Check the token is scoped to the correct bucket

@@ -97,7 +97,7 @@ import { Schedule, Duration, Effect } from 'effect'
 /**
  * Exponential backoff schedule for Gemini API:
  * - 1st retry after 1s
- * - 2nd retry after 2s  
+ * - 2nd retry after 2s
  * - 3rd retry after 4s
  * - Includes jitter (±10%) to prevent thundering herd
  */
@@ -129,8 +129,8 @@ export class GeminiError extends Data.TaggedError('GeminiError')<{
 
 // Helper function to determine retryability
 export function isRetryableGeminiError(error: GeminiError): boolean {
-  return error.cause === 'RATE_LIMITED' || 
-         error.cause === 'API_ERROR' || 
+  return error.cause === 'RATE_LIMITED' ||
+         error.cause === 'API_ERROR' ||
          error.cause === 'TIMEOUT'
 }
 ```
@@ -150,16 +150,16 @@ export const GeminiServiceLive = Layer.succeed(
       pipe(
         // Core API call
         callGeminiWithEffect(imageUrl, prompt),
-        
+
         // Retry only retryable errors (predicate lives in schedule)
         Effect.retry(geminiRetrySchedule),
-        
+
         // 60s timeout for entire operation including retries
         Effect.timeout('60 seconds'),
         Effect.mapError((e) => {
           if (e._tag === 'TimeoutException') {
-            return new GeminiError({ 
-              cause: 'TIMEOUT', 
+            return new GeminiError({
+              cause: 'TIMEOUT',
               message: 'Operation timed out after 60s including retries',
             })
           }
@@ -216,7 +216,7 @@ Attempt 4 (final): Call Gemini API
 //     → Error returned immediately to caller
 //     → No further attempts
 
-// Example: CONTENT_POLICY fails immediately  
+// Example: CONTENT_POLICY fails immediately
 // Attempt 1: Gemini safety filter blocks output
 //     → Maps to GeminiError { cause: 'CONTENT_POLICY' }
 //     → Error returned immediately
@@ -300,39 +300,39 @@ describe('GeminiService retry', () => {
       generateImage: () => {
         attempts++
         if (attempts < 3) {
-          return Effect.fail(new GeminiError({ 
-            cause: 'RATE_LIMITED', 
+          return Effect.fail(new GeminiError({
+            cause: 'RATE_LIMITED',
             message: 'Too many requests',
-            retryable: true 
+            retryable: true
           }))
         }
         return Effect.succeed(Buffer.from('image'))
       }
     }
-    
+
     const result = await Effect.runPromise(
       mockService.generateImage().pipe(
         Effect.retry(geminiRetrySchedule)
       )
     )
-    
+
     expect(attempts).toBe(3)
     expect(result).toBeDefined()
   })
-  
+
   it('fails immediately on INVALID_IMAGE', async () => {
     let attempts = 0
     const mockService = {
       generateImage: () => {
         attempts++
-        return Effect.fail(new GeminiError({ 
-          cause: 'INVALID_IMAGE', 
+        return Effect.fail(new GeminiError({
+          cause: 'INVALID_IMAGE',
           message: 'Bad image',
-          retryable: false 
+          retryable: false
         }))
       }
     }
-    
+
     await expect(
       Effect.runPromise(
         mockService.generateImage().pipe(
@@ -343,7 +343,7 @@ describe('GeminiService retry', () => {
         )
       )
     ).rejects.toThrow()
-    
+
     expect(attempts).toBe(1) // No retries
   })
 })
@@ -413,7 +413,7 @@ N/A - No blocking issues encountered
   - All acceptance criteria satisfied
 - 2025-12-21: Code Review Fixes (7 issues resolved)
   - [HIGH] Rewrote retry.test.ts to actually test geminiRetrySchedule with predicate
-  - [HIGH] Added proper tests for geminiRetryScheduleExact  
+  - [HIGH] Added proper tests for geminiRetryScheduleExact
   - [MED] Removed unused quickRetrySchedule dead code
   - [MED] Fixed attemptNumber race condition using Effect.Ref
   - [MED] Fixed mock services to properly require PostHogService

@@ -1,11 +1,11 @@
-import * as Sentry from "@sentry/react"
+import * as Sentry from "@sentry/react";
 
 // Sentry configuration
-const SENTRY_DSN = import.meta.env.VITE_SENTRY_DSN
-const ENVIRONMENT = import.meta.env.MODE
+const SENTRY_DSN = import.meta.env.VITE_SENTRY_DSN;
+const ENVIRONMENT = import.meta.env.MODE;
 
 // Initialize Sentry only once
-let isInitialized = false
+let isInitialized = false;
 
 /**
  * Initialize Sentry error tracking
@@ -14,15 +14,15 @@ let isInitialized = false
 export function initSentry() {
   if (isInitialized || typeof window === "undefined" || !SENTRY_DSN) {
     if (import.meta.env.DEV && !SENTRY_DSN) {
-      console.log("🛡️ Sentry not configured (VITE_SENTRY_DSN missing)")
+      console.log("🛡️ Sentry not configured (VITE_SENTRY_DSN missing)");
     }
-    return
+    return;
   }
 
   Sentry.init({
     dsn: SENTRY_DSN,
     environment: ENVIRONMENT,
-    
+
     // Performance monitoring
     integrations: [
       Sentry.browserTracingIntegration(),
@@ -31,32 +31,29 @@ export function initSentry() {
         blockAllMedia: true, // Privacy: block media
       }),
     ],
-    
+
     // Sample rates
     tracesSampleRate: ENVIRONMENT === "production" ? 0.1 : 1.0, // 10% in prod, 100% in dev
     replaysSessionSampleRate: 0.1, // 10% of sessions
     replaysOnErrorSampleRate: 1.0, // 100% on errors
-    
+
     // Filter out PII before sending
     beforeSend(event) {
       // Remove email from user context
       if (event.user?.email) {
-        delete event.user.email
+        delete event.user.email;
       }
-      return event
+      return event;
     },
-    
-    // Ignore common browser errors
-    ignoreErrors: [
-      "ResizeObserver loop limit exceeded",
-      "Non-Error promise rejection captured",
-    ],
-  })
 
-  isInitialized = true
-  
+    // Ignore common browser errors
+    ignoreErrors: ["ResizeObserver loop limit exceeded", "Non-Error promise rejection captured"],
+  });
+
+  isInitialized = true;
+
   if (import.meta.env.DEV) {
-    console.log("🛡️ Sentry initialized")
+    console.log("🛡️ Sentry initialized");
   }
 }
 
@@ -65,7 +62,7 @@ export function initSentry() {
  * Call this when a session is created
  */
 export function setSessionContext(sessionToken: string) {
-  Sentry.setUser({ id: sessionToken })
+  Sentry.setUser({ id: sessionToken });
 }
 
 /**
@@ -73,7 +70,7 @@ export function setSessionContext(sessionToken: string) {
  * Call this when session ends or user resets
  */
 export function clearSessionContext() {
-  Sentry.setUser(null)
+  Sentry.setUser(null);
 }
 
 /**
@@ -82,40 +79,34 @@ export function clearSessionContext() {
 export function addBreadcrumb(
   message: string,
   category: string = "user-action",
-  data?: Record<string, unknown>
+  data?: Record<string, unknown>,
 ) {
   Sentry.addBreadcrumb({
     message,
     category,
     data,
     level: "info",
-  })
+  });
 }
 
 /**
  * Capture an exception with optional context
  */
-export function captureException(
-  error: Error,
-  context?: Record<string, unknown>
-) {
+export function captureException(error: Error, context?: Record<string, unknown>) {
   Sentry.captureException(error, {
     extra: context,
-  })
+  });
 }
 
 /**
  * Capture a message (for non-error events)
  */
-export function captureMessage(
-  message: string,
-  level: Sentry.SeverityLevel = "info"
-) {
-  Sentry.captureMessage(message, level)
+export function captureMessage(message: string, level: Sentry.SeverityLevel = "info") {
+  Sentry.captureMessage(message, level);
 }
 
 // Check if Sentry is configured
-export const isSentryConfigured = () => !!SENTRY_DSN
+export const isSentryConfigured = () => !!SENTRY_DSN;
 
 // Re-export Sentry for direct access if needed
-export { Sentry }
+export { Sentry };

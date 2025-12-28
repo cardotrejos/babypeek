@@ -17,13 +17,13 @@ So that **code is automatically deployed on merge to main**.
 
 ## Acceptance Criteria
 
-| # | Criterion | Test |
-|---|-----------|------|
-| AC1 | PR to main triggers CI checks | Open PR → GitHub Actions runs |
-| AC2 | Vercel deploys to production on merge to main | Merge PR → production updated |
-| AC3 | Preview deployments created for PRs | Open PR → preview URL generated |
-| AC4 | Build failures block deployment | TypeScript error → deploy blocked |
-| AC5 | Environment variables synced from Vercel | Vercel env vars available in builds |
+| #   | Criterion                                     | Test                                |
+| --- | --------------------------------------------- | ----------------------------------- |
+| AC1 | PR to main triggers CI checks                 | Open PR → GitHub Actions runs       |
+| AC2 | Vercel deploys to production on merge to main | Merge PR → production updated       |
+| AC3 | Preview deployments created for PRs           | Open PR → preview URL generated     |
+| AC4 | Build failures block deployment               | TypeScript error → deploy blocked   |
+| AC5 | Environment variables synced from Vercel      | Vercel env vars available in builds |
 
 ---
 
@@ -93,7 +93,7 @@ env:
 jobs:
   ci:
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -141,6 +141,7 @@ jobs:
 ### Environment Variables in Vercel
 
 **Required for Production:**
+
 ```
 DATABASE_URL=postgresql://...
 R2_ACCOUNT_ID=...
@@ -152,6 +153,7 @@ NODE_ENV=production
 ```
 
 **Required for Preview:**
+
 ```
 DATABASE_URL=postgresql://...-preview  # Branch database
 CORS_ORIGIN=https://*.vercel.app
@@ -171,6 +173,7 @@ TURBO_TEAM=your-team
 ### Branch Protection Rules
 
 **Recommended settings for `main`:**
+
 - ✅ Require pull request reviews before merging
 - ✅ Require status checks to pass (select CI workflow)
 - ✅ Require branches to be up to date
@@ -179,6 +182,7 @@ TURBO_TEAM=your-team
 ### Vercel Project Settings
 
 **Build & Development Settings:**
+
 - Framework Preset: Other
 - Build Command: `bun run build`
 - Output Directory: `apps/web/dist`
@@ -191,19 +195,21 @@ TURBO_TEAM=your-team
 ### Previous Story Learnings
 
 **From Story 1.4:**
+
 - Environment variables defined in env.ts
 - `.env.example` documents all required variables
 
 ### File Locations
 
-| File | Purpose |
-|------|---------|
-| `.github/workflows/ci.yml` | NEW: CI pipeline |
-| `vercel.json` | NEW: Vercel configuration |
+| File                       | Purpose                   |
+| -------------------------- | ------------------------- |
+| `.github/workflows/ci.yml` | NEW: CI pipeline          |
+| `vercel.json`              | NEW: Vercel configuration |
 
 ### Testing Notes
 
 **Test Pipeline:**
+
 1. Create branch `test/ci-pipeline`
 2. Make small change (add comment)
 3. Open PR to main
@@ -213,6 +219,7 @@ TURBO_TEAM=your-team
 7. Verify production deployment
 
 **Test Failure Case:**
+
 1. Introduce TypeScript error
 2. Push to PR
 3. Verify CI fails
@@ -242,17 +249,17 @@ N/A
 
 ### File List
 
-| File | Action |
-|------|--------|
+| File                       | Action  |
+| -------------------------- | ------- |
 | `.github/workflows/ci.yml` | Created |
-| `vercel.json` | Created |
+| `vercel.json`              | Created |
 
 ---
 
 ## Change Log
 
-| Date | Change |
-|------|--------|
+| Date       | Change                                   |
+| ---------- | ---------------------------------------- |
 | 2024-12-20 | Story created with comprehensive context |
 
 ---

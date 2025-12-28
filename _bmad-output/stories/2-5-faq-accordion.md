@@ -26,6 +26,7 @@ So that **I understand how the service works before uploading**.
 - Keyboard accessible per WCAG requirements
 
 **Out of Scope:**
+
 - Trust signals section (Story 2.4 - DONE)
 - SEO optimization (Story 2.6)
 - CMS/admin interface for FAQ management
@@ -35,28 +36,28 @@ So that **I understand how the service works before uploading**.
 
 ## Acceptance Criteria
 
-| # | Criterion | Test |
-|---|-----------|------|
-| AC1 | FAQ section displays expandable FAQ items | Visual check - accordion items visible and expandable |
-| AC2 | FAQs cover: how it works, pricing, privacy, quality | Content review - all topics present |
-| AC3 | Only one FAQ is expanded at a time | Interaction test - expanding one collapses others |
-| AC4 | FAQs are keyboard accessible | Tab navigation works, Enter/Space toggles |
-| AC5 | Section is visible below trust signals when scrolling | Scroll test - section appears after trust section |
-| AC6 | Section renders correctly on mobile viewports | Test on 375px, 390px, 360px viewports |
-| AC7 | Screen reader announces expand/collapse state | VoiceOver test - aria-expanded announced |
+| #   | Criterion                                             | Test                                                  |
+| --- | ----------------------------------------------------- | ----------------------------------------------------- |
+| AC1 | FAQ section displays expandable FAQ items             | Visual check - accordion items visible and expandable |
+| AC2 | FAQs cover: how it works, pricing, privacy, quality   | Content review - all topics present                   |
+| AC3 | Only one FAQ is expanded at a time                    | Interaction test - expanding one collapses others     |
+| AC4 | FAQs are keyboard accessible                          | Tab navigation works, Enter/Space toggles             |
+| AC5 | Section is visible below trust signals when scrolling | Scroll test - section appears after trust section     |
+| AC6 | Section renders correctly on mobile viewports         | Test on 375px, 390px, 360px viewports                 |
+| AC7 | Screen reader announces expand/collapse state         | VoiceOver test - aria-expanded announced              |
 
 ---
 
 ## Dependencies
 
-| Dependency | Status | Notes |
-|------------|--------|-------|
-| Story 2.1 Layout | **DONE** | LandingLayout, design tokens, responsive container ready |
-| Story 2.2 Hero | **DONE** | Hero section complete |
-| Story 2.3 Gallery | **DONE** | Gallery section complete |
-| Story 2.4 Trust Signals | **DONE** | Trust section complete, FAQ placeholder exists |
-| shadcn/ui Accordion | **READY** | Use shadcn/ui accordion component (already available) |
-| Design tokens | **READY** | `bg-cream`, `text-charcoal`, `text-coral` available |
+| Dependency              | Status    | Notes                                                    |
+| ----------------------- | --------- | -------------------------------------------------------- |
+| Story 2.1 Layout        | **DONE**  | LandingLayout, design tokens, responsive container ready |
+| Story 2.2 Hero          | **DONE**  | Hero section complete                                    |
+| Story 2.3 Gallery       | **DONE**  | Gallery section complete                                 |
+| Story 2.4 Trust Signals | **DONE**  | Trust section complete, FAQ placeholder exists           |
+| shadcn/ui Accordion     | **READY** | Use shadcn/ui accordion component (already available)    |
+| Design tokens           | **READY** | `bg-cream`, `text-charcoal`, `text-coral` available      |
 
 ---
 
@@ -128,12 +129,14 @@ So that **I understand how the service works before uploading**.
 ### Architecture Requirements
 
 **From `architecture.md`:**
+
 - Frontend: TanStack Start + React + Tailwind + shadcn/ui
 - Bundle size target: <150KB initial (use shadcn/ui accordion, already tree-shaken)
 - Touch targets: 48px minimum (accordion triggers)
 - WCAG 2.1 Level AA compliance
 
 **Stack Already Configured (from Stories 2.1-2.4):**
+
 - TanStack Start with Vite
 - Tailwind CSS with shadcn/ui (base-lyra style)
 - Component aliases: `@/components`, `@/lib/utils`
@@ -145,6 +148,7 @@ So that **I understand how the service works before uploading**.
 **From `ux-design-specification.md`:**
 
 **FAQ Section Purpose:**
+
 - Answer common questions before upload
 - Reduce friction/objections
 - Build confidence in service
@@ -156,6 +160,7 @@ So that **I understand how the service works before uploading**.
 | FAQ | Warm, helpful, conversational |
 
 **Design System Colors:**
+
 ```css
 --color-cream: #FDF8F5;      /* Background */
 --color-charcoal: #2D2A26;   /* Primary text */
@@ -170,12 +175,14 @@ So that **I understand how the service works before uploading**.
 **FR-7.5:** FAQ section - **Should**
 
 **Story 2.5 Requirements (from epics.md):**
+
 - Expandable FAQ items
 - FAQs cover: how it works, pricing, privacy, quality
 - Only one FAQ expanded at a time
 - Keyboard accessible
 
 **Pricing Information (for FAQ content):**
+
 - Standard: $9.99
 - Premium: $14.99 (future - mention base price for now)
 
@@ -184,6 +191,7 @@ So that **I understand how the service works before uploading**.
 **Note:** shadcn/ui now uses `@base-ui/react/accordion` instead of Radix UI.
 
 **Component Structure:**
+
 ```typescript
 import {
   Accordion,
@@ -203,12 +211,14 @@ import {
 ```
 
 **Key Props (base-ui API):**
+
 - `multiple={false}` - Only one item open at a time (DEFAULT - satisfies AC3)
 - `multiple={true}` - Allow multiple items open simultaneously
 - `defaultValue={[0]}` - Array of initially open item values
 - `value` / `onValueChange` - Controlled mode
 
 **Built-in Accessibility:**
+
 - `aria-expanded` automatically managed
 - Keyboard navigation: Tab focuses, Enter/Space toggles, Arrow keys navigate
 - `loopFocus={true}` by default - keyboard loops back to first item
@@ -216,16 +226,17 @@ import {
 
 ### File Locations
 
-| File | Purpose |
-|------|---------|
-| `apps/web/src/components/ui/accordion.tsx` | CHECK/ADD: shadcn/ui accordion component |
+| File                                              | Purpose                                  |
+| ------------------------------------------------- | ---------------------------------------- |
+| `apps/web/src/components/ui/accordion.tsx`        | CHECK/ADD: shadcn/ui accordion component |
 | `apps/web/src/components/landing/faq-section.tsx` | NEW: FaqSection container with accordion |
-| `apps/web/src/components/landing/index.ts` | MODIFY: Export FaqSection |
-| `apps/web/src/routes/index.tsx` | MODIFY: Replace FAQ placeholder |
+| `apps/web/src/components/landing/index.ts`        | MODIFY: Export FaqSection                |
+| `apps/web/src/routes/index.tsx`                   | MODIFY: Replace FAQ placeholder          |
 
 ### Project Structure Notes
 
 **Current Structure (from Stories 2.1-2.4):**
+
 ```
 apps/web/src/
 ├── components/
@@ -247,6 +258,7 @@ apps/web/src/
 ```
 
 **Target Structure for Story 2.5:**
+
 ```
 apps/web/src/
 ├── components/
@@ -268,6 +280,7 @@ apps/web/src/
 ### FaqSection Component Pattern
 
 **Actual Implementation (base-ui API):**
+
 ```typescript
 // apps/web/src/components/landing/faq-section.tsx
 import { cn } from "@/lib/utils"
@@ -297,7 +310,7 @@ export function FaqSection({ id, className }: FaqSectionProps) {
       <h2 className="font-display text-2xl text-charcoal text-center mb-8">
         Questions? We've got answers
       </h2>
-      
+
       {/* base-ui: multiple={false} is default, so only one open at a time */}
       <Accordion className="w-full">
         {faqItems.map((item, index) => (
@@ -326,12 +339,14 @@ export function FaqSection({ id, className }: FaqSectionProps) {
 ### FAQ Content Guidelines
 
 **Warm Copy Tone (DO):**
+
 - "Simply upload your 4D ultrasound..."
 - "Your privacy matters to us"
 - "A small price for such a special keepsake"
 - "You can preview for free!"
 
 **Avoid (DON'T):**
+
 - "The system processes your image..."
 - "Data is retained per our policy..."
 - "Terms and conditions apply"
@@ -340,6 +355,7 @@ export function FaqSection({ id, className }: FaqSectionProps) {
 ### Styling Customization
 
 **AccordionTrigger Styling:**
+
 ```typescript
 <AccordionTrigger className={cn(
   "text-left font-semibold text-charcoal",
@@ -350,11 +366,13 @@ export function FaqSection({ id, className }: FaqSectionProps) {
 ```
 
 **AccordionContent Styling:**
+
 ```typescript
 <AccordionContent className="text-warm-gray leading-relaxed">
 ```
 
 **AccordionItem Styling:**
+
 ```typescript
 <AccordionItem className="border-b border-warm-gray/20">
 ```
@@ -362,6 +380,7 @@ export function FaqSection({ id, className }: FaqSectionProps) {
 ### Previous Story Learnings (from Stories 2.1-2.4)
 
 **What worked well:**
+
 1. Inline subcomponents (GalleryCard, TrustBadge pattern)
 2. Barrel exports in `components/landing/index.ts`
 3. `id` prop pattern for anchor linking (used in TrustSignals)
@@ -370,12 +389,14 @@ export function FaqSection({ id, className }: FaqSectionProps) {
 6. Inline SVG icons for minimal bundle impact
 
 **Issues fixed in previous code reviews:**
+
 1. Touch targets: Ensure 48px minimum height on interactive elements
 2. Focus-visible styles: Always add on interactive elements
 3. Double section wrapper: Use `id` prop pattern, avoid wrapping component that has section
 4. Manual test documentation: Add explicit testing notes in Task subtasks
 
 **Code Review Patterns to Follow:**
+
 - Document all files in File Locations table
 - Update barrel exports immediately
 - Add aria-labels for accessibility where needed
@@ -398,11 +419,13 @@ import { FaqSection } from "@/components/landing"
 ### Responsive Design
 
 **Mobile (375px):**
+
 - Full-width accordion
 - Touch-friendly trigger height (48px+)
 - Adequate padding for readability
 
 **Tablet/Desktop (sm: 640px+):**
+
 - Same accordion layout
 - More breathing room
 - Centered within container (max-width from LandingLayout)
@@ -410,6 +433,7 @@ import { FaqSection } from "@/components/landing"
 ### Testing Checklist
 
 **Manual Testing:**
+
 1. Open in Chrome DevTools mobile emulation (375px, 390px, 360px)
 2. Scroll to FAQ section (below trust signals)
 3. Click/tap each FAQ item - verify expand/collapse
@@ -419,6 +443,7 @@ import { FaqSection } from "@/components/landing"
 7. Run Lighthouse accessibility audit
 
 **Devices to Test:**
+
 - iPhone SE (375px) - smallest common mobile
 - iPhone 14 (390px) - typical iPhone
 - Samsung Galaxy (360px) - smallest Android
@@ -433,6 +458,7 @@ bunx --bun shadcn@latest add accordion
 ```
 
 This adds:
+
 - `apps/web/src/components/ui/accordion.tsx`
 - Radix UI accordion dependency (via shadcn)
 
@@ -464,22 +490,22 @@ Claude Sonnet 4 (Anthropic)
 
 ### File List
 
-| File | Action |
-|------|--------|
-| `apps/web/src/components/ui/accordion.tsx` | Created - shadcn/ui accordion (base-ui) |
-| `apps/web/src/components/landing/faq-section.tsx` | Created - FaqSection component with 4 FAQs |
-| `apps/web/src/components/landing/index.ts` | Modified - Added FaqSection export |
-| `apps/web/src/routes/index.tsx` | Modified - Import FaqSection, add to landing page |
+| File                                              | Action                                            |
+| ------------------------------------------------- | ------------------------------------------------- |
+| `apps/web/src/components/ui/accordion.tsx`        | Created - shadcn/ui accordion (base-ui)           |
+| `apps/web/src/components/landing/faq-section.tsx` | Created - FaqSection component with 4 FAQs        |
+| `apps/web/src/components/landing/index.ts`        | Modified - Added FaqSection export                |
+| `apps/web/src/routes/index.tsx`                   | Modified - Import FaqSection, add to landing page |
 
 ---
 
 ## Change Log
 
-| Date | Change |
-|------|--------|
-| 2024-12-20 | Story created via create-story workflow with comprehensive context from epics, PRD, architecture, UX design, and previous story learnings |
+| Date       | Change                                                                                                                                                     |
+| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2024-12-20 | Story created via create-story workflow with comprehensive context from epics, PRD, architecture, UX design, and previous story learnings                  |
 | 2024-12-20 | Implementation complete: shadcn/ui accordion installed, FaqSection component created, 4 FAQs with warm copy, integrated into landing page. Status → review |
-| 2024-12-20 | Code review: Updated Dev Notes to reflect base-ui API (shadcn/ui now uses @base-ui/react instead of Radix). All ACs pass. |
+| 2024-12-20 | Code review: Updated Dev Notes to reflect base-ui API (shadcn/ui now uses @base-ui/react instead of Radix). All ACs pass.                                  |
 
 ---
 

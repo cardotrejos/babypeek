@@ -79,6 +79,7 @@ so that **I can get the full-resolution image**.
 ### Existing Code to Leverage
 
 **StripeService already exists** at `packages/api/src/services/StripeService.ts`:
+
 ```typescript
 createCheckoutSession: (params: CheckoutSessionParams) => Effect.Effect<Stripe.Checkout.Session, PaymentError>
 
@@ -92,10 +93,12 @@ interface CheckoutSessionParams {
 ```
 
 **Environment configuration** at `packages/api/src/lib/env.ts`:
+
 - PRODUCT_PRICE_CENTS - price in cents (999 for $9.99)
 - STRIPE_SECRET_KEY - Stripe API key
 
 **Database schema** at `packages/db/src/schema/index.ts`:
+
 - purchases table already defined with uploadId, stripeSessionId, amount, status, isGift
 
 ### API Endpoint Design
@@ -212,6 +215,7 @@ None - implementation proceeded without issues.
 ### File List
 
 **New Files:**
+
 - packages/api/src/services/PurchaseService.ts
 - packages/api/src/services/PurchaseService.test.ts
 - packages/api/src/routes/checkout.ts
@@ -221,13 +225,14 @@ None - implementation proceeded without issues.
 - apps/web/src/routes/checkout-success.tsx
 
 **Modified Files:**
+
 - packages/api/src/index.ts (added checkoutRoutes export)
 - packages/api/src/services/index.ts (added PurchaseService export)
 - apps/server/src/index.ts (mounted checkout route)
 - apps/web/src/components/reveal/RevealUI.tsx (integrated CheckoutButton)
 - apps/web/src/components/reveal/RevealUI.test.tsx (updated tests for new props)
 - apps/web/src/routes/result.$resultId.tsx (pass uploadId to RevealUI)
-- _bmad-output/stories/sprint-status.yaml (status updated to review)
+- \_bmad-output/stories/sprint-status.yaml (status updated to review)
 
 ## Senior Developer Review (AI)
 
@@ -247,7 +252,7 @@ None - implementation proceeded without issues.
 - [x] **[LOW]** console.log in production code - FIXED: Removed
 - [ ] **[MEDIUM]** checkout-success doesn't verify payment - Deferred to Story 6.3 (webhook handler)
 - [ ] **[LOW]** Loading state doesn't reset on redirect failure - Minor edge case
-- [ ] **[LOW]** Missing error handling for missing session_id - Minor edge case  
+- [ ] **[LOW]** Missing error handling for missing session_id - Minor edge case
 - [ ] **[LOW]** Download button is non-functional - By design for Story 7.x
 
 ### Fixes Applied
@@ -261,7 +266,7 @@ None - implementation proceeded without issues.
 
 ## Change Log
 
-| Date | Change |
-|------|--------|
-| 2025-12-21 | Story implementation complete - Stripe Checkout integration with PurchaseService, CheckoutButton, success page, and analytics |
+| Date       | Change                                                                                                                                        |
+| ---------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2025-12-21 | Story implementation complete - Stripe Checkout integration with PurchaseService, CheckoutButton, success page, and analytics                 |
 | 2025-12-21 | Code review: Fixed 6 issues (2 High, 3 Medium, 1 Low). Added authentication, rate limiting, correct cancel URL. All tests passing (30 total). |

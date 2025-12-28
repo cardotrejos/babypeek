@@ -1,7 +1,7 @@
-import { XIcon } from "lucide-react"
+import { XIcon } from "lucide-react";
 
-import { Button } from "@/components/ui/button"
-import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 // =============================================================================
 // Types
@@ -9,15 +9,15 @@ import { cn } from "@/lib/utils"
 
 export interface UploadProgressProps {
   /** Upload progress percentage (0-100) */
-  progress: number
+  progress: number;
   /** Whether to show the cancel button */
-  showCancel?: boolean
+  showCancel?: boolean;
   /** Called when cancel button is clicked */
-  onCancel?: () => void
+  onCancel?: () => void;
   /** Optional className for the container */
-  className?: string
+  className?: string;
   /** Optional status message */
-  statusMessage?: string
+  statusMessage?: string;
 }
 
 // =============================================================================
@@ -32,21 +32,16 @@ export function UploadProgress({
   statusMessage,
 }: UploadProgressProps) {
   // Clamp progress between 0 and 100
-  const clampedProgress = Math.min(100, Math.max(0, progress))
-  
+  const clampedProgress = Math.min(100, Math.max(0, progress));
+
   // Determine status message
   const message =
     statusMessage ??
-    (clampedProgress < 100
-      ? `Uploading... ${clampedProgress}%`
-      : "Upload complete!")
+    (clampedProgress < 100 ? `Uploading... ${clampedProgress}%` : "Upload complete!");
 
   return (
     <div
-      className={cn(
-        "flex flex-col items-center gap-4 rounded-[12px] bg-cream p-6",
-        className
-      )}
+      className={cn("flex flex-col items-center gap-4 rounded-[12px] bg-cream p-6", className)}
       role="progressbar"
       aria-valuenow={clampedProgress}
       aria-valuemin={0}
@@ -59,11 +54,11 @@ export function UploadProgress({
         <div
           className={cn(
             "h-full rounded-full transition-all duration-300 ease-out",
-            clampedProgress < 100 ? "bg-coral" : "bg-green-500"
+            clampedProgress < 100 ? "bg-coral" : "bg-green-500",
           )}
           style={{ width: `${clampedProgress}%` }}
         />
-        
+
         {/* Animated shimmer effect during upload */}
         {clampedProgress < 100 && (
           <div
@@ -78,7 +73,7 @@ export function UploadProgress({
       {/* Status text */}
       <div className="flex w-full items-center justify-between">
         <p className="text-sm font-medium text-charcoal">{message}</p>
-        
+
         {/* Screen reader announcement */}
         <span className="sr-only" aria-live="polite">
           Upload progress: {clampedProgress} percent
@@ -100,5 +95,5 @@ export function UploadProgress({
         )}
       </div>
     </div>
-  )
+  );
 }

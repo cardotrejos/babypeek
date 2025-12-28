@@ -1,16 +1,18 @@
-import { useState, useEffect } from "react"
-import { cn } from "@/lib/utils"
-import { revealAnimation } from "./animation-config"
-import { useReducedMotion } from "@/hooks/use-reduced-motion"
+import { useState, useEffect } from "react";
+import { cn } from "@/lib/utils";
+import { revealAnimation } from "./animation-config";
+import { useReducedMotion } from "@/hooks/use-reduced-motion";
 
 interface RevealAnimationProps {
-  imageUrl: string
-  alt?: string
-  onRevealComplete?: () => void
+  imageUrl: string;
+  alt?: string;
+  onRevealComplete?: () => void;
   /** External control for UI visibility (for testing/parent control) */
-  showUI?: boolean
-  className?: string
-  children?: React.ReactNode
+  showUI?: boolean;
+  /** Disable image protection (allow right-click, drag) - for paid users */
+  allowImageSave?: boolean;
+  className?: string;
+  children?: React.ReactNode;
 }
 
 /**
@@ -32,53 +34,54 @@ export function RevealAnimation({
   alt = "Your baby's portrait",
   onRevealComplete,
   showUI: externalShowUI,
+  allowImageSave = false,
   className,
   children,
 }: RevealAnimationProps) {
-  const [isRevealing, setIsRevealing] = useState(false)
-  const [internalShowUI, setInternalShowUI] = useState(false)
-  const prefersReducedMotion = useReducedMotion()
+  const [isRevealing, setIsRevealing] = useState(false);
+  const [internalShowUI, setInternalShowUI] = useState(false);
+  const prefersReducedMotion = useReducedMotion();
 
   // Use external showUI if provided, otherwise use internal state
-  const showUI = externalShowUI ?? internalShowUI
+  const showUI = externalShowUI ?? internalShowUI;
 
   // Start animation on mount with small delay for DOM readiness
   useEffect(() => {
     // If user prefers reduced motion, skip animation and show UI immediately
     if (prefersReducedMotion) {
-      setIsRevealing(true)
+      setIsRevealing(true);
       if (externalShowUI === undefined) {
-        setInternalShowUI(true)
-        onRevealComplete?.()
+        setInternalShowUI(true);
+        onRevealComplete?.();
       }
-      return
+      return;
     }
 
     const startTimeout = setTimeout(() => {
-      setIsRevealing(true)
-    }, revealAnimation.startDelay)
+      setIsRevealing(true);
+    }, revealAnimation.startDelay);
 
     // Show UI after full reveal delay (only if not externally controlled)
-    let uiTimeout: NodeJS.Timeout | undefined
+    let uiTimeout: NodeJS.Timeout | undefined;
     if (externalShowUI === undefined) {
       uiTimeout = setTimeout(() => {
-        setInternalShowUI(true)
-        onRevealComplete?.()
-      }, revealAnimation.uiDelay)
+        setInternalShowUI(true);
+        onRevealComplete?.();
+      }, revealAnimation.uiDelay);
     }
 
     return () => {
-      clearTimeout(startTimeout)
-      if (uiTimeout) clearTimeout(uiTimeout)
-    }
-  }, [onRevealComplete, externalShowUI, prefersReducedMotion])
+      clearTimeout(startTimeout);
+      if (uiTimeout) clearTimeout(uiTimeout);
+    };
+  }, [onRevealComplete, externalShowUI, prefersReducedMotion]);
 
   // Call onRevealComplete when externally controlled showUI becomes true
   useEffect(() => {
     if (externalShowUI === true && onRevealComplete) {
-      onRevealComplete()
+      onRevealComplete();
     }
-  }, [externalShowUI, onRevealComplete])
+  }, [externalShowUI, onRevealComplete]);
 
   // Animation styles computed based on state
   // Skip transitions for users who prefer reduced motion
@@ -99,7 +102,7 @@ export function RevealAnimation({
         filter: `blur(${revealAnimation.blur.from}px)`,
         transform: `scale(${revealAnimation.scale.from})`,
         opacity: revealAnimation.opacity.from,
-      }
+      };
 
   return (
     <div
@@ -112,13 +115,17 @@ export function RevealAnimation({
           "fixed inset-0 bg-black/20 -z-10",
           // Skip transition for reduced motion (5.4)
           !prefersReducedMotion && "transition-opacity duration-300",
-          isRevealing ? "opacity-100" : "opacity-0"
+          isRevealing ? "opacity-100" : "opacity-0",
         )}
         aria-hidden="true"
       />
 
       {/* Image with reveal animation */}
-      <div className="relative">
+      <div
+        className="relative"
+        // Prevent right-click context menu on container
+        onContextMenu={(e) => !allowImageSave && e.preventDefault()}
+      >
         <img
           src={imageUrl}
           alt={alt}
@@ -127,9 +134,14 @@ export function RevealAnimation({
             // GPU acceleration via will-change (AC-7)
             "will-change-[transform,filter,opacity]",
             // State classes for testing
-            isRevealing ? "reveal-active" : "reveal-initial"
+            isRevealing ? "reveal-active" : "reveal-initial",
+            // Prevent selection/highlighting
+            !allowImageSave && "select-none",
           )}
           style={animationStyles}
+          // Prevent drag to save
+          draggable={allowImageSave}
+          onDragStart={(e) => !allowImageSave && e.preventDefault()}
         />
       </div>
 
@@ -140,12 +152,12 @@ export function RevealAnimation({
           className={cn(
             "absolute inset-0 flex items-end justify-center p-4 pointer-events-none",
             // Skip fade animation for reduced motion (5.4)
-            !prefersReducedMotion && "animate-fade-in"
+            !prefersReducedMotion && "animate-fade-in",
           )}
         >
           <div className="w-full pointer-events-auto">{children}</div>
         </div>
       )}
     </div>
-  )
+  );
 }

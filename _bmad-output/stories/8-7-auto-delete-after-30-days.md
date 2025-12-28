@@ -98,7 +98,7 @@ export const CleanupServiceLive = Layer.effect(
       cleanupStaleUploads: () =>
         Effect.gen(function* () {
           const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
-          
+
           // Find uploads older than 30 days
           // For purchased uploads, use purchase date instead
           const staleUploads = yield* Effect.promise(() =>
@@ -109,7 +109,7 @@ export const CleanupServiceLive = Layer.effect(
 
           // Filter out recently purchased uploads
           const uploadsToDelete: typeof staleUploads = []
-          
+
           for (const upload of staleUploads) {
             // Check if purchased
             const purchase = yield* Effect.promise(() =>
@@ -221,15 +221,15 @@ const app = new Hono()
 /**
  * POST /api/cron/cleanup
  * Daily cleanup cron job
- * 
+ *
  * Story 8.7: Auto-Delete After 30 Days
- * 
+ *
  * Secured with CRON_SECRET header to prevent unauthorized access.
  */
 app.post("/cleanup", async (c) => {
   // Verify cron secret
   const cronSecret = c.req.header("x-cron-secret")
-  
+
   if (!cronSecret || cronSecret !== env.CRON_SECRET) {
     return c.json({ error: "Unauthorized" }, 401)
   }
@@ -282,6 +282,7 @@ export default app
 ### Environment Variable
 
 Add to `.env.example` and Vercel:
+
 ```bash
 CRON_SECRET=your-secure-random-string
 ```
@@ -312,6 +313,7 @@ vercel.json              <- UPDATE: Add cron config
 ### Monitoring & Alerts
 
 Consider adding alerts for:
+
 - Job failures (via Sentry)
 - Unusually high deletion counts
 - R2 errors during cleanup
@@ -333,12 +335,12 @@ if (result.failed > 0) {
 
 ### Retention Policy Summary
 
-| Record Type | Retention |
-|------------|-----------|
-| Unpurchased uploads | 30 days from upload |
-| Purchased uploads | 30 days from purchase |
-| R2 images | Same as upload record |
-| Purchase records | Anonymized (email → "deleted@gdpr.local") |
+| Record Type         | Retention                                 |
+| ------------------- | ----------------------------------------- |
+| Unpurchased uploads | 30 days from upload                       |
+| Purchased uploads   | 30 days from purchase                     |
+| R2 images           | Same as upload record                     |
+| Purchase records    | Anonymized (email → "deleted@gdpr.local") |
 
 ### Dependencies
 
@@ -348,6 +350,7 @@ if (result.failed > 0) {
 ### Parallel Work
 
 Can be developed in parallel with:
+
 - Story 8.6 (Delete Button)
 - Story 8.8 (Expired Handling)
 
@@ -384,11 +387,13 @@ Claude Opus 4.5
 ### File List
 
 **New Files:**
+
 - `packages/api/src/services/CleanupService.ts` - Core cleanup service with retention policy
 - `packages/api/src/routes/cleanup.ts` - Cron endpoint
 - `packages/api/src/routes/cleanup.test.ts` - 22 unit/integration tests
 
 **Modified Files:**
+
 - `packages/api/src/lib/env.ts` - Added `CRON_SECRET` env var
 - `packages/api/src/lib/errors.ts` - Added `CleanupError` type
 - `packages/api/src/services/index.ts` - Exported CleanupService

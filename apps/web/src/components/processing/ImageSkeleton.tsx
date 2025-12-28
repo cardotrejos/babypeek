@@ -1,7 +1,7 @@
-import { cn } from "@/lib/utils"
+import { cn } from "@/lib/utils";
 
 interface ImageSkeletonProps {
-  className?: string
+  className?: string;
 }
 
 /**
@@ -10,12 +10,7 @@ interface ImageSkeletonProps {
  */
 export function ImageSkeleton({ className }: ImageSkeletonProps) {
   return (
-    <div
-      className={cn(
-        "w-full max-w-md aspect-[4/3] rounded-2xl overflow-hidden",
-        className
-      )}
-    >
+    <div className={cn("w-full max-w-md aspect-[4/3] rounded-2xl overflow-hidden", className)}>
       {/* Shimmer effect using gradient animation */}
       <div className="relative w-full h-full bg-charcoal/5">
         <div
@@ -45,5 +40,5 @@ export function ImageSkeleton({ className }: ImageSkeletonProps) {
         </div>
       </div>
     </div>
-  )
+  );
 }

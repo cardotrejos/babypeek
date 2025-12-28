@@ -1,5 +1,5 @@
-import { usePostHog } from "posthog-js/react"
-import { useCallback } from "react"
+import { usePostHog } from "posthog-js/react";
+import { useCallback } from "react";
 
 // =============================================================================
 // Analytics Event Types
@@ -41,35 +41,35 @@ export type AnalyticsEvent =
   | "checkout_completed"
   | "checkout_failed"
   | "download_initiated"
-  | "share_clicked"
+  | "share_clicked";
 
 export interface UploadEventProperties {
-  file_type?: string
-  file_size?: number
-  duration_ms?: number
-  error?: string
-  type?: "file_type" | "file_size"
+  file_type?: string;
+  file_size?: number;
+  duration_ms?: number;
+  error?: string;
+  type?: "file_type" | "file_size";
 }
 
 export interface ProcessingEventProperties {
-  job_id?: string
-  duration_ms?: number
-  stage?: string
-  error?: string
+  job_id?: string;
+  duration_ms?: number;
+  stage?: string;
+  error?: string;
 }
 
 export interface CheckoutEventProperties {
-  price?: number
-  type?: "self" | "gift"
-  error?: string
+  price?: number;
+  type?: "self" | "gift";
+  error?: string;
 }
 
 export interface DownloadEventProperties {
-  purchase_id?: string
+  purchase_id?: string;
 }
 
 export interface ShareEventProperties {
-  platform?: "whatsapp" | "imessage" | "copy_link" | "instagram"
+  platform?: "whatsapp" | "imessage" | "copy_link" | "instagram";
 }
 
 // =============================================================================
@@ -77,28 +77,28 @@ export interface ShareEventProperties {
 // =============================================================================
 
 export interface CompressionStartedProperties {
-  fileSize: number
-  fileSizeMB: number
-  fileType: string
+  fileSize: number;
+  fileSizeMB: number;
+  fileType: string;
 }
 
 export interface CompressionCompletedProperties {
-  durationMs: number
-  originalSize: number
-  compressedSize: number
-  compressionRatio: number
+  durationMs: number;
+  originalSize: number;
+  compressedSize: number;
+  compressionRatio: number;
 }
 
 export interface CompressionSkippedProperties {
-  reason: "under_threshold" | "gif_file" | "already_optimized"
-  fileSize: number
-  fileSizeMB?: number
-  compressionRatio?: number
+  reason: "under_threshold" | "gif_file" | "already_optimized";
+  fileSize: number;
+  fileSizeMB?: number;
+  compressionRatio?: number;
 }
 
 export interface CompressionFailedProperties {
-  errorType: string
-  fileSize: number
+  errorType: string;
+  fileSize: number;
 }
 
 type EventProperties =
@@ -111,14 +111,14 @@ type EventProperties =
   | CompressionCompletedProperties
   | CompressionSkippedProperties
   | CompressionFailedProperties
-  | Record<string, unknown>
+  | Record<string, unknown>;
 
 // =============================================================================
 // Analytics Hook
 // =============================================================================
 
 export function useAnalytics() {
-  const posthog = usePostHog()
+  const posthog = usePostHog();
 
   /**
    * Identify user by session token
@@ -126,27 +126,27 @@ export function useAnalytics() {
    */
   const identify = useCallback(
     (sessionToken: string, properties?: Record<string, unknown>) => {
-      posthog?.identify(sessionToken, properties)
+      posthog?.identify(sessionToken, properties);
     },
-    [posthog]
-  )
+    [posthog],
+  );
 
   /**
    * Reset identity (e.g., when user starts fresh)
    */
   const reset = useCallback(() => {
-    posthog?.reset()
-  }, [posthog])
+    posthog?.reset();
+  }, [posthog]);
 
   /**
    * Track a custom event
    */
   const trackEvent = useCallback(
     (event: AnalyticsEvent | string, properties?: EventProperties) => {
-      posthog?.capture(event, properties)
+      posthog?.capture(event, properties);
     },
-    [posthog]
-  )
+    [posthog],
+  );
 
   // =============================================================================
   // Convenience Methods for Common Events
@@ -154,66 +154,66 @@ export function useAnalytics() {
 
   const trackUploadStarted = useCallback(
     (properties: UploadEventProperties) => {
-      trackEvent("upload_started", properties)
+      trackEvent("upload_started", properties);
     },
-    [trackEvent]
-  )
+    [trackEvent],
+  );
 
   const trackUploadCompleted = useCallback(
     (properties: UploadEventProperties) => {
-      trackEvent("upload_completed", properties)
+      trackEvent("upload_completed", properties);
     },
-    [trackEvent]
-  )
+    [trackEvent],
+  );
 
   const trackUploadFailed = useCallback(
     (error: string, properties?: UploadEventProperties) => {
-      trackEvent("upload_failed", { ...properties, error })
+      trackEvent("upload_failed", { ...properties, error });
     },
-    [trackEvent]
-  )
+    [trackEvent],
+  );
 
   const trackProcessingStarted = useCallback(
     (jobId: string) => {
-      trackEvent("processing_started", { job_id: jobId })
+      trackEvent("processing_started", { job_id: jobId });
     },
-    [trackEvent]
-  )
+    [trackEvent],
+  );
 
   const trackProcessingCompleted = useCallback(
     (jobId: string, durationMs: number) => {
-      trackEvent("processing_completed", { job_id: jobId, duration_ms: durationMs })
+      trackEvent("processing_completed", { job_id: jobId, duration_ms: durationMs });
     },
-    [trackEvent]
-  )
+    [trackEvent],
+  );
 
   const trackRevealViewed = useCallback(
     (jobId: string) => {
-      trackEvent("reveal_viewed", { job_id: jobId })
+      trackEvent("reveal_viewed", { job_id: jobId });
     },
-    [trackEvent]
-  )
+    [trackEvent],
+  );
 
   const trackCheckoutStarted = useCallback(
     (price: number, type: "self" | "gift") => {
-      trackEvent("checkout_started", { price, type })
+      trackEvent("checkout_started", { price, type });
     },
-    [trackEvent]
-  )
+    [trackEvent],
+  );
 
   const trackDownloadInitiated = useCallback(
     (purchaseId: string) => {
-      trackEvent("download_initiated", { purchase_id: purchaseId })
+      trackEvent("download_initiated", { purchase_id: purchaseId });
     },
-    [trackEvent]
-  )
+    [trackEvent],
+  );
 
   const trackShareClicked = useCallback(
     (platform: ShareEventProperties["platform"]) => {
-      trackEvent("share_clicked", { platform })
+      trackEvent("share_clicked", { platform });
     },
-    [trackEvent]
-  )
+    [trackEvent],
+  );
 
   return {
     // Core methods
@@ -230,5 +230,5 @@ export function useAnalytics() {
     trackCheckoutStarted,
     trackDownloadInitiated,
     trackShareClicked,
-  }
+  };
 }

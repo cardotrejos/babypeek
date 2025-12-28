@@ -113,34 +113,34 @@ interface RevealAnimationProps {
 export function RevealAnimation({ imageUrl, alt, onRevealComplete }: RevealAnimationProps) {
   const [isRevealing, setIsRevealing] = useState(false)
   const [showUI, setShowUI] = useState(false)
-  
+
   // Start animation on mount
   useEffect(() => {
     // Small delay to ensure DOM is ready
     const startTimeout = setTimeout(() => setIsRevealing(true), 50)
-    
+
     // Show UI after full reveal
     const uiTimeout = setTimeout(() => {
       setShowUI(true)
       onRevealComplete?.()
     }, 3500)
-    
+
     return () => {
       clearTimeout(startTimeout)
       clearTimeout(uiTimeout)
     }
   }, [onRevealComplete])
-  
+
   return (
     <div className="relative w-full max-w-md mx-auto">
       {/* Dimmed background */}
-      <div 
+      <div
         className={cn(
           "fixed inset-0 bg-black/20 transition-opacity duration-300",
           isRevealing ? "opacity-100" : "opacity-0"
-        )} 
+        )}
       />
-      
+
       {/* Image with reveal animation */}
       <div className="relative">
         <img
@@ -160,7 +160,7 @@ export function RevealAnimation({ imageUrl, alt, onRevealComplete }: RevealAnima
           }}
         />
       </div>
-      
+
       {/* UI Overlay - appears after delay */}
       {showUI && (
         <div className="absolute inset-0 flex items-end justify-center p-4 animate-fade-in">
@@ -194,7 +194,7 @@ export function RevealAnimation({ imageUrl, alt, onRevealComplete }: RevealAnima
 }
 
 .reveal-animation {
-  animation: 
+  animation:
     reveal-blur 2s cubic-bezier(0.33, 1, 0.68, 1) forwards,
     reveal-zoom 2.5s cubic-bezier(0.33, 1, 0.68, 1) forwards,
     reveal-opacity 2s ease-out forwards;
@@ -229,21 +229,21 @@ export function usePreloadImage(url: string | null) {
     }
 
     setIsLoading(true)
-    
+
     const img = new Image()
-    
+
     img.onload = () => {
       setIsLoaded(true)
       setIsLoading(false)
     }
-    
+
     img.onerror = () => {
       setError(new Error('Failed to preload image'))
       setIsLoading(false)
     }
-    
+
     img.src = url
-    
+
     return () => {
       img.onload = null
       img.onerror = null
@@ -270,11 +270,11 @@ export const Route = createFileRoute('/result/$resultId')({
 
 function ResultPage() {
   const { resultId } = Route.useParams()
-  
+
   // Get session from the upload that created this result
   const uploadId = localStorage.getItem(`babypeek-result-upload-${resultId}`)
   const sessionToken = uploadId ? getSession(uploadId) : null
-  
+
   // Fetch result data
   const { data: result, isLoading } = useQuery({
     queryKey: ['result', resultId],
@@ -286,17 +286,17 @@ function ResultPage() {
       return response.json()
     },
   })
-  
+
   // Preload the image
   const { isLoaded: imageLoaded } = usePreloadImage(result?.previewUrl)
-  
+
   if (isLoading || !imageLoaded) {
     return <LoadingScreen />
   }
-  
+
   return (
     <div className="min-h-screen bg-cream flex items-center justify-center p-4">
-      <RevealAnimation 
+      <RevealAnimation
         imageUrl={result.previewUrl}
         alt="Your AI-generated baby portrait"
         onRevealComplete={() => {
@@ -325,25 +325,25 @@ export function RevealUI({ resultId, onPurchase, onShare, onDownloadPreview }: R
   return (
     <div className="bg-white/95 backdrop-blur-sm rounded-2xl p-6 shadow-xl space-y-4">
       {/* Primary CTA */}
-      <Button 
-        size="lg" 
+      <Button
+        size="lg"
         className="w-full bg-coral hover:bg-coral/90 text-white font-body text-lg py-6"
         onClick={onPurchase}
       >
         Get HD Version - $9.99
       </Button>
-      
+
       {/* Secondary actions */}
       <div className="flex gap-3">
-        <Button 
-          variant="outline" 
+        <Button
+          variant="outline"
           className="flex-1"
           onClick={onShare}
         >
           Share
         </Button>
-        <Button 
-          variant="ghost" 
+        <Button
+          variant="ghost"
           className="flex-1 text-warm-gray"
           onClick={onDownloadPreview}
         >
@@ -361,7 +361,7 @@ export function RevealUI({ resultId, onPurchase, onShare, onDownloadPreview }: R
 // GPU-accelerated properties only
 const gpuAcceleratedStyles = {
   transform: 'scale(...)',  // ✅ Composited
-  opacity: '...',           // ✅ Composited  
+  opacity: '...',           // ✅ Composited
   filter: 'blur(...)',      // ✅ Composited (in modern browsers)
 }
 
@@ -383,6 +383,7 @@ const avoidDuringAnimation = {
 ### Emotional Design (from UX Spec)
 
 **Reveal Sequence:**
+
 1. Screen dims slightly (0.3s)
 2. Image appears blurred (instant)
 3. Blur slowly clears (2s ease-out)
@@ -391,6 +392,7 @@ const avoidDuringAnimation = {
 6. UI fades in (0.5s)
 
 **Key Principles:**
+
 - Peak-End Rule: Reveal is the peak moment
 - Let the image speak - minimal UI during reveal
 - Surprise creates memory - exceed expectations
@@ -473,6 +475,7 @@ None - Implementation proceeded smoothly without issues.
 - All 373 tests passing (after code review fixes)
 
 **Code Review Fixes Applied:**
+
 - Changed result page to use existing /api/status endpoint instead of non-existent /api/result
 - Added image preloading at 80% progress in processing page
 - Fixed cross-origin download using fetch+blob pattern
@@ -500,6 +503,7 @@ None - Implementation proceeded smoothly without issues.
 ### File List
 
 **New Files:**
+
 - apps/web/src/components/reveal/RevealAnimation.tsx
 - apps/web/src/components/reveal/RevealAnimation.test.tsx
 - apps/web/src/components/reveal/RevealUI.tsx
@@ -511,6 +515,7 @@ None - Implementation proceeded smoothly without issues.
 - apps/web/src/routes/result.$resultId.tsx
 
 **Modified Files:**
+
 - apps/web/src/index.css (added reveal animation CSS)
 - apps/web/src/routes/processing.$jobId.tsx (navigate to result page + preloading at 80%)
 - apps/web/src/routeTree.gen.ts (auto-generated)

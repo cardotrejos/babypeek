@@ -58,7 +58,7 @@ Lighting/optics:
 Constraint: Make as few changes as possible beyond converting ultrasound rendering into a photoreal photo while keeping anatomy locked.
 
 Negative prompt: no date stamp, no text, no watermark, no border, not rustic, not aged, no CGI, no 3D render, no plastic/waxy skin, no beauty filter, no over-smoothing, no over-sharpening, no HDR look, no extra fingers, no missing fingers, no fused fingers, no duplicated facial features, no warped anatomy
-`.trim()
+`.trim();
 
 /**
  * Comprehensive negative prompt for v3.
@@ -84,7 +84,7 @@ export const V3_NEGATIVE_PROMPT = [
   "fused fingers",
   "duplicated facial features",
   "warped anatomy",
-] as const
+] as const;
 
 // =============================================================================
 // Prompt Template v3-json - Structured JSON Format
@@ -141,14 +141,14 @@ export const BABY_PORTRAIT_PROMPT_V3_JSON = {
     depthOfField: "shallow (around f/2 look)",
   },
   negatives: V3_NEGATIVE_PROMPT,
-} as const
+} as const;
 
 /**
  * Get the v3 JSON prompt as a formatted string.
  * Useful when the API expects a string but you want JSON structure.
  */
 export function getV3JsonPromptAsString(): string {
-  return JSON.stringify(BABY_PORTRAIT_PROMPT_V3_JSON, null, 2)
+  return JSON.stringify(BABY_PORTRAIT_PROMPT_V3_JSON, null, 2);
 }
 
 // =============================================================================
@@ -165,7 +165,7 @@ export const UPSCALE_PROMPT = `
 Upscale to 4K and lightly restore. Preserve the exact image content and composition.
 Increase fine skin detail and realistic grain subtly.
 Do not introduce new features, text, or anatomy changes.
-`.trim()
+`.trim();
 
 // =============================================================================
 // Prompt Template v4 - National Geographic / Linus Ekenstam Style
@@ -223,7 +223,7 @@ Camera:
 Style: National Geographic documentary photography, Lennart Nilsson "A Child is Born" aesthetic, cinematic medical visualization
 
 Negative prompt: no date stamp, no text, no watermark, no border, not rustic, not aged, no CGI look, no 3D render, no plastic/waxy skin, no beauty filter, no over-smoothing, no over-sharpening, no HDR look, no tight face crop only, no missing the womb context, no extra fingers, no missing fingers, no fused fingers, no duplicated facial features, no warped anatomy
-`.trim()
+`.trim();
 
 /**
  * V4 JSON Prompt: Structured format for zoomed-out womb style.
@@ -301,13 +301,13 @@ export const BABY_PORTRAIT_PROMPT_V4_JSON = {
     "no visible womb membrane",
     "floating in void without womb",
   ],
-} as const
+} as const;
 
 /**
  * Get the v4 JSON prompt as a formatted string.
  */
 export function getV4JsonPromptAsString(): string {
-  return JSON.stringify(BABY_PORTRAIT_PROMPT_V4_JSON, null, 2)
+  return JSON.stringify(BABY_PORTRAIT_PROMPT_V4_JSON, null, 2);
 }
 
 // =============================================================================
@@ -317,12 +317,12 @@ export function getV4JsonPromptAsString(): string {
 /**
  * Prompt style metadata for analytics.
  */
-export type PromptStyle = "in-utero" | "national-geographic"
+export type PromptStyle = "in-utero" | "national-geographic";
 
 /**
  * Prompt format type.
  */
-export type PromptFormat = "prose" | "json"
+export type PromptFormat = "prose" | "json";
 
 /**
  * Prompt metadata for each version.
@@ -332,7 +332,7 @@ export const PROMPT_METADATA = {
   "v3-json": { style: "in-utero" as PromptStyle, format: "json" as PromptFormat },
   v4: { style: "national-geographic" as PromptStyle, format: "prose" as PromptFormat },
   "v4-json": { style: "national-geographic" as PromptStyle, format: "json" as PromptFormat },
-} as const
+} as const;
 
 /**
  * All available prompt versions.
@@ -342,20 +342,20 @@ export const PROMPTS = {
   "v3-json": getV3JsonPromptAsString(),
   v4: BABY_PORTRAIT_PROMPT_V4,
   "v4-json": getV4JsonPromptAsString(),
-} as const
+} as const;
 
 /**
  * Available prompt version identifiers.
  */
-export type PromptVersion = keyof typeof PROMPTS
+export type PromptVersion = keyof typeof PROMPTS;
 
 /**
  * Default prompt version to use.
- * 
+ *
  * v3: Close-up face portrait (tight crop)
  * v4: National Geographic style - zoomed out with visible womb membrane (Linus Ekenstam style)
  */
-export const DEFAULT_PROMPT_VERSION: PromptVersion = "v4"
+export const DEFAULT_PROMPT_VERSION: PromptVersion = "v4";
 
 // =============================================================================
 // Prompt Retrieval
@@ -375,7 +375,7 @@ export const DEFAULT_PROMPT_VERSION: PromptVersion = "v4"
  * ```
  */
 export function getPrompt(version: PromptVersion = DEFAULT_PROMPT_VERSION): string {
-  return PROMPTS[version]
+  return PROMPTS[version];
 }
 
 /**
@@ -385,7 +385,7 @@ export function getPrompt(version: PromptVersion = DEFAULT_PROMPT_VERSION): stri
  * @returns The v3 JSON prompt object
  */
 export function getV3JsonPrompt(): typeof BABY_PORTRAIT_PROMPT_V3_JSON {
-  return BABY_PORTRAIT_PROMPT_V3_JSON
+  return BABY_PORTRAIT_PROMPT_V3_JSON;
 }
 
 /**
@@ -394,7 +394,7 @@ export function getV3JsonPrompt(): typeof BABY_PORTRAIT_PROMPT_V3_JSON {
  * @returns The upscale prompt string
  */
 export function getUpscalePrompt(): string {
-  return UPSCALE_PROMPT
+  return UPSCALE_PROMPT;
 }
 
 /**
@@ -404,7 +404,7 @@ export function getUpscalePrompt(): string {
  * @returns Metadata including style and format
  */
 export function getPromptMetadata(version: PromptVersion): (typeof PROMPT_METADATA)[PromptVersion] {
-  return PROMPT_METADATA[version]
+  return PROMPT_METADATA[version];
 }
 
 /**
@@ -413,5 +413,5 @@ export function getPromptMetadata(version: PromptVersion): (typeof PROMPT_METADA
  * @returns Array of version identifiers
  */
 export function getAvailableVersions(): PromptVersion[] {
-  return Object.keys(PROMPTS) as PromptVersion[]
+  return Object.keys(PROMPTS) as PromptVersion[];
 }

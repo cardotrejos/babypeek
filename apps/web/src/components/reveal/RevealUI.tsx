@@ -1,35 +1,35 @@
-import { useCallback } from "react"
-import { useQuery } from "@tanstack/react-query"
-import { Button } from "@/components/ui/button"
-import { DownloadPreviewButton } from "./DownloadPreviewButton"
-import { CheckoutButton } from "@/components/payment"
-import { DownloadButton } from "@/components/download"
-import { ShareButtons } from "@/components/share"
-import { DeleteDataButton } from "@/components/settings"
-import { toast } from "sonner"
-import { getSession } from "@/lib/session"
-import { API_BASE_URL } from "@/lib/api-config"
+import { useCallback } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { Button } from "@/components/ui/button";
+import { DownloadPreviewButton } from "./DownloadPreviewButton";
+import { CheckoutButton } from "@/components/payment";
+import { DownloadButton } from "@/components/download";
+import { ShareButtons } from "@/components/share";
+import { DeleteDataButton } from "@/components/settings";
+import { toast } from "sonner";
+import { getSession } from "@/lib/session";
+import { API_BASE_URL } from "@/lib/api-config";
 
 interface RevealUIProps {
   /** Result ID for analytics tracking */
-  resultId: string
+  resultId: string;
   /** Upload ID for checkout */
-  uploadId: string
+  uploadId: string;
   /** Preview image URL for download */
-  previewUrl: string
-  onShare: () => void
+  previewUrl: string;
+  onShare: () => void;
   /** Whether original image is available for comparison */
-  hasOriginalImage?: boolean
+  hasOriginalImage?: boolean;
   /** Whether comparison mode is active */
-  showComparison?: boolean
+  showComparison?: boolean;
   /** Toggle comparison mode */
-  onToggleComparison?: () => void
+  onToggleComparison?: () => void;
   /** Retry count for payment retry tracking (Story 6.6) */
-  retryCount?: number
+  retryCount?: number;
   /** Callback when checkout starts (Story 6.6) */
-  onCheckoutStart?: () => void
+  onCheckoutStart?: () => void;
   /** Callback to start over with a new upload */
-  onStartOver?: () => void
+  onStartOver?: () => void;
 }
 
 /**
@@ -58,39 +58,36 @@ export function RevealUI({
   onCheckoutStart,
   onStartOver,
 }: RevealUIProps) {
-  const sessionToken = getSession(uploadId)
+  const sessionToken = getSession(uploadId);
 
   // Story 7.5 AC-2: Check if user has already purchased
   const { data: downloadStatus, isLoading: checkingPurchase } = useQuery({
     queryKey: ["download-status", uploadId],
     queryFn: async () => {
-      if (!sessionToken) return null
+      if (!sessionToken) return null;
 
-      const response = await fetch(
-        `${API_BASE_URL}/api/download/${uploadId}/status`,
-        {
-          headers: {
-            "Content-Type": "application/json",
-            "X-Session-Token": sessionToken,
-          },
-        }
-      )
+      const response = await fetch(`${API_BASE_URL}/api/download/${uploadId}/status`, {
+        headers: {
+          "Content-Type": "application/json",
+          "X-Session-Token": sessionToken,
+        },
+      });
 
-      if (!response.ok) return null
-      return response.json()
+      if (!response.ok) return null;
+      return response.json();
     },
     enabled: !!sessionToken,
     staleTime: 60 * 1000, // 1 minute
     retry: false,
-  })
+  });
 
-  const hasPurchased = downloadStatus?.canDownload === true
+  const hasPurchased = downloadStatus?.canDownload === true;
 
   const handleCheckoutError = useCallback((error: string) => {
     toast.error("Unable to start checkout", {
       description: error,
-    })
-  }, [])
+    });
+  }, []);
 
   return (
     <div
@@ -137,9 +134,7 @@ export function RevealUI({
 
       {/* Share buttons section (Story 8.1) */}
       <div className="pt-2 border-t border-gray-200">
-        <p className="text-sm text-warm-gray text-center mb-3">
-          Share your portrait
-        </p>
+        <p className="text-sm text-warm-gray text-center mb-3">Share your portrait</p>
         <ShareButtons uploadId={uploadId} resultId={resultId} />
       </div>
 
@@ -157,11 +152,7 @@ export function RevealUI({
 
       {/* Start Over / Try Again button */}
       {onStartOver && (
-        <Button
-          variant="outline"
-          className="w-full"
-          onClick={onStartOver}
-        >
+        <Button variant="outline" className="w-full" onClick={onStartOver}>
           Try with a Different Photo
         </Button>
       )}
@@ -175,5 +166,5 @@ export function RevealUI({
         </div>
       )}
     </div>
-  )
+  );
 }

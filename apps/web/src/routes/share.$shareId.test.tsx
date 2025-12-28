@@ -1,14 +1,14 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
-import { render, screen, waitFor } from "@testing-library/react"
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
-import { useQuery } from "@tanstack/react-query"
-import { useEffect, type ReactNode } from "react"
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { render, screen, waitFor } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
+import { useEffect, type ReactNode } from "react";
 
 // Define mock functions before vi.mock calls
-const mockNavigate = vi.fn()
-const mockShareId = "test-share-123"
-const mockPosthogCapture = vi.fn()
-const mockIsPostHogConfigured = vi.fn(() => true)
+const mockNavigate = vi.fn();
+const mockShareId = "test-share-123";
+const mockPosthogCapture = vi.fn();
+const mockIsPostHogConfigured = vi.fn(() => true);
 
 // Mock TanStack Router
 vi.mock("@tanstack/react-router", () => ({
@@ -16,10 +16,8 @@ vi.mock("@tanstack/react-router", () => ({
     component: () => null,
   }),
   useNavigate: () => mockNavigate,
-  Link: ({ children, to }: { children: ReactNode; to: string }) => (
-    <a href={to}>{children}</a>
-  ),
-}))
+  Link: ({ children, to }: { children: ReactNode; to: string }) => <a href={to}>{children}</a>,
+}));
 
 // Mock PostHog
 vi.mock("@/lib/posthog", () => ({
@@ -27,16 +25,16 @@ vi.mock("@/lib/posthog", () => ({
     capture: (...args: unknown[]) => mockPosthogCapture(...args),
   },
   isPostHogConfigured: () => mockIsPostHogConfigured(),
-}))
+}));
 
 // Mock API config
 vi.mock("@/lib/api-config", () => ({
   API_BASE_URL: "https://api.test.com",
-}))
+}));
 
 // Import mocked modules
-import { posthog, isPostHogConfigured } from "@/lib/posthog"
-import { Button } from "@/components/ui/button"
+import { posthog, isPostHogConfigured } from "@/lib/posthog";
+import { Button } from "@/components/ui/button";
 
 /**
  * Test version of SharePage
@@ -44,9 +42,9 @@ import { Button } from "@/components/ui/button"
  */
 function TestSharePage({ shareId }: { shareId: string }) {
   interface ShareData {
-    shareId: string
-    uploadId: string
-    previewUrl: string
+    shareId: string;
+    uploadId: string;
+    previewUrl: string;
   }
 
   const {
@@ -56,17 +54,17 @@ function TestSharePage({ shareId }: { shareId: string }) {
   } = useQuery<ShareData>({
     queryKey: ["share", shareId],
     queryFn: async () => {
-      const response = await fetch(`https://api.test.com/api/share/${shareId}`)
+      const response = await fetch(`https://api.test.com/api/share/${shareId}`);
       if (!response.ok) {
         if (response.status === 404) {
-          throw new Error("This portrait is no longer available")
+          throw new Error("This portrait is no longer available");
         }
-        throw new Error("Failed to load portrait")
+        throw new Error("Failed to load portrait");
       }
-      return response.json()
+      return response.json();
     },
     retry: false,
-  })
+  });
 
   // Analytics tracking
   useEffect(() => {
@@ -74,9 +72,9 @@ function TestSharePage({ shareId }: { shareId: string }) {
       posthog.capture("share_page_viewed", {
         share_id: shareId,
         referrer: document.referrer || "direct",
-      })
+      });
     }
-  }, [shareId, result])
+  }, [shareId, result]);
 
   // Loading state
   if (isLoading) {
@@ -87,7 +85,7 @@ function TestSharePage({ shareId }: { shareId: string }) {
           <p className="font-body text-warm-gray">Loading portrait...</p>
         </div>
       </div>
-    )
+    );
   }
 
   // Error state
@@ -117,7 +115,7 @@ function TestSharePage({ shareId }: { shareId: string }) {
           </div>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -125,7 +123,9 @@ function TestSharePage({ shareId }: { shareId: string }) {
       <div className="max-w-md mx-auto px-4 py-8 space-y-6">
         {/* Header */}
         <div className="text-center space-y-2">
-          <h1 className="font-display text-2xl text-charcoal">See what AI created from an ultrasound! ✨</h1>
+          <h1 className="font-display text-2xl text-charcoal">
+            See what AI created from an ultrasound! ✨
+          </h1>
           <p className="font-body text-warm-gray">
             Someone turned their ultrasound into this beautiful baby portrait
           </p>
@@ -151,7 +151,7 @@ function TestSharePage({ shareId }: { shareId: string }) {
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 // Helper to create test wrapper
@@ -163,25 +163,25 @@ const createWrapper = () => {
         gcTime: 0,
       },
     },
-  })
+  });
   return ({ children }: { children: ReactNode }) => (
     <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
-  )
-}
+  );
+};
 
 describe("SharePage - Story 8.4", () => {
-  let originalFetch: typeof global.fetch
+  let originalFetch: typeof global.fetch;
 
   beforeEach(() => {
-    vi.clearAllMocks()
-    originalFetch = global.fetch
-    mockIsPostHogConfigured.mockReturnValue(true)
-  })
+    vi.clearAllMocks();
+    originalFetch = global.fetch;
+    mockIsPostHogConfigured.mockReturnValue(true);
+  });
 
   afterEach(() => {
-    global.fetch = originalFetch
-    vi.restoreAllMocks()
-  })
+    global.fetch = originalFetch;
+    vi.restoreAllMocks();
+  });
 
   describe("AC-1: Display watermarked preview", () => {
     it("should display preview image when share data loads successfully", async () => {
@@ -189,22 +189,22 @@ describe("SharePage - Story 8.4", () => {
         shareId: mockShareId,
         uploadId: "upload-123",
         previewUrl: "https://r2.test.com/preview/test.jpg",
-      }
+      };
 
       global.fetch = vi.fn().mockResolvedValueOnce({
         ok: true,
         json: () => Promise.resolve(mockShareData),
-      })
+      });
 
-      render(<TestSharePage shareId={mockShareId} />, { wrapper: createWrapper() })
+      render(<TestSharePage shareId={mockShareId} />, { wrapper: createWrapper() });
 
       await waitFor(() => {
-        const img = screen.getByAltText("AI-generated baby portrait preview")
-        expect(img).toBeInTheDocument()
-        expect(img).toHaveAttribute("src", mockShareData.previewUrl)
-      })
-    })
-  })
+        const img = screen.getByAltText("AI-generated baby portrait preview");
+        expect(img).toBeInTheDocument();
+        expect(img).toHaveAttribute("src", mockShareData.previewUrl);
+      });
+    });
+  });
 
   describe("AC-2: Contextual messaging", () => {
     it("should display correct heading text", async () => {
@@ -212,57 +212,57 @@ describe("SharePage - Story 8.4", () => {
         shareId: mockShareId,
         uploadId: "upload-123",
         previewUrl: "https://r2.test.com/preview/test.jpg",
-      }
+      };
 
       global.fetch = vi.fn().mockResolvedValueOnce({
         ok: true,
         json: () => Promise.resolve(mockShareData),
-      })
+      });
 
-      render(<TestSharePage shareId={mockShareId} />, { wrapper: createWrapper() })
+      render(<TestSharePage shareId={mockShareId} />, { wrapper: createWrapper() });
 
       await waitFor(() => {
-        expect(screen.getByText("See what AI created from an ultrasound! ✨")).toBeInTheDocument()
+        expect(screen.getByText("See what AI created from an ultrasound! ✨")).toBeInTheDocument();
         expect(
-          screen.getByText("Someone turned their ultrasound into this beautiful baby portrait")
-        ).toBeInTheDocument()
-      })
-    })
-  })
+          screen.getByText("Someone turned their ultrasound into this beautiful baby portrait"),
+        ).toBeInTheDocument();
+      });
+    });
+  });
 
   describe("AC-5: Expired/deleted results error", () => {
     it("should display friendly error when share returns 404", async () => {
       global.fetch = vi.fn().mockResolvedValueOnce({
         ok: false,
         status: 404,
-      })
+      });
 
-      render(<TestSharePage shareId={mockShareId} />, { wrapper: createWrapper() })
+      render(<TestSharePage shareId={mockShareId} />, { wrapper: createWrapper() });
 
       await waitFor(() => {
-        expect(screen.getByText("Portrait Not Available")).toBeInTheDocument()
+        expect(screen.getByText("Portrait Not Available")).toBeInTheDocument();
         expect(
-          screen.getByText("This portrait may have expired or been removed.")
-        ).toBeInTheDocument()
+          screen.getByText("This portrait may have expired or been removed."),
+        ).toBeInTheDocument();
         expect(
-          screen.getByText("Portraits are automatically deleted after 30 days for privacy.")
-        ).toBeInTheDocument()
-      })
-    })
+          screen.getByText("Portraits are automatically deleted after 30 days for privacy."),
+        ).toBeInTheDocument();
+      });
+    });
 
     it("should show CTA to create own portrait on error", async () => {
       global.fetch = vi.fn().mockResolvedValueOnce({
         ok: false,
         status: 404,
-      })
+      });
 
-      render(<TestSharePage shareId={mockShareId} />, { wrapper: createWrapper() })
+      render(<TestSharePage shareId={mockShareId} />, { wrapper: createWrapper() });
 
       await waitFor(() => {
-        expect(screen.getByText("Create Your Own Portrait")).toBeInTheDocument()
-      })
-    })
-  })
+        expect(screen.getByText("Create Your Own Portrait")).toBeInTheDocument();
+      });
+    });
+  });
 
   describe("AC-6: Fast loading (no auth)", () => {
     it("should display loading state initially", () => {
@@ -276,16 +276,16 @@ describe("SharePage - Story 8.4", () => {
                   json: () =>
                     Promise.resolve({ shareId: mockShareId, uploadId: "u", previewUrl: "p" }),
                 }),
-              100
-            )
-          )
-      )
+              100,
+            ),
+          ),
+      );
 
-      render(<TestSharePage shareId={mockShareId} />, { wrapper: createWrapper() })
+      render(<TestSharePage shareId={mockShareId} />, { wrapper: createWrapper() });
 
-      expect(screen.getByText("Loading portrait...")).toBeInTheDocument()
-    })
-  })
+      expect(screen.getByText("Loading portrait...")).toBeInTheDocument();
+    });
+  });
 
   describe("Analytics tracking", () => {
     it("should track share_page_viewed event when data loads", async () => {
@@ -293,46 +293,46 @@ describe("SharePage - Story 8.4", () => {
         shareId: mockShareId,
         uploadId: "upload-123",
         previewUrl: "https://r2.test.com/preview/test.jpg",
-      }
+      };
 
       global.fetch = vi.fn().mockResolvedValueOnce({
         ok: true,
         json: () => Promise.resolve(mockShareData),
-      })
+      });
 
-      render(<TestSharePage shareId={mockShareId} />, { wrapper: createWrapper() })
+      render(<TestSharePage shareId={mockShareId} />, { wrapper: createWrapper() });
 
       await waitFor(() => {
         expect(mockPosthogCapture).toHaveBeenCalledWith("share_page_viewed", {
           share_id: mockShareId,
           referrer: expect.any(String),
-        })
-      })
-    })
+        });
+      });
+    });
 
     it("should not track when PostHog is not configured", async () => {
-      mockIsPostHogConfigured.mockReturnValue(false)
+      mockIsPostHogConfigured.mockReturnValue(false);
 
       const mockShareData = {
         shareId: mockShareId,
         uploadId: "upload-123",
         previewUrl: "https://r2.test.com/preview/test.jpg",
-      }
+      };
 
       global.fetch = vi.fn().mockResolvedValueOnce({
         ok: true,
         json: () => Promise.resolve(mockShareData),
-      })
+      });
 
-      render(<TestSharePage shareId={mockShareId} />, { wrapper: createWrapper() })
+      render(<TestSharePage shareId={mockShareId} />, { wrapper: createWrapper() });
 
       // Wait for component to settle
       await waitFor(() => {
-        expect(screen.getByAltText("AI-generated baby portrait preview")).toBeInTheDocument()
-      })
+        expect(screen.getByAltText("AI-generated baby portrait preview")).toBeInTheDocument();
+      });
 
       // PostHog should not have been called
-      expect(mockPosthogCapture).not.toHaveBeenCalled()
-    })
-  })
-})
+      expect(mockPosthogCapture).not.toHaveBeenCalled();
+    });
+  });
+});

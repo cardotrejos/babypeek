@@ -2,7 +2,7 @@
 
 Status: done
 
-<!-- 
+<!--
 This story enhances Story 4.2 (Gemini Imagen 3 Integration) with optimized prompts
 based on the Nano Banana Pro prompting guide for hyper-realistic in-utero imagery.
 
@@ -110,12 +110,13 @@ so that **generated images match the viral Linus Ekenstam quality (in-utero styl
 
 **From Official Google Docs (`guide-nano-banana.md`):**
 
-| Model | Alias | Use Case | Features |
-|-------|-------|----------|----------|
-| `gemini-2.5-flash-image` | Nano Banana | Fast generation | Good quality, quick |
-| `gemini-3-pro-image-preview` | Nano Banana Pro | Best quality | Thinking mode, 4K, 14 refs |
+| Model                        | Alias           | Use Case        | Features                   |
+| ---------------------------- | --------------- | --------------- | -------------------------- |
+| `gemini-2.5-flash-image`     | Nano Banana     | Fast generation | Good quality, quick        |
+| `gemini-3-pro-image-preview` | Nano Banana Pro | Best quality    | Thinking mode, 4K, 14 refs |
 
 **Current Implementation Issues:**
+
 ```typescript
 // WRONG (current):
 model: "gemini-2.0-flash-exp"  // Vision model, not image generation
@@ -126,6 +127,7 @@ model: "gemini-3-pro-image-preview"  // For quality
 ```
 
 **Required Generation Config:**
+
 ```typescript
 // Official pattern from Google docs:
 const response = await ai.models.generateContent({
@@ -155,7 +157,7 @@ for (const part of response.candidates[0].content.parts) {
 
 1. **Reference Priority System**
    - Ref1: Full ultrasound frame (pose/framing lock)
-   - Ref2: Tight face crop (identity lock)  
+   - Ref2: Tight face crop (identity lock)
    - Ref3: Face+hand crop (anatomy lock)
    - Up to 5 references for maximum fidelity
 
@@ -165,6 +167,7 @@ for (const part of response.candidates[0].content.parts) {
    - Keep: exact pose, head angle, facial proportions, framing
 
 3. **Critical Negative Prompts**
+
    ```
    no date stamp, no text, no watermark, no border, not rustic, not aged,
    no CGI, no 3D render, no plastic/waxy skin, no beauty filter,
@@ -185,15 +188,15 @@ for (const part of response.candidates[0].content.parts) {
 
 ### Prompt Comparison
 
-| Aspect | v1/v2 (Current) | v3 (Target) |
-|--------|-----------------|-------------|
-| Setting | Nursery/studio | Inside womb |
-| Lighting | Soft natural | Amber/red transillumination |
-| Skin | Standard | Subsurface scattering, translucent |
-| Background | Neutral blur | Amniotic fluid haze |
-| Style | Portrait photo | Medical macro |
-| Pose | "Match features" | Strict anatomy lock |
-| Negatives | Minimal | Comprehensive |
+| Aspect     | v1/v2 (Current)  | v3 (Target)                        |
+| ---------- | ---------------- | ---------------------------------- |
+| Setting    | Nursery/studio   | Inside womb                        |
+| Lighting   | Soft natural     | Amber/red transillumination        |
+| Skin       | Standard         | Subsurface scattering, translucent |
+| Background | Neutral blur     | Amniotic fluid haze                |
+| Style      | Portrait photo   | Medical macro                      |
+| Pose       | "Match features" | Strict anatomy lock                |
+| Negatives  | Minimal          | Comprehensive                      |
 
 ### v3 Prompt Template (Prose)
 
@@ -238,7 +241,7 @@ const V3_JSON_PROMPT = {
     expression: "relaxed, eyes closed",
     details: [
       "natural eyelids",
-      "natural lips", 
+      "natural lips",
       "soft cheeks",
       "subtle peach fuzz",
       "skin micro-texture",
@@ -296,6 +299,7 @@ packages/api/src/prompts/
 ### Gemini 3 Pro Image Features (from Official Docs)
 
 If we use `gemini-3-pro-image-preview`:
+
 - **Up to 14 reference images** - Could use multiple ultrasound crops for better anatomy lock
 - **1K/2K/4K resolution** - Direct high-res output without upscaling
 - **Thinking mode** - Model reasons through complex prompts with interim images
@@ -330,6 +334,7 @@ Claude (Anthropic)
 ### Completion Notes List
 
 **Task 0: Update GeminiService for correct model/SDK**
+
 - Updated model from `gemini-2.0-flash-exp` to `gemini-3-pro-image-preview` (Nano Banana Pro)
 - Added `GEMINI_MODELS` enum with PRO_IMAGE, FLASH_IMAGE, LEGACY options
 - Added `responseModalities: ['text', 'image']` to generation config for native image output
@@ -338,30 +343,36 @@ Claude (Anthropic)
 - Updated mock implementations for new interface
 
 **Task 1-2: Create v3 prose prompt (in-utero style)**
+
 - Created `BABY_PORTRAIT_PROMPT_V3` with full Nano Banana Pro structure
 - Includes: Edit task, Reference priority, What to change, Scene, Lighting/optics, Constraint, Negative prompt
 - Matches Linus Ekenstam viral quality (in-utero, transillumination, anatomy lock)
 
 **Task 3: Create v3-json structured prompt**
+
 - Created `BABY_PORTRAIT_PROMPT_V3_JSON` object with typed structure
 - Created `V3_NEGATIVE_PROMPT` array for reuse
 - Added `getV3JsonPrompt()` and `getV3JsonPromptAsString()` functions
 
 **Task 4: Update prompt registry**
+
 - Added v3 and v3-json to `PROMPTS` registry
 - Changed default to v3 (in-utero style)
 - Added `PROMPT_METADATA` with style and format info
 - Added `getPromptMetadata()` and `getVersionsByStyle()` helpers
 
 **Task 5: Add upscale/restore prompt**
+
 - Created `UPSCALE_PROMPT` for optional second-pass enhancement
 - Added `getUpscalePrompt()` function
 
 **Task 6: Update tests**
+
 - Updated existing tests for new v3 default and 4 versions
 - Added 4 new tests for v3, JSON, upscale, and metadata functions
 
 **Task 7: Document prompt strategy**
+
 - Updated module JSDoc with prompt styles explanation
 - Added inline documentation for all new exports
 
@@ -372,13 +383,11 @@ Claude (Anthropic)
   - Added `GEMINI_MODELS` enum
   - Added `AspectRatio`, `ImageSize`, `ImageGenerationConfig` types
   - Added `DEFAULT_IMAGE_CONFIG`
-  
 - packages/api/src/services/GeminiService.ts (UPDATED)
   - Added `GenerateImageOptions` type
   - Updated service interface to accept options
   - Added `responseModalities: ['text', 'image']` config
   - Updated mock implementations
-  
 - packages/api/src/prompts/baby-portrait.ts (UPDATED)
   - Added `BABY_PORTRAIT_PROMPT_V3` (in-utero style)
   - Added `V3_NEGATIVE_PROMPT` array

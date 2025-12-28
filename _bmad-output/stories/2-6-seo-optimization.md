@@ -28,6 +28,7 @@ So that **I can discover it organically when searching for "4D ultrasound to pho
 - Follows TanStack Start patterns for meta tag management
 
 **Out of Scope:**
+
 - FAQ accordion implementation (Story 2.5 - ready-for-dev)
 - Sitemap generation (can be automated later)
 - Advanced schema markup (Product, FAQ structured data can be added incrementally)
@@ -38,29 +39,29 @@ So that **I can discover it organically when searching for "4D ultrasound to pho
 
 ## Acceptance Criteria
 
-| # | Criterion | Test |
-|---|-----------|------|
-| AC1 | Page has unique title and meta description | View source - `<title>` and `<meta name="description">` present |
-| AC2 | Structured data (JSON-LD) is present | Google Rich Results Test validates JSON-LD |
-| AC3 | OG image is configured for social sharing | Facebook Debugger/Twitter Card Validator shows image |
-| AC4 | Canonical URLs are set | View source - `<link rel="canonical">` points to correct URL |
-| AC5 | robots.txt allows indexing | Visit /robots.txt - allows crawling of landing page |
-| AC6 | Meta viewport is correctly set for mobile | View source - viewport meta present |
-| AC7 | All meta tags render correctly on page load | Lighthouse SEO audit score > 90 |
+| #   | Criterion                                   | Test                                                            |
+| --- | ------------------------------------------- | --------------------------------------------------------------- |
+| AC1 | Page has unique title and meta description  | View source - `<title>` and `<meta name="description">` present |
+| AC2 | Structured data (JSON-LD) is present        | Google Rich Results Test validates JSON-LD                      |
+| AC3 | OG image is configured for social sharing   | Facebook Debugger/Twitter Card Validator shows image            |
+| AC4 | Canonical URLs are set                      | View source - `<link rel="canonical">` points to correct URL    |
+| AC5 | robots.txt allows indexing                  | Visit /robots.txt - allows crawling of landing page             |
+| AC6 | Meta viewport is correctly set for mobile   | View source - viewport meta present                             |
+| AC7 | All meta tags render correctly on page load | Lighthouse SEO audit score > 90                                 |
 
 ---
 
 ## Dependencies
 
-| Dependency | Status | Notes |
-|------------|--------|-------|
-| Story 2.1 Layout | **DONE** | Base layout with meta tag support |
-| Story 2.2 Hero | **DONE** | Hero section complete |
-| Story 2.3 Gallery | **DONE** | Gallery section complete |
-| Story 2.4 Trust | **DONE** | Trust signals complete |
-| TanStack Start Meta | **READY** | Uses `createRootRoute` with `meta` export or `Meta` component |
-| OG Image Asset | **NEEDED** | Need to create/source OG image (1200x630px) |
-| robots.txt | **NEEDED** | File may not exist yet in public folder |
+| Dependency          | Status     | Notes                                                         |
+| ------------------- | ---------- | ------------------------------------------------------------- |
+| Story 2.1 Layout    | **DONE**   | Base layout with meta tag support                             |
+| Story 2.2 Hero      | **DONE**   | Hero section complete                                         |
+| Story 2.3 Gallery   | **DONE**   | Gallery section complete                                      |
+| Story 2.4 Trust     | **DONE**   | Trust signals complete                                        |
+| TanStack Start Meta | **READY**  | Uses `createRootRoute` with `meta` export or `Meta` component |
+| OG Image Asset      | **NEEDED** | Need to create/source OG image (1200x630px)                   |
+| robots.txt          | **NEEDED** | File may not exist yet in public folder                       |
 
 ---
 
@@ -140,12 +141,14 @@ So that **I can discover it organically when searching for "4D ultrasound to pho
 ### Architecture Requirements
 
 **From `architecture.md`:**
+
 - Frontend: TanStack Start + React + Tailwind
 - Hosting: Vercel (handles robots.txt from public folder)
 - Performance: LCP <2.5s (SEO meta shouldn't impact this)
 - Bundle size: <150KB (meta tags are SSR, no client impact)
 
 **Stack Already Configured (from Stories 2.1-2.5):**
+
 - TanStack Start with Vite
 - Root layout in `apps/web/src/routes/__root.tsx`
 - Public folder: `apps/web/public/`
@@ -153,6 +156,7 @@ So that **I can discover it organically when searching for "4D ultrasound to pho
 ### TanStack Start Meta Tag Patterns
 
 **Option 1: Route-level Meta Export**
+
 ```typescript
 // apps/web/src/routes/index.tsx
 import { createFileRoute } from '@tanstack/react-router'
@@ -174,6 +178,7 @@ export const Route = createFileRoute('/')({
 ```
 
 **Option 2: Root Layout Meta (for site-wide defaults)**
+
 ```typescript
 // apps/web/src/routes/__root.tsx
 export const Route = createRootRoute({
@@ -192,18 +197,23 @@ export const Route = createRootRoute({
 ### SEO Copy Guidelines
 
 **Title Tag (50-60 characters):**
+
 ```
 babypeek | Transform Your 4D Ultrasound into a Baby Portrait
 ```
+
 Character count: 58 ✓
 
 **Meta Description (150-160 characters):**
+
 ```
 See your baby before they're born. Upload your 4D ultrasound and get a beautiful AI-generated portrait in 60 seconds. Free preview, instant results.
 ```
+
 Character count: 152 ✓
 
 **Keywords to Target (for content, not meta keywords):**
+
 - "4D ultrasound to photo"
 - "AI baby portrait"
 - "ultrasound baby picture"
@@ -241,8 +251,9 @@ const structuredData = {
 ```
 
 **Implementation:**
+
 ```typescript
-<script 
+<script
   type="application/ld+json"
   dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
 />
@@ -251,6 +262,7 @@ const structuredData = {
 ### OG Image Requirements
 
 **Specifications:**
+
 - Size: 1200 x 630 pixels (1.91:1 ratio)
 - Format: JPEG or PNG
 - File size: <200KB (optimized for web)
@@ -258,23 +270,25 @@ const structuredData = {
 
 **Placeholder Strategy:**
 If final OG image isn't ready, create a placeholder with:
+
 - Solid coral (#E8927C) or cream (#FDF8F5) background
 - "babypeek" text in Playfair Display
 - Tagline: "Transform your 4D ultrasound"
 
 ### File Locations
 
-| File | Purpose |
-|------|---------|
-| `apps/web/src/routes/__root.tsx` | MODIFY: Add base meta tags (charset, viewport) |
-| `apps/web/src/routes/index.tsx` | MODIFY: Add page-specific meta, OG, Twitter, canonical |
-| `apps/web/public/robots.txt` | NEW: Create robots.txt |
-| `apps/web/public/og-image.jpg` | NEW: OG image for social sharing |
-| `apps/web/src/components/seo/structured-data.tsx` | OPTIONAL: JSON-LD component |
+| File                                              | Purpose                                                |
+| ------------------------------------------------- | ------------------------------------------------------ |
+| `apps/web/src/routes/__root.tsx`                  | MODIFY: Add base meta tags (charset, viewport)         |
+| `apps/web/src/routes/index.tsx`                   | MODIFY: Add page-specific meta, OG, Twitter, canonical |
+| `apps/web/public/robots.txt`                      | NEW: Create robots.txt                                 |
+| `apps/web/public/og-image.jpg`                    | NEW: OG image for social sharing                       |
+| `apps/web/src/components/seo/structured-data.tsx` | OPTIONAL: JSON-LD component                            |
 
 ### Project Structure Notes
 
 **Current Structure (from Stories 2.1-2.5):**
+
 ```
 apps/web/
 ├── public/
@@ -290,6 +304,7 @@ apps/web/
 ```
 
 **Target Structure for Story 2.6:**
+
 ```
 apps/web/
 ├── public/
@@ -304,11 +319,13 @@ apps/web/
 ### Previous Story Learnings (from Stories 2.1-2.5)
 
 **What worked well:**
+
 1. TanStack Start route-based configuration
 2. Public folder for static assets
 3. Testing with Lighthouse for quality checks
 
 **Code Review Patterns to Follow:**
+
 - Document all files in File Locations table
 - Run build to verify no TypeScript errors
 - Test with Lighthouse SEO audit
@@ -333,6 +350,7 @@ Disallow: /api/
 ### Environment Variables for Domain
 
 If the project uses environment variables for the domain:
+
 ```typescript
 const siteUrl = process.env.VITE_SITE_URL || 'https://babypeek.com'
 ```
@@ -342,6 +360,7 @@ Check `apps/web/.env.example` for existing patterns.
 ### Lighthouse SEO Checklist
 
 Lighthouse SEO audit checks for:
+
 - [ ] Document has a `<title>` element
 - [ ] Document has a meta description
 - [ ] Page has successful HTTP status code
@@ -355,12 +374,14 @@ Lighthouse SEO audit checks for:
 ### Testing Strategy
 
 **Local Testing:**
+
 1. `bun run build` - verify no errors
 2. View page source - check all meta tags present
 3. Use browser DevTools → Elements → `<head>` inspection
 4. Run Lighthouse SEO audit in DevTools
 
 **Production Testing (after deploy):**
+
 1. Facebook Sharing Debugger: https://developers.facebook.com/tools/debug/
 2. Twitter Card Validator: https://cards-dev.twitter.com/validator
 3. Google Rich Results Test: https://search.google.com/test/rich-results
@@ -373,6 +394,7 @@ Lighthouse SEO audit checks for:
 **FR-7.6:** SEO optimization - **Should**
 
 **Requirements from epics.md:**
+
 - Page has unique title and meta description
 - Structured data (JSON-LD) is present
 - OG image is configured for social sharing
@@ -380,6 +402,7 @@ Lighthouse SEO audit checks for:
 - robots.txt allows indexing
 
 **Business Value:**
+
 - Enables organic discovery via search
 - Reduces CAC (customer acquisition cost)
 - Long-term growth channel
@@ -413,22 +436,22 @@ Claude Sonnet 4 (Anthropic)
 
 ### File List
 
-| File | Action |
-|------|--------|
-| `apps/web/src/routes/index.tsx` | Modified - Added SEO constants, head export with meta/links, StructuredData component |
+| File                                              | Action                                                                                          |
+| ------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| `apps/web/src/routes/index.tsx`                   | Modified - Added SEO constants, head export with meta/links, StructuredData component           |
 | `apps/web/src/components/seo/structured-data.tsx` | Created - StructuredData component with JSON-LD (WebSite, Organization, WebApplication schemas) |
-| `apps/web/public/og-image.svg` | Created - OG image placeholder (1200x630) with babypeek branding |
-| `apps/web/public/robots.txt` | Modified - Updated with proper Allow/Disallow rules |
+| `apps/web/public/og-image.svg`                    | Created - OG image placeholder (1200x630) with babypeek branding                                |
+| `apps/web/public/robots.txt`                      | Modified - Updated with proper Allow/Disallow rules                                             |
 
 ---
 
 ## Change Log
 
-| Date | Change |
-|------|--------|
-| 2024-12-20 | Story created via create-story workflow with comprehensive context from epics, PRD, architecture, UX design, and previous story learnings |
-| 2024-12-20 | Implementation complete: All 8 tasks completed. SEO meta tags, OG tags, Twitter cards, JSON-LD structured data, canonical URL, robots.txt, and OG image placeholder. Status → review |
-| 2024-12-20 | Code review completed: Fixed 8 issues - (1) Converted og-image.svg to PNG for social media compatibility, (2) Added trailing slash to canonical URL, (3) Removed hardcoded price from JSON-LD, (4) Updated logo URL to PNG, (5) Verified SSR for StructuredData, (6) Added og:locale meta tag, (7) Verified viewport meta in __root.tsx, (8) Build verified. Status → done |
+| Date       | Change                                                                                                                                                                                                                                                                                                                                                                       |
+| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2024-12-20 | Story created via create-story workflow with comprehensive context from epics, PRD, architecture, UX design, and previous story learnings                                                                                                                                                                                                                                    |
+| 2024-12-20 | Implementation complete: All 8 tasks completed. SEO meta tags, OG tags, Twitter cards, JSON-LD structured data, canonical URL, robots.txt, and OG image placeholder. Status → review                                                                                                                                                                                         |
+| 2024-12-20 | Code review completed: Fixed 8 issues - (1) Converted og-image.svg to PNG for social media compatibility, (2) Added trailing slash to canonical URL, (3) Removed hardcoded price from JSON-LD, (4) Updated logo URL to PNG, (5) Verified SSR for StructuredData, (6) Added og:locale meta tag, (7) Verified viewport meta in \_\_root.tsx, (8) Build verified. Status → done |
 
 ---
 

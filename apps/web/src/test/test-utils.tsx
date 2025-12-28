@@ -1,9 +1,9 @@
 /**
  * Test utilities for React component testing
  */
-import { render, type RenderOptions } from "@testing-library/react"
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
-import type { ReactElement, ReactNode } from "react"
+import { render, type RenderOptions } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import type { ReactElement, ReactNode } from "react";
 
 /**
  * Create a fresh QueryClient for tests
@@ -21,21 +21,19 @@ const createTestQueryClient = () =>
         retry: false,
       },
     },
-  })
+  });
 
 interface WrapperProps {
-  children: ReactNode
+  children: ReactNode;
 }
 
 /**
  * Wrapper component with all providers needed for testing
  */
 function TestProviders({ children }: WrapperProps) {
-  const queryClient = createTestQueryClient()
+  const queryClient = createTestQueryClient();
 
-  return (
-    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
-  )
+  return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
 }
 
 /**
@@ -50,19 +48,16 @@ function TestProviders({ children }: WrapperProps) {
  * })
  * ```
  */
-function customRender(
-  ui: ReactElement,
-  options?: Omit<RenderOptions, "wrapper">
-) {
-  return render(ui, { wrapper: TestProviders, ...options })
+function customRender(ui: ReactElement, options?: Omit<RenderOptions, "wrapper">) {
+  return render(ui, { wrapper: TestProviders, ...options });
 }
 
 // Re-export everything from testing-library
-export * from "@testing-library/react"
-export { default as userEvent } from "@testing-library/user-event"
+export * from "@testing-library/react";
+export { default as userEvent } from "@testing-library/user-event";
 
 // Override render with our custom version
-export { customRender as render }
+export { customRender as render };
 
 // =============================================================================
 // File Creation Utilities
@@ -71,60 +66,56 @@ export { customRender as render }
 /**
  * Create a mock file with the given properties
  * Uses ArrayBuffer for better performance with large files
- * 
+ *
  * @param name - File name
  * @param type - MIME type
  * @param sizeInMB - Size in megabytes (default: 1)
  * @returns Mock File object
- * 
+ *
  * @example
  * ```ts
  * const file = createMockFile("photo.jpg", "image/jpeg", 5)
  * ```
  */
-export function createMockFile(
-  name: string,
-  type: string,
-  sizeInMB: number = 1
-): File {
-  const size = Math.floor(sizeInMB * 1024 * 1024)
-  const buffer = new ArrayBuffer(size)
-  return new File([buffer], name, { type })
+export function createMockFile(name: string, type: string, sizeInMB: number = 1): File {
+  const size = Math.floor(sizeInMB * 1024 * 1024);
+  const buffer = new ArrayBuffer(size);
+  return new File([buffer], name, { type });
 }
 
 /**
  * Create a mock HEIC file for testing
- * 
+ *
  * @param sizeInMB - Size in megabytes (default: 1)
  * @returns Mock HEIC File object
  */
 export function createMockHeicFile(sizeInMB: number = 1): File {
-  return createMockFile("test.heic", "image/heic", sizeInMB)
+  return createMockFile("test.heic", "image/heic", sizeInMB);
 }
 
 /**
  * Create a mock JPEG file for testing
- * 
+ *
  * @param sizeInMB - Size in megabytes (default: 1)
  * @returns Mock JPEG File object
  */
 export function createMockJpegFile(sizeInMB: number = 1): File {
-  return createMockFile("test.jpg", "image/jpeg", sizeInMB)
+  return createMockFile("test.jpg", "image/jpeg", sizeInMB);
 }
 
 /**
  * Create a mock PNG file for testing
- * 
+ *
  * @param sizeInMB - Size in megabytes (default: 1)
  * @returns Mock PNG File object
  */
 export function createMockPngFile(sizeInMB: number = 1): File {
-  return createMockFile("test.png", "image/png", sizeInMB)
+  return createMockFile("test.png", "image/png", sizeInMB);
 }
 
 /**
  * Create a DataTransfer object for drag-drop testing
- * 
+ *
  * @param files - Array of files to include
  * @returns Mock DataTransfer object
  */
@@ -137,5 +128,5 @@ export function createDataTransfer(files: File[]): DataTransfer {
       getAsFile: () => file,
     })),
     types: ["Files"],
-  } as unknown as DataTransfer
+  } as unknown as DataTransfer;
 }

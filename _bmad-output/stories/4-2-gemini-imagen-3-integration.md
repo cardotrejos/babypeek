@@ -80,6 +80,7 @@ so that **a photorealistic baby portrait is generated**.
 ### Gemini Imagen 3 API Overview
 
 Gemini Imagen 3 is Google's latest image generation model. For babypeek, we use image-to-image generation:
+
 - Input: 4D ultrasound image
 - Output: Photorealistic baby portrait
 
@@ -89,6 +90,7 @@ Gemini Imagen 3 is Google's latest image generation model. For babypeek, we use 
 ### GeminiService Pattern (from Architecture)
 
 **Note:** The actual implementation differs from the original architecture in these ways:
+
 - `generateImage(imageBuffer: Buffer, prompt)` takes a Buffer directly (not imageUrl)
 - `generateImageFromUrl(imageUrl: string, prompt)` is available for URL-based input
 - Both return `Effect.Effect<{ data: Buffer, mimeType: string }, GeminiError>`
@@ -101,7 +103,7 @@ import { Effect, Context, Layer, Data } from 'effect'
 export class GeminiService extends Context.Tag('GeminiService')<
   GeminiService,
   {
-    generateImage: (imageBuffer: Buffer, prompt: string) => 
+    generateImage: (imageBuffer: Buffer, prompt: string) =>
       Effect.Effect<{ data: Buffer, mimeType: string }, GeminiError>
     generateImageFromUrl: (imageUrl: string, prompt: string) =>
       Effect.Effect<{ data: Buffer, mimeType: string }, GeminiError>
@@ -123,18 +125,18 @@ export const GeminiServiceLive = Layer.succeed(
       Effect.gen(function* () {
         // Fetch image from R2
         const imageBuffer = yield* fetchImageFromUrl(imageUrl)
-        
+
         // Call Gemini API
         const result = yield* Effect.tryPromise({
           try: () => callGeminiImagenApi(imageBuffer, prompt),
           catch: (e) => mapGeminiError(e)
         })
-        
+
         return result
       }).pipe(
         Effect.timeout('60 seconds'),
-        Effect.mapError((e) => 
-          e._tag === 'TimeoutException' 
+        Effect.mapError((e) =>
+          e._tag === 'TimeoutException'
             ? new GeminiError({ cause: 'TIMEOUT', message: 'Gemini API timed out after 60s' })
             : e
         )
@@ -198,14 +200,14 @@ export const genAI = new GoogleGenerativeAI(env.GEMINI_API_KEY)
 
 // For Imagen 3 image generation
 export async function callGeminiImagenApi(
-  inputImage: Buffer, 
+  inputImage: Buffer,
   prompt: string
 ): Promise<Buffer> {
   const model = genAI.getGenerativeModel({ model: 'imagen-3.0-generate-001' })
-  
+
   // Convert buffer to base64 for API
   const imageBase64 = inputImage.toString('base64')
-  
+
   const result = await model.generateContent([
     prompt,
     {
@@ -215,10 +217,10 @@ export async function callGeminiImagenApi(
       },
     },
   ])
-  
+
   // Extract generated image from response
   const generatedImageBase64 = result.response.candidates[0].content.parts[0].inlineData.data
-  
+
   return Buffer.from(generatedImageBase64, 'base64')
 }
 ```
@@ -231,39 +233,39 @@ export async function callGeminiImagenApi(
 // packages/api/src/services/GeminiService.ts
 function mapGeminiError(error: unknown): GeminiError {
   const message = error instanceof Error ? error.message : String(error)
-  
+
   // Rate limiting
   if (message.includes('429') || message.includes('RESOURCE_EXHAUSTED')) {
-    return new GeminiError({ 
-      cause: 'RATE_LIMITED', 
+    return new GeminiError({
+      cause: 'RATE_LIMITED',
       message: 'Gemini API rate limit exceeded',
-      originalError: error 
+      originalError: error
     })
   }
-  
+
   // Content policy
   if (message.includes('SAFETY') || message.includes('blocked')) {
-    return new GeminiError({ 
-      cause: 'CONTENT_POLICY', 
+    return new GeminiError({
+      cause: 'CONTENT_POLICY',
       message: 'Content was blocked by safety filters',
-      originalError: error 
+      originalError: error
     })
   }
-  
+
   // Invalid input image
   if (message.includes('INVALID_ARGUMENT') || message.includes('image')) {
-    return new GeminiError({ 
-      cause: 'INVALID_IMAGE', 
+    return new GeminiError({
+      cause: 'INVALID_IMAGE',
       message: 'Invalid or corrupted input image',
-      originalError: error 
+      originalError: error
     })
   }
-  
+
   // Generic API error
-  return new GeminiError({ 
-    cause: 'API_ERROR', 
+  return new GeminiError({
+    cause: 'API_ERROR',
     message: `Gemini API error: ${message}`,
-    originalError: error 
+    originalError: error
   })
 }
 ```
@@ -281,12 +283,12 @@ export const processImageWorkflow = (uploadId: string) =>
   pipe(
     // Stage 1: Get original image URL from R2
     Effect.flatMap(() => R2Service.getSignedUrl(`uploads/${uploadId}/original.jpg`, 300)),
-    
+
     // Stage 2: Call Gemini (THIS STORY)
-    Effect.flatMap((imageUrl) => 
+    Effect.flatMap((imageUrl) =>
       GeminiService.generateImage(imageUrl, getPrompt('v1'))
     ),
-    
+
     // Stage 3: Pass to watermarking (Story 4.4)
     // ...
   )
@@ -311,11 +313,13 @@ packages/api/src/
 ### Environment Variables
 
 Already defined in architecture:
+
 ```bash
 GEMINI_API_KEY=your-api-key-here
 ```
 
 Env schema already has:
+
 ```typescript
 GEMINI_API_KEY: z.string().min(1),
 ```
@@ -363,6 +367,7 @@ cd packages/api && bun add @google/generative-ai
 ### Risk Mitigation (from Risk Register)
 
 **Risk #1: Gemini API quality/stability**
+
 - Quality validation gate (Story 4.4/4.5)
 - Fallback messaging for failures
 - Retry logic (Story 4.3)
@@ -439,6 +444,7 @@ Claude (Anthropic)
 ### File List
 
 **Core Implementation:**
+
 - packages/api/src/lib/gemini.ts (NEW) - Gemini client with caching, safety settings
 - packages/api/src/lib/errors.ts (UPDATED) - Added originalError field to GeminiError
 - packages/api/src/prompts/baby-portrait.ts (NEW) - v1/v2 prompt templates
@@ -447,14 +453,17 @@ Claude (Anthropic)
 - packages/api/src/workflows/process-image.ts (UPDATED) - Integrated GeminiService
 
 **Tests:**
+
 - packages/api/src/services/GeminiService.test.ts (NEW) - 26 tests
 - packages/api/src/services/services.test.ts (UPDATED) - Fixed pre-existing issues
 
 **Dependencies:**
+
 - packages/api/package.json (UPDATED) - Added @google/generative-ai@0.24.1
 - bun.lock (UPDATED)
 
 **Type Exports:**
+
 - packages/api/src/lib/workflow.ts (EXISTING) - ProcessImageStage type
 
 ### Change Log
@@ -470,19 +479,19 @@ Claude (Anthropic)
 
 ### Issues Found
 
-| # | Severity | Issue | Resolution |
-|---|----------|-------|------------|
-| 1 | HIGH | Model name `gemini-2.0-flash-exp` documentation was unclear about Imagen 3 | Fixed - Added clarifying comments in gemini.ts |
-| 2 | HIGH | Story Dev Notes showed `generateImage(imageUrl)` but impl uses `generateImage(Buffer)` | Fixed - Updated Dev Notes to match implementation |
-| 3 | HIGH | Task 4 claims `originalError` field for Sentry but GeminiError didn't have it | Fixed - Added `originalError?: unknown` to GeminiError |
-| 4 | MEDIUM | File List incomplete - 11 files changed but only 8 documented | Fixed - Updated File List with all files |
-| 5 | MEDIUM | No test for 60-second timeout behavior | Fixed - Added timeout error format test |
-| 6 | MEDIUM | Unused `GENERATION_CONFIG` export | Not an issue - it IS used in GeminiService.ts:168 |
-| 7 | MEDIUM | Workflow doesn't update database status | Fixed - Added TODO comment referencing Story 4.5 |
-| 8 | MEDIUM | Dev mode mock returns input image (misleading) | Fixed - Returns distinct placeholder buffer with warning |
-| 9 | LOW | Inconsistent date format in Change Log | Accepted - minor stylistic issue |
-| 10 | LOW | `inferMimeType` doesn't check buffer length | Accepted - edge case, will fail gracefully |
-| 11 | LOW | Hardcoded `.jpg` extension in image key pattern | Accepted - consistent with architecture pattern |
+| #   | Severity | Issue                                                                                  | Resolution                                               |
+| --- | -------- | -------------------------------------------------------------------------------------- | -------------------------------------------------------- |
+| 1   | HIGH     | Model name `gemini-2.0-flash-exp` documentation was unclear about Imagen 3             | Fixed - Added clarifying comments in gemini.ts           |
+| 2   | HIGH     | Story Dev Notes showed `generateImage(imageUrl)` but impl uses `generateImage(Buffer)` | Fixed - Updated Dev Notes to match implementation        |
+| 3   | HIGH     | Task 4 claims `originalError` field for Sentry but GeminiError didn't have it          | Fixed - Added `originalError?: unknown` to GeminiError   |
+| 4   | MEDIUM   | File List incomplete - 11 files changed but only 8 documented                          | Fixed - Updated File List with all files                 |
+| 5   | MEDIUM   | No test for 60-second timeout behavior                                                 | Fixed - Added timeout error format test                  |
+| 6   | MEDIUM   | Unused `GENERATION_CONFIG` export                                                      | Not an issue - it IS used in GeminiService.ts:168        |
+| 7   | MEDIUM   | Workflow doesn't update database status                                                | Fixed - Added TODO comment referencing Story 4.5         |
+| 8   | MEDIUM   | Dev mode mock returns input image (misleading)                                         | Fixed - Returns distinct placeholder buffer with warning |
+| 9   | LOW      | Inconsistent date format in Change Log                                                 | Accepted - minor stylistic issue                         |
+| 10  | LOW      | `inferMimeType` doesn't check buffer length                                            | Accepted - edge case, will fail gracefully               |
+| 11  | LOW      | Hardcoded `.jpg` extension in image key pattern                                        | Accepted - consistent with architecture pattern          |
 
 ### Test Results Post-Review
 

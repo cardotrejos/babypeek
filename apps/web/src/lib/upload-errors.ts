@@ -7,30 +7,30 @@
  * Each type maps to specific user messages and retry behaviors.
  */
 export type UploadErrorType =
-  | "NETWORK"       // Network failure, offline
-  | "TIMEOUT"       // Request timed out
-  | "SERVER"        // 5xx errors
-  | "RATE_LIMIT"    // 429 - too many requests
-  | "VALIDATION"    // 400 - invalid request
-  | "UNAUTHORIZED"  // 401/403 - auth issues
-  | "NOT_FOUND"     // 404 - resource missing
-  | "CANCELLED"     // User cancelled
-  | "UNKNOWN"       // Fallback
+  | "NETWORK" // Network failure, offline
+  | "TIMEOUT" // Request timed out
+  | "SERVER" // 5xx errors
+  | "RATE_LIMIT" // 429 - too many requests
+  | "VALIDATION" // 400 - invalid request
+  | "UNAUTHORIZED" // 401/403 - auth issues
+  | "NOT_FOUND" // 404 - resource missing
+  | "CANCELLED" // User cancelled
+  | "UNKNOWN"; // Fallback
 
 /**
  * Structured upload error with user-friendly message and retry info.
  */
 export interface UploadError {
   /** Error category */
-  type: UploadErrorType
+  type: UploadErrorType;
   /** Technical error message (for logging) */
-  message: string
+  message: string;
   /** User-friendly message (for display) */
-  userMessage: string
+  userMessage: string;
   /** Whether the error is retryable */
-  retryable: boolean
+  retryable: boolean;
   /** Seconds to wait before retry (for rate limits) */
-  retryAfter?: number
+  retryAfter?: number;
 }
 
 // =============================================================================
@@ -47,7 +47,7 @@ const ERROR_MESSAGES: Record<UploadErrorType, string> = {
   NOT_FOUND: "We couldn't find what you're looking for. Please try again.",
   CANCELLED: "", // No message needed - user initiated
   UNKNOWN: "We had trouble uploading your image. Let's try again!",
-}
+};
 
 // =============================================================================
 // Error Categorization
@@ -55,7 +55,7 @@ const ERROR_MESSAGES: Record<UploadErrorType, string> = {
 
 /**
  * Categorize an error into a structured UploadError.
- * 
+ *
  * Handles various error types:
  * - TypeError (fetch/network errors)
  * - Response objects (HTTP status codes)
@@ -65,29 +65,33 @@ const ERROR_MESSAGES: Record<UploadErrorType, string> = {
 export function categorizeError(error: unknown): UploadError {
   // Handle fetch/network errors (TypeError from fetch)
   if (error instanceof TypeError) {
-    if (error.message.includes("fetch") || error.message.includes("network") || error.message.includes("Failed to fetch")) {
+    if (
+      error.message.includes("fetch") ||
+      error.message.includes("network") ||
+      error.message.includes("Failed to fetch")
+    ) {
       return {
         type: "NETWORK",
         message: error.message,
         userMessage: ERROR_MESSAGES.NETWORK,
         retryable: true,
-      }
+      };
     }
   }
 
   // Handle Response objects (HTTP errors)
   if (error instanceof Response) {
-    return categorizeResponseError(error)
+    return categorizeResponseError(error);
   }
 
   // Handle Error objects
   if (error instanceof Error) {
-    return categorizeErrorMessage(error.message, error)
+    return categorizeErrorMessage(error.message, error);
   }
 
   // Handle string errors
   if (typeof error === "string") {
-    return categorizeErrorMessage(error)
+    return categorizeErrorMessage(error);
   }
 
   // Unknown error type
@@ -96,19 +100,19 @@ export function categorizeError(error: unknown): UploadError {
     message: String(error),
     userMessage: ERROR_MESSAGES.UNKNOWN,
     retryable: true,
-  }
+  };
 }
 
 /**
  * Categorize an HTTP Response error.
  */
 function categorizeResponseError(response: Response): UploadError {
-  const status = response.status
+  const status = response.status;
 
   // Rate limit
   if (status === 429) {
-    const retryAfterHeader = response.headers.get("Retry-After")
-    const retryAfter = retryAfterHeader ? parseInt(retryAfterHeader, 10) : 3600
+    const retryAfterHeader = response.headers.get("Retry-After");
+    const retryAfter = retryAfterHeader ? parseInt(retryAfterHeader, 10) : 3600;
 
     return {
       type: "RATE_LIMIT",
@@ -116,7 +120,7 @@ function categorizeResponseError(response: Response): UploadError {
       userMessage: formatRateLimitMessage(retryAfter),
       retryable: true,
       retryAfter,
-    }
+    };
   }
 
   // Server errors (5xx)
@@ -126,7 +130,7 @@ function categorizeResponseError(response: Response): UploadError {
       message: `Server error: ${status}`,
       userMessage: ERROR_MESSAGES.SERVER,
       retryable: true,
-    }
+    };
   }
 
   // Unauthorized/Forbidden
@@ -136,7 +140,7 @@ function categorizeResponseError(response: Response): UploadError {
       message: `Unauthorized: ${status}`,
       userMessage: ERROR_MESSAGES.UNAUTHORIZED,
       retryable: false,
-    }
+    };
   }
 
   // Not Found
@@ -146,7 +150,7 @@ function categorizeResponseError(response: Response): UploadError {
       message: `Not found: ${status}`,
       userMessage: ERROR_MESSAGES.NOT_FOUND,
       retryable: false,
-    }
+    };
   }
 
   // Bad Request (validation errors)
@@ -156,7 +160,7 @@ function categorizeResponseError(response: Response): UploadError {
       message: `Validation error: ${status}`,
       userMessage: ERROR_MESSAGES.VALIDATION,
       retryable: false,
-    }
+    };
   }
 
   // Other client errors (4xx)
@@ -166,7 +170,7 @@ function categorizeResponseError(response: Response): UploadError {
       message: `Client error: ${status}`,
       userMessage: ERROR_MESSAGES.VALIDATION,
       retryable: false,
-    }
+    };
   }
 
   // Unknown status
@@ -175,14 +179,14 @@ function categorizeResponseError(response: Response): UploadError {
     message: `HTTP error: ${status}`,
     userMessage: ERROR_MESSAGES.UNKNOWN,
     retryable: true,
-  }
+  };
 }
 
 /**
  * Categorize an error based on its message string.
  */
 function categorizeErrorMessage(message: string, originalError?: Error): UploadError {
-  const lowerMessage = message.toLowerCase()
+  const lowerMessage = message.toLowerCase();
 
   // Check for cancellation
   if (lowerMessage.includes("cancel") || lowerMessage.includes("abort")) {
@@ -191,7 +195,7 @@ function categorizeErrorMessage(message: string, originalError?: Error): UploadE
       message,
       userMessage: ERROR_MESSAGES.CANCELLED,
       retryable: false,
-    }
+    };
   }
 
   // Check for network errors
@@ -206,7 +210,7 @@ function categorizeErrorMessage(message: string, originalError?: Error): UploadE
       message,
       userMessage: ERROR_MESSAGES.NETWORK,
       retryable: true,
-    }
+    };
   }
 
   // Check for timeout
@@ -216,27 +220,36 @@ function categorizeErrorMessage(message: string, originalError?: Error): UploadE
       message,
       userMessage: ERROR_MESSAGES.TIMEOUT,
       retryable: true,
-    }
+    };
   }
 
   // Check for server errors
-  if (lowerMessage.includes("server") || lowerMessage.includes("500") || lowerMessage.includes("502") || lowerMessage.includes("503")) {
+  if (
+    lowerMessage.includes("server") ||
+    lowerMessage.includes("500") ||
+    lowerMessage.includes("502") ||
+    lowerMessage.includes("503")
+  ) {
     return {
       type: "SERVER",
       message,
       userMessage: ERROR_MESSAGES.SERVER,
       retryable: true,
-    }
+    };
   }
 
   // Check for rate limit
-  if (lowerMessage.includes("rate limit") || lowerMessage.includes("429") || lowerMessage.includes("too many")) {
+  if (
+    lowerMessage.includes("rate limit") ||
+    lowerMessage.includes("429") ||
+    lowerMessage.includes("too many")
+  ) {
     return {
       type: "RATE_LIMIT",
       message,
       userMessage: ERROR_MESSAGES.RATE_LIMIT,
       retryable: true,
-    }
+    };
   }
 
   // Default to unknown
@@ -245,7 +258,7 @@ function categorizeErrorMessage(message: string, originalError?: Error): UploadE
     message: originalError?.message || message,
     userMessage: ERROR_MESSAGES.UNKNOWN,
     retryable: true,
-  }
+  };
 }
 
 /**
@@ -254,18 +267,18 @@ function categorizeErrorMessage(message: string, originalError?: Error): UploadE
 function formatRateLimitMessage(retryAfterSeconds: number): string {
   // Less than a minute - use vague "in a moment"
   if (retryAfterSeconds < 60) {
-    return "You've reached the upload limit. Please try again in a moment."
+    return "You've reached the upload limit. Please try again in a moment.";
   }
-  
-  const minutes = Math.ceil(retryAfterSeconds / 60)
-  return `You've reached the upload limit. Please try again in ${minutes} minute${minutes > 1 ? "s" : ""}.`
+
+  const minutes = Math.ceil(retryAfterSeconds / 60);
+  return `You've reached the upload limit. Please try again in ${minutes} minute${minutes > 1 ? "s" : ""}.`;
 }
 
 /**
  * Get the user message for an error type.
  */
 export function getErrorMessage(type: UploadErrorType): string {
-  return ERROR_MESSAGES[type]
+  return ERROR_MESSAGES[type];
 }
 
 /**
@@ -278,13 +291,13 @@ export function isRetryable(type: UploadErrorType): boolean {
     case "SERVER":
     case "RATE_LIMIT":
     case "UNKNOWN":
-      return true
+      return true;
     case "VALIDATION":
     case "UNAUTHORIZED":
     case "NOT_FOUND":
     case "CANCELLED":
-      return false
+      return false;
     default:
-      return true
+      return true;
   }
 }

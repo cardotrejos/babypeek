@@ -55,6 +55,7 @@ so that **I can paste it anywhere**.
 ### Existing Code to Leverage
 
 **Toast library** (already installed):
+
 ```typescript
 import { toast } from "sonner"
 
@@ -130,6 +131,7 @@ https://babypeek.com/share/{uploadId}
 ```
 
 **Example:**
+
 ```
 https://babypeek.com/share/clm8h2xz40001js08x7qz3k4y
 ```
@@ -276,6 +278,7 @@ apps/web/src/components/share/
 ### Parallel Work
 
 Can be developed in parallel with:
+
 - Story 8.1 (WhatsApp Share)
 - Story 8.2 (iMessage Share)
 

@@ -35,7 +35,7 @@ so that **I can complete payment in two taps**.
   - [ ] Verify biometric authentication works (manual testing required)
   - [ ] Verify payment completes without card entry (manual testing required)
 
-- [ ] **Task 4: Add analytics for payment method** (AC: 1, 2) — *Deferred to Story 6.3*
+- [ ] **Task 4: Add analytics for payment method** (AC: 1, 2) — _Deferred to Story 6.3_
   - [ ] Track `payment_method_type` in purchase_completed event (requires webhook handler from Story 6.3)
   - [ ] Distinguish between 'card', 'apple_pay', 'google_pay'
   - [ ] Add to PostHog for conversion analysis
@@ -56,6 +56,7 @@ so that **I can complete payment in two taps**.
 ### How Stripe Checkout Handles Express Payments
 
 Stripe Checkout automatically:
+
 1. Detects device/browser capabilities
 2. Shows Apple Pay on iOS Safari, macOS Safari
 3. Shows Google Pay on Chrome with saved cards
@@ -65,12 +66,14 @@ Stripe Checkout automatically:
 ### Stripe Configuration (Already Correct)
 
 The existing StripeService.createCheckoutSession uses:
+
 ```typescript
 payment_method_types: ["card"]  // This enables Apple Pay + Google Pay automatically
 mode: "payment"
 ```
 
 Stripe Checkout with `payment_method_types: ["card"]` automatically enables:
+
 - Apple Pay (on supported devices)
 - Google Pay (on supported browsers)
 - Link (Stripe's saved payment method)
@@ -83,6 +86,7 @@ Stripe Checkout with `payment_method_types: ["card"]` automatically enables:
 ```
 
 Steps:
+
 1. Go to Stripe Dashboard → Settings → Payment methods
 2. Click "Configure" on Apple Pay
 3. Add your domain (e.g., babypeek.com)
@@ -92,11 +96,13 @@ Steps:
 ### Testing Express Payments
 
 **Apple Pay Testing:**
+
 - Requires real iOS device or macOS with Safari
 - Stripe test mode works with Apple Pay
 - Use Stripe test cards in Apple Wallet (Stripe provides test card)
 
 **Google Pay Testing:**
+
 - Works in Chrome with saved test cards
 - Stripe test mode auto-enables Google Pay sandbox
 
@@ -172,6 +178,7 @@ None - implementation proceeded without issues.
 ### File List
 
 **New Files:**
+
 - packages/api/src/services/StripeService.test.ts
 - apps/web/public/.well-known/apple-developer-merchantid-domain-association (placeholder, no extension)
 - docs/apple-pay-setup.md
@@ -202,8 +209,8 @@ None - implementation proceeded without issues.
 
 ## Change Log
 
-| Date | Change |
-|------|--------|
-| 2025-12-21 | Initial implementation - verified Stripe config, created Apple Pay domain verification structure and documentation, added unit tests |
+| Date       | Change                                                                                                                                                               |
+| ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2025-12-21 | Initial implementation - verified Stripe config, created Apple Pay domain verification structure and documentation, added unit tests                                 |
 | 2025-12-21 | Story marked for review. Remaining items: (1) Manual domain registration in Stripe Dashboard, (2) Manual device testing, (3) Analytics tracking blocked by Story 6.3 |
-| 2025-12-21 | Code review: Fixed 7 issues (3 High, 3 Medium, 1 Low). Renamed domain file, rewrote tests with proper mock approach. All tests passing (10 total). |
+| 2025-12-21 | Code review: Fixed 7 issues (3 High, 3 Medium, 1 Low). Renamed domain file, rewrote tests with proper mock approach. All tests passing (10 total).                   |

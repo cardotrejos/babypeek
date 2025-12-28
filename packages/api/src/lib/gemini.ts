@@ -12,14 +12,14 @@
  * @see Story 4.2.1 - Prompt Optimization (Nano Banana Pro Style)
  */
 
-import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from "@google/generative-ai"
-import { env, isGeminiConfigured } from "./env"
+import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from "@google/generative-ai";
+import { env, isGeminiConfigured } from "./env";
 
 // =============================================================================
 // Gemini Client Initialization
 // =============================================================================
 
-let cachedClient: GoogleGenerativeAI | null = null
+let cachedClient: GoogleGenerativeAI | null = null;
 
 /**
  * Get the Gemini AI client.
@@ -27,15 +27,15 @@ let cachedClient: GoogleGenerativeAI | null = null
  */
 export const getGeminiClient = (): GoogleGenerativeAI | null => {
   if (!isGeminiConfigured()) {
-    return null
+    return null;
   }
 
   if (!cachedClient) {
-    cachedClient = new GoogleGenerativeAI(env.GEMINI_API_KEY!)
+    cachedClient = new GoogleGenerativeAI(env.GEMINI_API_KEY!);
   }
 
-  return cachedClient
-}
+  return cachedClient;
+};
 
 // =============================================================================
 // Model Configuration
@@ -55,21 +55,21 @@ export const GEMINI_MODELS = {
   PRO_IMAGE: "gemini-3-pro-image-preview",
   /** Nano Banana - Fast image generation, good quality */
   FLASH_IMAGE: "gemini-2.5-flash-image",
-} as const
+} as const;
 
-export type GeminiModel = (typeof GEMINI_MODELS)[keyof typeof GEMINI_MODELS]
+export type GeminiModel = (typeof GEMINI_MODELS)[keyof typeof GEMINI_MODELS];
 
 /**
  * Default model for image generation.
  * Using gemini-3-pro-image-preview (Nano Banana Pro) for highest quality output.
- * 
+ *
  * Features:
  * - Up to 14 reference images (6 objects + 5 humans)
  * - 1K/2K/4K resolution output
  * - Thinking mode for complex prompts
  * - Best-in-class image quality
  */
-export const IMAGEN_MODEL: GeminiModel = GEMINI_MODELS.PRO_IMAGE
+export const IMAGEN_MODEL: GeminiModel = GEMINI_MODELS.PRO_IMAGE;
 
 /**
  * Safety settings for Gemini API calls.
@@ -92,7 +92,7 @@ export const SAFETY_SETTINGS = [
     category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
     threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
   },
-]
+];
 
 // =============================================================================
 // Image Generation Configuration
@@ -102,24 +102,35 @@ export const SAFETY_SETTINGS = [
  * Supported aspect ratios for image generation.
  * From official Google docs.
  */
-export const ASPECT_RATIOS = ["1:1", "2:3", "3:2", "3:4", "4:3", "4:5", "5:4", "9:16", "16:9", "21:9"] as const
-export type AspectRatio = (typeof ASPECT_RATIOS)[number]
+export const ASPECT_RATIOS = [
+  "1:1",
+  "2:3",
+  "3:2",
+  "3:4",
+  "4:3",
+  "4:5",
+  "5:4",
+  "9:16",
+  "16:9",
+  "21:9",
+] as const;
+export type AspectRatio = (typeof ASPECT_RATIOS)[number];
 
 /**
  * Supported image sizes/resolutions.
  * From official Google docs.
  */
-export const IMAGE_SIZES = ["1K", "2K", "4K"] as const
-export type ImageSize = (typeof IMAGE_SIZES)[number]
+export const IMAGE_SIZES = ["1K", "2K", "4K"] as const;
+export type ImageSize = (typeof IMAGE_SIZES)[number];
 
 /**
  * Image generation configuration options.
  */
 export interface ImageGenerationConfig {
   /** Aspect ratio for the generated image */
-  aspectRatio?: AspectRatio
+  aspectRatio?: AspectRatio;
   /** Output resolution (1K, 2K, or 4K) */
-  imageSize?: ImageSize
+  imageSize?: ImageSize;
 }
 
 /**
@@ -128,7 +139,7 @@ export interface ImageGenerationConfig {
 export const DEFAULT_IMAGE_CONFIG: ImageGenerationConfig = {
   aspectRatio: "1:1",
   imageSize: "1K",
-}
+};
 
 /**
  * Generation configuration for the model.
@@ -139,7 +150,7 @@ export const GENERATION_CONFIG = {
   topK: 32,
   topP: 1,
   maxOutputTokens: 4096,
-}
+};
 
 // =============================================================================
 // Image Processing Helpers
@@ -149,15 +160,15 @@ export const GENERATION_CONFIG = {
  * Convert a Buffer to base64-encoded image data for the Gemini API.
  */
 export const bufferToBase64 = (buffer: Buffer, _mimeType?: string): string => {
-  return buffer.toString("base64")
-}
+  return buffer.toString("base64");
+};
 
 /**
  * Convert base64 image data back to a Buffer.
  */
 export const base64ToBuffer = (base64: string): Buffer => {
-  return Buffer.from(base64, "base64")
-}
+  return Buffer.from(base64, "base64");
+};
 
 /**
  * Infer MIME type from buffer magic bytes.
@@ -165,16 +176,16 @@ export const base64ToBuffer = (base64: string): Buffer => {
 export const inferMimeType = (buffer: Buffer): string => {
   // JPEG magic bytes: FF D8 FF
   if (buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff) {
-    return "image/jpeg"
+    return "image/jpeg";
   }
   // PNG magic bytes: 89 50 4E 47
   if (buffer[0] === 0x89 && buffer[1] === 0x50 && buffer[2] === 0x4e && buffer[3] === 0x47) {
-    return "image/png"
+    return "image/png";
   }
   // WebP magic bytes: 52 49 46 46 ... 57 45 42 50
   if (buffer[0] === 0x52 && buffer[1] === 0x49 && buffer[2] === 0x46 && buffer[3] === 0x46) {
-    return "image/webp"
+    return "image/webp";
   }
   // Default to JPEG
-  return "image/jpeg"
-}
+  return "image/jpeg";
+};

@@ -58,6 +58,7 @@ so that **I can access it later from any device**.
 ### Existing Code to Leverage
 
 **sendDownloadEmail exists** (packages/api/src/services/ResendService.ts):
+
 ```typescript
 const sendDownloadEmail = Effect.fn("ResendService.sendDownloadEmail")(function* (
   email: string,
@@ -84,7 +85,8 @@ const sendDownloadEmail = Effect.fn("ResendService.sendDownloadEmail")(function*
 ```
 
 **Current Email Flows (satisfy AC-1):**
-- Self-purchase → `sendReceiptEmail` includes download link  
+
+- Self-purchase → `sendReceiptEmail` includes download link
 - Gift purchase → `sendGiftNotificationEmail` includes download link
 - **New `sendDownloadEmail`** → Available for Story 7.5 re-download support
 
@@ -113,20 +115,20 @@ export const generateDownloadHtml = (params: {
 </head>
 <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #FDF8F5;">
   <div style="background-color: white; border-radius: 16px; padding: 32px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
-    
+
     <!-- Header with baby emoji -->
     <div style="text-align: center; margin-bottom: 24px;">
       <span style="font-size: 48px;">👶</span>
     </div>
-    
+
     <!-- Celebratory headline (AC-2) -->
     <h1 style="color: #E8927C; font-family: 'Playfair Display', Georgia, serif; font-size: 28px; margin-bottom: 8px; text-align: center;">
-      ${params.isGift 
+      ${params.isGift
         ? "Someone Gifted You a Special Photo! 🎁"
         : "Your HD Photo is Ready! 🎉"
       }
     </h1>
-    
+
     <!-- Warm message (AC-2) -->
     <p style="color: #6B5B5B; font-size: 16px; line-height: 1.6; text-align: center; margin-bottom: 32px;">
       ${params.isGift
@@ -134,23 +136,23 @@ export const generateDownloadHtml = (params: {
         : "Your beautiful HD baby portrait is ready to download. We hope it brings you joy!"
       }
     </p>
-    
+
     <!-- Prominent download button (AC-3) -->
     <div style="text-align: center; margin: 32px 0;">
-      <a href="${params.downloadUrl}" 
+      <a href="${params.downloadUrl}"
          style="display: inline-block; background-color: #E8927C; color: white; text-decoration: none; padding: 18px 40px; border-radius: 8px; font-weight: 600; font-size: 18px; box-shadow: 0 4px 12px rgba(232, 146, 124, 0.3);">
         Download HD Photo
       </a>
     </div>
-    
+
     <!-- Expiration notice (AC-4) -->
     <div style="background-color: #FEF3CD; border-radius: 8px; padding: 12px 16px; margin-top: 24px; border-left: 4px solid #F0AD4E;">
       <p style="color: #856404; font-size: 14px; margin: 0;">
-        ⏰ <strong>Important:</strong> This download link expires in ${params.expiresInDays ?? 7} days. 
+        ⏰ <strong>Important:</strong> This download link expires in ${params.expiresInDays ?? 7} days.
         Save your photo before then!
       </p>
     </div>
-    
+
     <!-- Tips section -->
     <div style="margin-top: 24px; padding-top: 24px; border-top: 1px solid #EEE;">
       <p style="color: #9B8B8B; font-size: 13px; margin-bottom: 8px;">
@@ -162,14 +164,14 @@ export const generateDownloadHtml = (params: {
         <li>Share it with family & friends</li>
       </ul>
     </div>
-    
+
     <!-- Footer -->
     <p style="color: #9B8B8B; font-size: 12px; text-align: center; margin-top: 24px;">
       Questions? Reply to this email and we'll help.
       <br><br>
       Made with 💕 by babypeek
     </p>
-    
+
   </div>
 </body>
 </html>
@@ -192,7 +194,7 @@ const sendDownloadEmail = Effect.fn("ResendService.sendDownloadEmail")(function*
 ) {
   const resend = yield* getResendClient()
   const isGift = params.isGift ?? false
-  
+
   const subject = isGift
     ? "🎁 Someone gifted you a special photo!"
     : "📸 Your HD photo is ready to download!"
@@ -221,7 +223,7 @@ const sendDownloadEmail = Effect.fn("ResendService.sendDownloadEmail")(function*
       Effect.fail(new EmailError({ cause: "SEND_FAILED", message: "Email send timed out" }))
     )
   )
-  
+
   // Log + PostHog tracking
   yield* Effect.log(`Download email sent: messageId=${result.data?.id}, uploadId=${params.uploadId}`)
   captureEvent("download_email_sent", params.uploadId, {
@@ -249,7 +251,7 @@ yield* resendService.sendReceiptEmail({
   isGift: false,
 })
 
-// Gift purchase: Gift notification includes download link  
+// Gift purchase: Gift notification includes download link
 yield* resendService.sendGiftNotificationEmail({
   email: recipientEmail,  // original uploader
   uploadId,
@@ -298,6 +300,7 @@ packages/api/src/routes/
 ### Email Preview
 
 The email should render as:
+
 - Baby emoji (👶) header
 - Coral-colored headline "Your HD Photo is Ready! 🎉"
 - Warm message text
@@ -368,13 +371,13 @@ Claude Opus 4.5
 
 ### Issues Found & Resolved
 
-| Severity | Issue | Resolution |
-|----------|-------|------------|
-| HIGH | sendDownloadEmail not called anywhere (dead code) | Clarified: Function is prepared for Story 7.5 re-download. AC-1 satisfied via existing receipt/gift emails |
-| MEDIUM | Task 3 misleading documentation | Updated task description to reflect actual verification |
-| MEDIUM | Missing integration tests | Added 5 interface/integration tests |
-| LOW | Dev Notes signature mismatch | Updated docs to match DownloadEmailParams implementation |
-| LOW | Test count incorrect | Updated to 19 tests |
+| Severity | Issue                                             | Resolution                                                                                                 |
+| -------- | ------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| HIGH     | sendDownloadEmail not called anywhere (dead code) | Clarified: Function is prepared for Story 7.5 re-download. AC-1 satisfied via existing receipt/gift emails |
+| MEDIUM   | Task 3 misleading documentation                   | Updated task description to reflect actual verification                                                    |
+| MEDIUM   | Missing integration tests                         | Added 5 interface/integration tests                                                                        |
+| LOW      | Dev Notes signature mismatch                      | Updated docs to match DownloadEmailParams implementation                                                   |
+| LOW      | Test count incorrect                              | Updated to 19 tests                                                                                        |
 
 ### Action Items
 

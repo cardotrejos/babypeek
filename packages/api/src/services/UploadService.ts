@@ -1,49 +1,62 @@
-import { Effect, Context, Layer } from "effect"
-import { eq, and } from "drizzle-orm"
-import { db, uploads, type Upload, type UploadStatus, type UploadStage, type PromptVersion } from "@babypeek/db"
-import { NotFoundError, AlreadyProcessingError, UploadStatusError } from "../lib/errors"
+import { Effect, Context, Layer } from "effect";
+import { eq, and } from "drizzle-orm";
+import {
+  db,
+  uploads,
+  type Upload,
+  type UploadStatus,
+  type UploadStage,
+  type PromptVersion,
+} from "@babypeek/db";
+import { NotFoundError, AlreadyProcessingError, UploadStatusError } from "../lib/errors";
 
 // Re-export PromptVersion for consumers
-export type { PromptVersion }
+export type { PromptVersion };
 
 // Re-export UploadStage for consumers
-export type { UploadStage }
+export type { UploadStage };
 
 // Valid stage transitions (can only move forward, except to failed)
-const STAGE_ORDER: UploadStage[] = ["validating", "generating", "storing", "watermarking", "complete"]
+const STAGE_ORDER: UploadStage[] = [
+  "validating",
+  "generating",
+  "storing",
+  "watermarking",
+  "complete",
+];
 
 function isValidStageTransition(currentStage: UploadStage | null, newStage: UploadStage): boolean {
   // Can always transition to failed
-  if (newStage === "failed") return true
-  
+  if (newStage === "failed") return true;
+
   // From null (no current stage), any stage is valid
-  if (currentStage === null) return true
-  
+  if (currentStage === null) return true;
+
   // Cannot transition from complete or failed
-  if (currentStage === "complete" || currentStage === "failed") return false
-  
-  const currentIndex = STAGE_ORDER.indexOf(currentStage)
-  const newIndex = STAGE_ORDER.indexOf(newStage)
-  
+  if (currentStage === "complete" || currentStage === "failed") return false;
+
+  const currentIndex = STAGE_ORDER.indexOf(currentStage);
+  const newIndex = STAGE_ORDER.indexOf(newStage);
+
   // Can only move forward
-  return newIndex > currentIndex
+  return newIndex > currentIndex;
 }
 
 // Create upload parameters
 export interface CreateUploadParams {
-  id: string // Pre-generated ID to match R2 key
-  email: string
-  sessionToken: string
-  originalUrl: string
+  id: string; // Pre-generated ID to match R2 key
+  email: string;
+  sessionToken: string;
+  originalUrl: string;
 }
 
 // Upload Service interface
 export class UploadService extends Context.Tag("UploadService")<
   UploadService,
   {
-    create: (params: CreateUploadParams) => Effect.Effect<Upload, never>
-    getById: (id: string) => Effect.Effect<Upload, NotFoundError>
-    getBySessionToken: (token: string) => Effect.Effect<Upload, NotFoundError>
+    create: (params: CreateUploadParams) => Effect.Effect<Upload, never>;
+    getById: (id: string) => Effect.Effect<Upload, NotFoundError>;
+    getBySessionToken: (token: string) => Effect.Effect<Upload, NotFoundError>;
     /**
      * Get upload by ID with session token verification.
      * Used for authenticated status polling.
@@ -53,9 +66,17 @@ export class UploadService extends Context.Tag("UploadService")<
      * @returns The upload record if found and token matches
      * @throws NotFoundError if upload doesn't exist or token doesn't match
      */
-    getByIdWithAuth: (id: string, sessionToken: string) => Effect.Effect<Upload, NotFoundError>
-    updateStatus: (id: string, status: UploadStatus, errorMessage?: string) => Effect.Effect<void, NotFoundError>
-    updateResult: (id: string, resultUrl: string, previewUrl: string) => Effect.Effect<void, NotFoundError>
+    getByIdWithAuth: (id: string, sessionToken: string) => Effect.Effect<Upload, NotFoundError>;
+    updateStatus: (
+      id: string,
+      status: UploadStatus,
+      errorMessage?: string,
+    ) => Effect.Effect<void, NotFoundError>;
+    updateResult: (
+      id: string,
+      resultUrl: string,
+      previewUrl: string,
+    ) => Effect.Effect<void, NotFoundError>;
     /**
      * Update the processing stage and progress.
      * Validates stage transitions (can only move forward, except to failed).
@@ -67,7 +88,11 @@ export class UploadService extends Context.Tag("UploadService")<
      * @throws NotFoundError if upload doesn't exist
      * @throws UploadStatusError if transition is invalid
      */
-    updateStage: (uploadId: string, stage: UploadStage, progress: number) => Effect.Effect<Upload, NotFoundError | UploadStatusError>
+    updateStage: (
+      uploadId: string,
+      stage: UploadStage,
+      progress: number,
+    ) => Effect.Effect<Upload, NotFoundError | UploadStatusError>;
     /**
      * Start processing for an upload.
      * Updates status to "processing" and stores the workflow run ID.
@@ -78,7 +103,10 @@ export class UploadService extends Context.Tag("UploadService")<
      * @throws NotFoundError if upload doesn't exist
      * @throws AlreadyProcessingError if upload is not in "pending" status
      */
-    startProcessing: (uploadId: string, workflowRunId: string) => Effect.Effect<Upload, NotFoundError | AlreadyProcessingError>
+    startProcessing: (
+      uploadId: string,
+      workflowRunId: string,
+    ) => Effect.Effect<Upload, NotFoundError | AlreadyProcessingError>;
     /**
      * Reset an upload for retry after failure.
      * Clears error state and resets status to "pending".
@@ -89,7 +117,7 @@ export class UploadService extends Context.Tag("UploadService")<
      * @throws NotFoundError if upload doesn't exist
      * @throws UploadStatusError if upload is not in "failed" status
      */
-    resetForRetry: (uploadId: string) => Effect.Effect<Upload, NotFoundError | UploadStatusError>
+    resetForRetry: (uploadId: string) => Effect.Effect<Upload, NotFoundError | UploadStatusError>;
     /**
      * Update the prompt version used for generating the result.
      * This tracks which prompt was used for analytics and debugging.
@@ -99,7 +127,10 @@ export class UploadService extends Context.Tag("UploadService")<
      * @returns void
      * @throws NotFoundError if upload doesn't exist
      */
-    updatePromptVersion: (uploadId: string, promptVersion: PromptVersion) => Effect.Effect<void, NotFoundError>
+    updatePromptVersion: (
+      uploadId: string,
+      promptVersion: PromptVersion,
+    ) => Effect.Effect<void, NotFoundError>;
   }
 >() {}
 
@@ -115,52 +146,55 @@ const create = Effect.fn("UploadService.create")(function* (params: CreateUpload
         status: "pending",
         expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
       })
-      .returning()
-  })
+      .returning();
+  });
   // Result always returns at least the inserted row
-  return result[0]!
-})
+  return result[0]!;
+});
 
 const getById = Effect.fn("UploadService.getById")(function* (id: string) {
   const upload = yield* Effect.promise(async () => {
     return db.query.uploads.findFirst({
       where: eq(uploads.id, id),
-    })
-  })
+    });
+  });
   if (!upload) {
-    return yield* Effect.fail(new NotFoundError({ resource: "upload", id }))
+    return yield* Effect.fail(new NotFoundError({ resource: "upload", id }));
   }
-  return upload
-})
+  return upload;
+});
 
 const getBySessionToken = Effect.fn("UploadService.getBySessionToken")(function* (token: string) {
   const upload = yield* Effect.promise(async () => {
     return db.query.uploads.findFirst({
       where: eq(uploads.sessionToken, token),
-    })
-  })
+    });
+  });
   if (!upload) {
-    return yield* Effect.fail(new NotFoundError({ resource: "upload", id: token }))
+    return yield* Effect.fail(new NotFoundError({ resource: "upload", id: token }));
   }
-  return upload
-})
+  return upload;
+});
 
-const getByIdWithAuth = Effect.fn("UploadService.getByIdWithAuth")(function* (id: string, sessionToken: string) {
+const getByIdWithAuth = Effect.fn("UploadService.getByIdWithAuth")(function* (
+  id: string,
+  sessionToken: string,
+) {
   const upload = yield* Effect.promise(async () => {
     return db.query.uploads.findFirst({
       where: and(eq(uploads.id, id), eq(uploads.sessionToken, sessionToken)),
-    })
-  })
+    });
+  });
   if (!upload) {
-    return yield* Effect.fail(new NotFoundError({ resource: "upload", id }))
+    return yield* Effect.fail(new NotFoundError({ resource: "upload", id }));
   }
-  return upload
-})
+  return upload;
+});
 
 const updateStatus = Effect.fn("UploadService.updateStatus")(function* (
   id: string,
   status: UploadStatus,
-  errorMessage?: string
+  errorMessage?: string,
 ) {
   const result = yield* Effect.promise(async () => {
     return db
@@ -171,17 +205,17 @@ const updateStatus = Effect.fn("UploadService.updateStatus")(function* (
         updatedAt: new Date(),
       })
       .where(eq(uploads.id, id))
-      .returning()
-  })
+      .returning();
+  });
   if (!result[0]) {
-    return yield* Effect.fail(new NotFoundError({ resource: "upload", id }))
+    return yield* Effect.fail(new NotFoundError({ resource: "upload", id }));
   }
-})
+});
 
 const updateResult = Effect.fn("UploadService.updateResult")(function* (
   id: string,
   resultUrl: string,
-  previewUrl: string
+  previewUrl: string,
 ) {
   const result = yield* Effect.promise(async () => {
     return db
@@ -193,52 +227,52 @@ const updateResult = Effect.fn("UploadService.updateResult")(function* (
         updatedAt: new Date(),
       })
       .where(eq(uploads.id, id))
-      .returning()
-  })
+      .returning();
+  });
   if (!result[0]) {
-    return yield* Effect.fail(new NotFoundError({ resource: "upload", id }))
+    return yield* Effect.fail(new NotFoundError({ resource: "upload", id }));
   }
-})
+});
 
 const updateStage = Effect.fn("UploadService.updateStage")(function* (
   uploadId: string,
   stage: UploadStage,
-  progress: number
+  progress: number,
 ) {
   // Clamp progress to 0-100
-  const clampedProgress = Math.max(0, Math.min(100, progress))
+  const clampedProgress = Math.max(0, Math.min(100, progress));
 
   // First, get the current upload to validate the transition
   const currentUpload = yield* Effect.promise(async () => {
     return db.query.uploads.findFirst({
       where: eq(uploads.id, uploadId),
-    })
-  })
+    });
+  });
 
   if (!currentUpload) {
-    return yield* Effect.fail(new NotFoundError({ resource: "upload", id: uploadId }))
+    return yield* Effect.fail(new NotFoundError({ resource: "upload", id: uploadId }));
   }
 
   // Validate stage transition
-  const currentStage = currentUpload.stage as UploadStage | null
+  const currentStage = currentUpload.stage as UploadStage | null;
   if (!isValidStageTransition(currentStage, stage)) {
     return yield* Effect.fail(
       new UploadStatusError({
         cause: "INVALID_TRANSITION",
         message: `Cannot transition from ${currentStage ?? "null"} to ${stage}`,
         uploadId,
-      })
-    )
+      }),
+    );
   }
 
   // Determine auto-status based on stage
-  let newStatus: UploadStatus = currentUpload.status
+  let newStatus: UploadStatus = currentUpload.status;
   if (stage === "complete") {
-    newStatus = "completed"
+    newStatus = "completed";
   } else if (stage === "failed") {
-    newStatus = "failed"
+    newStatus = "failed";
   } else if (currentUpload.status === "pending") {
-    newStatus = "processing"
+    newStatus = "processing";
   }
 
   // Update stage and progress
@@ -252,15 +286,15 @@ const updateStage = Effect.fn("UploadService.updateStage")(function* (
         updatedAt: new Date(),
       })
       .where(eq(uploads.id, uploadId))
-      .returning()
-  })
+      .returning();
+  });
 
-  return result[0]!
-})
+  return result[0]!;
+});
 
 const startProcessing = Effect.fn("UploadService.startProcessing")(function* (
   uploadId: string,
-  workflowRunId: string
+  workflowRunId: string,
 ) {
   // Use atomic UPDATE with WHERE clause to prevent race conditions
   // Only update if id matches AND status is "pending" - this is a single atomic operation
@@ -273,8 +307,8 @@ const startProcessing = Effect.fn("UploadService.startProcessing")(function* (
         updatedAt: new Date(),
       })
       .where(and(eq(uploads.id, uploadId), eq(uploads.status, "pending")))
-      .returning()
-  })
+      .returning();
+  });
 
   // If no rows returned, either upload doesn't exist or status wasn't "pending"
   if (!result[0]) {
@@ -282,11 +316,11 @@ const startProcessing = Effect.fn("UploadService.startProcessing")(function* (
     const existingUpload = yield* Effect.promise(async () => {
       return db.query.uploads.findFirst({
         where: eq(uploads.id, uploadId),
-      })
-    })
+      });
+    });
 
     if (!existingUpload) {
-      return yield* Effect.fail(new NotFoundError({ resource: "upload", id: uploadId }))
+      return yield* Effect.fail(new NotFoundError({ resource: "upload", id: uploadId }));
     }
 
     // Upload exists but wasn't updated - must not be in "pending" status
@@ -294,13 +328,13 @@ const startProcessing = Effect.fn("UploadService.startProcessing")(function* (
       new AlreadyProcessingError({
         uploadId,
         currentStatus: existingUpload.status,
-      })
-    )
+      }),
+    );
   }
 
   // Return the updated upload
-  return result[0]
-})
+  return result[0];
+});
 
 const resetForRetry = Effect.fn("UploadService.resetForRetry")(function* (uploadId: string) {
   // Use atomic UPDATE with WHERE clause to only reset failed uploads
@@ -316,8 +350,8 @@ const resetForRetry = Effect.fn("UploadService.resetForRetry")(function* (upload
         updatedAt: new Date(),
       })
       .where(and(eq(uploads.id, uploadId), eq(uploads.status, "failed")))
-      .returning()
-  })
+      .returning();
+  });
 
   // If no rows returned, either upload doesn't exist or status wasn't "failed"
   if (!result[0]) {
@@ -325,11 +359,11 @@ const resetForRetry = Effect.fn("UploadService.resetForRetry")(function* (upload
     const existingUpload = yield* Effect.promise(async () => {
       return db.query.uploads.findFirst({
         where: eq(uploads.id, uploadId),
-      })
-    })
+      });
+    });
 
     if (!existingUpload) {
-      return yield* Effect.fail(new NotFoundError({ resource: "upload", id: uploadId }))
+      return yield* Effect.fail(new NotFoundError({ resource: "upload", id: uploadId }));
     }
 
     // Upload exists but wasn't updated - must not be in "failed" status
@@ -338,17 +372,17 @@ const resetForRetry = Effect.fn("UploadService.resetForRetry")(function* (upload
         cause: "INVALID_TRANSITION",
         message: `Can only retry failed uploads. Current status: ${existingUpload.status}`,
         uploadId,
-      })
-    )
+      }),
+    );
   }
 
   // Return the updated upload
-  return result[0]
-})
+  return result[0];
+});
 
 const updatePromptVersion = Effect.fn("UploadService.updatePromptVersion")(function* (
   uploadId: string,
-  promptVersion: PromptVersion
+  promptVersion: PromptVersion,
 ) {
   const result = yield* Effect.promise(async () => {
     return db
@@ -358,12 +392,12 @@ const updatePromptVersion = Effect.fn("UploadService.updatePromptVersion")(funct
         updatedAt: new Date(),
       })
       .where(eq(uploads.id, uploadId))
-      .returning()
-  })
+      .returning();
+  });
   if (!result[0]) {
-    return yield* Effect.fail(new NotFoundError({ resource: "upload", id: uploadId }))
+    return yield* Effect.fail(new NotFoundError({ resource: "upload", id: uploadId }));
   }
-})
+});
 
 // Upload Service implementation
 export const UploadServiceLive = Layer.succeed(UploadService, {
@@ -377,4 +411,4 @@ export const UploadServiceLive = Layer.succeed(UploadService, {
   startProcessing,
   resetForRetry,
   updatePromptVersion,
-})
+});

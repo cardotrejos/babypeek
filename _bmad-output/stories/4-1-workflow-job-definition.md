@@ -79,6 +79,7 @@ so that **long-running AI jobs survive function timeouts**.
 ### Why Workflow (useworkflow.dev)?
 
 From architecture.md:
+
 - Vercel Pro has 60s function timeout
 - Gemini Imagen 3 processing takes 60-90s
 - Workflow provides durable execution that survives timeouts
@@ -195,9 +196,9 @@ export const uploads = pgTable("uploads", {
 // packages/api/src/services/UploadService.ts
 interface UploadService {
   // Existing methods...
-  
+
   // NEW method for this story:
-  startProcessing: (uploadId: string, workflowRunId: string) => 
+  startProcessing: (uploadId: string, workflowRunId: string) =>
     Effect.Effect<Upload, NotFoundError | AlreadyProcessingError>
 }
 
@@ -205,14 +206,14 @@ interface UploadService {
 startProcessing: (uploadId, workflowRunId) =>
   Effect.gen(function* () {
     const upload = yield* getById(uploadId)
-    
+
     if (upload.status !== 'pending') {
       return yield* Effect.fail(new AlreadyProcessingError({ uploadId, currentStatus: upload.status }))
     }
-    
+
     const [updated] = yield* Effect.tryPromise(() =>
       db.update(uploads)
-        .set({ 
+        .set({
           status: 'processing',
           workflowRunId,
           updatedAt: new Date()
@@ -220,7 +221,7 @@ startProcessing: (uploadId, workflowRunId) =>
         .where(eq(uploads.id, uploadId))
         .returning()
     )
-    
+
     return updated
   })
 ```
@@ -238,6 +239,7 @@ export class AlreadyProcessingError extends Data.TaggedError('AlreadyProcessingE
 ### Environment Variables
 
 Add to `.env.example` and env schema:
+
 ```bash
 WORKFLOW_API_KEY=wf_...
 WORKFLOW_ENDPOINT=https://api.useworkflow.dev
@@ -264,17 +266,17 @@ export const Route = createFileRoute('/processing/$jobId')({
 function ProcessingPage() {
   const { jobId } = Route.useParams()
   const [hasStarted, setHasStarted] = useState(false)
-  
+
   useEffect(() => {
     const startProcessing = async () => {
       if (hasStarted) return
-      
+
       const sessionToken = getSession(jobId)
       if (!sessionToken) {
         // Handle missing session - redirect to home
         return
       }
-      
+
       try {
         const response = await fetch('/api/process', {
           method: 'POST',
@@ -284,26 +286,26 @@ function ProcessingPage() {
           },
           body: JSON.stringify({ uploadId: jobId }),
         })
-        
+
         if (response.status === 409) {
           // Already processing - that's fine, just show status
           setHasStarted(true)
           return
         }
-        
+
         if (!response.ok) {
           throw new Error('Failed to start processing')
         }
-        
+
         setHasStarted(true)
       } catch (error) {
         // Handle error
       }
     }
-    
+
     startProcessing()
   }, [jobId, hasStarted])
-  
+
   // Render processing UI (Story 5.1)
   return <div>Processing {jobId}...</div>
 }
@@ -365,6 +367,7 @@ apps/web/src/
 ### useworkflow.dev References
 
 Check latest SDK documentation:
+
 ```bash
 # Installation (verify latest version)
 bun add @useworkflow/client
@@ -416,12 +419,14 @@ Claude (claude-sonnet-4-20250514)
 ### File List
 
 **New Files:**
+
 - `packages/api/src/lib/workflow.ts` - Workflow utilities and types
 - `packages/api/src/workflows/process-image.ts` - Process image workflow definition
 - `packages/api/src/routes/process.ts` - POST /api/process endpoint
 - `packages/api/src/routes/process.test.ts` - Tests for process route
 
 **Modified Files:**
+
 - `packages/api/package.json` - Added workflow, nitro, rollup dependencies
 - `packages/api/src/lib/env.ts` - Added Workflow documentation
 - `packages/api/src/lib/errors.ts` - Added AlreadyProcessingError
@@ -436,27 +441,32 @@ Claude (claude-sonnet-4-20250514)
 ## Senior Developer Review
 
 ### Review Date
+
 2024-12-21
 
 ### Reviewer
+
 Code Review Workflow (claude-sonnet-4-20250514)
 
 ### Review Summary
+
 Implementation meets all acceptance criteria with good architectural patterns. Minor issues identified and fixed during review.
 
 ### Issues Found and Resolved
 
-| ID | Severity | Issue | Resolution |
-|----|----------|-------|------------|
-| H2 | HIGH | Test coverage gap - tests use mocks, no AC verification tests | Added AC verification tests to `packages/api/src/routes/process.test.ts` documenting expected behavior |
-| M3 | MEDIUM | Missing rate limiting on process endpoint (upload route has it, process route doesn't) | Added `rateLimitMiddleware()` to process route |
-| M4 | MEDIUM | Race condition in `startProcessing` - SELECT then UPDATE as two operations could allow duplicate processing | Refactored to use atomic UPDATE with compound WHERE clause: `and(eq(uploads.id, uploadId), eq(uploads.status, "pending"))` |
+| ID  | Severity | Issue                                                                                                       | Resolution                                                                                                                 |
+| --- | -------- | ----------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| H2  | HIGH     | Test coverage gap - tests use mocks, no AC verification tests                                               | Added AC verification tests to `packages/api/src/routes/process.test.ts` documenting expected behavior                     |
+| M3  | MEDIUM   | Missing rate limiting on process endpoint (upload route has it, process route doesn't)                      | Added `rateLimitMiddleware()` to process route                                                                             |
+| M4  | MEDIUM   | Race condition in `startProcessing` - SELECT then UPDATE as two operations could allow duplicate processing | Refactored to use atomic UPDATE with compound WHERE clause: `and(eq(uploads.id, uploadId), eq(uploads.status, "pending"))` |
 
 ### Action Items (Deferred)
+
 - [ ] **M2**: Dev Notes contain outdated code examples (show `@useworkflow/client` but implementation uses `workflow` with directives) - Low priority, documentation-only
 - [ ] **L1**: Unused `WorkflowRunResult` type in `packages/api/src/workflows/process-image.ts` - May be used in future stories
 - [ ] **L2**: Console.log statements in workflow code - Acceptable for development, consider structured logging later
 - [ ] **L3**: Missing client-side `processing_started` analytics event - Server-side event exists, client-side is optional enhancement
 
 ### Approval
+
 **APPROVED** - Implementation is production-ready. Core issues (rate limiting, race condition) have been fixed. Remaining items are low priority and can be addressed in future iterations.

@@ -1,4 +1,4 @@
-import { useSessionRecovery } from "@/hooks/use-session-recovery"
+import { useSessionRecovery } from "@/hooks/use-session-recovery";
 
 /**
  * Session Recovery Prompt Component (Story 5.7)
@@ -8,10 +8,10 @@ import { useSessionRecovery } from "@/hooks/use-session-recovery"
  */
 export function SessionRecoveryPrompt() {
   const { pendingJob, showRecoveryPrompt, resumeJob, startFresh, dismissPrompt } =
-    useSessionRecovery()
+    useSessionRecovery();
 
   if (!showRecoveryPrompt || !pendingJob) {
-    return null
+    return null;
   }
 
   return (
@@ -43,10 +43,7 @@ export function SessionRecoveryPrompt() {
 
         {/* Content */}
         <div className="text-center space-y-2">
-          <h2
-            id="recovery-title"
-            className="font-display text-xl text-charcoal"
-          >
+          <h2 id="recovery-title" className="font-display text-xl text-charcoal">
             Welcome back!
           </h2>
           <p className="font-body text-warm-gray text-sm">
@@ -79,5 +76,5 @@ export function SessionRecoveryPrompt() {
         </div>
       </div>
     </div>
-  )
+  );
 }

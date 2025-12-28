@@ -5,6 +5,7 @@ This guide covers enabling Apple Pay for 3D Ultra payments.
 ## Overview
 
 Apple Pay is automatically enabled through Stripe Checkout when:
+
 1. `payment_method_types: ["card"]` is configured (already done)
 2. Domain verification is completed for production
 
@@ -23,6 +24,7 @@ stripe.checkout.sessions.create({
 ## Test Mode
 
 In Stripe test mode, Apple Pay works automatically:
+
 - Use any real Apple device with Safari
 - Stripe test cards can be added to Apple Wallet
 - No domain verification required
@@ -91,6 +93,7 @@ apps/web/public/
 ## Google Pay
 
 Google Pay requires no domain verification! It works automatically when:
+
 - User is on Chrome
 - User has saved payment methods in Google Pay
 - `payment_method_types: ["card"]` is configured (already done)

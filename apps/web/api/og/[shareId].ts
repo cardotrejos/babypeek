@@ -10,7 +10,7 @@
 
 export const config = {
   runtime: "edge",
-}
+};
 
 // Social media crawler User-Agent patterns
 const CRAWLER_PATTERNS = [
@@ -27,35 +27,35 @@ const CRAWLER_PATTERNS = [
   /bingbot/i,
   /Applebot/i,
   /iMessageLinkPreview/i,
-]
+];
 
-const API_BASE_URL = process.env.VITE_API_URL || "https://api.babypeek.io"
-const SITE_URL = process.env.VITE_SITE_URL || "https://babypeek.io"
+const API_BASE_URL = process.env.VITE_API_URL || "https://api.babypeek.io";
+const SITE_URL = process.env.VITE_SITE_URL || "https://babypeek.io";
 
 interface ShareData {
-  shareId: string
-  uploadId: string
-  previewUrl: string
+  shareId: string;
+  uploadId: string;
+  previewUrl: string;
 }
 
 async function fetchShareData(shareId: string): Promise<ShareData | null> {
   try {
     const response = await fetch(`${API_BASE_URL}/api/share/${shareId}`, {
       headers: { "Content-Type": "application/json" },
-    })
-    if (!response.ok) return null
-    return response.json()
+    });
+    if (!response.ok) return null;
+    return response.json();
   } catch {
-    return null
+    return null;
   }
 }
 
 function generateOgHtml(shareData: ShareData | null, shareId: string): string {
-  const title = "See what AI created from an ultrasound! 👶✨"
+  const title = "See what AI created from an ultrasound! 👶✨";
   const description =
-    "Someone turned their ultrasound into this beautiful baby portrait. Create your own for free!"
-  const imageUrl = shareData?.previewUrl || `${SITE_URL}/og-image.png`
-  const pageUrl = `${SITE_URL}/share/${shareId}`
+    "Someone turned their ultrasound into this beautiful baby portrait. Create your own for free!";
+  const imageUrl = shareData?.previewUrl || `${SITE_URL}/og-image.png`;
+  const pageUrl = `${SITE_URL}/share/${shareId}`;
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -92,21 +92,21 @@ function generateOgHtml(shareData: ShareData | null, shareId: string): string {
 <body>
   <p>Redirecting to <a href="${pageUrl}">BabyPeek</a>...</p>
 </body>
-</html>`
+</html>`;
 }
 
 export default async function handler(request: Request): Promise<Response> {
-  const url = new URL(request.url)
-  const pathParts = url.pathname.split("/")
-  const shareId = pathParts[pathParts.length - 1]
+  const url = new URL(request.url);
+  const pathParts = url.pathname.split("/");
+  const shareId = pathParts[pathParts.length - 1];
 
   if (!shareId) {
-    return new Response("Share ID required", { status: 400 })
+    return new Response("Share ID required", { status: 400 });
   }
 
   // Fetch share data and generate HTML
-  const shareData = await fetchShareData(shareId)
-  const html = generateOgHtml(shareData, shareId)
+  const shareData = await fetchShareData(shareId);
+  const html = generateOgHtml(shareData, shareId);
 
   return new Response(html, {
     status: 200,
@@ -114,5 +114,5 @@ export default async function handler(request: Request): Promise<Response> {
       "Content-Type": "text/html; charset=utf-8",
       "Cache-Control": "public, max-age=3600, s-maxage=3600", // Cache for 1 hour
     },
-  })
+  });
 }

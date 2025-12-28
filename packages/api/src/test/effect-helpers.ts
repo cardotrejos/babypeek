@@ -1,7 +1,7 @@
 /**
  * Effect test utilities for mocking services and running effects in tests
  */
-import { Effect, Layer, Context } from "effect"
+import { Effect, Layer, Context } from "effect";
 
 /**
  * Run an Effect in a test context with optional service layers
@@ -15,11 +15,11 @@ import { Effect, Layer, Context } from "effect"
  */
 export const runTest = <A, E>(
   effect: Effect.Effect<A, E, never>,
-  layer?: Layer.Layer<never, never, any>
+  layer?: Layer.Layer<never, never, any>,
 ): Promise<A> => {
-  const program = layer ? Effect.provide(effect, layer) : effect
-  return Effect.runPromise(program)
-}
+  const program = layer ? Effect.provide(effect, layer) : effect;
+  return Effect.runPromise(program);
+};
 
 /**
  * Run an Effect and expect it to fail
@@ -27,11 +27,11 @@ export const runTest = <A, E>(
  */
 export const runTestExpectFail = <A, E>(
   effect: Effect.Effect<A, E, never>,
-  layer?: Layer.Layer<never, never, any>
+  layer?: Layer.Layer<never, never, any>,
 ): Promise<E> => {
-  const program = layer ? Effect.provide(effect, layer) : effect
-  return Effect.runPromise(Effect.flip(program))
-}
+  const program = layer ? Effect.provide(effect, layer) : effect;
+  return Effect.runPromise(Effect.flip(program));
+};
 
 /**
  * Create a mock service layer for testing
@@ -43,10 +43,8 @@ export const runTestExpectFail = <A, E>(
  * })
  * ```
  */
-export const mockService = <Id, S>(
-  tag: Context.Tag<Id, S>,
-  impl: S
-): Layer.Layer<Id> => Layer.succeed(tag, impl)
+export const mockService = <Id, S>(tag: Context.Tag<Id, S>, impl: S): Layer.Layer<Id> =>
+  Layer.succeed(tag, impl);
 
 /**
  * Create a mock service that fails with a specific error
@@ -54,10 +52,10 @@ export const mockService = <Id, S>(
 export const mockServiceFailing = <Id, S, E>(
   tag: Context.Tag<Id, S>,
   methodName: keyof S,
-  error: E
+  error: E,
 ): Layer.Layer<Id> => {
   const impl = {
     [methodName]: () => Effect.fail(error),
-  } as unknown as S
-  return Layer.succeed(tag, impl)
-}
+  } as unknown as S;
+  return Layer.succeed(tag, impl);
+};

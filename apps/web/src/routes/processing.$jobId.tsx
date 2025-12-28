@@ -1,14 +1,14 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router"
-import { useState, useEffect, useCallback, useRef } from "react"
-import { z } from "zod"
-import { getSession, hasSession, updateJobStatus, updateJobResult } from "@/lib/session"
-import { posthog, isPostHogConfigured } from "@/lib/posthog"
-import { useStatus } from "@/hooks/use-status"
-import { usePreloadImage } from "@/hooks/use-preload-image"
-import { useVisibilityChange } from "@/hooks/use-visibility-change"
-import { useTabCoordinator } from "@/hooks/use-tab-coordinator"
-import { ProcessingScreen } from "@/components/processing"
-import { API_BASE_URL } from "@/lib/api-config"
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { z } from "zod";
+import { getSession, hasSession, updateJobStatus, updateJobResult } from "@/lib/session";
+import { posthog, isPostHogConfigured } from "@/lib/posthog";
+import { useStatus } from "@/hooks/use-status";
+import { usePreloadImage } from "@/hooks/use-preload-image";
+import { useVisibilityChange } from "@/hooks/use-visibility-change";
+import { useTabCoordinator } from "@/hooks/use-tab-coordinator";
+import { ProcessingScreen } from "@/components/processing";
+import { API_BASE_URL } from "@/lib/api-config";
 
 /**
  * Processing Page
@@ -19,7 +19,7 @@ import { API_BASE_URL } from "@/lib/api-config"
  * Story 4.1: Fire-and-forget pattern - triggers workflow and shows UI
  * Story 4.6: Timeout handling with retry capability
  * Story 5.1: Full processing status page implementation (future)
- * 
+ *
  * Add ?prompts=true to URL to show prompt selector (for testing)
  */
 export const Route = createFileRoute("/processing/$jobId")({
@@ -28,78 +28,87 @@ export const Route = createFileRoute("/processing/$jobId")({
     prompts: z.boolean().optional(),
     promptVersion: z.enum(["v3", "v3-json", "v4", "v4-json"]).optional(),
   }),
-})
+});
 
-type ProcessingState = "idle" | "starting" | "processing" | "error" | "already-processing" | "timeout" | "retrying" | "complete"
+type ProcessingState =
+  | "idle"
+  | "starting"
+  | "processing"
+  | "error"
+  | "already-processing"
+  | "timeout"
+  | "retrying"
+  | "complete";
 
-type PromptVersion = "v3" | "v3-json" | "v4" | "v4-json"
+type PromptVersion = "v3" | "v3-json" | "v4" | "v4-json";
 
 const PROMPT_OPTIONS: { value: PromptVersion; label: string }[] = [
   { value: "v4", label: "v4 - National Geographic Style (default)" },
   { value: "v4-json", label: "v4-json - National Geographic (JSON)" },
   { value: "v3", label: "v3 - Close-up In-utero Style" },
   { value: "v3-json", label: "v3-json - Close-up (JSON)" },
-]
+];
 
 interface ProcessingError {
-  message: string
-  code?: string
-  canRetry: boolean
-  lastStage?: string
-  lastProgress?: number
+  message: string;
+  code?: string;
+  canRetry: boolean;
+  lastStage?: string;
+  lastProgress?: number;
 }
 
 function ProcessingPage() {
-  const { jobId } = Route.useParams()
-  const { prompts: showPromptSelector, promptVersion: urlPromptVersion } = Route.useSearch()
-  const navigate = useNavigate()
+  const { jobId } = Route.useParams();
+  const { prompts: showPromptSelector, promptVersion: urlPromptVersion } = Route.useSearch();
+  const navigate = useNavigate();
 
-  const [state, setState] = useState<ProcessingState>("idle")
-  const [error, setError] = useState<ProcessingError | null>(null)
-  const [workflowRunId, setWorkflowRunId] = useState<string | null>(null)
+  const [state, setState] = useState<ProcessingState>("idle");
+  const [error, setError] = useState<ProcessingError | null>(null);
+  const [workflowRunId, setWorkflowRunId] = useState<string | null>(null);
   // Use URL prompt version if provided, otherwise default
-  const [selectedPrompt, setSelectedPrompt] = useState<PromptVersion>(urlPromptVersion || "v4")
+  const [selectedPrompt, setSelectedPrompt] = useState<PromptVersion>(urlPromptVersion || "v4");
 
   // Story 5.7: Tab coordination - only leader tab polls (AC8)
-  const shouldCoordinate = state === "processing" || state === "already-processing"
+  const shouldCoordinate = state === "processing" || state === "already-processing";
   const { isLeader, statusUpdate, broadcast, requestRefetch, refetchRequested } = useTabCoordinator(
     shouldCoordinate ? jobId : null,
-    { enabled: shouldCoordinate }
-  )
+    { enabled: shouldCoordinate },
+  );
 
   // Poll for status updates only if this tab is the leader
-  const shouldPoll = shouldCoordinate && isLeader
-  const { 
-    stage: polledStage, 
-    progress: polledProgress, 
-    isComplete: polledIsComplete, 
-    isFailed: polledIsFailed, 
+  const shouldPoll = shouldCoordinate && isLeader;
+  const {
+    stage: polledStage,
+    progress: polledProgress,
+    isComplete: polledIsComplete,
+    isFailed: polledIsFailed,
     resultId: polledResultId,
     resultUrl: polledResultUrl,
     promptVersion: polledPromptVersion,
     errorMessage: polledErrorMessage,
     refetch: refetchStatus,
-  } = useStatus(shouldPoll ? jobId : null)
+  } = useStatus(shouldPoll ? jobId : null);
 
   // Story 5.7: Merge polled status with updates from leader tab (AC8)
   // If we have a status update from another tab, use it; otherwise use polled data
-  const stage = statusUpdate?.stage !== undefined ? statusUpdate.stage : polledStage
-  const progress = statusUpdate?.progress ?? polledProgress
-  const isComplete = statusUpdate?.status === "completed" || polledIsComplete
-  const isFailed = statusUpdate?.status === "failed" || polledIsFailed
-  const resultId = statusUpdate?.resultId !== undefined ? statusUpdate.resultId : polledResultId
-  const resultUrl = statusUpdate?.resultUrl !== undefined ? statusUpdate.resultUrl : polledResultUrl
-  const promptVersion = polledPromptVersion // Only from polling
+  const stage = statusUpdate?.stage !== undefined ? statusUpdate.stage : polledStage;
+  const progress = statusUpdate?.progress ?? polledProgress;
+  const isComplete = statusUpdate?.status === "completed" || polledIsComplete;
+  const isFailed = statusUpdate?.status === "failed" || polledIsFailed;
+  const resultId = statusUpdate?.resultId !== undefined ? statusUpdate.resultId : polledResultId;
+  const resultUrl =
+    statusUpdate?.resultUrl !== undefined ? statusUpdate.resultUrl : polledResultUrl;
+  const promptVersion = polledPromptVersion; // Only from polling
 
   // Broadcast status updates to other tabs when we're the leader
-  const lastBroadcastRef = useRef<string | null>(null)
+  const lastBroadcastRef = useRef<string | null>(null);
   useEffect(() => {
     if (isLeader && shouldCoordinate) {
       const leaderStatus = polledIsComplete
         ? "completed"
         : polledIsFailed
           ? "failed"
-          : "processing"
+          : "processing";
 
       const payload = {
         jobId,
@@ -109,14 +118,14 @@ function ProcessingPage() {
         resultId: polledResultId,
         resultUrl: polledResultUrl,
         errorMessage: polledErrorMessage,
-      }
+      };
 
       // Avoid redundant cross-tab spam when payload is unchanged
-      const serialized = JSON.stringify(payload)
-      if (lastBroadcastRef.current === serialized) return
-      lastBroadcastRef.current = serialized
+      const serialized = JSON.stringify(payload);
+      if (lastBroadcastRef.current === serialized) return;
+      lastBroadcastRef.current = serialized;
 
-      broadcast(payload)
+      broadcast(payload);
     }
   }, [
     isLeader,
@@ -130,19 +139,19 @@ function ProcessingPage() {
     polledResultUrl,
     polledErrorMessage,
     broadcast,
-  ])
+  ]);
 
   // Story 5.7: If another tab asks for a refetch and we're leader, do it now (AC1, AC8)
   useEffect(() => {
-    if (!shouldPoll) return
-    if (refetchRequested <= 0) return
-    void refetchStatus()
-  }, [shouldPoll, refetchRequested, refetchStatus])
+    if (!shouldPoll) return;
+    if (refetchRequested <= 0) return;
+    void refetchStatus();
+  }, [shouldPoll, refetchRequested, refetchStatus]);
 
   // Preload image when progress >= 80% (AC-6: Story 5.3)
   // Start preloading early to ensure smooth reveal experience
-  const shouldPreload = progress >= 80 && resultUrl
-  const { isLoaded: imagePreloaded } = usePreloadImage(shouldPreload ? resultUrl : null)
+  const shouldPreload = progress >= 80 && resultUrl;
+  const { isLoaded: imagePreloaded } = usePreloadImage(shouldPreload ? resultUrl : null);
 
   // Track preload completion
   useEffect(() => {
@@ -150,20 +159,20 @@ function ProcessingPage() {
       posthog.capture("image_preloaded", {
         upload_id: jobId,
         progress_at_preload: progress,
-      })
+      });
     }
-  }, [imagePreloaded, jobId, progress])
+  }, [imagePreloaded, jobId, progress]);
 
   // Story 5.7: Handle visibility change for session recovery (AC1, AC2, AC3)
   // Ref to track if we've already handled a visibility change to prevent double-firing
-  const isRefetchingRef = useRef(false)
+  const isRefetchingRef = useRef(false);
 
   useVisibilityChange(
     useCallback(async () => {
-      if (!shouldCoordinate) return
-      if (isRefetchingRef.current) return
+      if (!shouldCoordinate) return;
+      if (isRefetchingRef.current) return;
 
-      isRefetchingRef.current = true
+      isRefetchingRef.current = true;
 
       try {
         if (isPostHogConfigured()) {
@@ -172,46 +181,55 @@ function ProcessingPage() {
             previous_state: state,
             previous_progress: progress,
             is_leader: isLeader,
-          })
+          });
         }
 
         // If we're the leader, refetch immediately. Otherwise ask the leader to refetch.
         if (shouldPoll) {
-          await refetchStatus()
+          await refetchStatus();
         } else {
-          requestRefetch()
+          requestRefetch();
         }
       } catch (err) {
-        console.error("[processing] Error refetching status on visibility return:", err)
+        console.error("[processing] Error refetching status on visibility return:", err);
       } finally {
-        isRefetchingRef.current = false
+        isRefetchingRef.current = false;
       }
-    }, [shouldCoordinate, shouldPoll, refetchStatus, requestRefetch, jobId, state, progress, isLeader]),
-    { enabled: shouldCoordinate }
-  )
+    }, [
+      shouldCoordinate,
+      shouldPoll,
+      refetchStatus,
+      requestRefetch,
+      jobId,
+      state,
+      progress,
+      isLeader,
+    ]),
+    { enabled: shouldCoordinate },
+  );
 
   // Handle completion - navigate to reveal page (Story 5.3)
   useEffect(() => {
     if (isComplete && resultId) {
-      setState("complete")
+      setState("complete");
       // Track completion
       if (isPostHogConfigured()) {
         posthog.capture("processing_complete", {
           upload_id: jobId,
           result_id: resultId,
-        })
+        });
       }
       // Store mapping of result -> upload for session token retrieval
-      localStorage.setItem(`babypeek-result-upload-${resultId}`, jobId)
+      localStorage.setItem(`babypeek-result-upload-${resultId}`, jobId);
       // Story 5.7: Update session with result for recovery
-      updateJobResult(jobId, resultId)
-      
+      updateJobResult(jobId, resultId);
+
       // Navigate to reveal page
       setTimeout(() => {
-        navigate({ to: "/result/$resultId", params: { resultId } })
-      }, 500) // Brief delay for visual feedback
+        navigate({ to: "/result/$resultId", params: { resultId } });
+      }, 500); // Brief delay for visual feedback
     }
-  }, [isComplete, resultId, jobId, navigate])
+  }, [isComplete, resultId, jobId, navigate]);
 
   // Handle failure from polling
   useEffect(() => {
@@ -220,12 +238,12 @@ function ProcessingPage() {
         message: polledErrorMessage || "Processing failed. Please try again.",
         code: "PROCESSING_FAILED",
         canRetry: true,
-      })
-      setState("error")
+      });
+      setState("error");
       // Story 5.7: Update session status
-      updateJobStatus(jobId, "failed")
+      updateJobStatus(jobId, "failed");
     }
-  }, [isFailed, polledErrorMessage, jobId])
+  }, [isFailed, polledErrorMessage, jobId]);
 
   const startProcessing = useCallback(async () => {
     // Check if we have a session for this job
@@ -234,23 +252,23 @@ function ProcessingPage() {
         message: "Session not found. Please start a new upload.",
         code: "SESSION_NOT_FOUND",
         canRetry: false,
-      })
-      setState("error")
-      return
+      });
+      setState("error");
+      return;
     }
 
-    const sessionToken = getSession(jobId)
+    const sessionToken = getSession(jobId);
     if (!sessionToken) {
       setError({
         message: "Invalid session. Please start a new upload.",
         code: "INVALID_SESSION",
         canRetry: false,
-      })
-      setState("error")
-      return
+      });
+      setState("error");
+      return;
     }
 
-    setState("starting")
+    setState("starting");
 
     try {
       const response = await fetch(`${API_BASE_URL}/api/process-workflow`, {
@@ -259,22 +277,22 @@ function ProcessingPage() {
           "Content-Type": "application/json",
           "X-Session-Token": sessionToken,
         },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           uploadId: jobId,
           // Include promptVersion when provided via URL
           ...(urlPromptVersion && { promptVersion: urlPromptVersion }),
         }),
-      })
+      });
 
-      const data = await response.json()
+      const data = await response.json();
 
       if (response.status === 409) {
         // Already processing - that's fine, just poll for status
-        setState("already-processing")
+        setState("already-processing");
         if (data.workflowRunId) {
-          setWorkflowRunId(data.workflowRunId)
+          setWorkflowRunId(data.workflowRunId);
         }
-        return
+        return;
       }
 
       if (!response.ok) {
@@ -285,7 +303,7 @@ function ProcessingPage() {
               upload_id: jobId,
               last_stage: data.lastStage,
               last_progress: data.lastProgress,
-            })
+            });
           }
           setError({
             message: "This is taking longer than expected. Let's try again!",
@@ -293,71 +311,71 @@ function ProcessingPage() {
             canRetry: true,
             lastStage: data.lastStage,
             lastProgress: data.lastProgress,
-          })
-          setState("timeout")
-          return
+          });
+          setState("timeout");
+          return;
         }
 
         // Handle different error codes
-        const errorMessage = getErrorMessage(response.status, data)
+        const errorMessage = getErrorMessage(response.status, data);
         setError({
           message: errorMessage,
           code: data.code,
           canRetry: data.canRetry ?? (response.status >= 500 || response.status === 0),
-        })
-        setState("error")
-        return
+        });
+        setState("error");
+        return;
       }
 
       // Success - processing started, now poll for status
-      setState("processing")
-      setWorkflowRunId(data.workflowRunId)
+      setState("processing");
+      setWorkflowRunId(data.workflowRunId);
       // Story 5.7: Update session status
-      updateJobStatus(jobId, "processing")
+      updateJobStatus(jobId, "processing");
     } catch (err) {
-      console.error("[processing] Error starting process:", err)
+      console.error("[processing] Error starting process:", err);
       setError({
         message: "Something went wrong. Please try again.",
         code: "NETWORK_ERROR",
         canRetry: true,
-      })
-      setState("error")
+      });
+      setState("error");
     }
-  }, [jobId, selectedPrompt])
+  }, [jobId, selectedPrompt]);
 
   // Start processing on mount (auto-start in prod, manual in dev for testing)
-  const [devManualStart, setDevManualStart] = useState(false)
+  const [devManualStart, setDevManualStart] = useState(false);
   useEffect(() => {
     // When prompt selector is enabled WITHOUT a pre-selected prompt, wait for manual start
     // If promptVersion is in URL, auto-start with that prompt
-    if (showPromptSelector && !urlPromptVersion && !devManualStart) return
-    
+    if (showPromptSelector && !urlPromptVersion && !devManualStart) return;
+
     if (state === "idle") {
-      startProcessing()
+      startProcessing();
     }
-  }, [state, startProcessing, devManualStart, showPromptSelector, urlPromptVersion])
+  }, [state, startProcessing, devManualStart, showPromptSelector, urlPromptVersion]);
 
   // Handle retry by calling the retry endpoint first, then restarting processing
   const handleRetry = async () => {
-    const sessionToken = getSession(jobId)
+    const sessionToken = getSession(jobId);
     if (!sessionToken) {
       setError({
         message: "Session expired. Please start a new upload.",
         code: "SESSION_EXPIRED",
         canRetry: false,
-      })
-      setState("error")
-      return
+      });
+      setState("error");
+      return;
     }
 
-    setState("retrying")
+    setState("retrying");
 
     try {
       // Track retry attempt
       if (isPostHogConfigured()) {
         posthog.capture("processing_retry_started", {
           upload_id: jobId,
-        })
+        });
       }
 
       // First, reset the job state via retry endpoint
@@ -366,49 +384,47 @@ function ProcessingPage() {
         headers: {
           "X-Session-Token": sessionToken,
         },
-      })
+      });
 
       if (!retryResponse.ok) {
-        const data = await retryResponse.json()
-        throw new Error(data.error || "Failed to reset job for retry")
+        const data = await retryResponse.json();
+        throw new Error(data.error || "Failed to reset job for retry");
       }
 
       // Then restart processing
-      setError(null)
-      setState("idle")
+      setError(null);
+      setState("idle");
     } catch (err) {
-      console.error("[processing] Error during retry:", err)
+      console.error("[processing] Error during retry:", err);
       if (isPostHogConfigured()) {
         posthog.capture("processing_retry_failed", {
           upload_id: jobId,
           error: err instanceof Error ? err.message : String(err),
-        })
+        });
       }
       setError({
         message: "Couldn't start retry. Please try again.",
         code: "RETRY_FAILED",
         canRetry: true,
-      })
-      setState("error")
+      });
+      setState("error");
     }
-  }
+  };
 
   const handleStartOver = () => {
-    navigate({ to: "/" })
-  }
+    navigate({ to: "/" });
+  };
 
   // Show prompt selector when ?prompts=true is in URL
   if (showPromptSelector && state === "idle" && !devManualStart) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-cream">
         <div className="max-w-md w-full text-center space-y-6">
-          <h1 className="font-display text-2xl text-charcoal">
-            Dev Mode: Select Prompt
-          </h1>
+          <h1 className="font-display text-2xl text-charcoal">Dev Mode: Select Prompt</h1>
           <p className="text-warm-gray">
             Choose which prompt version to test before starting processing.
           </p>
-          
+
           <div className="space-y-3">
             {PROMPT_OPTIONS.map((option) => (
               <label
@@ -429,39 +445,38 @@ function ProcessingPage() {
                 />
                 <div
                   className={`size-5 rounded-full border-2 flex items-center justify-center ${
-                    selectedPrompt === option.value
-                      ? "border-coral"
-                      : "border-warm-gray/50"
+                    selectedPrompt === option.value ? "border-coral" : "border-warm-gray/50"
                   }`}
                 >
                   {selectedPrompt === option.value && (
                     <div className="size-3 rounded-full bg-coral" />
                   )}
                 </div>
-                <span className="text-left text-sm font-medium text-charcoal">
-                  {option.label}
-                </span>
+                <span className="text-left text-sm font-medium text-charcoal">{option.label}</span>
               </label>
             ))}
           </div>
-          
+
           <button
             onClick={() => setDevManualStart(true)}
             className="w-full px-6 py-3 bg-coral text-white font-body rounded-lg hover:bg-coral/90 transition-colors"
           >
             Start Processing with {selectedPrompt}
           </button>
-          
-          <p className="text-xs text-warm-gray/70">
-            Job ID: {jobId}
-          </p>
+
+          <p className="text-xs text-warm-gray/70">Job ID: {jobId}</p>
         </div>
       </div>
-    )
+    );
   }
 
   // Processing states use full-screen ProcessingScreen component
-  if (state === "idle" || state === "starting" || state === "processing" || state === "already-processing") {
+  if (
+    state === "idle" ||
+    state === "starting" ||
+    state === "processing" ||
+    state === "already-processing"
+  ) {
     return (
       <>
         <ProcessingScreen
@@ -484,7 +499,7 @@ function ProcessingPage() {
           </div>
         )}
       </>
-    )
+    );
   }
 
   // Non-processing states (complete, retrying, timeout, error)
@@ -495,16 +510,10 @@ function ProcessingPage() {
         {state === "complete" && (
           <>
             <div className="space-y-4">
-              <h1 className="font-display text-2xl text-charcoal">
-                Your portrait is ready!
-              </h1>
+              <h1 className="font-display text-2xl text-charcoal">Your portrait is ready!</h1>
               {resultUrl ? (
                 <div className="rounded-xl overflow-hidden shadow-lg border-4 border-white">
-                  <img 
-                    src={resultUrl} 
-                    alt="Your AI-generated portrait" 
-                    className="w-full h-auto"
-                  />
+                  <img src={resultUrl} alt="Your AI-generated portrait" className="w-full h-auto" />
                 </div>
               ) : (
                 <div className="flex justify-center">
@@ -529,7 +538,12 @@ function ProcessingPage() {
               {promptVersion && (
                 <div className="flex justify-center">
                   <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-charcoal/10 text-charcoal">
-                    Prompt: {promptVersion === "v4" ? "National Geographic Style" : promptVersion === "v3" ? "Close-up Style" : promptVersion}
+                    Prompt:{" "}
+                    {promptVersion === "v4"
+                      ? "National Geographic Style"
+                      : promptVersion === "v3"
+                        ? "Close-up Style"
+                        : promptVersion}
                   </span>
                 </div>
               )}
@@ -555,9 +569,7 @@ function ProcessingPage() {
               <h1 className="font-display text-2xl text-charcoal">
                 Getting ready for another try...
               </h1>
-              <p className="font-body text-warm-gray">
-                Hang tight, we're setting things up.
-              </p>
+              <p className="font-body text-warm-gray">Hang tight, we're setting things up.</p>
             </div>
           </>
         )}
@@ -566,9 +578,7 @@ function ProcessingPage() {
         {state === "timeout" && error && (
           <>
             <div className="flex justify-center">
-              <div className="size-20 text-6xl flex items-center justify-center">
-                :(
-              </div>
+              <div className="size-20 text-6xl flex items-center justify-center">:(</div>
             </div>
             <div className="space-y-2">
               <h1 className="font-display text-2xl text-charcoal">
@@ -613,9 +623,7 @@ function ProcessingPage() {
               </div>
             </div>
             <div className="space-y-2">
-              <h1 className="font-display text-2xl text-charcoal">
-                Oops! Something went wrong
-              </h1>
+              <h1 className="font-display text-2xl text-charcoal">Oops! Something went wrong</h1>
               <p className="font-body text-warm-gray">{error.message}</p>
             </div>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
@@ -647,9 +655,9 @@ function ProcessingPage() {
             {error?.code && <p>Error Code: {error.code}</p>}
           </div>
         )}
-        </div>
+      </div>
     </div>
-  )
+  );
 }
 
 /**
@@ -658,18 +666,18 @@ function ProcessingPage() {
 function getErrorMessage(status: number, data: Record<string, unknown>): string {
   switch (status) {
     case 401:
-      return "Your session has expired. Please start a new upload."
+      return "Your session has expired. Please start a new upload.";
     case 404:
-      return "We couldn't find your upload. Please try again."
+      return "We couldn't find your upload. Please try again.";
     case 409:
-      return "Your image is already being processed."
+      return "Your image is already being processed.";
     case 429:
-      return "Too many requests. Please wait a moment and try again."
+      return "Too many requests. Please wait a moment and try again.";
     case 500:
     case 502:
     case 503:
-      return "Our servers are having trouble. Please try again in a moment."
+      return "Our servers are having trouble. Please try again in a moment.";
     default:
-      return (data.error as string) || "Something went wrong. Please try again."
+      return (data.error as string) || "Something went wrong. Please try again.";
   }
 }

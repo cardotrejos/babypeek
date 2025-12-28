@@ -1,12 +1,12 @@
-import * as Sentry from "@sentry/node"
-import { createMiddleware } from "hono/factory"
-import { env, isSentryConfigured } from "../lib/env"
+import * as Sentry from "@sentry/node";
+import { createMiddleware } from "hono/factory";
+import { env, isSentryConfigured } from "../lib/env";
 
 // =============================================================================
 // Sentry Initialization
 // =============================================================================
 
-let isInitialized = false
+let isInitialized = false;
 
 /**
  * Initialize Sentry for backend error tracking
@@ -15,32 +15,32 @@ let isInitialized = false
 export function initSentry() {
   if (isInitialized || !isSentryConfigured()) {
     if (env.NODE_ENV === "development" && !isSentryConfigured()) {
-      console.log("🛡️ Sentry not configured (SENTRY_DSN missing)")
+      console.log("🛡️ Sentry not configured (SENTRY_DSN missing)");
     }
-    return
+    return;
   }
 
   Sentry.init({
     dsn: env.SENTRY_DSN,
     environment: env.NODE_ENV,
-    
+
     // Performance monitoring
     tracesSampleRate: env.NODE_ENV === "production" ? 0.1 : 1.0,
-    
+
     // Filter out PII
     beforeSend(event) {
       // Remove any email addresses from user context
       if (event.user?.email) {
-        delete event.user.email
+        delete event.user.email;
       }
-      return event
+      return event;
     },
-  })
+  });
 
-  isInitialized = true
-  
+  isInitialized = true;
+
   if (env.NODE_ENV === "development") {
-    console.log("🛡️ Sentry backend initialized")
+    console.log("🛡️ Sentry backend initialized");
   }
 }
 
@@ -55,14 +55,14 @@ export function initSentry() {
  */
 export const sentryMiddleware = createMiddleware(async (c, next) => {
   // Attach session token to Sentry context if present
-  const sessionToken = c.req.header("X-Session-Token")
-  
+  const sessionToken = c.req.header("X-Session-Token");
+
   if (sessionToken && isSentryConfigured()) {
-    Sentry.setUser({ id: sessionToken })
+    Sentry.setUser({ id: sessionToken });
   }
 
   try {
-    await next()
+    await next();
   } catch (error) {
     // Capture error to Sentry
     if (isSentryConfigured()) {
@@ -71,13 +71,13 @@ export const sentryMiddleware = createMiddleware(async (c, next) => {
           path: c.req.path,
           method: c.req.method,
         },
-      })
+      });
     }
-    
+
     // Re-throw to let Hono handle the error response
-    throw error
+    throw error;
   }
-})
+});
 
 // =============================================================================
 // Helper Functions
@@ -88,7 +88,7 @@ export const sentryMiddleware = createMiddleware(async (c, next) => {
  */
 export function setSessionContext(sessionToken: string) {
   if (isSentryConfigured()) {
-    Sentry.setUser({ id: sessionToken })
+    Sentry.setUser({ id: sessionToken });
   }
 }
 
@@ -97,7 +97,7 @@ export function setSessionContext(sessionToken: string) {
  */
 export function clearSessionContext() {
   if (isSentryConfigured()) {
-    Sentry.setUser(null)
+    Sentry.setUser(null);
   }
 }
 
@@ -107,7 +107,7 @@ export function clearSessionContext() {
 export function addBreadcrumb(
   message: string,
   category: string = "server-action",
-  data?: Record<string, unknown>
+  data?: Record<string, unknown>,
 ) {
   if (isSentryConfigured()) {
     Sentry.addBreadcrumb({
@@ -115,39 +115,33 @@ export function addBreadcrumb(
       category,
       data,
       level: "info",
-    })
+    });
   }
 }
 
 /**
  * Capture an exception with optional context
  */
-export function captureException(
-  error: Error,
-  context?: Record<string, unknown>
-) {
+export function captureException(error: Error, context?: Record<string, unknown>) {
   if (isSentryConfigured()) {
     Sentry.captureException(error, {
       extra: context,
-    })
+    });
   } else if (env.NODE_ENV === "development") {
-    console.error("🛡️ [Sentry Mock] Exception:", error.message, context)
+    console.error("🛡️ [Sentry Mock] Exception:", error.message, context);
   }
 }
 
 /**
  * Capture a message
  */
-export function captureMessage(
-  message: string,
-  level: Sentry.SeverityLevel = "info"
-) {
+export function captureMessage(message: string, level: Sentry.SeverityLevel = "info") {
   if (isSentryConfigured()) {
-    Sentry.captureMessage(message, level)
+    Sentry.captureMessage(message, level);
   } else if (env.NODE_ENV === "development") {
-    console.log(`🛡️ [Sentry Mock] ${level}: ${message}`)
+    console.log(`🛡️ [Sentry Mock] ${level}: ${message}`);
   }
 }
 
 // Re-export Sentry for direct access
-export { Sentry }
+export { Sentry };

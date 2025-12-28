@@ -1,13 +1,13 @@
-import { Effect, Context, Layer } from "effect"
-import { PostHog } from "posthog-node"
-import { env, isPostHogConfigured } from "../lib/env"
+import { Effect, Context, Layer } from "effect";
+import { PostHog } from "posthog-node";
+import { env, isPostHogConfigured } from "../lib/env";
 
 // =============================================================================
 // PostHog Service Types
 // =============================================================================
 
 export interface PostHogEventProperties {
-  [key: string]: unknown
+  [key: string]: unknown;
 }
 
 // =============================================================================
@@ -26,23 +26,20 @@ export class PostHogService extends Context.Tag("PostHogService")<
     capture: (
       event: string,
       distinctId: string,
-      properties?: PostHogEventProperties
-    ) => Effect.Effect<void>
+      properties?: PostHogEventProperties,
+    ) => Effect.Effect<void>;
 
     /**
      * Identify a user with properties
      * @param distinctId - User/session identifier
      * @param properties - User properties
      */
-    identify: (
-      distinctId: string,
-      properties?: PostHogEventProperties
-    ) => Effect.Effect<void>
+    identify: (distinctId: string, properties?: PostHogEventProperties) => Effect.Effect<void>;
 
     /**
      * Flush pending events and shutdown client
      */
-    shutdown: () => Effect.Effect<void>
+    shutdown: () => Effect.Effect<void>;
   }
 >() {}
 
@@ -50,11 +47,11 @@ export class PostHogService extends Context.Tag("PostHogService")<
 // Cached PostHog Client
 // =============================================================================
 
-let cachedClient: PostHog | null = null
+let cachedClient: PostHog | null = null;
 
 const getClient = (): PostHog | null => {
   if (!isPostHogConfigured()) {
-    return null
+    return null;
   }
 
   if (!cachedClient) {
@@ -62,11 +59,11 @@ const getClient = (): PostHog | null => {
       host: "https://app.posthog.com",
       flushAt: 20, // Batch size before flushing
       flushInterval: 10000, // Flush every 10 seconds
-    })
+    });
   }
 
-  return cachedClient
-}
+  return cachedClient;
+};
 
 // =============================================================================
 // PostHog Service Implementation
@@ -75,60 +72,60 @@ const getClient = (): PostHog | null => {
 const capture = Effect.fn("PostHogService.capture")(function* (
   event: string,
   distinctId: string,
-  properties?: PostHogEventProperties
+  properties?: PostHogEventProperties,
 ) {
   yield* Effect.sync(() => {
-    const client = getClient()
+    const client = getClient();
     if (!client) {
       if (env.NODE_ENV === "development") {
-        console.log(`📊 [PostHog Mock] ${event}:`, { distinctId, ...properties })
+        console.log(`📊 [PostHog Mock] ${event}:`, { distinctId, ...properties });
       }
-      return
+      return;
     }
 
     client.capture({
       event,
       distinctId,
       properties,
-    })
-  })
-})
+    });
+  });
+});
 
 const identify = Effect.fn("PostHogService.identify")(function* (
   distinctId: string,
-  properties?: PostHogEventProperties
+  properties?: PostHogEventProperties,
 ) {
   yield* Effect.sync(() => {
-    const client = getClient()
+    const client = getClient();
     if (!client) {
       if (env.NODE_ENV === "development") {
-        console.log(`📊 [PostHog Mock] identify:`, { distinctId, ...properties })
+        console.log(`📊 [PostHog Mock] identify:`, { distinctId, ...properties });
       }
-      return
+      return;
     }
 
     client.identify({
       distinctId,
       properties,
-    })
-  })
-})
+    });
+  });
+});
 
 const shutdown = Effect.fn("PostHogService.shutdown")(function* () {
   yield* Effect.promise(async () => {
-    const client = getClient()
+    const client = getClient();
     if (client) {
-      await client.shutdown()
-      cachedClient = null
+      await client.shutdown();
+      cachedClient = null;
     }
-  })
-})
+  });
+});
 
 export const PostHogServiceLive = Layer.succeed(PostHogService, {
   capture,
   identify,
   shutdown,
-})
+});
 
 /**
  * Mock PostHogService for testing.
@@ -144,7 +141,7 @@ export const PostHogServiceMock = Layer.succeed(PostHogService, {
       // Silent in tests
     }),
   shutdown: () => Effect.sync(() => {}),
-})
+});
 
 // =============================================================================
 // Standalone Helper Functions (for use outside Effect context)
@@ -156,21 +153,21 @@ export const PostHogServiceMock = Layer.succeed(PostHogService, {
 export const captureEvent = (
   event: string,
   distinctId: string,
-  properties?: PostHogEventProperties
+  properties?: PostHogEventProperties,
 ) => {
-  const client = getClient()
+  const client = getClient();
   if (client) {
-    client.capture({ event, distinctId, properties })
+    client.capture({ event, distinctId, properties });
   }
-}
+};
 
 /**
  * Shutdown PostHog client (call on server shutdown)
  */
 export const shutdownPostHog = async () => {
-  const client = getClient()
+  const client = getClient();
   if (client) {
-    await client.shutdown()
-    cachedClient = null
+    await client.shutdown();
+    cachedClient = null;
   }
-}
+};

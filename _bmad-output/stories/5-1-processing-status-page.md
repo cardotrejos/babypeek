@@ -113,7 +113,7 @@ const stages = [
 
 export function ProcessingScreen({ stage, progress, isComplete, isFailed }: ProcessingScreenProps) {
   const currentStep = getStepFromBackendStage(stage)
-  
+
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-cream">
       {/* Stage indicator */}
@@ -131,10 +131,10 @@ export function ProcessingScreen({ stage, progress, isComplete, isFailed }: Proc
           </div>
         ))}
       </div>
-      
+
       {/* Progress bar */}
       <div className="w-full max-w-md bg-charcoal/10 rounded-full h-3 mb-6">
-        <div 
+        <div
           className="bg-coral h-full rounded-full transition-all duration-500"
           style={{ width: `${progress}%` }}
           role="progressbar"
@@ -144,16 +144,16 @@ export function ProcessingScreen({ stage, progress, isComplete, isFailed }: Proc
           aria-label={`Processing ${progress}% complete`}
         />
       </div>
-      
+
       {/* Stage copy */}
       <StageCopy stage={stage} />
-      
+
       {/* Baby facts */}
       <BabyFacts />
-      
+
       {/* Skeleton image placeholder */}
       <ImageSkeleton />
-      
+
       {/* Accessibility live region */}
       <div aria-live="polite" className="sr-only">
         {stage && `Stage ${currentStep} of 3: ${getStageLabel(stage)}`}
@@ -201,15 +201,15 @@ const babyFacts = [
 
 export function BabyFacts() {
   const [currentFact, setCurrentFact] = useState(0)
-  
+
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentFact((prev) => (prev + 1) % babyFacts.length)
     }, 10000) // 10 seconds
-    
+
     return () => clearInterval(interval)
   }, [])
-  
+
   return (
     <div className="mt-8 p-4 bg-rose/30 rounded-xl max-w-md text-center">
       <p className="text-sm text-warm-gray font-body animate-fade-in">
@@ -239,6 +239,7 @@ export function ImageSkeleton() {
 ### UX Spec Reference (Processing Wait)
 
 From UX design spec:
+
 - **Duration:** 60-90 seconds
 - **3-Stage Progress:**
   - Stage 1 (0-20s): "Analyzing your ultrasound..." - Scan animation
@@ -308,6 +309,7 @@ N/A
 ### File List
 
 **New Files:**
+
 - apps/web/src/components/processing/ProcessingScreen.tsx
 - apps/web/src/components/processing/StageIndicator.tsx
 - apps/web/src/components/processing/StageCopy.tsx
@@ -323,28 +325,32 @@ N/A
 - apps/web/src/components/processing/accessibility.test.tsx
 
 **Modified Files:**
+
 - apps/web/src/routes/processing.$jobId.tsx
 - apps/web/src/index.css
 
 ## Senior Developer Review (AI)
 
 ### Review Date
+
 2025-12-21
 
 ### Review Outcome
+
 Changes Requested → Fixed
 
 ### Issues Found and Resolved
 
-| Severity | Issue | Status |
-|----------|-------|--------|
-| CRITICAL | Task 8 "axe-core audit" was marked done with no tests | ✅ Fixed - Added accessibility.test.tsx with 8 tests |
-| CRITICAL | Task 5 "VoiceOver test" marked done with no evidence | ✅ Fixed - Added manual testing checklist documentation |
-| MEDIUM | Dead code: unused `liveRegionRef` | ✅ Fixed - Removed unused ref |
-| MEDIUM | ImageSkeleton comment said 800px but code uses 448px | ✅ Fixed - Corrected comment |
-| LOW | ProcessingScreen props `isComplete`/`isFailed` not documented | ✅ Fixed - Added JSDoc explaining future use |
+| Severity | Issue                                                         | Status                                                  |
+| -------- | ------------------------------------------------------------- | ------------------------------------------------------- |
+| CRITICAL | Task 8 "axe-core audit" was marked done with no tests         | ✅ Fixed - Added accessibility.test.tsx with 8 tests    |
+| CRITICAL | Task 5 "VoiceOver test" marked done with no evidence          | ✅ Fixed - Added manual testing checklist documentation |
+| MEDIUM   | Dead code: unused `liveRegionRef`                             | ✅ Fixed - Removed unused ref                           |
+| MEDIUM   | ImageSkeleton comment said 800px but code uses 448px          | ✅ Fixed - Corrected comment                            |
+| LOW      | ProcessingScreen props `isComplete`/`isFailed` not documented | ✅ Fixed - Added JSDoc explaining future use            |
 
 ### Action Items
+
 - [x] [AI-Review][CRITICAL] Add axe-core accessibility tests
 - [x] [AI-Review][CRITICAL] Document VoiceOver manual testing
 - [x] [AI-Review][MEDIUM] Remove unused liveRegionRef

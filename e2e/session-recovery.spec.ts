@@ -1,4 +1,4 @@
-import { test, expect, Page } from "@playwright/test"
+import { test, expect, Page } from "@playwright/test";
 
 /**
  * E2E tests for Session Recovery (Story 5.7)
@@ -10,29 +10,29 @@ import { test, expect, Page } from "@playwright/test"
  * - AC7: Session is cleared after TTL
  */
 
-const SESSION_PREFIX = "babypeek-session-"
-const JOB_DATA_PREFIX = "babypeek-job-"
-const CURRENT_JOB_KEY = "babypeek-current-job"
+const SESSION_PREFIX = "babypeek-session-";
+const JOB_DATA_PREFIX = "babypeek-job-";
+const CURRENT_JOB_KEY = "babypeek-current-job";
 
 // Helper to set up a mock session in localStorage
 async function setupMockSession(
   page: Page,
   jobId: string,
   options?: {
-    status?: "pending" | "processing" | "completed" | "failed"
-    resultId?: string
-    expired?: boolean
-  }
+    status?: "pending" | "processing" | "completed" | "failed";
+    resultId?: string;
+    expired?: boolean;
+  },
 ) {
-  const { status = "pending", resultId, expired = false } = options ?? {}
+  const { status = "pending", resultId, expired = false } = options ?? {};
 
   await page.addInitScript(
     ({ jobId, status, resultId, expired }) => {
-      const createdAt = expired ? Date.now() - 25 * 60 * 60 * 1000 : Date.now()
+      const createdAt = expired ? Date.now() - 25 * 60 * 60 * 1000 : Date.now();
 
       // Set session token
-      localStorage.setItem(`babypeek-session-${jobId}`, `mock-token-${jobId}`)
-      localStorage.setItem("babypeek-current-job", jobId)
+      localStorage.setItem(`babypeek-session-${jobId}`, `mock-token-${jobId}`);
+      localStorage.setItem("babypeek-current-job", jobId);
 
       // Set job data
       const jobData = {
@@ -41,19 +41,16 @@ async function setupMockSession(
         createdAt,
         status,
         ...(resultId && { resultId }),
-      }
-      localStorage.setItem(
-        `babypeek-job-${jobId}`,
-        JSON.stringify(jobData)
-      )
+      };
+      localStorage.setItem(`babypeek-job-${jobId}`, JSON.stringify(jobData));
 
       // Set result mapping if completed
       if (resultId) {
-        localStorage.setItem(`babypeek-result-upload-${resultId}`, jobId)
+        localStorage.setItem(`babypeek-result-upload-${resultId}`, jobId);
       }
     },
-    { jobId, status, resultId, expired }
-  )
+    { jobId, status, resultId, expired },
+  );
 }
 
 // Helper to simulate visibility change
@@ -62,170 +59,158 @@ async function simulateVisibilityChange(page: Page, state: "hidden" | "visible")
     Object.defineProperty(document, "visibilityState", {
       configurable: true,
       value: state,
-    })
-    document.dispatchEvent(new Event("visibilitychange"))
-  }, state)
+    });
+    document.dispatchEvent(new Event("visibilitychange"));
+  }, state);
 }
 
 test.describe("Session Recovery (Story 5.7)", () => {
   test.describe("Recovery Prompt (AC5)", () => {
-    test("shows recovery prompt for pending job on landing page", async ({
-      page,
-    }) => {
-      await setupMockSession(page, "test-job-1")
+    test("shows recovery prompt for pending job on landing page", async ({ page }) => {
+      await setupMockSession(page, "test-job-1");
 
-      await page.goto("/")
+      await page.goto("/");
 
       // Wait for recovery prompt to appear
-      const recoveryPrompt = page.getByRole("dialog")
-      await expect(recoveryPrompt).toBeVisible({ timeout: 5000 })
+      const recoveryPrompt = page.getByRole("dialog");
+      await expect(recoveryPrompt).toBeVisible({ timeout: 5000 });
 
       // Check for recovery prompt content
-      await expect(
-        page.getByText(/welcome back/i)
-      ).toBeVisible()
-      await expect(
-        page.getByRole("button", { name: /continue/i })
-      ).toBeVisible()
-      await expect(
-        page.getByRole("button", { name: /start fresh/i })
-      ).toBeVisible()
-    })
+      await expect(page.getByText(/welcome back/i)).toBeVisible();
+      await expect(page.getByRole("button", { name: /continue/i })).toBeVisible();
+      await expect(page.getByRole("button", { name: /start fresh/i })).toBeVisible();
+    });
 
     test("shows recovery prompt for processing job", async ({ page }) => {
-      await setupMockSession(page, "test-job-2", { status: "processing" })
+      await setupMockSession(page, "test-job-2", { status: "processing" });
 
-      await page.goto("/")
+      await page.goto("/");
 
-      const recoveryPrompt = page.getByRole("dialog")
-      await expect(recoveryPrompt).toBeVisible({ timeout: 5000 })
+      const recoveryPrompt = page.getByRole("dialog");
+      await expect(recoveryPrompt).toBeVisible({ timeout: 5000 });
 
       // Should show "Check Progress" for processing job
-      await expect(
-        page.getByRole("button", { name: /check progress/i })
-      ).toBeVisible()
-    })
+      await expect(page.getByRole("button", { name: /check progress/i })).toBeVisible();
+    });
 
     test("resume button navigates to processing page", async ({ page }) => {
-      await setupMockSession(page, "test-job-3", { status: "processing" })
+      await setupMockSession(page, "test-job-3", { status: "processing" });
 
-      await page.goto("/")
+      await page.goto("/");
 
       // Wait for and click resume button
-      const resumeButton = page.getByRole("button", { name: /check progress/i })
-      await resumeButton.click()
+      const resumeButton = page.getByRole("button", { name: /check progress/i });
+      await resumeButton.click();
 
       // Should navigate to processing page
-      await expect(page).toHaveURL(/\/processing\/test-job-3/)
-    })
+      await expect(page).toHaveURL(/\/processing\/test-job-3/);
+    });
 
     test("start fresh clears session and hides prompt", async ({ page }) => {
-      await setupMockSession(page, "test-job-4")
+      await setupMockSession(page, "test-job-4");
 
-      await page.goto("/")
+      await page.goto("/");
 
       // Click start fresh
-      const startFreshButton = page.getByRole("button", { name: /start fresh/i })
-      await startFreshButton.click()
+      const startFreshButton = page.getByRole("button", { name: /start fresh/i });
+      await startFreshButton.click();
 
       // Prompt should disappear
-      await expect(page.getByRole("dialog")).not.toBeVisible({ timeout: 2000 })
+      await expect(page.getByRole("dialog")).not.toBeVisible({ timeout: 2000 });
 
       // Session should be cleared
       const sessionExists = await page.evaluate((jobId) => {
-        return localStorage.getItem(`babypeek-job-${jobId}`) !== null
-      }, "test-job-4")
-      expect(sessionExists).toBe(false)
-    })
+        return localStorage.getItem(`babypeek-job-${jobId}`) !== null;
+      }, "test-job-4");
+      expect(sessionExists).toBe(false);
+    });
 
     test("does not show prompt on processing page", async ({ page }) => {
-      await setupMockSession(page, "test-job-5")
+      await setupMockSession(page, "test-job-5");
 
       // Navigate directly to processing page
-      await page.goto("/processing/test-job-5")
+      await page.goto("/processing/test-job-5");
 
       // Wait a bit to ensure no prompt appears
-      await page.waitForTimeout(1000)
+      await page.waitForTimeout(1000);
 
       // Should not show recovery dialog
-      await expect(page.getByRole("dialog")).not.toBeVisible()
-    })
-  })
+      await expect(page.getByRole("dialog")).not.toBeVisible();
+    });
+  });
 
   test.describe("Completed Job Redirect (AC6)", () => {
-    test("redirects to result page when completed job exists", async ({
-      page,
-    }) => {
+    test("redirects to result page when completed job exists", async ({ page }) => {
       await setupMockSession(page, "test-job-6", {
         status: "completed",
         resultId: "result-123",
-      })
+      });
 
-      await page.goto("/")
+      await page.goto("/");
 
       // Should redirect to result page
-      await expect(page).toHaveURL(/\/result\/result-123/, { timeout: 5000 })
-    })
+      await expect(page).toHaveURL(/\/result\/result-123/, { timeout: 5000 });
+    });
 
     test("does not redirect for failed job", async ({ page }) => {
-      await setupMockSession(page, "test-job-7", { status: "failed" })
+      await setupMockSession(page, "test-job-7", { status: "failed" });
 
-      await page.goto("/")
+      await page.goto("/");
 
       // Should stay on landing page (no redirect)
-      await expect(page).toHaveURL("/")
+      await expect(page).toHaveURL("/");
 
       // No recovery prompt for failed jobs
-      await page.waitForTimeout(1000)
-      await expect(page.getByRole("dialog")).not.toBeVisible()
-    })
-  })
+      await page.waitForTimeout(1000);
+      await expect(page.getByRole("dialog")).not.toBeVisible();
+    });
+  });
 
   test.describe("TTL Enforcement (AC7)", () => {
     test("does not show prompt for expired session", async ({ page }) => {
       await setupMockSession(page, "test-job-8", {
         status: "pending",
         expired: true,
-      })
+      });
 
-      await page.goto("/")
+      await page.goto("/");
 
       // Wait for stale session cleanup to run
-      await page.waitForTimeout(500)
+      await page.waitForTimeout(500);
 
       // Should not show recovery dialog
-      await expect(page.getByRole("dialog")).not.toBeVisible({ timeout: 2000 })
+      await expect(page.getByRole("dialog")).not.toBeVisible({ timeout: 2000 });
 
       // Session should be cleared
       const sessionExists = await page.evaluate((jobId) => {
-        return localStorage.getItem(`babypeek-job-${jobId}`) !== null
-      }, "test-job-8")
-      expect(sessionExists).toBe(false)
-    })
-  })
+        return localStorage.getItem(`babypeek-job-${jobId}`) !== null;
+      }, "test-job-8");
+      expect(sessionExists).toBe(false);
+    });
+  });
 
   test.describe("Visibility Change (AC1, AC2, AC3)", () => {
     test("visibility change hook is set up correctly", async ({ page }) => {
-      await page.goto("/")
+      await page.goto("/");
 
       // Check that visibilitychange event listener is registered
       const hasListener = await page.evaluate(() => {
         // We can't directly check listeners, but we can verify document.visibilityState works
-        return typeof document.visibilityState === "string"
-      })
-      expect(hasListener).toBe(true)
-    })
+        return typeof document.visibilityState === "string";
+      });
+      expect(hasListener).toBe(true);
+    });
 
     test("background → return triggers status refetch and navigates when completed", async ({
       page,
     }) => {
-      const jobId = "test-job-vis"
-      const resultId = "result-123"
+      const jobId = "test-job-vis";
+      const resultId = "result-123";
 
-      await setupMockSession(page, jobId, { status: "processing" })
+      await setupMockSession(page, jobId, { status: "processing" });
 
       const tinyPng =
-        "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/w8AAn8B9pRkqQAAAABJRU5ErkJggg=="
+        "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/w8AAn8B9pRkqQAAAABJRU5ErkJggg==";
 
       // Mock process start endpoint
       await page.route("**/api/process-workflow", async (route) => {
@@ -233,17 +218,17 @@ test.describe("Session Recovery (Story 5.7)", () => {
           status: 200,
           contentType: "application/json",
           body: JSON.stringify({ workflowRunId: "run-1" }),
-        })
-      })
+        });
+      });
 
       // Mock status endpoint with two-phase response:
       // 1) first call returns processing
       // 2) subsequent calls return completed
-      let statusCalls = 0
+      let statusCalls = 0;
       await page.route("**/api/status/**", async (route) => {
-        statusCalls += 1
+        statusCalls += 1;
 
-        const isCompleted = statusCalls >= 2
+        const isCompleted = statusCalls >= 2;
         const payload = isCompleted
           ? {
               success: true,
@@ -268,26 +253,26 @@ test.describe("Session Recovery (Story 5.7)", () => {
               promptVersion: "v4",
               errorMessage: null,
               updatedAt: new Date().toISOString(),
-            }
+            };
 
         await route.fulfill({
           status: 200,
           contentType: "application/json",
           body: JSON.stringify(payload),
-        })
-      })
+        });
+      });
 
-      await page.goto(`/processing/${jobId}`)
+      await page.goto(`/processing/${jobId}`);
 
       // Wait for the initial status call to happen
-      await page.waitForRequest(new RegExp(`/api/status/${jobId}$`))
+      await page.waitForRequest(new RegExp(`/api/status/${jobId}$`));
 
       // Simulate app backgrounding and returning
-      await simulateVisibilityChange(page, "hidden")
-      await simulateVisibilityChange(page, "visible")
+      await simulateVisibilityChange(page, "hidden");
+      await simulateVisibilityChange(page, "visible");
 
       // Should navigate to result page after refetch detects completion
-      await expect(page).toHaveURL(new RegExp(`/result/${resultId}$`), { timeout: 8000 })
-    })
-  })
-})
+      await expect(page).toHaveURL(new RegExp(`/result/${resultId}$`), { timeout: 8000 });
+    });
+  });
+});

@@ -77,10 +77,10 @@ interface DownloadPreviewButtonProps {
   variant?: 'default' | 'outline' | 'ghost'
 }
 
-export function DownloadPreviewButton({ 
-  previewUrl, 
+export function DownloadPreviewButton({
+  previewUrl,
   resultId,
-  variant = 'ghost' 
+  variant = 'ghost'
 }: DownloadPreviewButtonProps) {
   const [isDownloading, setIsDownloading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -98,19 +98,19 @@ export function DownloadPreviewButton({
       // Fetch the image as blob
       const response = await fetch(previewUrl)
       if (!response.ok) throw new Error('Failed to fetch image')
-      
+
       const blob = await response.blob()
-      
+
       // Create download filename with date
       const date = new Date().toISOString().split('T')[0] // YYYY-MM-DD
       const filename = `babypeek-preview-${date}.jpg`
-      
+
       // Create object URL and trigger download
       const url = URL.createObjectURL(blob)
       const link = document.createElement('a')
       link.href = url
       link.download = filename
-      
+
       // Append to body, click, and cleanup
       document.body.appendChild(link)
       link.click()
@@ -124,7 +124,7 @@ export function DownloadPreviewButton({
     } catch (err) {
       console.error('Download failed:', err)
       setError('Download failed. Please try again.')
-      
+
       // Track download failed
       if (isPostHogConfigured()) {
         posthog.capture('preview_download_failed', {
@@ -152,7 +152,7 @@ export function DownloadPreviewButton({
         )}
         {isDownloading ? 'Downloading...' : 'Download Preview'}
       </Button>
-      
+
       {error && (
         <p className="text-sm text-red-500 mt-1">{error}</p>
       )}
@@ -171,18 +171,18 @@ export function RevealUI({ resultId, previewUrl, onPurchase, onShare }: RevealUI
   return (
     <div className="bg-white/95 backdrop-blur-sm rounded-2xl p-6 shadow-xl space-y-4">
       {/* Primary CTA */}
-      <Button 
-        size="lg" 
+      <Button
+        size="lg"
         className="w-full bg-coral hover:bg-coral/90 text-white font-body text-lg py-6"
         onClick={onPurchase}
       >
         Get HD Version - $9.99
       </Button>
-      
+
       {/* Secondary actions */}
       <div className="flex gap-3">
-        <Button 
-          variant="outline" 
+        <Button
+          variant="outline"
           className="flex-1"
           onClick={onShare}
         >
@@ -211,7 +211,7 @@ const handleDownload = async () => {
   if (isIOS) {
     // iOS: Open image in new tab, user can long-press to save
     window.open(previewUrl, '_blank')
-    
+
     // Show toast with instructions
     toast({
       title: 'Saving on iOS',
@@ -220,7 +220,7 @@ const handleDownload = async () => {
     })
     return
   }
-  
+
   // Standard download for other browsers
   // ... existing blob download logic
 }
@@ -266,11 +266,11 @@ posthog.capture('preview_download_failed', {
 
 ### Error Handling
 
-| Error | User Message |
-|-------|--------------|
-| Fetch failed | "Download failed. Please try again." |
+| Error           | User Message                                  |
+| --------------- | --------------------------------------------- |
+| Fetch failed    | "Download failed. Please try again."          |
 | Network offline | "Please check your connection and try again." |
-| iOS restriction | (Show instructions toast) |
+| iOS restriction | (Show instructions toast)                     |
 
 ### File Structure
 
@@ -289,15 +289,15 @@ apps/web/src/components/reveal/
 
 ### Mobile Testing Matrix
 
-| Platform | Browser | Download Method |
-|----------|---------|-----------------|
-| iOS | Safari | Open in new tab + instructions |
-| iOS | Chrome | Open in new tab + instructions |
-| Android | Chrome | Direct blob download |
-| Android | Samsung | Direct blob download |
-| Desktop | Chrome | Direct blob download |
-| Desktop | Safari | Direct blob download |
-| Desktop | Firefox | Direct blob download |
+| Platform | Browser | Download Method                |
+| -------- | ------- | ------------------------------ |
+| iOS      | Safari  | Open in new tab + instructions |
+| iOS      | Chrome  | Open in new tab + instructions |
+| Android  | Chrome  | Direct blob download           |
+| Android  | Samsung | Direct blob download           |
+| Desktop  | Chrome  | Direct blob download           |
+| Desktop  | Safari  | Direct blob download           |
+| Desktop  | Firefox | Direct blob download           |
 
 ### References
 
@@ -313,7 +313,7 @@ apps/web/src/components/reveal/
 ### Action Items
 
 - [x] [HIGH] H1: iOS toast/messaging not implemented - Missing instructions toast for iOS users
-- [x] [HIGH] H2: Device testing unverified - Cannot verify, noted in documentation  
+- [x] [HIGH] H2: Device testing unverified - Cannot verify, noted in documentation
 - [x] [MEDIUM] M1: Download button layout bug - flex-1 applied to wrapper div, not Button
 - [x] [MEDIUM] M2: Missing iOS detection test coverage - No tests for iOS path
 - [x] [MEDIUM] M3: CORS fetch without error differentiation - No offline vs network error handling
@@ -349,6 +349,7 @@ None required - implementation was straightforward.
 - ✅ All 430 tests pass with no regressions
 
 **Code Review Fixes Applied:**
+
 - ✅ H1: Added toast.info() for iOS users with save instructions
 - ✅ M1: Applied className to Button with cn() for proper flex layout
 - ✅ M2: Added iOS detection tests (detectIOS exported, 4 new tests)
@@ -363,10 +364,12 @@ None required - implementation was straightforward.
 ### File List
 
 **New Files:**
+
 - `apps/web/src/components/reveal/DownloadPreviewButton.tsx`
 - `apps/web/src/components/reveal/DownloadPreviewButton.test.tsx`
 
 **Modified Files:**
+
 - `apps/web/src/components/reveal/RevealUI.tsx` - Added resultId/previewUrl props, integrated DownloadPreviewButton
 - `apps/web/src/components/reveal/RevealUI.test.tsx` - Updated tests for new interface
 - `apps/web/src/components/reveal/index.ts` - Exported DownloadPreviewButton

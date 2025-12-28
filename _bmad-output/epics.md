@@ -45,6 +45,7 @@ This document provides the complete epic and story breakdown for babypeek, decom
 ### Functional Requirements
 
 **FR-1: Image Upload & Processing**
+
 - FR-1.1: Accept JPEG, PNG, HEIC image formats (Must)
 - FR-1.2: Maximum file size 25MB (Must)
 - FR-1.3: Convert HEIC to JPEG client-side (Must)
@@ -55,6 +56,7 @@ This document provides the complete epic and story breakdown for babypeek, decom
 - FR-1.8: Direct upload to R2 via presigned URL (Must)
 
 **FR-2: AI Generation**
+
 - FR-2.1: Process image through Gemini Imagen 3 (Must)
 - FR-2.2: Use structured prompt template (Must)
 - FR-2.3: Complete processing in <90 seconds (Must)
@@ -63,6 +65,7 @@ This document provides the complete epic and story breakdown for babypeek, decom
 - FR-2.6: Store both original and result (Must)
 
 **FR-3: Preview & Results**
+
 - FR-3.1: Generate watermarked preview image (Must)
 - FR-3.2: Watermark: 40% opacity, corner position (Must)
 - FR-3.3: Preview resolution: 800px max dimension (Must)
@@ -71,6 +74,7 @@ This document provides the complete epic and story breakdown for babypeek, decom
 - FR-3.6: Download preview with watermark (Must)
 
 **FR-4: Payment & Purchase**
+
 - FR-4.1: Stripe payment integration (Must)
 - FR-4.2: Apple Pay support (Must)
 - FR-4.3: Google Pay support (Must)
@@ -80,6 +84,7 @@ This document provides the complete epic and story breakdown for babypeek, decom
 - FR-4.7: Handle failed payments gracefully (Must)
 
 **FR-5: Download & Delivery**
+
 - FR-5.1: Generate HD image (full resolution) (Must)
 - FR-5.2: Secure download link (signed URL) (Must)
 - FR-5.3: Download link expires in 7 days (Must)
@@ -88,6 +93,7 @@ This document provides the complete epic and story breakdown for babypeek, decom
 - FR-5.6: Support re-download within 30 days (Should)
 
 **FR-6: Sharing & Viral Loop**
+
 - FR-6.1: WhatsApp share button (Must)
 - FR-6.2: iMessage share button (Must)
 - FR-6.3: Copy link button (Must)
@@ -96,6 +102,7 @@ This document provides the complete epic and story breakdown for babypeek, decom
 - FR-6.6: Gift purchase CTA on share page (Must)
 
 **FR-7: Landing & Discovery**
+
 - FR-7.1: Mobile-optimized landing page (Must)
 - FR-7.2: Clear value proposition (Must)
 - FR-7.3: Before/after example gallery (Should)
@@ -104,6 +111,7 @@ This document provides the complete epic and story breakdown for babypeek, decom
 - FR-7.6: SEO optimization (Should)
 
 **FR-8: System Operations**
+
 - FR-8.1: Email delivery via Resend (Must)
 - FR-8.2: Analytics via PostHog (Should)
 - FR-8.3: Error tracking via Sentry (Should)
@@ -114,6 +122,7 @@ This document provides the complete epic and story breakdown for babypeek, decom
 ### Non-Functional Requirements
 
 **NFR-1: Performance**
+
 - NFR-1.1: Landing page LCP <2.5s
 - NFR-1.2: Time to Interactive <3.5s
 - NFR-1.3: Upload start latency <500ms
@@ -122,6 +131,7 @@ This document provides the complete epic and story breakdown for babypeek, decom
 - NFR-1.6: Bundle size <150KB
 
 **NFR-2: Security**
+
 - NFR-2.1: HTTPS everywhere
 - NFR-2.2: Signed URLs for all images
 - NFR-2.3: Rate limiting 10/IP/hour
@@ -130,6 +140,7 @@ This document provides the complete epic and story breakdown for babypeek, decom
 - NFR-2.6: No PII in logs
 
 **NFR-3: Scalability**
+
 - NFR-3.1: 100+ concurrent uploads
 - NFR-3.2: 10,000 images/day capacity
 - NFR-3.3: Auto-scaling (serverless)
@@ -137,6 +148,7 @@ This document provides the complete epic and story breakdown for babypeek, decom
 - NFR-3.5: Queue-based processing
 
 **NFR-4: Reliability**
+
 - NFR-4.1: 99.5% uptime
 - NFR-4.2: <1% error rate
 - NFR-4.3: >98% payment success rate
@@ -144,6 +156,7 @@ This document provides the complete epic and story breakdown for babypeek, decom
 - NFR-4.5: 99.99% data durability
 
 **NFR-5: Accessibility**
+
 - NFR-5.1: WCAG 2.1 Level AA
 - NFR-5.2: Keyboard navigation
 - NFR-5.3: Screen reader support
@@ -153,6 +166,7 @@ This document provides the complete epic and story breakdown for babypeek, decom
 ### Additional Requirements
 
 **From Architecture:**
+
 - Starter template: Better-T-Stack with Hono + Effect
 - Vercel Pro hosting (60s function timeout)
 - Cloudflare R2 storage with presigned URLs
@@ -167,6 +181,7 @@ This document provides the complete epic and story breakdown for babypeek, decom
 - GDPR: Delete button, hash/delete email, 30-day auto-deletion
 
 **From UX Design:**
+
 - Mobile-first design with bottom-aligned CTAs
 - Blur-to-sharp reveal animation (2-3 seconds)
 - Anticipation-building progress stages with baby facts
@@ -177,20 +192,20 @@ This document provides the complete epic and story breakdown for babypeek, decom
 
 ### FR Coverage Map
 
-| FR Range | Epic | Domain |
-|----------|------|--------|
-| FR-1.1 – FR-1.8 | Epic 3 | Upload |
-| FR-2.1 – FR-2.6 | Epic 4 | AI Processing |
-| FR-3.1 – FR-3.6 | Epic 5 | Reveal |
-| FR-4.1 – FR-4.7 | Epic 6 | Payment |
-| FR-5.1 – FR-5.6 | Epic 7 | Download |
-| FR-6.1 – FR-6.6 | Epic 8 | Sharing |
-| FR-7.1 – FR-7.6 | Epic 2 | Landing |
-| FR-8.1 | Epic 7 | Email |
-| FR-8.2 – FR-8.3 | Epic 1 | Observability |
-| FR-8.4 | Epic 3 | Rate Limiting |
-| FR-8.5 | Epic 8 | Auto-delete |
-| FR-8.6 | Deferred | Admin Dashboard |
+| FR Range        | Epic     | Domain          |
+| --------------- | -------- | --------------- |
+| FR-1.1 – FR-1.8 | Epic 3   | Upload          |
+| FR-2.1 – FR-2.6 | Epic 4   | AI Processing   |
+| FR-3.1 – FR-3.6 | Epic 5   | Reveal          |
+| FR-4.1 – FR-4.7 | Epic 6   | Payment         |
+| FR-5.1 – FR-5.6 | Epic 7   | Download        |
+| FR-6.1 – FR-6.6 | Epic 8   | Sharing         |
+| FR-7.1 – FR-7.6 | Epic 2   | Landing         |
+| FR-8.1          | Epic 7   | Email           |
+| FR-8.2 – FR-8.3 | Epic 1   | Observability   |
+| FR-8.4          | Epic 3   | Rate Limiting   |
+| FR-8.5          | Epic 8   | Auto-delete     |
+| FR-8.6          | Deferred | Admin Dashboard |
 
 **Coverage:** 53/54 FRs mapped (FR-8.6 deferred to post-MVP)
 
@@ -199,7 +214,7 @@ This document provides the complete epic and story breakdown for babypeek, decom
 ```
 EPIC 1: Foundation
   1.1 → 1.2 → 1.3 → 1.4 → [1.5 ∥ 1.6 ∥ 1.7 ∥ 1.8 ∥ 1.9]
-  
+
 EPIC 2: Landing (can start after 1.1)
   2.1 → [2.2 ∥ 2.3 ∥ 2.4 ∥ 2.5 ∥ 2.6]
 
@@ -227,6 +242,7 @@ EPIC 8: Sharing
 ## Priority Tiers
 
 ### 🔴 P0 - Critical Path (Block release if incomplete)
+
 - 1.1, 1.2, 1.3, 1.4 (Foundation core)
 - 3.1, 3.5, 3.6, 3.7 (Upload core)
 - 4.1, 4.2, 4.4 (AI core)
@@ -235,6 +251,7 @@ EPIC 8: Sharing
 - 7.1, 7.2, 7.3 (Download core)
 
 ### 🟡 P1 - Important (Complete in sprint)
+
 - 1.5, 1.6, 1.7 (Observability)
 - 2.1, 2.2 (Landing essentials)
 - 3.2, 3.3, 3.4, 3.9 (Upload polish)
@@ -245,6 +262,7 @@ EPIC 8: Sharing
 - 8.1, 8.3, 8.4, 8.5 (Sharing core)
 
 ### 🟢 P2 - Enhancement (Can defer if needed)
+
 - 1.8, 1.9 (Test infrastructure, schema docs)
 - 2.3, 2.4, 2.5, 2.6 (Landing extras)
 - 3.8 (Rate limiting)
@@ -255,17 +273,18 @@ EPIC 8: Sharing
 
 ## Risk Register
 
-| Rank | Risk | Stories | Impact | Mitigation |
-|------|------|---------|--------|------------|
-| 1 | Gemini API quality/stability | 4.2, 4.3 | CRITICAL | Quality validation gate, fallback messaging |
-| 2 | Mobile performance (HEIC + animation) | 3.2, 5.3 | HIGH | Lazy loading, performance budgets, device testing |
-| 3 | Payment webhook reliability | 6.3 | HIGH | Idempotency, retry logic, reconciliation |
-| 4 | 90s processing timeout | 4.6 | MEDIUM | User expectations, graceful degradation |
-| 5 | Session loss on mobile | 5.7 | MEDIUM | localStorage persistence, visibility API |
+| Rank | Risk                                  | Stories  | Impact   | Mitigation                                        |
+| ---- | ------------------------------------- | -------- | -------- | ------------------------------------------------- |
+| 1    | Gemini API quality/stability          | 4.2, 4.3 | CRITICAL | Quality validation gate, fallback messaging       |
+| 2    | Mobile performance (HEIC + animation) | 3.2, 5.3 | HIGH     | Lazy loading, performance budgets, device testing |
+| 3    | Payment webhook reliability           | 6.3      | HIGH     | Idempotency, retry logic, reconciliation          |
+| 4    | 90s processing timeout                | 4.6      | MEDIUM   | User expectations, graceful degradation           |
+| 5    | Session loss on mobile                | 5.7      | MEDIUM   | localStorage persistence, visibility API          |
 
 ## Epic List
 
 ### Epic 1: Foundation & Observability
+
 **User Outcome:** Development environment ready with monitoring from day one
 
 **Goal:** Initialize project with Better-T-Stack + Effect, set up infrastructure connections, and establish observability so all issues are visible from the start.
@@ -273,6 +292,7 @@ EPIC 8: Sharing
 **FRs covered:** FR-8.2, FR-8.3, Architecture requirements
 
 **Includes:**
+
 - Better-T-Stack project initialization
 - Effect library setup
 - Neon PostgreSQL connection + Drizzle schema
@@ -285,6 +305,7 @@ EPIC 8: Sharing
 ---
 
 ### Epic 2: Landing Experience
+
 **User Outcome:** Users discover babypeek and understand its value proposition
 
 **Goal:** A visitor lands on the page, instantly understands what babypeek does, sees compelling before/after examples, and is motivated to try it.
@@ -292,6 +313,7 @@ EPIC 8: Sharing
 **FRs covered:** FR-7.1, FR-7.2, FR-7.3, FR-7.4, FR-7.5, FR-7.6
 
 **Includes:**
+
 - Mobile-optimized landing page layout
 - Hero section with clear value proposition
 - Before/after example gallery
@@ -303,6 +325,7 @@ EPIC 8: Sharing
 ---
 
 ### Epic 3: Image Upload
+
 **User Outcome:** Users can upload their 4D ultrasound and initiate processing
 
 **Goal:** User selects their ultrasound image, it's processed client-side (HEIC conversion, compression), uploaded to R2, and they receive a jobId to track progress.
@@ -310,6 +333,7 @@ EPIC 8: Sharing
 **FRs covered:** FR-1.1, FR-1.2, FR-1.3, FR-1.4, FR-1.5, FR-1.6, FR-1.7, FR-1.8, FR-8.4
 
 **Includes:**
+
 - Image picker with format validation
 - Client-side HEIC → JPEG conversion (heic2any)
 - Client-side compression for large files
@@ -323,6 +347,7 @@ EPIC 8: Sharing
 ---
 
 ### Epic 4: AI Processing
+
 **User Outcome:** System generates photorealistic portrait from ultrasound
 
 **Goal:** The uploaded ultrasound is processed through Gemini Imagen 3, generating a photorealistic baby portrait stored in R2.
@@ -330,6 +355,7 @@ EPIC 8: Sharing
 **FRs covered:** FR-2.1, FR-2.2, FR-2.3, FR-2.4, FR-2.5, FR-2.6
 
 **Includes:**
+
 - Workflow job definition (useworkflow.dev)
 - Gemini Imagen 3 API integration
 - Structured prompt template
@@ -342,6 +368,7 @@ EPIC 8: Sharing
 ---
 
 ### Epic 5: Reveal Experience
+
 **User Outcome:** Users see an emotional blur-to-sharp reveal of their baby's portrait
 
 **Goal:** After processing completes, user sees a stunning reveal animation that transitions from blurred to sharp, creating the emotional peak of the product.
@@ -349,6 +376,7 @@ EPIC 8: Sharing
 **FRs covered:** FR-3.1, FR-3.2, FR-3.3, FR-3.4, FR-3.5, FR-3.6
 
 **Includes:**
+
 - Processing status page with progress stages
 - Baby facts carousel during wait
 - Watermark application (40% opacity, corner)
@@ -362,6 +390,7 @@ EPIC 8: Sharing
 ---
 
 ### Epic 6: Payment
+
 **User Outcome:** Users can purchase the HD version with Apple Pay, Google Pay, or card
 
 **Goal:** After viewing the watermarked preview, user taps "Get HD Version" and completes purchase in seconds via Stripe.
@@ -369,6 +398,7 @@ EPIC 8: Sharing
 **FRs covered:** FR-4.1, FR-4.2, FR-4.3, FR-4.4, FR-4.5, FR-4.6, FR-4.7
 
 **Includes:**
+
 - Stripe Checkout integration
 - Apple Pay button
 - Google Pay button
@@ -383,6 +413,7 @@ EPIC 8: Sharing
 ---
 
 ### Epic 7: Download & Delivery
+
 **User Outcome:** Users receive their HD photo via email and in-app download
 
 **Goal:** After purchase, user gets immediate download access and an email with a secure 7-day download link.
@@ -390,6 +421,7 @@ EPIC 8: Sharing
 **FRs covered:** FR-5.1, FR-5.2, FR-5.3, FR-5.4, FR-5.5, FR-5.6, FR-8.1
 
 **Includes:**
+
 - HD image retrieval (full resolution)
 - Signed URL generation (7-day expiry)
 - In-app download button
@@ -401,6 +433,7 @@ EPIC 8: Sharing
 ---
 
 ### Epic 8: Sharing & Viral Loop
+
 **User Outcome:** Users share their result and drive viral growth
 
 **Goal:** Users share watermarked preview to social platforms, and share recipients can view the preview and purchase as a gift.
@@ -408,6 +441,7 @@ EPIC 8: Sharing
 **FRs covered:** FR-6.1, FR-6.2, FR-6.3, FR-6.4, FR-6.5, FR-6.6, FR-8.5
 
 **Includes:**
+
 - WhatsApp share button
 - iMessage share button
 - Copy link button
@@ -438,6 +472,7 @@ Epic 1 (Foundation) ──┬── Epic 2 (Landing) ← Standalone entry point
 ```
 
 **Parallel Work Opportunities:**
+
 - Epic 2 (Landing) can be developed alongside Epic 3 (Upload)
 - Epic 4 (AI/backend) and Epic 5 (Reveal/frontend) can be developed in parallel
 
@@ -524,7 +559,7 @@ So that **the app fails fast on missing or invalid config**.
 **And** missing required variables throw descriptive errors  
 **And** sensitive values are never logged  
 **And** type-safe `env` object is exported from `packages/api/src/lib/env.ts`  
-**And** validation covers: DATABASE_URL, R2_*, GEMINI_API_KEY, STRIPE_*, RESEND_API_KEY
+**And** validation covers: DATABASE*URL, R2*_, GEMINI*API_KEY, STRIPE*_, RESEND_API_KEY
 
 ---
 
@@ -1600,17 +1635,16 @@ So that **I understand why I can't access it**.
 
 ## Story Summary
 
-| Epic | Stories | P0 | P1 | P2 |
-|------|---------|----|----|----| 
-| Epic 1: Foundation | 9 | 4 | 3 | 2 |
-| Epic 2: Landing | 6 | 0 | 2 | 4 |
-| Epic 3: Upload | 9 | 4 | 3 | 2 |
-| Epic 4: AI Processing | 6 | 3 | 3 | 0 |
-| Epic 5: Reveal | 7 | 2 | 2 | 3 |
-| Epic 6: Payment | 7 | 3 | 2 | 2 |
-| Epic 7: Download | 6 | 3 | 2 | 1 |
-| Epic 8: Sharing | 8 | 0 | 4 | 4 |
-| **Total** | **58** | **19** | **21** | **18** |
+| Epic                  | Stories | P0     | P1     | P2     |
+| --------------------- | ------- | ------ | ------ | ------ |
+| Epic 1: Foundation    | 9       | 4      | 3      | 2      |
+| Epic 2: Landing       | 6       | 0      | 2      | 4      |
+| Epic 3: Upload        | 9       | 4      | 3      | 2      |
+| Epic 4: AI Processing | 6       | 3      | 3      | 0      |
+| Epic 5: Reveal        | 7       | 2      | 2      | 3      |
+| Epic 6: Payment       | 7       | 3      | 2      | 2      |
+| Epic 7: Download      | 6       | 3      | 2      | 1      |
+| Epic 8: Sharing       | 8       | 0      | 4      | 4      |
+| **Total**             | **58**  | **19** | **21** | **18** |
 
 ---
-

@@ -1,6 +1,6 @@
-import { useState, useCallback } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import { useState, useCallback } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Dialog,
   DialogContent,
@@ -8,18 +8,18 @@ import {
   DialogFooter,
   DialogTitle,
   DialogDescription,
-} from "@/components/ui/dialog"
-import { API_BASE_URL } from "@/lib/api-config"
-import { posthog, isPostHogConfigured } from "@/lib/posthog"
-import { addBreadcrumb } from "@/lib/sentry"
+} from "@/components/ui/dialog";
+import { API_BASE_URL } from "@/lib/api-config";
+import { posthog, isPostHogConfigured } from "@/lib/posthog";
+import { addBreadcrumb } from "@/lib/sentry";
 
 // Price from env or default $9.99
-const PRICE_CENTS = Number(import.meta.env.VITE_PRODUCT_PRICE_CENTS) || 999
-const PRICE_DISPLAY = `$${(PRICE_CENTS / 100).toFixed(2)}`
+const PRICE_CENTS = Number(import.meta.env.VITE_PRODUCT_PRICE_CENTS) || 999;
+const PRICE_DISPLAY = `$${(PRICE_CENTS / 100).toFixed(2)}`;
 
 interface GiftCheckoutButtonProps {
-  shareId: string
-  uploadId: string
+  shareId: string;
+  uploadId: string;
 }
 
 /**
@@ -30,24 +30,24 @@ interface GiftCheckoutButtonProps {
  * Creates checkout session with type="gift" and purchaser email.
  */
 export function GiftCheckoutButton({ shareId, uploadId }: GiftCheckoutButtonProps) {
-  const [showEmailModal, setShowEmailModal] = useState(false)
-  const [email, setEmail] = useState("")
-  const [emailError, setEmailError] = useState("")
-  const [isLoading, setIsLoading] = useState(false)
+  const [showEmailModal, setShowEmailModal] = useState(false);
+  const [email, setEmail] = useState("");
+  const [emailError, setEmailError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   const validateEmail = (value: string): boolean => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!value) {
-      setEmailError("Email is required")
-      return false
+      setEmailError("Email is required");
+      return false;
     }
     if (!emailRegex.test(value)) {
-      setEmailError("Please enter a valid email")
-      return false
+      setEmailError("Please enter a valid email");
+      return false;
     }
-    setEmailError("")
-    return true
-  }
+    setEmailError("");
+    return true;
+  };
 
   const handleOpenModal = useCallback(() => {
     // Story 8.5 - Track CTA click (funnel: awareness → interest)
@@ -56,31 +56,31 @@ export function GiftCheckoutButton({ shareId, uploadId }: GiftCheckoutButtonProp
         share_id: shareId,
         upload_id: uploadId,
         source: "share_page",
-      })
+      });
     }
     // M1: Sentry breadcrumb for debugging checkout flows
-    addBreadcrumb("Gift CTA clicked", "checkout", { share_id: shareId })
-    
+    addBreadcrumb("Gift CTA clicked", "checkout", { share_id: shareId });
+
     // Reset state when modal opens (in case user navigated back)
-    setIsLoading(false)
-    setEmailError("")
-    setShowEmailModal(true)
-  }, [shareId, uploadId])
+    setIsLoading(false);
+    setEmailError("");
+    setShowEmailModal(true);
+  }, [shareId, uploadId]);
 
   const handleGiftPurchase = useCallback(async () => {
-    if (!validateEmail(email)) return
-    if (isLoading) return
+    if (!validateEmail(email)) return;
+    if (isLoading) return;
 
-    setIsLoading(true)
+    setIsLoading(true);
 
     // H1 Fix: Track purchase started at correct funnel stage (interest → intent)
     if (isPostHogConfigured()) {
       posthog.capture("gift_purchase_started", {
         share_id: shareId,
         upload_id: uploadId,
-      })
+      });
     }
-    addBreadcrumb("Gift purchase started", "checkout", { share_id: shareId })
+    addBreadcrumb("Gift purchase started", "checkout", { share_id: shareId });
 
     try {
       // Gift checkout - no session token required (public purchase)
@@ -91,14 +91,14 @@ export function GiftCheckoutButton({ shareId, uploadId }: GiftCheckoutButtonProp
           uploadId,
           purchaserEmail: email,
         }),
-      })
+      });
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}))
-        throw new Error(errorData.error || "Failed to create checkout session")
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || "Failed to create checkout session");
       }
 
-      const { checkoutUrl } = await response.json()
+      const { checkoutUrl } = await response.json();
 
       // Track checkout created
       if (isPostHogConfigured()) {
@@ -106,25 +106,25 @@ export function GiftCheckoutButton({ shareId, uploadId }: GiftCheckoutButtonProp
           share_id: shareId,
           upload_id: uploadId,
           amount: PRICE_CENTS,
-        })
+        });
       }
 
       // Redirect to Stripe Checkout
-      window.location.href = checkoutUrl
+      window.location.href = checkoutUrl;
     } catch (error) {
-      console.error("[GiftCheckoutButton] Checkout failed:", error)
+      console.error("[GiftCheckoutButton] Checkout failed:", error);
 
       if (isPostHogConfigured()) {
         posthog.capture("gift_checkout_error", {
           share_id: shareId,
           error: error instanceof Error ? error.message : "Unknown error",
-        })
+        });
       }
 
-      setEmailError(error instanceof Error ? error.message : "Unable to start checkout")
-      setIsLoading(false)
+      setEmailError(error instanceof Error ? error.message : "Unable to start checkout");
+      setIsLoading(false);
     }
-  }, [uploadId, shareId, email, isLoading])
+  }, [uploadId, shareId, email, isLoading]);
 
   return (
     <>
@@ -158,8 +158,8 @@ export function GiftCheckoutButton({ shareId, uploadId }: GiftCheckoutButtonProp
                 placeholder="your@email.com"
                 value={email}
                 onChange={(e) => {
-                  setEmail(e.target.value)
-                  if (emailError) validateEmail(e.target.value)
+                  setEmail(e.target.value);
+                  if (emailError) validateEmail(e.target.value);
                 }}
                 className={emailError ? "border-red-500" : ""}
                 data-testid="gift-email-input"
@@ -174,11 +174,7 @@ export function GiftCheckoutButton({ shareId, uploadId }: GiftCheckoutButtonProp
           </div>
 
           <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setShowEmailModal(false)}
-              disabled={isLoading}
-            >
+            <Button variant="outline" onClick={() => setShowEmailModal(false)} disabled={isLoading}>
               Cancel
             </Button>
             <Button
@@ -200,5 +196,5 @@ export function GiftCheckoutButton({ shareId, uploadId }: GiftCheckoutButtonProp
         </DialogContent>
       </Dialog>
     </>
-  )
+  );
 }

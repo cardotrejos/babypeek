@@ -1,4 +1,4 @@
-import { useNavigate } from "@tanstack/react-router"
+import { useNavigate } from "@tanstack/react-router";
 
 /**
  * DownloadExpired Component
@@ -12,11 +12,11 @@ import { useNavigate } from "@tanstack/react-router"
  */
 
 interface DownloadExpiredProps {
-  expiresAt: string | null
+  expiresAt: string | null;
 }
 
 export function DownloadExpired({ expiresAt }: DownloadExpiredProps) {
-  const navigate = useNavigate()
+  const navigate = useNavigate();
 
   const expiredDate = expiresAt
     ? new Date(expiresAt).toLocaleDateString("en-US", {
@@ -24,7 +24,7 @@ export function DownloadExpired({ expiresAt }: DownloadExpiredProps) {
         day: "numeric",
         year: "numeric",
       })
-    : null
+    : null;
 
   return (
     <div className="min-h-screen bg-cream flex items-center justify-center p-4">
@@ -38,9 +38,7 @@ export function DownloadExpired({ expiresAt }: DownloadExpiredProps) {
 
         {/* Message */}
         <div className="space-y-2">
-          <h1 className="font-display text-2xl text-charcoal">
-            Download Expired
-          </h1>
+          <h1 className="font-display text-2xl text-charcoal">Download Expired</h1>
           <p className="text-warm-gray">
             {expiredDate
               ? `Your download access expired on ${expiredDate}. Downloads are available for 30 days after purchase.`
@@ -69,5 +67,5 @@ export function DownloadExpired({ expiresAt }: DownloadExpiredProps) {
         </div>
       </div>
     </div>
-  )
+  );
 }

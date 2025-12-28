@@ -66,6 +66,7 @@ so that **I can save it to my camera roll immediately**.
 ### Existing Code to Leverage
 
 **checkout-success.tsx placeholder** (apps/web/src/routes/checkout-success.tsx):
+
 ```typescript
 {/* Download button - placeholder for Story 7.x */}
 <Button
@@ -80,6 +81,7 @@ so that **I can save it to my camera roll immediately**.
 ```
 
 **Session token pattern** (apps/web/src/lib/session.ts):
+
 ```typescript
 export const getSession = (uploadId: string): string | null => {
   try {
@@ -151,7 +153,7 @@ export function DownloadButton({
       setState("downloading")
 
       // AC-3: Generate filename with date
-      const filename = suggestedFilename || 
+      const filename = suggestedFilename ||
         `babypeek-baby-${new Date().toISOString().split('T')[0]}.jpg`
 
       // Trigger download via hidden anchor
@@ -253,10 +255,10 @@ import { toast } from "sonner"
 
 function CheckoutSuccessPage() {
   const { session_id } = Route.useSearch()
-  
+
   // Get uploadId from session storage (stored during checkout)
-  const uploadId = typeof window !== "undefined" 
-    ? localStorage.getItem("babypeek-last-purchase-upload") 
+  const uploadId = typeof window !== "undefined"
+    ? localStorage.getItem("babypeek-last-purchase-upload")
     : null
   const sessionToken = uploadId ? getSession(uploadId) : null
 
@@ -424,11 +426,13 @@ None - implementation completed without issues.
 ### File List
 
 **New Files:**
+
 - apps/web/src/components/download/DownloadButton.tsx
 - apps/web/src/components/download/DownloadButton.test.tsx
 - apps/web/src/components/download/index.ts
 
 **Modified Files:**
+
 - apps/web/src/routes/checkout-success.tsx (replaced placeholder with DownloadButton)
 - apps/web/src/components/payment/CheckoutButton.tsx (store uploadId for checkout-success)
 

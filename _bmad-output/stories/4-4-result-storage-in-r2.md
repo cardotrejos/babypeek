@@ -85,6 +85,7 @@ so that **they can be retrieved for reveal and download**.
 ### Database Schema Reference
 
 **Schema alignment required:** The current schema (`packages/db/src/schema/index.ts`) does **not** include a `results` table. Decide **one**:
+
 - **Option A (align with architecture):** Add `results` table + migration, then link uploads via `uploadId`.
 - **Option B (MVP):** Use `uploads` as the canonical result record (store `resultUrl`/`previewUrl` on upload) and skip a separate `results` table for now.
 
@@ -144,16 +145,16 @@ export const ResultServiceLive = Layer.effect(
   ResultService,
   Effect.gen(function* () {
     const r2Service = yield* R2Service
-    
+
     return {
       create: ({ uploadId, fullImageBuffer }) =>
         Effect.gen(function* () {
           const resultId = createId()
           const r2Key = `results/${resultId}/full.jpg`
-          
+
           // Upload to R2
           yield* r2Service.upload(r2Key, fullImageBuffer, 'image/jpeg')
-          
+
           // Create database record (preview URL added in Story 5.2)
           const [result] = yield* Effect.tryPromise({
             try: () => db.insert(results).values({
@@ -162,59 +163,59 @@ export const ResultServiceLive = Layer.effect(
               resultUrl: r2Key,
               previewUrl: '', // Set in Story 5.2 (watermarking)
             }).returning(),
-            catch: (e) => new ResultError({ 
-              cause: 'DB_FAILED', 
+            catch: (e) => new ResultError({
+              cause: 'DB_FAILED',
               message: String(e),
-              uploadId 
+              uploadId
             })
           })
-          
+
           // Update upload record with result reference
           yield* Effect.tryPromise({
             try: () => db.update(uploads)
               .set({ resultUrl: r2Key, updatedAt: new Date() })
               .where(eq(uploads.id, uploadId)),
-            catch: (e) => new ResultError({ 
-              cause: 'DB_FAILED', 
+            catch: (e) => new ResultError({
+              cause: 'DB_FAILED',
               message: String(e),
-              uploadId 
+              uploadId
             })
           })
-          
+
           return result
         }),
-      
+
       getById: (id) =>
         Effect.gen(function* () {
           const result = yield* Effect.tryPromise({
             try: () => db.query.results.findFirst({
               where: eq(results.id, id)
             }),
-            catch: (e) => new ResultError({ 
-              cause: 'DB_FAILED', 
-              message: String(e) 
+            catch: (e) => new ResultError({
+              cause: 'DB_FAILED',
+              message: String(e)
             })
           })
-          
+
           if (!result) {
-            return yield* Effect.fail(new NotFoundError({ 
-              resource: 'result', 
-              id 
+            return yield* Effect.fail(new NotFoundError({
+              resource: 'result',
+              id
             }))
           }
-          
+
           return result
         }),
-      
+
       getByUploadId: (uploadId) =>
         Effect.tryPromise({
           try: () => db.query.results.findFirst({
             where: eq(results.uploadId, uploadId)
           }),
-          catch: (e) => new ResultError({ 
-            cause: 'DB_FAILED', 
+          catch: (e) => new ResultError({
+            cause: 'DB_FAILED',
             message: String(e),
-            uploadId 
+            uploadId
           })
         })
     }
@@ -237,9 +238,9 @@ upload: (key: string, body: Buffer, contentType: string) =>
       }))
       return `https://${env.R2_BUCKET_NAME}.r2.cloudflarestorage.com/${key}`
     },
-    catch: (e) => new R2Error({ 
-      cause: 'UPLOAD_FAILED', 
-      message: String(e) 
+    catch: (e) => new R2Error({
+      cause: 'UPLOAD_FAILED',
+      message: String(e)
     })
   })
 ```
@@ -270,19 +271,19 @@ export const processImageWorkflow = (uploadId: string) =>
     // Stage 1: Validate upload exists
     Effect.flatMap(() => UploadService.getById(uploadId)),
     Effect.tap(() => UploadService.updateStage(uploadId, 'validating', 10)),
-    
+
     // Stage 2: Call Gemini (Story 4.2)
-    Effect.flatMap((upload) => 
+    Effect.flatMap((upload) =>
       Effect.gen(function* () {
         yield* UploadService.updateStage(uploadId, 'generating', 30)
         const imageBuffer = yield* GeminiService.generateImage(
-          upload.originalUrl, 
+          upload.originalUrl,
           getPrompt('v1')
         )
         return imageBuffer
       })
     ),
-    
+
     // Stage 3: Store result in R2 (THIS STORY)
     Effect.flatMap((imageBuffer) =>
       Effect.gen(function* () {
@@ -291,24 +292,24 @@ export const processImageWorkflow = (uploadId: string) =>
           uploadId,
           fullImageBuffer: imageBuffer
         })
-        
+
         // Track analytics
         yield* PostHogService.capture('result_stored', uploadId, {
           upload_id: uploadId,
           result_id: result.id,
           file_size_bytes: imageBuffer.length,
         })
-        
+
         return result
       })
     ),
-    
+
     // Stage 4: Watermarking (Story 5.2)
     // ...
-    
+
     // Stage 5: Complete (Story 4.5)
     // ...
-    
+
     // Provide all services
     Effect.provide(AppServicesLive)
   )
@@ -405,12 +406,12 @@ describe('ResultService', () => {
         uploadId: 'test-upload-id',
         fullImageBuffer: Buffer.from('test-image'),
       })
-      
+
       expect(result.id).toBeDefined()
       expect(result.resultUrl).toContain('results/')
       expect(result.uploadId).toBe('test-upload-id')
     })
-    
+
     await Effect.runPromise(
       program.pipe(
         Effect.provide(ResultServiceLive),
@@ -470,14 +471,14 @@ None - implementation proceeded smoothly.
 
 ### Issues Found and Fixed
 
-| # | Severity | Issue | Resolution |
-|---|----------|-------|------------|
-| 1 | HIGH | Task 5 claimed previewUrl set but it wasn't | Updated task description - previewUrl is Story 5.2 scope |
-| 2 | HIGH | Task 5 claimed status updated but it wasn't | Updated task description - status update is Story 4.5 scope |
-| 3 | MEDIUM | DB update didn't verify upload existed | Added `.returning()` and NOT_FOUND error handling |
-| 4 | MEDIUM | Test file was untracked in git | Staged for commit |
-| 5 | MEDIUM | Integration test claim was inaccurate | Clarified - unit tests with mocks provide coverage |
-| 6 | LOW | Dev Notes said "results table" but MVP uses uploads | Corrected documentation |
+| #   | Severity | Issue                                               | Resolution                                                  |
+| --- | -------- | --------------------------------------------------- | ----------------------------------------------------------- |
+| 1   | HIGH     | Task 5 claimed previewUrl set but it wasn't         | Updated task description - previewUrl is Story 5.2 scope    |
+| 2   | HIGH     | Task 5 claimed status updated but it wasn't         | Updated task description - status update is Story 4.5 scope |
+| 3   | MEDIUM   | DB update didn't verify upload existed              | Added `.returning()` and NOT_FOUND error handling           |
+| 4   | MEDIUM   | Test file was untracked in git                      | Staged for commit                                           |
+| 5   | MEDIUM   | Integration test claim was inaccurate               | Clarified - unit tests with mocks provide coverage          |
+| 6   | LOW      | Dev Notes said "results table" but MVP uses uploads | Corrected documentation                                     |
 
 ### Action Items
 

@@ -21,6 +21,7 @@ so that **I can measure conversion and identify drop-offs**.
 ## Current State Analysis
 
 **Already Implemented (Stories 3.1-3.5):**
+
 - ✅ `upload_started` with file_type, file_size
 - ✅ `upload_completed` with durationMs, file_size, uploadId
 - ✅ `upload_failed` with errorType, file_size
@@ -35,6 +36,7 @@ so that **I can measure conversion and identify drop-offs**.
 - ✅ PostHog integration via `useAnalytics` hook
 
 **Gaps to Address:**
+
 - ❌ Funnel analysis documentation/setup in PostHog
 - ❌ Session-level tracking (multiple attempts per session)
 - ❌ Device/browser context on events
@@ -109,24 +111,24 @@ export type AnalyticsEvent =
   // Image Selection (Story 3.1)
   | "upload_file_selected"        // { file_type, file_size }
   | "upload_validation_error"     // { type: 'file_type' | 'file_size', file_type?, file_size? }
-  
+
   // HEIC Conversion (Story 3.2)
   | "heic_conversion_started"     // { fileSize, fileSizeMB }
   | "heic_conversion_completed"   // { durationMs, inputSize, outputSize }
   | "heic_conversion_error"       // { errorType, fileSize }
   | "heic_large_file_warning"     // { fileSizeMB }
-  
+
   // Compression (Story 3.3)
   | "compression_started"         // { fileSize, fileSizeMB, fileType }
   | "compression_completed"       // { durationMs, originalSize, compressedSize, compressionRatio }
   | "compression_skipped"         // { reason, fileSize }
   | "compression_failed"          // { errorType, fileSize }
-  
+
   // Email Capture (Story 3.4)
   | "email_entered"               // {} (no PII)
   | "email_validation_error"      // { errorType }
   | "upload_form_completed"       // {}
-  
+
   // Upload Flow (Story 3.5)
   | "presigned_url_requested"     // { latencyMs }
   | "upload_started"              // { file_type, file_size }
@@ -148,11 +150,11 @@ export function getAnalyticsContext() {
     os: getOSInfo(),                         // 'iOS 17' | 'Android 14' | 'Windows 11'
     viewport_width: window.innerWidth,
     viewport_height: window.innerHeight,
-    
+
     // Connection info (if available)
     connection_type: getConnectionType(),    // 'wifi' | 'cellular' | 'unknown'
     effective_type: getEffectiveType(),      // '4g' | '3g' | 'slow-2g'
-    
+
     // Session info
     session_id: getOrCreateSessionId(),
     time_since_page_load: getTimeSinceLoad(),
@@ -187,7 +189,7 @@ interface UploadSession {
 
 export function getOrCreateUploadSession(): UploadSession {
   const stored = sessionStorage.getItem(UPLOAD_SESSION_KEY)
-  
+
   if (stored) {
     const session = JSON.parse(stored) as UploadSession
     // Expire session after 30 minutes of inactivity
@@ -195,13 +197,13 @@ export function getOrCreateUploadSession(): UploadSession {
       return session
     }
   }
-  
+
   const newSession: UploadSession = {
     id: crypto.randomUUID(),
     startedAt: Date.now(),
     attemptCount: 0,
   }
-  
+
   sessionStorage.setItem(UPLOAD_SESSION_KEY, JSON.stringify(newSession))
   return newSession
 }
@@ -222,18 +224,18 @@ interface UploadCompletedProperties {
   uploadId: string
   file_size: number
   file_type: string
-  
+
   // Timing breakdown (all in ms)
   total_duration: number
   processing_time: number    // HEIC + compression
   presign_latency: number    // API call
   upload_duration: number    // R2 PUT
-  
+
   // Context
   was_heic_converted: boolean
   was_compressed: boolean
   compression_ratio?: number
-  
+
   // Session
   session_id: string
   attempt_number: number
@@ -255,19 +257,19 @@ trackEvent('upload_completed', {
   uploadId,
   file_size: file.size,
   file_type: file.type,
-  
+
   total_duration: timings.uploadEnd - timings.processStart,
   processing_time: timings.processEnd - timings.processStart,
   presign_latency: timings.presignEnd - timings.presignStart,
   upload_duration: timings.uploadEnd - timings.uploadStart,
-  
+
   was_heic_converted: originalFile.type !== file.type,
   was_compressed: originalSize !== file.size,
   compression_ratio: originalSize / file.size,
-  
+
   session_id: uploadSession.id,
   attempt_number: uploadSession.attemptCount,
-  
+
   ...getAnalyticsContext(), // Device info
 })
 ```
@@ -278,7 +280,7 @@ trackEvent('upload_completed', {
 FUNNEL: Upload Completion
 ========================
 Step 1: upload_file_selected
-Step 2: upload_started  
+Step 2: upload_started
 Step 3: upload_completed
 
 Conversion: file_selected → completed
@@ -310,7 +312,7 @@ Step 7: upload_completed
 
 ```sql
 -- Query 1: Upload Success Rate (Last 7 Days)
-SELECT 
+SELECT
   toDate(timestamp) as date,
   countIf(event = 'upload_started') as started,
   countIf(event = 'upload_completed') as completed,
@@ -323,7 +325,7 @@ GROUP BY date
 ORDER BY date
 
 -- Query 2: Error Type Breakdown
-SELECT 
+SELECT
   JSONExtractString(properties, 'errorType') as error_type,
   count() as count,
   count() / sum(count()) OVER () * 100 as percentage
@@ -334,7 +336,7 @@ GROUP BY error_type
 ORDER BY count DESC
 
 -- Query 3: Average Upload Duration by Device
-SELECT 
+SELECT
   JSONExtractString(properties, 'device_type') as device,
   avg(JSONExtractFloat(properties, 'total_duration')) / 1000 as avg_seconds,
   median(JSONExtractFloat(properties, 'total_duration')) / 1000 as median_seconds
@@ -344,8 +346,8 @@ WHERE event = 'upload_completed'
 GROUP BY device
 
 -- Query 4: File Size Distribution
-SELECT 
-  CASE 
+SELECT
+  CASE
     WHEN JSONExtractFloat(properties, 'file_size') < 1000000 THEN '< 1MB'
     WHEN JSONExtractFloat(properties, 'file_size') < 5000000 THEN '1-5MB'
     WHEN JSONExtractFloat(properties, 'file_size') < 10000000 THEN '5-10MB'
@@ -469,7 +471,7 @@ Claude claude-sonnet-4-20250514
 
 ### File List
 
-- _bmad-output/docs/upload-analytics.md (NEW - comprehensive analytics documentation, fixed Query 6)
+- \_bmad-output/docs/upload-analytics.md (NEW - comprehensive analytics documentation, fixed Query 6)
 - apps/web/src/lib/analytics-context.ts (NEW - device/browser context enrichment)
 - apps/web/src/lib/analytics-context.test.ts (NEW - 28 unit tests)
 - apps/web/src/lib/upload-session.ts (NEW - session tracking utilities)

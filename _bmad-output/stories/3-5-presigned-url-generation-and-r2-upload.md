@@ -149,11 +149,13 @@ User submits form (email + file)
 ### R2 Key Structure
 
 Per architecture.md:
+
 ```
 /uploads/{uploadId}/original.jpg
 ```
 
 Key generation:
+
 ```typescript
 import { createId } from "@paralleldrive/cuid2"
 
@@ -188,14 +190,14 @@ function useUpload(): UseUploadResult
 const uploadWithProgress = (url: string, file: File, onProgress: (percent: number) => void) => {
   return new Promise<void>((resolve, reject) => {
     const xhr = new XMLHttpRequest()
-    
+
     xhr.upload.onprogress = (event) => {
       if (event.lengthComputable) {
         const percent = Math.round((event.loaded / event.total) * 100)
         onProgress(percent)
       }
     }
-    
+
     xhr.onload = () => {
       if (xhr.status >= 200 && xhr.status < 300) {
         resolve()
@@ -203,10 +205,10 @@ const uploadWithProgress = (url: string, file: File, onProgress: (percent: numbe
         reject(new Error(`Upload failed with status ${xhr.status}`))
       }
     }
-    
+
     xhr.onerror = () => reject(new Error('Network error'))
     xhr.onabort = () => reject(new Error('Upload cancelled'))
-    
+
     xhr.open('PUT', url)
     xhr.setRequestHeader('Content-Type', file.type)
     xhr.send(file)
@@ -234,12 +236,12 @@ const uploadWithProgress = (url: string, file: File, onProgress: (percent: numbe
 
 ### Error Copy (Warm Tone)
 
-| Error | Message |
-|-------|---------|
-| Network error | "We couldn't upload your image. Let's try again!" |
-| Timeout | "The upload took too long. Please check your connection and try again." |
-| Server error | "Something went wrong on our end. Let's give it another try!" |
-| Cancelled | (No toast - user initiated) |
+| Error         | Message                                                                 |
+| ------------- | ----------------------------------------------------------------------- |
+| Network error | "We couldn't upload your image. Let's try again!"                       |
+| Timeout       | "The upload took too long. Please check your connection and try again." |
+| Server error  | "Something went wrong on our end. Let's give it another try!"           |
+| Cancelled     | (No toast - user initiated)                                             |
 
 ### Performance Requirements
 
@@ -289,6 +291,7 @@ packages/api/src/routes/
 ### cuid2 Installation
 
 If not already installed:
+
 ```bash
 cd packages/api && bun add @paralleldrive/cuid2
 ```
@@ -368,6 +371,7 @@ Claude Opus 4
 ### File List
 
 **New Files:**
+
 - `apps/web/src/hooks/use-upload.ts`
 - `apps/web/src/hooks/use-upload.test.ts`
 - `apps/web/src/components/upload/upload-progress.tsx`
@@ -375,6 +379,7 @@ Claude Opus 4
 - `packages/api/src/routes/upload.ts`
 
 **Modified Files:**
+
 - `packages/api/src/index.ts` - Added uploadRoutes export
 - `apps/server/src/index.ts` - Registered /api/upload route
 - `apps/web/src/components/upload/upload-form.tsx` - Added upload integration
@@ -392,10 +397,10 @@ Claude Opus 4
 
 ### Issues Found & Fixed
 
-| Severity | Issue | Fix Applied |
-|----------|-------|-------------|
-| HIGH | Missing `@paralleldrive/cuid2` dependency in packages/api | Added via `bun add` |
-| MEDIUM | Stale `state.progress` captured in cancellation analytics | Changed to use `progressRef` for accurate tracking |
+| Severity | Issue                                                     | Fix Applied                                        |
+| -------- | --------------------------------------------------------- | -------------------------------------------------- |
+| HIGH     | Missing `@paralleldrive/cuid2` dependency in packages/api | Added via `bun add`                                |
+| MEDIUM   | Stale `state.progress` captured in cancellation analytics | Changed to use `progressRef` for accurate tracking |
 
 ### Files Modified in Review
 
@@ -410,8 +415,8 @@ Claude Opus 4
 
 ## Change Log
 
-| Date | Change |
-|------|--------|
-| 2025-12-21 | Story created for sprint implementation |
-| 2025-12-21 | Implemented all tasks, 19 tests added, API endpoint created |
+| Date       | Change                                                                     |
+| ---------- | -------------------------------------------------------------------------- |
+| 2025-12-21 | Story created for sprint implementation                                    |
+| 2025-12-21 | Implemented all tasks, 19 tests added, API endpoint created                |
 | 2025-12-21 | **Code Review:** Fixed 1 HIGH (missing dep), 1 MEDIUM (stale state) issues |

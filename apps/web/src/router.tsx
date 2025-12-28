@@ -1,12 +1,12 @@
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
-import { createRouter as createTanStackRouter } from "@tanstack/react-router"
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { createRouter as createTanStackRouter } from "@tanstack/react-router";
 
-import Loader from "./components/loader"
-import { routeTree } from "./routeTree.gen"
-import { initializePageLoadTracking } from "./lib/upload-session"
+import Loader from "./components/loader";
+import { routeTree } from "./routeTree.gen";
+import { initializePageLoadTracking } from "./lib/upload-session";
 
 // Initialize page load tracking for analytics
-initializePageLoadTracking()
+initializePageLoadTracking();
 
 // Create query client
 export const queryClient = new QueryClient({
@@ -16,7 +16,7 @@ export const queryClient = new QueryClient({
       retry: 1,
     },
   },
-})
+});
 
 export const getRouter = () => {
   const router = createTanStackRouter({
@@ -29,12 +29,12 @@ export const getRouter = () => {
     Wrap: ({ children }) => (
       <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
     ),
-  })
-  return router
-}
+  });
+  return router;
+};
 
 declare module "@tanstack/react-router" {
   interface Register {
-    router: ReturnType<typeof getRouter>
+    router: ReturnType<typeof getRouter>;
   }
 }

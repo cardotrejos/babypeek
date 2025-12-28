@@ -1,13 +1,13 @@
-import * as React from "react"
-import { Dialog as DialogPrimitive } from "@base-ui/react/dialog"
+import * as React from "react";
+import { Dialog as DialogPrimitive } from "@base-ui/react/dialog";
 
-import { cn } from "@/lib/utils"
+import { cn } from "@/lib/utils";
 
-const Dialog = DialogPrimitive.Root
-const DialogTrigger = DialogPrimitive.Trigger
-const DialogClose = DialogPrimitive.Close
+const Dialog = DialogPrimitive.Root;
+const DialogTrigger = DialogPrimitive.Trigger;
+const DialogClose = DialogPrimitive.Close;
 
-const DialogPortal = DialogPrimitive.Portal
+const DialogPortal = DialogPrimitive.Portal;
 
 const DialogBackdrop = React.forwardRef<
   React.ComponentRef<typeof DialogPrimitive.Backdrop>,
@@ -19,12 +19,12 @@ const DialogBackdrop = React.forwardRef<
       "fixed inset-0 z-50 bg-black/60 backdrop-blur-sm",
       "data-[ending-style]:opacity-0 data-[starting-style]:opacity-0",
       "transition-opacity duration-200",
-      className
+      className,
     )}
     {...props}
   />
-))
-DialogBackdrop.displayName = "DialogBackdrop"
+));
+DialogBackdrop.displayName = "DialogBackdrop";
 
 const DialogContent = React.forwardRef<
   React.ComponentRef<typeof DialogPrimitive.Popup>,
@@ -40,28 +40,28 @@ const DialogContent = React.forwardRef<
         "data-[ending-style]:scale-95 data-[ending-style]:opacity-0",
         "data-[starting-style]:scale-95 data-[starting-style]:opacity-0",
         "transition-all duration-200",
-        className
+        className,
       )}
       {...props}
     >
       {children}
     </DialogPrimitive.Popup>
   </DialogPortal>
-))
-DialogContent.displayName = "DialogContent"
+));
+DialogContent.displayName = "DialogContent";
 
 const DialogHeader = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
   <div className={cn("flex flex-col space-y-2 text-center sm:text-left", className)} {...props} />
-)
-DialogHeader.displayName = "DialogHeader"
+);
+DialogHeader.displayName = "DialogHeader";
 
 const DialogFooter = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
   <div
     className={cn("flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2 mt-4", className)}
     {...props}
   />
-)
-DialogFooter.displayName = "DialogFooter"
+);
+DialogFooter.displayName = "DialogFooter";
 
 const DialogTitle = React.forwardRef<
   React.ComponentRef<typeof DialogPrimitive.Title>,
@@ -72,8 +72,8 @@ const DialogTitle = React.forwardRef<
     className={cn("text-lg font-display font-semibold text-charcoal", className)}
     {...props}
   />
-))
-DialogTitle.displayName = "DialogTitle"
+));
+DialogTitle.displayName = "DialogTitle";
 
 const DialogDescription = React.forwardRef<
   React.ComponentRef<typeof DialogPrimitive.Description>,
@@ -84,8 +84,8 @@ const DialogDescription = React.forwardRef<
     className={cn("text-sm text-warm-gray", className)}
     {...props}
   />
-))
-DialogDescription.displayName = "DialogDescription"
+));
+DialogDescription.displayName = "DialogDescription";
 
 export {
   Dialog,
@@ -98,4 +98,4 @@ export {
   DialogFooter,
   DialogTitle,
   DialogDescription,
-}
+};

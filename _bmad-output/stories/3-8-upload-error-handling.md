@@ -21,6 +21,7 @@ so that **I can try again without frustration**.
 ## Current State Analysis
 
 **Already Implemented (Story 3.5):**
+
 - ✅ Basic error handling in `useUpload` hook
 - ✅ `getErrorMessage()` function with warm copy
 - ✅ Sentry error reporting (no PII)
@@ -29,6 +30,7 @@ so that **I can try again without frustration**.
 - ✅ Error state in hook allows retry via `reset()`
 
 **Gaps to Address:**
+
 - ❌ R2 partial upload cleanup
 - ❌ Explicit retry button UI component
 - ❌ Rate limit specific error handling (429 status)
@@ -123,7 +125,7 @@ function getErrorMessage(errorType: string): string {
 
 ```typescript
 // apps/web/src/lib/upload-errors.ts
-export type UploadErrorType = 
+export type UploadErrorType =
   | "NETWORK"      // Network failure, offline
   | "TIMEOUT"      // Request timed out
   | "SERVER"       // 5xx errors
@@ -152,7 +154,7 @@ export function categorizeError(error: Error | Response): UploadError {
       retryable: true,
     }
   }
-  
+
   // Response errors
   if (error instanceof Response) {
     switch (error.status) {
@@ -176,7 +178,7 @@ export function categorizeError(error: Error | Response): UploadError {
       // ... more cases
     }
   }
-  
+
   return {
     type: 'UNKNOWN',
     message: String(error),
@@ -192,10 +194,10 @@ export function categorizeError(error: Error | Response): UploadError {
 // packages/api/src/routes/upload.ts - Add cleanup endpoint
 app.delete("/:uploadId", async (c) => {
   const uploadId = c.req.param("uploadId")
-  
+
   // Optional: Verify sessionToken
   const sessionToken = c.req.header("X-Session-Token")
-  
+
   const program = Effect.gen(function* () {
     const r2 = yield* R2Service
     // Delete all objects with prefix uploads/{uploadId}/
@@ -205,7 +207,7 @@ app.delete("/:uploadId", async (c) => {
     Effect.provide(R2ServiceLive),
     Effect.catchAll(() => Effect.succeed({ success: true })) // Don't fail if not found
   )
-  
+
   const result = await Effect.runPromise(program)
   return c.json(result)
 })
@@ -250,23 +252,23 @@ export function UploadError({ error, onRetry, retrying }: UploadErrorProps) {
       <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center">
         <AlertCircle className="w-8 h-8 text-red-500" />
       </div>
-      
+
       {/* Error message */}
       <p className="text-lg font-medium text-foreground">
         {error.userMessage}
       </p>
-      
+
       {/* Rate limit countdown */}
       {error.type === 'RATE_LIMIT' && error.retryAfter && (
         <p className="text-sm text-muted-foreground">
           Try again in {formatTime(error.retryAfter)}
         </p>
       )}
-      
+
       {/* Retry button */}
       {error.retryable && (
-        <Button 
-          onClick={onRetry} 
+        <Button
+          onClick={onRetry}
           disabled={retrying}
           className="min-w-[140px]"
         >
@@ -346,15 +348,15 @@ Sentry.captureException(error, {
 
 ### Error Copy Table (Warm Tone)
 
-| Error Type | User Message |
-|------------|--------------|
-| NETWORK | "Oops! Looks like you're offline. Check your connection and try again!" |
-| TIMEOUT | "The upload took a bit too long. Let's give it another shot!" |
-| SERVER | "Something went wrong on our end. Let's give it another try!" |
-| RATE_LIMIT | "You've reached the upload limit. Please try again in X minutes." |
-| VALIDATION | "We couldn't process that file. Try a different image?" |
-| CANCELLED | (No message - user initiated) |
-| UNKNOWN | "We had trouble uploading your image. Let's try again!" |
+| Error Type | User Message                                                            |
+| ---------- | ----------------------------------------------------------------------- |
+| NETWORK    | "Oops! Looks like you're offline. Check your connection and try again!" |
+| TIMEOUT    | "The upload took a bit too long. Let's give it another shot!"           |
+| SERVER     | "Something went wrong on our end. Let's give it another try!"           |
+| RATE_LIMIT | "You've reached the upload limit. Please try again in X minutes."       |
+| VALIDATION | "We couldn't process that file. Try a different image?"                 |
+| CANCELLED  | (No message - user initiated)                                           |
+| UNKNOWN    | "We had trouble uploading your image. Let's try again!"                 |
 
 ### File Structure
 
@@ -426,6 +428,7 @@ None - implementation proceeded without significant blockers.
 ### File List
 
 **New Files:**
+
 - apps/web/src/lib/upload-errors.ts (new - error categorization)
 - apps/web/src/lib/upload-errors.test.ts (new - 39 tests)
 - apps/web/src/hooks/use-online-status.ts (new - offline detection)
@@ -434,6 +437,7 @@ None - implementation proceeded without significant blockers.
 - apps/web/src/components/upload/upload-error.test.tsx (new - 13 tests)
 
 **Modified Files:**
+
 - packages/api/src/routes/upload.ts - Added DELETE cleanup endpoint with deletePrefix
 - packages/api/src/routes/upload.test.ts - Added DELETE endpoint tests
 - packages/api/src/services/R2Service.ts - Added deletePrefix method

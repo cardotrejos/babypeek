@@ -141,6 +141,7 @@ apps/web/src/components/settings/
 ### GDPR Audit Logging
 
 Deletion events are logged with:
+
 - Timestamp
 - Upload ID (no PII)
 - Action (requested/completed)
@@ -177,6 +178,7 @@ deleteObject: (key: string) =>
 ### Parallel Work
 
 Can be developed in parallel with:
+
 - Story 8.7 (Auto-Delete)
 - Story 8.8 (Expired Handling)
 
@@ -219,6 +221,7 @@ Claude Opus 4.5
 ### File List
 
 **New Files:**
+
 - packages/api/src/routes/data.ts - DELETE /api/data/:token endpoint
 - packages/api/src/routes/data.test.ts - API endpoint tests (10 tests)
 - apps/web/src/components/settings/DeleteDataButton.tsx - Confirmation dialog component
@@ -227,6 +230,7 @@ Claude Opus 4.5
 - apps/web/src/components/ui/alert-dialog.tsx - shadcn AlertDialog component
 
 **Modified Files:**
+
 - packages/api/src/index.ts - Export dataRoutes
 - apps/server/src/index.ts - Mount /api/data route
 - apps/web/src/components/reveal/RevealUI.tsx - Add DeleteDataButton import and integration

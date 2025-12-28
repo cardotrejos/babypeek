@@ -1,6 +1,6 @@
-import type React from "react"
-import { useRef, useCallback } from "react"
-import { cn } from "@/lib/utils"
+import type React from "react";
+import { useRef, useCallback } from "react";
+import { cn } from "@/lib/utils";
 
 /**
  * Example data for gallery cards
@@ -25,41 +25,41 @@ const examples = [
     before: "/images/examples/4d-ultra-2.jpeg",
     after: "/images/examples/result-3.jpeg",
   },
-]
+];
 
 interface ExampleGalleryProps {
-  className?: string
+  className?: string;
 }
 
 /**
  * ExampleGallery Component
  * Displays a horizontally scrollable gallery of before/after transformation examples.
- * 
+ *
  * Features:
  * - Horizontal scroll with snap points
  * - Touch-friendly swipe on mobile
  * - Keyboard navigation (arrow keys)
  * - Accessible with role="region" and aria-label
- * 
+ *
  * @see Story 2.3 - Before/After Example Gallery
  */
 export function ExampleGallery({ className }: ExampleGalleryProps) {
-  const scrollContainerRef = useRef<HTMLDivElement>(null)
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLDivElement>) => {
-    if (!scrollContainerRef.current) return
+    if (!scrollContainerRef.current) return;
 
-    const scrollAmount = 300 // Approximate card width
+    const scrollAmount = 300; // Approximate card width
 
     if (e.key === "ArrowRight") {
-      e.preventDefault()
-      scrollContainerRef.current.scrollBy({ left: scrollAmount, behavior: "smooth" })
+      e.preventDefault();
+      scrollContainerRef.current.scrollBy({ left: scrollAmount, behavior: "smooth" });
     }
     if (e.key === "ArrowLeft") {
-      e.preventDefault()
-      scrollContainerRef.current.scrollBy({ left: -scrollAmount, behavior: "smooth" })
+      e.preventDefault();
+      scrollContainerRef.current.scrollBy({ left: -scrollAmount, behavior: "smooth" });
     }
-  }, [])
+  }, []);
 
   return (
     <div
@@ -75,7 +75,7 @@ export function ExampleGallery({ className }: ExampleGalleryProps) {
           "flex gap-4 overflow-x-auto snap-x snap-mandatory",
           "pb-4 -mx-4 px-4", // Edge-to-edge scrolling on mobile
           "scrollbar-hide", // Hide scrollbar but keep functionality
-          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-coral focus-visible:ring-offset-2 rounded-lg"
+          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-coral focus-visible:ring-offset-2 rounded-lg",
         )}
         style={{ WebkitOverflowScrolling: "touch" }}
       >
@@ -94,17 +94,17 @@ export function ExampleGallery({ className }: ExampleGalleryProps) {
         Photos shared with permission from the families.
       </p>
     </div>
-  )
+  );
 }
 
 interface GalleryCardProps {
-  before: string
-  after: string
-  label: string
+  before: string;
+  after: string;
+  label: string;
   /**
    * Loading strategy for images. First 2 cards use "eager", rest use "lazy".
    */
-  loading?: "eager" | "lazy"
+  loading?: "eager" | "lazy";
 }
 
 /**
@@ -117,7 +117,7 @@ function GalleryCard({ before, after, label, loading = "lazy" }: GalleryCardProp
       className={cn(
         "flex-shrink-0 snap-center",
         "w-[280px] sm:w-[320px]", // Card width
-        "bg-white rounded-xl shadow-md overflow-hidden"
+        "bg-white rounded-xl shadow-md overflow-hidden",
       )}
     >
       <div className="grid grid-cols-2 gap-1 p-2">
@@ -152,5 +152,5 @@ function GalleryCard({ before, after, label, loading = "lazy" }: GalleryCardProp
         </div>
       </div>
     </div>
-  )
+  );
 }

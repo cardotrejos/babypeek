@@ -17,16 +17,16 @@ So that **I have a consistent architecture to build on**.
 
 ## Acceptance Criteria
 
-| # | Criterion | Test |
-|---|-----------|------|
-| AC1 | Service scaffold exists for GeminiService | File exists with typed interface |
-| AC2 | Service scaffold exists for R2Service | File exists with typed interface |
-| AC3 | Service scaffold exists for StripeService | File exists with typed interface |
-| AC4 | Service scaffold exists for ResendService | File exists with typed interface |
-| AC5 | Service scaffold exists for UploadService | File exists with typed interface |
-| AC6 | Service scaffold exists for ResultService | File exists with typed interface |
-| AC7 | Typed errors defined in errors.ts | All error types exported |
-| AC8 | AppServicesLive layer exports all services | Single import provides all services |
+| #   | Criterion                                   | Test                                            |
+| --- | ------------------------------------------- | ----------------------------------------------- |
+| AC1 | Service scaffold exists for GeminiService   | File exists with typed interface                |
+| AC2 | Service scaffold exists for R2Service       | File exists with typed interface                |
+| AC3 | Service scaffold exists for StripeService   | File exists with typed interface                |
+| AC4 | Service scaffold exists for ResendService   | File exists with typed interface                |
+| AC5 | Service scaffold exists for UploadService   | File exists with typed interface                |
+| AC6 | Service scaffold exists for ResultService   | File exists with typed interface                |
+| AC7 | Typed errors defined in errors.ts           | All error types exported                        |
+| AC8 | AppServicesLive layer exports all services  | Single import provides all services             |
 | AC9 | Example implementation demonstrates pattern | At least one service has working implementation |
 
 ---
@@ -219,9 +219,9 @@ export const GeminiServiceLive = Layer.succeed(
           // Will be implemented in Epic 4 (AI Processing)
           throw new Error('Not implemented')
         },
-        catch: (e) => new GeminiError({ 
-          cause: 'API_ERROR', 
-          message: String(e) 
+        catch: (e) => new GeminiError({
+          cause: 'API_ERROR',
+          message: String(e)
         })
       }).pipe(
         Effect.retry({
@@ -794,16 +794,16 @@ app.post('/upload/presign', async (c) => {
 
 ### File Locations
 
-| File | Purpose |
-|------|---------|
-| `packages/api/src/lib/errors.ts` | All typed error definitions |
-| `packages/api/src/services/GeminiService.ts` | AI generation service |
-| `packages/api/src/services/R2Service.ts` | Storage service (full impl) |
-| `packages/api/src/services/StripeService.ts` | Payment service |
-| `packages/api/src/services/ResendService.ts` | Email service |
-| `packages/api/src/services/UploadService.ts` | Upload management |
-| `packages/api/src/services/ResultService.ts` | Result management |
-| `packages/api/src/services/index.ts` | AppServicesLive export |
+| File                                         | Purpose                     |
+| -------------------------------------------- | --------------------------- |
+| `packages/api/src/lib/errors.ts`             | All typed error definitions |
+| `packages/api/src/services/GeminiService.ts` | AI generation service       |
+| `packages/api/src/services/R2Service.ts`     | Storage service (full impl) |
+| `packages/api/src/services/StripeService.ts` | Payment service             |
+| `packages/api/src/services/ResendService.ts` | Email service               |
+| `packages/api/src/services/UploadService.ts` | Upload management           |
+| `packages/api/src/services/ResultService.ts` | Result management           |
+| `packages/api/src/services/index.ts`         | AppServicesLive export      |
 
 ### Dependencies
 
@@ -817,14 +817,17 @@ bun add effect # if not already installed
 ### Previous Story Learnings
 
 **From Story 1.1:**
+
 - Effect 3.x installed with `@effect/schema`
 - Monorepo structure with `packages/api`
 
 **From Story 1.3:**
+
 - R2 already configured with `@aws-sdk/client-s3`
 - Presigned URL functions exist - refactor into R2Service
 
 **From Story 1.4:**
+
 - Environment validation with Zod
 - `env` object exported from `packages/api/src/lib/env.ts`
 
@@ -859,6 +862,7 @@ N/A
 - Fixed env.ts Zod 4 compatibility (required_error → message)
 
 **Code Review Fixes (2024-12-21):**
+
 - [M1] Extracted hardcoded price ($9.99) to `PRODUCT_PRICE_CENTS` env variable
 - [M2] Added `APP_URL` and `FROM_EMAIL` env variables for configurable URLs
 - [M3] Added Effect.retry() with exponential backoff to StripeService and ResendService
@@ -868,35 +872,36 @@ N/A
 - All 52 tests passing (27 API + 25 web)
 
 **Documentation Clarifications:**
+
 - Task 6.2 interface: Actual implementation uses `updateResult` instead of `updateStage` (DB schema has no stage field)
 - Task 7.2 interface: ResultService doesn't need `create` method as results are derived from uploads table
 
 ### File List
 
-| File | Action |
-|------|--------|
-| `packages/api/src/lib/errors.ts` | Modified |
-| `packages/api/src/lib/errors.test.ts` | Modified |
-| `packages/api/src/lib/env.ts` | Modified (+ APP_URL, PRODUCT_PRICE_CENTS, FROM_EMAIL) |
-| `packages/api/src/services/GeminiService.ts` | Created |
-| `packages/api/src/services/R2Service.ts` | Modified |
-| `packages/api/src/services/StripeService.ts` | Created (+ retry/timeout) |
-| `packages/api/src/services/ResendService.ts` | Created (+ retry/timeout) |
-| `packages/api/src/services/UploadService.ts` | Created |
-| `packages/api/src/services/ResultService.ts` | Created |
-| `packages/api/src/services/index.ts` | Modified |
-| `packages/api/src/services/services.test.ts` | Created (14 tests) |
-| `packages/api/src/routes/storage.ts` | Modified |
-| `packages/api/package.json` | Modified |
+| File                                         | Action                                                |
+| -------------------------------------------- | ----------------------------------------------------- |
+| `packages/api/src/lib/errors.ts`             | Modified                                              |
+| `packages/api/src/lib/errors.test.ts`        | Modified                                              |
+| `packages/api/src/lib/env.ts`                | Modified (+ APP_URL, PRODUCT_PRICE_CENTS, FROM_EMAIL) |
+| `packages/api/src/services/GeminiService.ts` | Created                                               |
+| `packages/api/src/services/R2Service.ts`     | Modified                                              |
+| `packages/api/src/services/StripeService.ts` | Created (+ retry/timeout)                             |
+| `packages/api/src/services/ResendService.ts` | Created (+ retry/timeout)                             |
+| `packages/api/src/services/UploadService.ts` | Created                                               |
+| `packages/api/src/services/ResultService.ts` | Created                                               |
+| `packages/api/src/services/index.ts`         | Modified                                              |
+| `packages/api/src/services/services.test.ts` | Created (14 tests)                                    |
+| `packages/api/src/routes/storage.ts`         | Modified                                              |
+| `packages/api/package.json`                  | Modified                                              |
 
 ---
 
 ## Change Log
 
-| Date | Change |
-|------|--------|
-| 2024-12-21 | Story created with comprehensive context |
-| 2024-12-21 | Implementation complete - all tasks done, 38 tests passing, status → review |
+| Date       | Change                                                                          |
+| ---------- | ------------------------------------------------------------------------------- |
+| 2024-12-21 | Story created with comprehensive context                                        |
+| 2024-12-21 | Implementation complete - all tasks done, 38 tests passing, status → review     |
 | 2024-12-21 | Code review: Fixed 8 issues (3 HIGH, 5 MEDIUM), 52 tests passing, status → done |
 
 ---

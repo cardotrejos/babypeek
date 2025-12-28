@@ -1,9 +1,9 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect } from "react";
 
 interface UsePreloadImageResult {
-  isLoaded: boolean
-  isLoading: boolean
-  error: Error | null
+  isLoaded: boolean;
+  isLoading: boolean;
+  error: Error | null;
 }
 
 /**
@@ -18,46 +18,46 @@ interface UsePreloadImageResult {
  * @returns Object with isLoaded, isLoading, and error states
  */
 export function usePreloadImage(url: string | null): UsePreloadImageResult {
-  const [isLoaded, setIsLoaded] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState<Error | null>(null)
+  const [isLoaded, setIsLoaded] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
     // Reset state when URL changes or becomes null
     if (!url) {
-      setIsLoaded(false)
-      setIsLoading(false)
-      setError(null)
-      return
+      setIsLoaded(false);
+      setIsLoading(false);
+      setError(null);
+      return;
     }
 
     // Start loading
-    setIsLoading(true)
-    setIsLoaded(false)
-    setError(null)
+    setIsLoading(true);
+    setIsLoaded(false);
+    setError(null);
 
-    const img = new Image()
+    const img = new Image();
 
     const handleLoad = () => {
-      setIsLoaded(true)
-      setIsLoading(false)
-    }
+      setIsLoaded(true);
+      setIsLoading(false);
+    };
 
     const handleError = () => {
-      setError(new Error("Failed to preload image"))
-      setIsLoading(false)
-    }
+      setError(new Error("Failed to preload image"));
+      setIsLoading(false);
+    };
 
-    img.onload = handleLoad
-    img.onerror = handleError
-    img.src = url
+    img.onload = handleLoad;
+    img.onerror = handleError;
+    img.src = url;
 
     // Cleanup on unmount or URL change
     return () => {
-      img.onload = null
-      img.onerror = null
-    }
-  }, [url])
+      img.onload = null;
+      img.onerror = null;
+    };
+  }, [url]);
 
-  return { isLoaded, isLoading, error }
+  return { isLoaded, isLoading, error };
 }

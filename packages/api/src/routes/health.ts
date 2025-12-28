@@ -1,6 +1,6 @@
-import { Hono } from "hono"
+import { Hono } from "hono";
 
-const app = new Hono()
+const app = new Hono();
 
 // Health check endpoint
 app.get("/", (c) => {
@@ -8,8 +8,8 @@ app.get("/", (c) => {
     status: "ok",
     timestamp: new Date().toISOString(),
     version: "1.0.0",
-  })
-})
+  });
+});
 
 // Ready check (verifies dependencies)
 app.get("/ready", async (c) => {
@@ -17,9 +17,9 @@ app.get("/ready", async (c) => {
   const checks = {
     api: true,
     database: true, // Will verify with actual ping later
-  }
+  };
 
-  const allHealthy = Object.values(checks).every(Boolean)
+  const allHealthy = Object.values(checks).every(Boolean);
 
   return c.json(
     {
@@ -27,8 +27,8 @@ app.get("/ready", async (c) => {
       checks,
       timestamp: new Date().toISOString(),
     },
-    allHealthy ? 200 : 503
-  )
-})
+    allHealthy ? 200 : 503,
+  );
+});
 
-export default app
+export default app;

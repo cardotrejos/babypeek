@@ -25,6 +25,7 @@ So that **I'm convinced the quality is worth trying**.
 - Mobile-first with touch-friendly horizontal scroll/swipe
 
 **Out of Scope:**
+
 - Hero section (Story 2.2 - DONE)
 - Trust signals section (Story 2.4)
 - FAQ accordion (Story 2.5)
@@ -35,26 +36,26 @@ So that **I'm convinced the quality is worth trying**.
 
 ## Acceptance Criteria
 
-| # | Criterion | Test |
-|---|-----------|------|
-| AC1 | Gallery section displays 3-6 before/after image pairs | Visual check - count pairs visible |
-| AC2 | Images are optimized (WebP format, lazy loaded) | Lighthouse image audit, Network tab shows WebP |
-| AC3 | Gallery is swipeable/scrollable on mobile | Touch gesture test on 375px viewport |
-| AC4 | Each example loads progressively (no layout shift) | CLS < 0.1 on Lighthouse audit |
-| AC5 | Gallery section appears after hero when scrolling | Scroll test, section visible after hero |
-| AC6 | Images have descriptive alt text | Accessibility audit passes |
-| AC7 | Gallery is keyboard navigable | Tab through gallery items, arrow keys work |
+| #   | Criterion                                             | Test                                           |
+| --- | ----------------------------------------------------- | ---------------------------------------------- |
+| AC1 | Gallery section displays 3-6 before/after image pairs | Visual check - count pairs visible             |
+| AC2 | Images are optimized (WebP format, lazy loaded)       | Lighthouse image audit, Network tab shows WebP |
+| AC3 | Gallery is swipeable/scrollable on mobile             | Touch gesture test on 375px viewport           |
+| AC4 | Each example loads progressively (no layout shift)    | CLS < 0.1 on Lighthouse audit                  |
+| AC5 | Gallery section appears after hero when scrolling     | Scroll test, section visible after hero        |
+| AC6 | Images have descriptive alt text                      | Accessibility audit passes                     |
+| AC7 | Gallery is keyboard navigable                         | Tab through gallery items, arrow keys work     |
 
 ---
 
 ## Dependencies
 
-| Dependency | Status | Notes |
-|------------|--------|-------|
-| Story 2.1 Layout | **DONE** | LandingLayout, design tokens, responsive container ready |
-| Story 2.2 Hero | **DONE** | Hero section complete, gallery placeholder exists |
-| Before/after images | **NEEDED** | Requires 3-6 sample image pairs |
-| Gallery component design | **READY** | UX spec defines swipeable horizontal carousel |
+| Dependency               | Status     | Notes                                                    |
+| ------------------------ | ---------- | -------------------------------------------------------- |
+| Story 2.1 Layout         | **DONE**   | LandingLayout, design tokens, responsive container ready |
+| Story 2.2 Hero           | **DONE**   | Hero section complete, gallery placeholder exists        |
+| Before/after images      | **NEEDED** | Requires 3-6 sample image pairs                          |
+| Gallery component design | **READY**  | UX spec defines swipeable horizontal carousel            |
 
 ---
 
@@ -128,6 +129,7 @@ So that **I'm convinced the quality is worth trying**.
 ### Architecture Requirements
 
 **From `architecture.md`:**
+
 - Frontend: TanStack Start + React + Tailwind + shadcn/ui
 - Bundle size target: <150KB initial
 - LCP target: <2.5s (gallery images should NOT be LCP - hero image is)
@@ -135,6 +137,7 @@ So that **I'm convinced the quality is worth trying**.
 - WCAG 2.1 Level AA compliance
 
 **Stack Already Configured (from Stories 2.1, 2.2):**
+
 - TanStack Start with Vite
 - Tailwind CSS with shadcn/ui (base-lyra style)
 - Component aliases: `@/components`, `@/lib/utils`
@@ -146,11 +149,13 @@ So that **I'm convinced the quality is worth trying**.
 **From `ux-design-specification.md`:**
 
 **Gallery Purpose:**
+
 - Showcase AI transformation quality
 - Build trust through examples
 - Drive conversion (visitors see quality → try it)
 
 **Design Requirements:**
+
 - Mobile-first horizontal scroll
 - 3-6 before/after pairs
 - Cards with before/after comparison
@@ -158,6 +163,7 @@ So that **I'm convinced the quality is worth trying**.
 - Progressive loading
 
 **From Epics Story 2.3:**
+
 > "I see 3-6 before/after image pairs"
 > "images are optimized (WebP, lazy loaded)"
 > "I can swipe/scroll through examples on mobile"
@@ -170,23 +176,25 @@ So that **I'm convinced the quality is worth trying**.
 **FR-7.3:** Before/after example gallery (Should)
 
 **Purpose:**
+
 - Social proof - show quality transformations
 - Reduce anxiety - users see what to expect
 - Conversion driver - quality examples motivate trial
 
 ### File Locations
 
-| File | Purpose |
-|------|---------|
-| `apps/web/src/routes/index.tsx` | MODIFY: Replace gallery placeholder |
+| File                                                  | Purpose                                       |
+| ----------------------------------------------------- | --------------------------------------------- |
+| `apps/web/src/routes/index.tsx`                       | MODIFY: Replace gallery placeholder           |
 | `apps/web/src/components/landing/example-gallery.tsx` | NEW: Gallery container + GalleryCard (inline) |
-| `apps/web/src/components/landing/index.ts` | MODIFY: Export ExampleGallery |
-| `apps/web/src/index.css` | MODIFY: Add scrollbar-hide utility |
-| `apps/web/public/images/examples/` | NEW: Example image pairs directory |
+| `apps/web/src/components/landing/index.ts`            | MODIFY: Export ExampleGallery                 |
+| `apps/web/src/index.css`                              | MODIFY: Add scrollbar-hide utility            |
+| `apps/web/public/images/examples/`                    | NEW: Example image pairs directory            |
 
 ### Project Structure Notes
 
 **Current Structure (from Stories 2.1, 2.2):**
+
 ```
 apps/web/src/
 ├── components/
@@ -204,6 +212,7 @@ apps/web/src/
 ```
 
 **Target Structure for Story 2.3:**
+
 ```
 apps/web/src/
 ├── components/
@@ -224,6 +233,7 @@ apps/web/src/
 ### Gallery Component Pattern
 
 **Horizontal Scroll with Snap:**
+
 ```typescript
 // apps/web/src/components/landing/example-gallery.tsx
 import { cn } from "@/lib/utils"
@@ -246,7 +256,7 @@ export function ExampleGallery({ className }: ExampleGalleryProps) {
       aria-label="Example transformations gallery"
       className={cn("w-full", className)}
     >
-      <div 
+      <div
         className={cn(
           "flex gap-4 overflow-x-auto snap-x snap-mandatory",
           "pb-4 -mx-4 px-4", // Extend to edges on mobile
@@ -282,7 +292,7 @@ interface GalleryCardProps {
 
 function GalleryCard({ beforeSrc, afterSrc, index, loading = "lazy" }: GalleryCardProps) {
   return (
-    <div 
+    <div
       className={cn(
         "flex-shrink-0 snap-center",
         "w-[280px] sm:w-[320px]", // Card width
@@ -304,7 +314,7 @@ function GalleryCard({ beforeSrc, afterSrc, index, loading = "lazy" }: GalleryCa
             Before
           </span>
         </div>
-        
+
         {/* After image */}
         <div className="relative aspect-[4/3] rounded-lg overflow-hidden">
           <img
@@ -328,6 +338,7 @@ function GalleryCard({ beforeSrc, afterSrc, index, loading = "lazy" }: GalleryCa
 ### Placeholder Images Strategy
 
 **Until real images are available:**
+
 ```typescript
 // Use gradient placeholders similar to HeroImage
 const PlaceholderImage = ({ label }: { label: string }) => (
@@ -340,6 +351,7 @@ const PlaceholderImage = ({ label }: { label: string }) => (
 ### CSS for Horizontal Scroll
 
 **Add to index.css if not present:**
+
 ```css
 /* Hide scrollbar but keep functionality */
 .scrollbar-hide {
@@ -356,6 +368,7 @@ const PlaceholderImage = ({ label }: { label: string }) => (
 ### Previous Story Learnings (from Stories 2.1, 2.2)
 
 **What worked well:**
+
 1. `@theme inline` for Tailwind color integration
 2. Google Fonts CDN with preconnect (simpler than self-hosting)
 3. Barrel exports for landing components
@@ -363,11 +376,13 @@ const PlaceholderImage = ({ label }: { label: string }) => (
 5. `role="img"` and `aria-label` for placeholder divs
 
 **Issues fixed in code review:**
+
 1. Missing React type import → Always add `import type React from "react"` if needed
 2. CTA needs aria-label → Include descriptive aria-label
 3. Focus-visible styles → Add focus ring for keyboard navigation
 
 **Pattern from HeroImage:**
+
 - Use `aspect-video` or `aspect-[4/3]` to reserve space
 - Use `role="img"` with `aria-label` for placeholder content
 - WebP in `<picture>` with fallback
@@ -377,23 +392,25 @@ const PlaceholderImage = ({ label }: { label: string }) => (
 
 **From UX Design + Story 2.1/2.2 learnings:**
 
-| Requirement | Implementation |
-|-------------|----------------|
+| Requirement         | Implementation                                          |
+| ------------------- | ------------------------------------------------------- |
 | Alt text for images | Descriptive, per-image: "Example X: Original/Generated" |
-| Keyboard navigation | Arrow keys to scroll, Tab to focus cards |
-| Focus visible | Ring outline on focused card |
-| Touch targets | Cards themselves are not interactive buttons |
-| Screen reader | `role="region"` + `aria-label` for gallery |
+| Keyboard navigation | Arrow keys to scroll, Tab to focus cards                |
+| Focus visible       | Ring outline on focused card                            |
+| Touch targets       | Cards themselves are not interactive buttons            |
+| Screen reader       | `role="region"` + `aria-label` for gallery              |
 
 ### Performance Considerations
 
 **Image Optimization:**
+
 - Format: WebP with JPEG fallback
 - Dimensions: 280x210 (mobile card size) or 320x240 (tablet/desktop)
 - Max file size: 50KB per image (100KB per pair)
 - Lazy load images 3+ (first 2 visible = eager)
 
 **Bundle Impact:**
+
 - Component is simple, no external dependencies
 - No impact on LCP (gallery is below fold)
 - May slightly impact CLS if images don't have reserved dimensions
@@ -401,6 +418,7 @@ const PlaceholderImage = ({ label }: { label: string }) => (
 ### Testing Checklist
 
 **Manual Testing:**
+
 1. Open in Chrome DevTools mobile emulation (375px, 390px, 360px)
 2. Scroll to gallery section
 3. Swipe/scroll horizontally through examples
@@ -410,6 +428,7 @@ const PlaceholderImage = ({ label }: { label: string }) => (
 7. Run Lighthouse accessibility audit
 
 **Devices to Test:**
+
 - iPhone SE (375px) - smallest common mobile
 - iPhone 14 (390px) - typical iPhone
 - Samsung Galaxy (360px) - smallest Android
@@ -460,7 +479,7 @@ className="pb-4 -mx-4 px-4"
 // More complex: roving tabindex (if cards are interactive)
 
 // For non-interactive gallery, just ensure container is focusable:
-<div 
+<div
   tabIndex={0}
   className="... focus-visible:ring-2 focus-visible:ring-coral focus-visible:ring-offset-2"
   onKeyDown={(e) => {
@@ -483,15 +502,15 @@ className="pb-4 -mx-4 px-4"
 
 ### Issues Found
 
-| # | Severity | Issue | Resolution |
-|---|----------|-------|------------|
-| 1 | MEDIUM | Story claimed gallery-card.tsx as separate file but it's inline in example-gallery.tsx | Fixed: Updated File Locations table |
-| 2 | MEDIUM | AC1 states 3-6 pairs, implementation has 4 | Acceptable: 4 is within the 3-6 range |
-| 3 | MEDIUM | Loading prop not used when using placeholders | Fixed: Added JSDoc comment explaining prop is for future real images |
-| 4 | MEDIUM | Missing test documentation | Fixed: Added test results note to Task 6 |
-| 5 | LOW | GalleryCard not exported for external reuse | Deferred: Internal component, export if needed later |
-| 6 | LOW | Hardcoded scroll amount (300px) | Deferred: Works well, can be made dynamic if issues arise |
-| 7 | LOW | Story File List showed index.ts twice | Fixed: Part of issue #1 resolution |
+| #   | Severity | Issue                                                                                  | Resolution                                                           |
+| --- | -------- | -------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| 1   | MEDIUM   | Story claimed gallery-card.tsx as separate file but it's inline in example-gallery.tsx | Fixed: Updated File Locations table                                  |
+| 2   | MEDIUM   | AC1 states 3-6 pairs, implementation has 4                                             | Acceptable: 4 is within the 3-6 range                                |
+| 3   | MEDIUM   | Loading prop not used when using placeholders                                          | Fixed: Added JSDoc comment explaining prop is for future real images |
+| 4   | MEDIUM   | Missing test documentation                                                             | Fixed: Added test results note to Task 6                             |
+| 5   | LOW      | GalleryCard not exported for external reuse                                            | Deferred: Internal component, export if needed later                 |
+| 6   | LOW      | Hardcoded scroll amount (300px)                                                        | Deferred: Works well, can be made dynamic if issues arise            |
+| 7   | LOW      | Story File List showed index.ts twice                                                  | Fixed: Part of issue #1 resolution                                   |
 
 ### Summary
 
@@ -533,23 +552,23 @@ Claude Sonnet 4 (Anthropic)
 
 ### File List
 
-| File | Action |
-|------|--------|
-| `apps/web/src/routes/index.tsx` | Modified - Import ExampleGallery, replace placeholder |
-| `apps/web/src/components/landing/example-gallery.tsx` | Created - Gallery container + GalleryCard component |
-| `apps/web/src/components/landing/index.ts` | Modified - Added ExampleGallery export |
-| `apps/web/src/index.css` | Modified - Added scrollbar-hide utility |
-| `apps/web/public/images/examples/` | Created (directory) - Ready for image assets |
+| File                                                  | Action                                                |
+| ----------------------------------------------------- | ----------------------------------------------------- |
+| `apps/web/src/routes/index.tsx`                       | Modified - Import ExampleGallery, replace placeholder |
+| `apps/web/src/components/landing/example-gallery.tsx` | Created - Gallery container + GalleryCard component   |
+| `apps/web/src/components/landing/index.ts`            | Modified - Added ExampleGallery export                |
+| `apps/web/src/index.css`                              | Modified - Added scrollbar-hide utility               |
+| `apps/web/public/images/examples/`                    | Created (directory) - Ready for image assets          |
 
 ---
 
 ## Change Log
 
-| Date | Change |
-|------|--------|
-| 2024-12-20 | Story created via create-story workflow with comprehensive context |
+| Date       | Change                                                                                                            |
+| ---------- | ----------------------------------------------------------------------------------------------------------------- |
+| 2024-12-20 | Story created via create-story workflow with comprehensive context                                                |
 | 2024-12-20 | Implementation complete: ExampleGallery component, GalleryCard, scrollbar-hide CSS, keyboard nav. Status → review |
-| 2024-12-20 | Code review complete: 7 issues found (0 High, 4 Medium, 3 Low). 4 MEDIUM fixed, 3 LOW deferred. Status → done |
+| 2024-12-20 | Code review complete: 7 issues found (0 High, 4 Medium, 3 Low). 4 MEDIUM fixed, 3 LOW deferred. Status → done     |
 
 ---
 
@@ -563,4 +582,3 @@ Claude Sonnet 4 (Anthropic)
 - [Source: ux-design-specification.md#Component-Strategy] - BeforeAfterSlider component notes
 - [Source: stories/2-1-mobile-optimized-landing-layout.md] - Layout foundation
 - [Source: stories/2-2-hero-section-with-value-proposition.md] - Hero section patterns
-

@@ -1,10 +1,10 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router"
-import { useEffect, useCallback, useState } from "react"
-import { Button } from "@/components/ui/button"
-import { DownloadButton } from "@/components/download"
-import { posthog, isPostHogConfigured } from "@/lib/posthog"
-import { getSession } from "@/lib/session"
-import { toast } from "sonner"
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useEffect, useCallback, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { DownloadButton } from "@/components/download";
+import { posthog, isPostHogConfigured } from "@/lib/posthog";
+import { getSession } from "@/lib/session";
+import { toast } from "sonner";
 
 /**
  * Checkout Success Page
@@ -21,29 +21,29 @@ export const Route = createFileRoute("/checkout-success")({
     session_id: search.session_id as string | undefined,
   }),
   component: CheckoutSuccessPage,
-})
+});
 
 function CheckoutSuccessPage() {
-  const navigate = useNavigate()
-  const { session_id } = Route.useSearch()
-  const [uploadId, setUploadId] = useState<string | null>(null)
-  const [sessionToken, setSessionToken] = useState<string | null>(null)
+  const navigate = useNavigate();
+  const { session_id } = Route.useSearch();
+  const [uploadId, setUploadId] = useState<string | null>(null);
+  const [sessionToken, setSessionToken] = useState<string | null>(null);
 
   // Get uploadId from localStorage (stored during checkout in Story 7.3)
   useEffect(() => {
-    if (typeof window === "undefined") return
+    if (typeof window === "undefined") return;
 
     try {
-      const storedUploadId = localStorage.getItem("babypeek-last-checkout-upload")
+      const storedUploadId = localStorage.getItem("babypeek-last-checkout-upload");
       if (storedUploadId) {
-        setUploadId(storedUploadId)
-        const token = getSession(storedUploadId)
-        setSessionToken(token)
+        setUploadId(storedUploadId);
+        const token = getSession(storedUploadId);
+        setSessionToken(token);
       }
     } catch {
       // localStorage may not be available (SSR, private browsing)
     }
-  }, [])
+  }, []);
 
   // Track checkout completion
   useEffect(() => {
@@ -51,29 +51,29 @@ function CheckoutSuccessPage() {
       posthog.capture("checkout_completed", {
         session_id,
         upload_id: uploadId,
-      })
+      });
     }
-  }, [session_id, uploadId])
+  }, [session_id, uploadId]);
 
   const handleStartOver = useCallback(() => {
-    navigate({ to: "/" })
-  }, [navigate])
+    navigate({ to: "/" });
+  }, [navigate]);
 
   // AC-4: Success callback shows toast and cleans up localStorage
   const handleDownloadSuccess = useCallback(() => {
-    toast.success("Your HD photo has been downloaded!")
+    toast.success("Your HD photo has been downloaded!");
     // Clean up localStorage after successful download
     try {
-      localStorage.removeItem("babypeek-last-checkout-upload")
+      localStorage.removeItem("babypeek-last-checkout-upload");
     } catch {
       // Ignore localStorage errors
     }
-  }, [])
+  }, []);
 
   // Handle download errors gracefully
   const handleDownloadError = useCallback((error: string) => {
-    toast.error(error || "Download failed. Please try again.")
-  }, [])
+    toast.error(error || "Download failed. Please try again.");
+  }, []);
 
   return (
     <div className="min-h-screen bg-cream flex items-center justify-center p-4">
@@ -99,9 +99,7 @@ function CheckoutSuccessPage() {
 
         {/* Success message */}
         <div className="space-y-2">
-          <h1 className="font-display text-3xl text-charcoal">
-            Payment Successful! 🎉
-          </h1>
+          <h1 className="font-display text-3xl text-charcoal">Payment Successful! 🎉</h1>
           <p className="font-body text-warm-gray text-lg">
             Thank you for your purchase. Your HD portrait is ready!
           </p>
@@ -144,5 +142,5 @@ function CheckoutSuccessPage() {
         </div>
       </div>
     </div>
-  )
+  );
 }
