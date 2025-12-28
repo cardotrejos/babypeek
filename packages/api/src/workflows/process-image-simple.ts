@@ -150,8 +150,9 @@ async function getOriginalImageUrl(uploadId: string): Promise<string | null> {
 async function generateWithGemini(
   imageUrl: string,
   prompt: string
-): Promise<{ data: Buffer; mimeType: string } | null> {
+): Promise<{ data: string; mimeType: string } | null> {
   "use step"
+  // NOTE: Returns base64 string instead of Buffer for workflow serialization
   
   const env = getEnv()
   
@@ -220,8 +221,9 @@ async function generateWithGemini(
         for (const part of parts) {
           if ("inlineData" in part && part.inlineData?.data) {
             const outputMimeType = part.inlineData.mimeType ?? "image/png"
-            const outputData = Buffer.from(part.inlineData.data, "base64")
-            console.log(`[workflow] Successfully generated image, size: ${outputData.length} bytes, type: ${outputMimeType}`)
+            // Return base64 string directly - Buffer doesn't serialize across workflow steps
+            const outputData = part.inlineData.data
+            console.log(`[workflow] Successfully generated image, base64 length: ${outputData.length}, type: ${outputMimeType}`)
             return {
               data: outputData,
               mimeType: outputMimeType,
@@ -289,10 +291,11 @@ void _storeResult // prevent unused warning
 
 /**
  * Store a result variant in R2 and the results table
+ * NOTE: imageDataBase64 is a base64 string (not Buffer) for workflow serialization
  */
 async function storeResultVariant(
   uploadId: string,
-  imageData: Buffer,
+  imageDataBase64: string,
   mimeType: string,
   promptVersion: PromptVersion,
   variantIndex: number,
@@ -305,7 +308,10 @@ async function storeResultVariant(
   const resultId = createId()
   const key = `results/${uploadId}/${resultId}_v${variantIndex}.jpg`
   
-  console.log(`[workflow] Storing variant ${variantIndex} to R2: ${key}`)
+  // Convert base64 back to Buffer for R2 upload
+  const imageData = Buffer.from(imageDataBase64, "base64")
+  
+  console.log(`[workflow] Storing variant ${variantIndex} to R2: ${key}, size: ${imageData.length} bytes`)
   
   // Upload to R2
   await client.send(
@@ -470,9 +476,10 @@ async function sendCompletionEmail(uploadId: string, resultId: string): Promise<
  */
 async function createAndStorePreview(
   resultId: string,
-  fullImageData: Buffer
+  fullImageDataBase64: string
 ): Promise<string | null> {
   "use step"
+  // NOTE: fullImageDataBase64 is base64 string for workflow serialization
   
   const env = getEnv()
   const client = getR2Client()
@@ -480,6 +487,9 @@ async function createAndStorePreview(
   console.log(`[workflow] Creating watermarked preview for result: ${resultId}`)
   
   try {
+    // Convert base64 back to Buffer for Jimp
+    const fullImageData = Buffer.from(fullImageDataBase64, "base64")
+    
     // Load image with Jimp
     const image = await Jimp.read(fullImageData)
     
@@ -594,7 +604,7 @@ export async function processImageWorkflowSimple(
     // Stage 2: Generating all 4 variants
     const resultIds: string[] = []
     let firstResultId: string | undefined
-    let firstImageData: Buffer | undefined
+    let firstImageDataBase64: string | undefined
     
     for (let i = 0; i < PROMPT_VARIANTS.length; i++) {
       const variant = PROMPT_VARIANTS[i] as PromptVersion
@@ -633,7 +643,7 @@ export async function processImageWorkflowSimple(
       // Keep first result for watermark preview and backward compatibility
       if (!firstResultId) {
         firstResultId = resultId
-        firstImageData = generatedImage.data
+        firstImageDataBase64 = generatedImage.data
       }
       
       console.log(`[workflow] Variant ${variantIndex} complete: ${resultId} (${generationTimeMs}ms)`)
@@ -650,8 +660,8 @@ export async function processImageWorkflowSimple(
     // Stage 3: Watermarking (create preview from first result)
     await updateUploadStage(uploadId, "watermarking", 90)
     
-    if (firstResultId && firstImageData) {
-      const previewKey = await createAndStorePreview(firstResultId, firstImageData)
+    if (firstResultId && firstImageDataBase64) {
+      const previewKey = await createAndStorePreview(firstResultId, firstImageDataBase64)
       if (previewKey) {
         await updatePreviewUrl(uploadId, previewKey)
         console.log(`[workflow] Preview stored at: ${previewKey}`)
