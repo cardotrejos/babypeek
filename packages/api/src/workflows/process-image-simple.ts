@@ -128,11 +128,11 @@ async function createWatermarkedPreview(fullImageData: Buffer): Promise<Buffer |
     const imageWidth = image.width;
     const imageHeight = image.height;
 
-    // Watermark text parameters
+    // Watermark text parameters - subtle but visible
     const text = "babypeek.io";
-    const opacity = 0.3;
-    const charWidth = Math.max(8, Math.floor(imageWidth / 50));
-    const spacing = Math.floor(imageWidth / 4);
+    const opacity = 0.15; // 15% opacity - subtle but visible
+    const charWidth = Math.max(4, Math.floor(imageWidth / 100)); // Smaller text
+    const spacing = Math.floor(imageWidth / 2); // Much wider spacing - only 2-3 watermarks visible
 
     // Simple pixel-based text rendering patterns
     const letterPatterns: Record<string, number[][]> = {
