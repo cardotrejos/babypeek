@@ -212,12 +212,12 @@ test.describe("Session Recovery (Story 5.7)", () => {
       const tinyPng =
         "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/w8AAn8B9pRkqQAAAABJRU5ErkJggg==";
 
-      // Mock process start endpoint
-      await page.route("**/api/process-workflow", async (route) => {
+      // Mock process start endpoint (now at /api/process, routing to workflow)
+      await page.route("**/api/process", async (route) => {
         await route.fulfill({
           status: 200,
           contentType: "application/json",
-          body: JSON.stringify({ workflowRunId: "run-1" }),
+          body: JSON.stringify({ success: true, jobId, workflowRunId: "run-1" }),
         });
       });
 
@@ -237,10 +237,12 @@ test.describe("Session Recovery (Story 5.7)", () => {
               progress: 100,
               resultId,
               resultUrl: tinyPng,
+              previewUrl: tinyPng, // Required for unpurchased users
               originalUrl: tinyPng,
               promptVersion: "v4",
               errorMessage: null,
               updatedAt: new Date().toISOString(),
+              results: [{ resultId, previewUrl: tinyPng, resultUrl: tinyPng, promptVersion: "v4", variantIndex: 1 }],
             }
           : {
               success: true,
@@ -249,10 +251,12 @@ test.describe("Session Recovery (Story 5.7)", () => {
               progress: 50,
               resultId: null,
               resultUrl: null,
+              previewUrl: null,
               originalUrl: null,
               promptVersion: "v4",
               errorMessage: null,
               updatedAt: new Date().toISOString(),
+              results: [],
             };
 
         await route.fulfill({
