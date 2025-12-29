@@ -271,7 +271,7 @@ function ProcessingPage() {
     setState("starting");
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/process-workflow`, {
+      const response = await fetch(`${API_BASE_URL}/api/process`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
