@@ -7,7 +7,6 @@ import {
   healthRoutes,
   storageRoutes,
   uploadRoutes,
-  processRoutes,
   processWorkflowRoutes,
   statusRoutes,
   retryRoutes,
@@ -38,8 +37,7 @@ app.use(
 app.route("/api/health", healthRoutes);
 app.route("/api/storage", storageRoutes);
 app.route("/api/upload", uploadRoutes);
-app.route("/api/process", processRoutes);
-app.route("/api/process-workflow", processWorkflowRoutes);
+app.route("/api/process", processWorkflowRoutes);
 app.route("/api/status", statusRoutes);
 app.route("/api/retry", retryRoutes);
 app.route("/api/checkout", checkoutRoutes);
