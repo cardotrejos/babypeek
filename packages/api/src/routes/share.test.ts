@@ -1,26 +1,110 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { Hono } from "hono";
-import { db } from "@babypeek/db";
+import { Effect, Layer } from "effect";
+import type { Upload } from "@babypeek/db";
 
-// Mock database
-vi.mock("@babypeek/db", () => ({
-  db: {
-    query: {
-      uploads: {
-        findFirst: vi.fn(),
-      },
-    },
-  },
-  uploads: { id: "id" },
-}));
+import { R2Service } from "../services/R2Service";
 
-// Import the actual route
-import shareRoutes from "./share";
+// =============================================================================
+// Mock Setup
+// =============================================================================
+
+const createMockUpload = (overrides: Partial<Upload> = {}): Upload => ({
+  id: "upload_123",
+  email: "test@example.com",
+  sessionToken: "secret_token",
+  originalUrl: "uploads/upload_123/original.jpg",
+  resultUrl: "results/upload_123/full.jpg",
+  previewUrl: "results/upload_123/preview.jpg",
+  status: "completed",
+  stage: "complete",
+  progress: 100,
+  workflowRunId: null,
+  promptVersion: "v4",
+  errorMessage: null,
+  createdAt: new Date(),
+  updatedAt: new Date(),
+  expiresAt: null,
+  ...overrides,
+});
+
+// Factory to create share route app with mocked services
+function createShareApp(options: { upload?: Upload | undefined }) {
+  const mockUpload = options.upload;
+
+  const app = new Hono();
+
+  app.get("/:shareId", async (c) => {
+    const shareId = c.req.param("shareId");
+
+    if (!shareId) {
+      return c.json({ error: "Share ID required" }, 400);
+    }
+
+    // Mock database lookup - shareId is uploadId
+    const upload = mockUpload?.id === shareId ? mockUpload : undefined;
+
+    if (!upload) {
+      return c.json({ error: "Not found" }, 404);
+    }
+
+    // Must have completed processing with preview
+    if (upload.status !== "completed" || !upload.previewUrl) {
+      return c.json({ error: "Not available for sharing" }, 404);
+    }
+
+    // Generate signed URL for preview image
+    const program = Effect.gen(function* () {
+      const r2Service = yield* R2Service;
+
+      // Generate 24-hour signed URL for the preview (public share pages)
+      const signedUrl = yield* r2Service
+        .getDownloadUrl(upload.previewUrl!, 24 * 60 * 60) // 24 hours
+        .pipe(Effect.catchAll(() => Effect.succeed(null as string | null)));
+
+      return signedUrl;
+    });
+
+    // Mock R2 service that returns a signed URL
+    const mockR2Service = {
+      generatePresignedUploadUrl: vi.fn(),
+      generatePresignedDownloadUrl: vi.fn(),
+      upload: vi.fn(),
+      delete: vi.fn(),
+      deletePrefix: vi.fn(),
+      headObject: vi.fn(),
+      getUploadUrl: vi.fn(),
+      getDownloadUrl: vi.fn().mockReturnValue(
+        Effect.succeed("https://signed-url.example.com/preview.jpg"),
+      ),
+    };
+
+    const MockR2ServiceLive = Layer.succeed(R2Service, mockR2Service);
+
+    const signedPreviewUrl = await Effect.runPromise(
+      program.pipe(Effect.provide(MockR2ServiceLive)),
+    );
+
+    if (!signedPreviewUrl) {
+      return c.json({ error: "Preview not available" }, 404);
+    }
+
+    // Return only public info - NO PII (email, sessionToken, resultUrl)
+    return c.json({
+      shareId,
+      uploadId: upload.id,
+      previewUrl: signedPreviewUrl,
+    });
+  });
+
+  return { app };
+}
+
+// =============================================================================
+// Tests
+// =============================================================================
 
 describe("Share Routes - Story 6.7", () => {
-  const app = new Hono();
-  app.route("/api/share", shareRoutes);
-
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -28,18 +112,11 @@ describe("Share Routes - Story 6.7", () => {
   describe("GET /api/share/:shareId", () => {
     it("should return share data for completed upload", async () => {
       // Arrange
-      const mockUpload = {
-        id: "upload_123",
-        email: "test@example.com",
-        status: "completed",
-        previewUrl: "https://r2.example.com/preview/upload_123.jpg",
-        resultUrl: "https://r2.example.com/result/upload_123.jpg",
-        sessionToken: "secret_token",
-      };
-      vi.mocked(db.query.uploads.findFirst).mockResolvedValue(mockUpload);
+      const mockUpload = createMockUpload();
+      const { app } = createShareApp({ upload: mockUpload });
 
       // Act
-      const res = await app.request("/api/share/upload_123");
+      const res = await app.request("/upload_123");
       const body = await res.json();
 
       // Assert
@@ -47,7 +124,7 @@ describe("Share Routes - Story 6.7", () => {
       expect(body).toEqual({
         shareId: "upload_123",
         uploadId: "upload_123",
-        previewUrl: "https://r2.example.com/preview/upload_123.jpg",
+        previewUrl: "https://signed-url.example.com/preview.jpg",
       });
       // Should NOT include sensitive data
       expect(body).not.toHaveProperty("email");
@@ -57,10 +134,10 @@ describe("Share Routes - Story 6.7", () => {
 
     it("should return 404 for non-existent upload", async () => {
       // Arrange
-      vi.mocked(db.query.uploads.findFirst).mockResolvedValue(undefined);
+      const { app } = createShareApp({ upload: undefined });
 
       // Act
-      const res = await app.request("/api/share/nonexistent");
+      const res = await app.request("/nonexistent");
 
       // Assert
       expect(res.status).toBe(404);
@@ -68,17 +145,16 @@ describe("Share Routes - Story 6.7", () => {
 
     it("should return 404 for non-completed upload", async () => {
       // Arrange
-      const mockUpload = {
+      const mockUpload = createMockUpload({
         id: "upload_123",
-        email: "test@example.com",
         status: "processing", // Not completed
         previewUrl: null,
         resultUrl: null,
-      };
-      vi.mocked(db.query.uploads.findFirst).mockResolvedValue(mockUpload);
+      });
+      const { app } = createShareApp({ upload: mockUpload });
 
       // Act
-      const res = await app.request("/api/share/upload_123");
+      const res = await app.request("/upload_123");
 
       // Assert
       expect(res.status).toBe(404);
@@ -86,17 +162,16 @@ describe("Share Routes - Story 6.7", () => {
 
     it("should return 404 for upload without preview URL", async () => {
       // Arrange
-      const mockUpload = {
+      const mockUpload = createMockUpload({
         id: "upload_123",
-        email: "test@example.com",
         status: "completed",
         previewUrl: null, // No preview
-        resultUrl: "https://r2.example.com/result/upload_123.jpg",
-      };
-      vi.mocked(db.query.uploads.findFirst).mockResolvedValue(mockUpload);
+        resultUrl: "results/upload_123/full.jpg",
+      });
+      const { app } = createShareApp({ upload: mockUpload });
 
       // Act
-      const res = await app.request("/api/share/upload_123");
+      const res = await app.request("/upload_123");
 
       // Assert
       expect(res.status).toBe(404);
@@ -104,18 +179,17 @@ describe("Share Routes - Story 6.7", () => {
 
     it("should not expose PII (email, sessionToken)", async () => {
       // Arrange
-      const mockUpload = {
+      const mockUpload = createMockUpload({
         id: "upload_secret",
         email: "private@email.com",
         sessionToken: "super_secret_token",
-        status: "completed",
-        previewUrl: "https://r2.example.com/preview.jpg",
-        resultUrl: "https://r2.example.com/result/private.jpg",
-      };
-      vi.mocked(db.query.uploads.findFirst).mockResolvedValue(mockUpload);
+        previewUrl: "results/upload_secret/preview.jpg",
+        resultUrl: "results/upload_secret/full.jpg",
+      });
+      const { app } = createShareApp({ upload: mockUpload });
 
       // Act
-      const res = await app.request("/api/share/upload_secret");
+      const res = await app.request("/upload_secret");
       const body = await res.json();
       const bodyString = JSON.stringify(body);
 

@@ -110,13 +110,13 @@ describe("PurchaseService", () => {
         sessionId: mockStripeSession.id,
       });
 
-      // Cancel URL should use resultId extracted from resultUrl with cancelled=true param
+      // Cancel URL should use /preview/${uploadId} (public, no session required) with cancelled=true param
       expect(mockStripeService.createCheckoutSession).toHaveBeenCalledWith({
         uploadId: "upload_123",
         email: "test@example.com",
         type: "self",
         successUrl: "http://localhost:3001/checkout-success?session_id={CHECKOUT_SESSION_ID}",
-        cancelUrl: "http://localhost:3001/result/result_abc?cancelled=true",
+        cancelUrl: "http://localhost:3001/preview/upload_123?cancelled=true",
       });
     });
 
