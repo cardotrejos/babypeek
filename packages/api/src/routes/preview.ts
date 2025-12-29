@@ -81,29 +81,43 @@ app.get("/:uploadId", async (c) => {
     }
     const allResults: ResultVariant[] = [];
 
+    console.log(`[preview] Found ${resultRows.length} results for upload ${uploadId}`);
+
     for (const result of resultRows) {
       // Always generate preview URL (watermarked)
       let previewUrl: string | null = null;
       let hdUrl: string | null = null;
 
+      console.log(`[preview] Processing result ${result.id}: previewUrl=${result.previewUrl}, resultUrl=${result.resultUrl}`);
+
       if (result.previewUrl) {
         previewUrl = yield* r2Service
           .getDownloadUrl(result.previewUrl, 60 * 60) // 1 hour
-          .pipe(Effect.catchAll(() => Effect.succeed(null as string | null)));
+          .pipe(Effect.catchAll((err) => {
+            console.error(`[preview] Failed to get preview URL for ${result.id}:`, err);
+            return Effect.succeed(null as string | null);
+          }));
       }
 
       // Only include HD URL if user has purchased
       if (hasPurchased && result.resultUrl) {
         hdUrl = yield* r2Service
           .getDownloadUrl(result.resultUrl, 60 * 60)
-          .pipe(Effect.catchAll(() => Effect.succeed(null as string | null)));
+          .pipe(Effect.catchAll((err) => {
+            console.error(`[preview] Failed to get HD URL for ${result.id}:`, err);
+            return Effect.succeed(null as string | null);
+          }));
       }
 
       // Fallback: if no preview exists, use HD URL as preview (backward compat)
       if (!previewUrl && result.resultUrl) {
+        console.log(`[preview] Using HD URL as fallback for ${result.id}`);
         previewUrl = yield* r2Service
           .getDownloadUrl(result.resultUrl, 60 * 60)
-          .pipe(Effect.catchAll(() => Effect.succeed(null as string | null)));
+          .pipe(Effect.catchAll((err) => {
+            console.error(`[preview] Failed to get fallback URL for ${result.id}:`, err);
+            return Effect.succeed(null as string | null);
+          }));
       }
 
       if (previewUrl) {
@@ -114,8 +128,12 @@ app.get("/:uploadId", async (c) => {
           promptVersion: result.promptVersion,
           variantIndex: result.variantIndex,
         });
+      } else {
+        console.warn(`[preview] No URL available for result ${result.id}`);
       }
     }
+
+    console.log(`[preview] Returning ${allResults.length} results for upload ${uploadId}`);
 
     // Generate signed URL for original image (for comparison slider)
     let originalUrl: string | null = null;

@@ -198,8 +198,9 @@ function ResultPage() {
 
       const data = await response.json();
 
-      // Verify the result is complete and has a URL
-      if (data.status !== "completed" || !data.resultUrl) {
+      // Verify the result is complete and has at least a preview URL
+      // Note: resultUrl is only available after purchase, previewUrl is always available
+      if (data.status !== "completed" || (!data.resultUrl && !data.previewUrl && (!data.results || data.results.length === 0))) {
         throw new Error("Portrait is not ready yet");
       }
 
