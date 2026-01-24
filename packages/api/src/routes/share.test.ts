@@ -74,9 +74,9 @@ function createShareApp(options: { upload?: Upload | undefined }) {
       deletePrefix: vi.fn(),
       headObject: vi.fn(),
       getUploadUrl: vi.fn(),
-      getDownloadUrl: vi.fn().mockReturnValue(
-        Effect.succeed("https://signed-url.example.com/preview.jpg"),
-      ),
+      getDownloadUrl: vi
+        .fn()
+        .mockReturnValue(Effect.succeed("https://signed-url.example.com/preview.jpg")),
     };
 
     const MockR2ServiceLive = Layer.succeed(R2Service, mockR2Service);

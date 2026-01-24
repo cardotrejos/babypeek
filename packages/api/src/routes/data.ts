@@ -87,19 +87,13 @@ app.delete("/:token", async (c) => {
     }
 
     // 4. Delete purchase records (after downloads are deleted, FK satisfied)
-    yield* Effect.promise(() =>
-      db.delete(purchases).where(eq(purchases.uploadId, uploadId)),
-    );
+    yield* Effect.promise(() => db.delete(purchases).where(eq(purchases.uploadId, uploadId)));
 
     // 5. Delete preferences for this upload (must delete before results due to FK)
-    yield* Effect.promise(() =>
-      db.delete(preferences).where(eq(preferences.uploadId, uploadId)),
-    );
+    yield* Effect.promise(() => db.delete(preferences).where(eq(preferences.uploadId, uploadId)));
 
     // 6. Delete results for this upload (must delete before uploads due to FK)
-    yield* Effect.promise(() =>
-      db.delete(results).where(eq(results.uploadId, uploadId)),
-    );
+    yield* Effect.promise(() => db.delete(results).where(eq(results.uploadId, uploadId)));
 
     // 7. Delete upload record (this cascade-affects nothing now since we handled refs)
     yield* Effect.promise(() => db.delete(uploads).where(eq(uploads.id, uploadId)));

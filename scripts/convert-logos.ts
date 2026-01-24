@@ -4,12 +4,7 @@ import { join } from "path";
 
 const PUBLIC_DIR = join(import.meta.dir, "../apps/web/public");
 
-const logos = [
-  "logo.svg",
-  "logo-purple.svg",
-  "logo-teal.svg",
-  "logo-wordmark.svg",
-];
+const logos = ["logo.svg", "logo-purple.svg", "logo-teal.svg", "logo-wordmark.svg"];
 
 for (const logo of logos) {
   const svgPath = join(PUBLIC_DIR, logo);
