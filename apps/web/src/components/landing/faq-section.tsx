@@ -5,6 +5,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { PRICE_DISPLAY } from "@/lib/pricing";
 
 interface FaqSectionProps {
   id?: string;
@@ -27,14 +28,24 @@ interface FaqSectionProps {
 
 const faqItems = [
   {
+    question: "How accurate is BabyPeek?",
+    answer:
+      "BabyPeek creates a realistic AI interpretation based on what’s visible in your 4D ultrasound. Results vary by image quality and how clearly the face is shown. It’s meant as a fun preview—not a medical or genetic prediction.",
+  },
+  {
     question: "How does BabyPeek work?",
     answer:
-      "Simply upload your 4D ultrasound image, and our AI transforms it into a beautiful, photorealistic portrait of your baby in about 60 seconds. You'll see a stunning reveal, then you can share it with family or purchase the HD version.",
+      "Upload a clear 4D ultrasound image, and our AI transforms it into a realistic baby portrait. You’ll see a free preview first, then you can share it or upgrade to the HD download.",
   },
   {
     question: "What kind of ultrasound works best?",
     answer:
       "The clearer the face in your 4D ultrasound, the better the result. Look for images where the baby's face is visible without obstructions (like hands covering the face or the umbilical cord). A clear view of the nose, lips, and closed eyes gives the best results.",
+  },
+  {
+    question: "How long does it take?",
+    answer:
+      "Most portraits are ready in about 60 seconds after upload. If your image needs extra processing, it may take a little longer.",
   },
   {
     question: "Why can't the AI predict skin color or hair?",
@@ -48,13 +59,12 @@ const faqItems = [
   },
   {
     question: "How much does it cost?",
-    answer:
-      "You can preview your baby's portrait for free! The HD download is $9.99 - a small price for such a special keepsake. We also offer gift options so grandparents and family can purchase it for you.",
+    answer: `You can preview your baby's portrait for free. The HD download is ${PRICE_DISPLAY} (one-time purchase, no subscription). We also offer gifting so family can purchase it for you.`,
   },
   {
-    question: "Is my data safe?",
+    question: "Is my data private?",
     answer:
-      "Absolutely. Your privacy matters to us. All images are transmitted securely via HTTPS, are never shared with anyone, and are automatically deleted after 30 days. You can also delete your data anytime.",
+      "Yes. Your images are transmitted securely via HTTPS, never shared, and automatically deleted after 30 days. You can also delete your data anytime.",
   },
   {
     question: "What makes the images so realistic?",
