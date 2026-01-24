@@ -8,6 +8,7 @@ interface LandingLayoutProps {
   className?: string;
   showCta?: boolean;
   ctaText?: string;
+  ctaSubtext?: string;
   onCtaClick?: () => void;
 }
 
@@ -16,6 +17,7 @@ export function LandingLayout({
   className,
   showCta = true,
   ctaText = "Try it free",
+  ctaSubtext,
   onCtaClick,
 }: LandingLayoutProps) {
   return (
@@ -57,6 +59,9 @@ export function LandingLayout({
             >
               {ctaText}
             </Button>
+            {ctaSubtext ? (
+              <p className="mt-2 text-center text-sm text-warm-gray">{ctaSubtext}</p>
+            ) : null}
           </div>
         </div>
       )}

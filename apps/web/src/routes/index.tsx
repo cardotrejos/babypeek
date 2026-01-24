@@ -4,18 +4,20 @@ import {
   HeroImage,
   ExampleGallery,
   TrustSignals,
+  PricingSection,
   FaqSection,
   UploadSection,
 } from "@/components/landing";
 import { StructuredData } from "@/components/seo/structured-data";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { PRICE_DISPLAY } from "@/lib/pricing";
 
 // SEO constants - meta tags are in index.html for SPA
 const SEO = {
   siteUrl: "https://babypeek.io/",
   description:
-    "See your baby before they're born. Upload your 4D ultrasound and get a beautiful AI-generated portrait in 60 seconds. Free preview, instant results.",
+    "See your baby's face before birth. Upload a 4D ultrasound and get an AI-generated baby portrait in about 60 seconds. Free preview, private & secure.",
 } as const;
 
 export const Route = createFileRoute("/")({
@@ -32,19 +34,24 @@ function LandingPage() {
   };
 
   return (
-    <LandingLayout onCtaClick={handleCtaClick}>
+    <LandingLayout
+      onCtaClick={handleCtaClick}
+      ctaText="Try it free"
+      ctaSubtext={`Free preview • HD download ${PRICE_DISPLAY}`}
+    >
       {/* JSON-LD Structured Data for SEO (AC2) */}
       <StructuredData siteUrl={SEO.siteUrl} siteName="BabyPeek" description={SEO.description} />
       {/* Hero Section - Story 2.2 Implementation */}
       <section id="hero" className="min-h-[60vh] flex flex-col justify-center py-8">
         {/* Headline - AC1 */}
         <h1 className="font-display text-3xl sm:text-5xl text-charcoal leading-tight">
-          Meet your baby before they're born
+          See your future baby before they arrive
         </h1>
 
         {/* Value Proposition - AC1 */}
         <p className="font-body text-warm-gray mt-4 text-lg sm:text-xl max-w-md">
-          Transform your 4D ultrasound into a beautiful, photorealistic portrait in seconds.
+          Upload a clear 4D ultrasound of your baby's face. BabyPeek uses AI to generate a realistic
+          baby portrait you can share in about a minute.
         </p>
 
         {/* Inline CTA Button - AC3, AC4, AC7 */}
@@ -65,6 +72,10 @@ function LandingPage() {
           Try it free
         </Button>
 
+        <p className="mt-3 text-sm text-warm-gray">
+          Free preview. HD download {PRICE_DISPLAY}. No subscription.
+        </p>
+
         {/* Before/After Example Image - AC2, AC6, AC7 */}
         <div className="mt-8">
           <HeroImage />
@@ -73,12 +84,20 @@ function LandingPage() {
 
       {/* Gallery Section - Story 2.3 Implementation */}
       <section id="gallery" className="py-12">
-        <h2 className="font-display text-2xl text-charcoal mb-6">See the magic</h2>
+        <h2 className="font-display text-2xl text-charcoal mb-2">
+          See before &amp; after examples
+        </h2>
+        <p className="text-warm-gray mb-6">
+          A clear 4D ultrasound in → a realistic AI baby portrait out.
+        </p>
         <ExampleGallery />
       </section>
 
       {/* Trust Signals Section - Story 2.4 Implementation */}
       <TrustSignals id="trust" />
+
+      {/* Pricing Section - SEO + Clarity */}
+      <PricingSection id="pricing" />
 
       {/* Upload Section - Story 3.6 Implementation */}
       <UploadSection id="upload" />

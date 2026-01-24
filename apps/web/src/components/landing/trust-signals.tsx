@@ -21,19 +21,19 @@ interface TrustSignalsProps {
 export function TrustSignals({ id, className }: TrustSignalsProps) {
   const trustItems = [
     {
-      icon: "clock-trash",
-      title: "Auto-deleted",
-      description: "Your images are deleted after 30 days",
-    },
-    {
       icon: "shield",
-      title: "Secure transfer",
-      description: "HTTPS encrypted, always protected",
+      title: "Secure checkout",
+      description: "Payments are handled by Stripe",
     },
     {
       icon: "eye-off",
-      title: "Private",
-      description: "Your photos are never shared",
+      title: "Private by default",
+      description: "Your images are never shared",
+    },
+    {
+      icon: "clock-trash",
+      title: "Auto-deleted",
+      description: "Deleted after 30 days (or anytime)",
     },
   ];
 
@@ -44,9 +44,12 @@ export function TrustSignals({ id, className }: TrustSignalsProps) {
       aria-label="Trust and privacy information"
       className={cn("py-12", className)}
     >
-      <h2 className="font-display text-2xl text-charcoal text-center mb-8">Your privacy matters</h2>
+      <h2 className="font-display text-2xl text-charcoal text-center mb-3">Trusted & private</h2>
+      <p className="text-center text-warm-gray max-w-md mx-auto">
+        Secure checkout, private processing, and automatic deletion.
+      </p>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mt-8">
         {trustItems.map((item) => (
           <TrustBadge
             key={item.title}

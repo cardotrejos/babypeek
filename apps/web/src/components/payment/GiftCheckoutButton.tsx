@@ -12,10 +12,7 @@ import {
 import { API_BASE_URL } from "@/lib/api-config";
 import { posthog, isPostHogConfigured } from "@/lib/posthog";
 import { addBreadcrumb } from "@/lib/sentry";
-
-// Price from env or default $9.99
-const PRICE_CENTS = Number(import.meta.env.VITE_PRODUCT_PRICE_CENTS) || 999;
-const PRICE_DISPLAY = `$${(PRICE_CENTS / 100).toFixed(2)}`;
+import { PRICE_CENTS, PRICE_DISPLAY } from "@/lib/pricing";
 
 interface GiftCheckoutButtonProps {
   shareId: string;

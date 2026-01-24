@@ -5,24 +5,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="theme-color" content="#FDF8F5" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <title>BabyPeek | Transform Your 4D Ultrasound into a Baby Portrait</title>
+    <title>BabyPeek - See Your Baby's Face Before Birth | AI Ultrasound Prediction</title>
     <meta
       name="description"
-      content="See your baby before they're born. Upload your 4D ultrasound and get a beautiful AI-generated portrait in 60 seconds. Free preview, instant results."
+      content="See your future baby before they arrive. Upload your 4D ultrasound for an AI baby face prediction in ~60 seconds. Free preview, HD $9.99. Private & secure."
     />
 
     <!-- Open Graph -->
     <meta
       property="og:title"
-      content="BabyPeek | Transform Your 4D Ultrasound into a Baby Portrait"
+      content="BabyPeek - See Your Baby's Face Before Birth | AI Ultrasound Prediction"
     />
     <meta
       property="og:description"
-      content="See your baby before they're born. Upload your 4D ultrasound and get a beautiful AI-generated portrait in 60 seconds."
+      content="See your future baby before they arrive. Upload your 4D ultrasound for an AI baby face prediction in ~60 seconds. Free preview, HD $9.99. Private & secure."
     />
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://babypeek.io/" />
     <meta property="og:image" content="https://babypeek.io/og-image.png" />
+    <meta property="og:image:alt" content="BabyPeek - AI baby portrait from ultrasound preview" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
     <meta property="og:site_name" content="BabyPeek" />
@@ -32,13 +33,14 @@
     <meta name="twitter:card" content="summary_large_image" />
     <meta
       name="twitter:title"
-      content="BabyPeek | Transform Your 4D Ultrasound into a Baby Portrait"
+      content="BabyPeek - See Your Baby's Face Before Birth | AI Ultrasound Prediction"
     />
     <meta
       name="twitter:description"
-      content="See your baby before they're born. Upload your 4D ultrasound and get a beautiful AI-generated portrait in 60 seconds."
+      content="See your future baby before they arrive. Upload your 4D ultrasound for an AI baby face prediction in ~60 seconds. Free preview, HD $9.99. Private & secure."
     />
     <meta name="twitter:image" content="https://babypeek.io/og-image.png" />
+    <meta name="twitter:image:alt" content="BabyPeek - AI baby portrait from ultrasound preview" />
 
     <!-- Canonical -->
     <link rel="canonical" href="https://babypeek.io/" />
@@ -56,12 +58,12 @@
       (function() {
         // Pixel ID is injected at build time by Vite
         var pixelId = '%VITE_FACEBOOK_PIXEL_ID%';
-        
+
         // Only initialize if pixelId is set (not empty or placeholder)
         if (!pixelId || pixelId === '' || pixelId.indexOf('VITE_') === 0) {
           return;
         }
-        
+
         // Facebook Pixel base code
         !function(f,b,e,v,n,t,s)
         {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
@@ -71,7 +73,7 @@
         t.src=v;s=b.getElementsByTagName(e)[0];
         s.parentNode.insertBefore(t,s)}(window, document,'script',
         'https://connect.facebook.net/en_US/fbevents.js');
-        
+
         fbq('init', pixelId);
         fbq('track', 'PageView');
       })();
@@ -80,8 +82,13 @@
   <body>
     <!-- Facebook Pixel noscript fallback -->
     <noscript>
-      <img height="1" width="1" style="display:none" alt=""
-        src="https://www.facebook.com/tr?id=%VITE_FACEBOOK_PIXEL_ID%&ev=PageView&noscript=1"/>
+      <img
+        height="1"
+        width="1"
+        style="display:none"
+        alt=""
+        src="https://www.facebook.com/tr?id=%VITE_FACEBOOK_PIXEL_ID%&ev=PageView&noscript=1"
+      />
     </noscript>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>

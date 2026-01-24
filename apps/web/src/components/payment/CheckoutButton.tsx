@@ -4,10 +4,7 @@ import { API_BASE_URL } from "@/lib/api-config";
 import { posthog, isPostHogConfigured } from "@/lib/posthog";
 import { trackFBInitiateCheckout } from "@/lib/facebook-pixel";
 import { getSession } from "@/lib/session";
-
-// Price from env or default $9.99
-const PRICE_CENTS = Number(import.meta.env.VITE_PRODUCT_PRICE_CENTS) || 999;
-const PRICE_DISPLAY = `$${(PRICE_CENTS / 100).toFixed(2)}`;
+import { PRICE_CENTS, PRICE_DISPLAY } from "@/lib/pricing";
 
 interface CheckoutButtonProps extends Omit<ComponentPropsWithoutRef<typeof Button>, "onClick"> {
   uploadId: string;
@@ -24,7 +21,7 @@ interface CheckoutButtonProps extends Omit<ComponentPropsWithoutRef<typeof Butto
  *
  * Creates a Stripe Checkout session and redirects user to Stripe.
  * - Shows loading state during checkout creation
- * - Displays price ($9.99)
+ * - Displays price (env-configured)
  * - Tracks purchase_started event
  */
 export function CheckoutButton({
