@@ -100,7 +100,7 @@ async function updateUploadStage(
 /**
  * Create a watermarked preview image buffer from full-size image data.
  * This is a pure helper function, not a workflow step.
- * 
+ *
  * Watermark Specs:
  * - Diagonal "babypeek.io" text pattern across entire image
  * - Opacity: 30%
@@ -136,15 +136,87 @@ async function createWatermarkedPreview(fullImageData: Buffer): Promise<Buffer |
 
     // Simple pixel-based text rendering patterns
     const letterPatterns: Record<string, number[][]> = {
-      b: [[1,1,1,0,0],[1,0,0,1,0],[1,1,1,0,0],[1,0,0,1,0],[1,0,0,1,0],[1,1,1,0,0],[0,0,0,0,0]],
-      a: [[0,1,1,0,0],[1,0,0,1,0],[1,0,0,1,0],[1,1,1,1,0],[1,0,0,1,0],[1,0,0,1,0],[0,0,0,0,0]],
-      y: [[1,0,0,1,0],[1,0,0,1,0],[0,1,1,0,0],[0,0,1,0,0],[0,0,1,0,0],[0,0,1,0,0],[0,0,0,0,0]],
-      p: [[1,1,1,0,0],[1,0,0,1,0],[1,0,0,1,0],[1,1,1,0,0],[1,0,0,0,0],[1,0,0,0,0],[0,0,0,0,0]],
-      e: [[1,1,1,1,0],[1,0,0,0,0],[1,1,1,0,0],[1,0,0,0,0],[1,0,0,0,0],[1,1,1,1,0],[0,0,0,0,0]],
-      k: [[1,0,0,1,0],[1,0,1,0,0],[1,1,0,0,0],[1,0,1,0,0],[1,0,0,1,0],[1,0,0,1,0],[0,0,0,0,0]],
-      i: [[0,1,1,1,0],[0,0,1,0,0],[0,0,1,0,0],[0,0,1,0,0],[0,0,1,0,0],[0,1,1,1,0],[0,0,0,0,0]],
-      o: [[0,1,1,0,0],[1,0,0,1,0],[1,0,0,1,0],[1,0,0,1,0],[1,0,0,1,0],[0,1,1,0,0],[0,0,0,0,0]],
-      ".": [[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0],[0,1,1,0,0],[0,0,0,0,0]],
+      b: [
+        [1, 1, 1, 0, 0],
+        [1, 0, 0, 1, 0],
+        [1, 1, 1, 0, 0],
+        [1, 0, 0, 1, 0],
+        [1, 0, 0, 1, 0],
+        [1, 1, 1, 0, 0],
+        [0, 0, 0, 0, 0],
+      ],
+      a: [
+        [0, 1, 1, 0, 0],
+        [1, 0, 0, 1, 0],
+        [1, 0, 0, 1, 0],
+        [1, 1, 1, 1, 0],
+        [1, 0, 0, 1, 0],
+        [1, 0, 0, 1, 0],
+        [0, 0, 0, 0, 0],
+      ],
+      y: [
+        [1, 0, 0, 1, 0],
+        [1, 0, 0, 1, 0],
+        [0, 1, 1, 0, 0],
+        [0, 0, 1, 0, 0],
+        [0, 0, 1, 0, 0],
+        [0, 0, 1, 0, 0],
+        [0, 0, 0, 0, 0],
+      ],
+      p: [
+        [1, 1, 1, 0, 0],
+        [1, 0, 0, 1, 0],
+        [1, 0, 0, 1, 0],
+        [1, 1, 1, 0, 0],
+        [1, 0, 0, 0, 0],
+        [1, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0],
+      ],
+      e: [
+        [1, 1, 1, 1, 0],
+        [1, 0, 0, 0, 0],
+        [1, 1, 1, 0, 0],
+        [1, 0, 0, 0, 0],
+        [1, 0, 0, 0, 0],
+        [1, 1, 1, 1, 0],
+        [0, 0, 0, 0, 0],
+      ],
+      k: [
+        [1, 0, 0, 1, 0],
+        [1, 0, 1, 0, 0],
+        [1, 1, 0, 0, 0],
+        [1, 0, 1, 0, 0],
+        [1, 0, 0, 1, 0],
+        [1, 0, 0, 1, 0],
+        [0, 0, 0, 0, 0],
+      ],
+      i: [
+        [0, 1, 1, 1, 0],
+        [0, 0, 1, 0, 0],
+        [0, 0, 1, 0, 0],
+        [0, 0, 1, 0, 0],
+        [0, 0, 1, 0, 0],
+        [0, 1, 1, 1, 0],
+        [0, 0, 0, 0, 0],
+      ],
+      o: [
+        [0, 1, 1, 0, 0],
+        [1, 0, 0, 1, 0],
+        [1, 0, 0, 1, 0],
+        [1, 0, 0, 1, 0],
+        [1, 0, 0, 1, 0],
+        [0, 1, 1, 0, 0],
+        [0, 0, 0, 0, 0],
+      ],
+      ".": [
+        [0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0],
+        [0, 1, 1, 0, 0],
+        [0, 0, 0, 0, 0],
+      ],
     };
 
     // Draw diagonal watermark text pattern
@@ -411,7 +483,7 @@ void _storeResult; // prevent unused warning
  * Store a result variant in R2 and the results table
  * Also creates and stores the watermarked preview in the same step
  * NOTE: imageDataBase64 is a base64 string (not Buffer) for workflow serialization
- * 
+ *
  * Returns: { resultId: string, previewKey: string | null }
  */
 async function storeResultVariant(
@@ -494,7 +566,9 @@ async function storeResultVariant(
       .where(eq(uploads.id, uploadId));
   }
 
-  console.log(`[workflow] Variant ${variantIndex} stored, resultId: ${resultId}, preview: ${finalPreviewKey ? "yes" : "no"}`);
+  console.log(
+    `[workflow] Variant ${variantIndex} stored, resultId: ${resultId}, preview: ${finalPreviewKey ? "yes" : "no"}`,
+  );
 
   return { resultId, previewKey: finalPreviewKey };
 }

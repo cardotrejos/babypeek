@@ -200,7 +200,10 @@ function ResultPage() {
 
       // Verify the result is complete and has at least a preview URL
       // Note: resultUrl is only available after purchase, previewUrl is always available
-      if (data.status !== "completed" || (!data.resultUrl && !data.previewUrl && (!data.results || data.results.length === 0))) {
+      if (
+        data.status !== "completed" ||
+        (!data.resultUrl && !data.previewUrl && (!data.results || data.results.length === 0))
+      ) {
         throw new Error("Portrait is not ready yet");
       }
 
@@ -242,7 +245,11 @@ function ResultPage() {
   // SECURITY: Show watermarked preview unless user has purchased
   // The API now only returns resultUrl for paid users, so we safely use previewUrl for unpaid
   const previewUrl = hasPurchased
-    ? (selectedResult?.resultUrl ?? selectedResult?.previewUrl ?? statusData?.resultUrl ?? statusData?.previewUrl ?? null)
+    ? (selectedResult?.resultUrl ??
+      selectedResult?.previewUrl ??
+      statusData?.resultUrl ??
+      statusData?.previewUrl ??
+      null)
     : (selectedResult?.previewUrl ?? statusData?.previewUrl ?? null);
 
   // Preload the image (AC-6)

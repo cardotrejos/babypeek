@@ -58,9 +58,9 @@ app.get("/:uploadId", async (c) => {
     }
 
     // Check if user has already purchased
-    const purchase = yield* purchaseService.getByUploadId(uploadId).pipe(
-      Effect.catchAll(() => Effect.succeed(null)),
-    );
+    const purchase = yield* purchaseService
+      .getByUploadId(uploadId)
+      .pipe(Effect.catchAll(() => Effect.succeed(null)));
     const hasPurchased = purchase?.status === "completed";
 
     // Fetch all results from the results table
@@ -88,36 +88,40 @@ app.get("/:uploadId", async (c) => {
       let previewUrl: string | null = null;
       let hdUrl: string | null = null;
 
-      console.log(`[preview] Processing result ${result.id}: previewUrl=${result.previewUrl}, resultUrl=${result.resultUrl}`);
+      console.log(
+        `[preview] Processing result ${result.id}: previewUrl=${result.previewUrl}, resultUrl=${result.resultUrl}`,
+      );
 
       if (result.previewUrl) {
         previewUrl = yield* r2Service
           .getDownloadUrl(result.previewUrl, 60 * 60) // 1 hour
-          .pipe(Effect.catchAll((err) => {
-            console.error(`[preview] Failed to get preview URL for ${result.id}:`, err);
-            return Effect.succeed(null as string | null);
-          }));
+          .pipe(
+            Effect.catchAll((err) => {
+              console.error(`[preview] Failed to get preview URL for ${result.id}:`, err);
+              return Effect.succeed(null as string | null);
+            }),
+          );
       }
 
       // Only include HD URL if user has purchased
       if (hasPurchased && result.resultUrl) {
-        hdUrl = yield* r2Service
-          .getDownloadUrl(result.resultUrl, 60 * 60)
-          .pipe(Effect.catchAll((err) => {
+        hdUrl = yield* r2Service.getDownloadUrl(result.resultUrl, 60 * 60).pipe(
+          Effect.catchAll((err) => {
             console.error(`[preview] Failed to get HD URL for ${result.id}:`, err);
             return Effect.succeed(null as string | null);
-          }));
+          }),
+        );
       }
 
       // Fallback: if no preview exists, use HD URL as preview (backward compat)
       if (!previewUrl && result.resultUrl) {
         console.log(`[preview] Using HD URL as fallback for ${result.id}`);
-        previewUrl = yield* r2Service
-          .getDownloadUrl(result.resultUrl, 60 * 60)
-          .pipe(Effect.catchAll((err) => {
+        previewUrl = yield* r2Service.getDownloadUrl(result.resultUrl, 60 * 60).pipe(
+          Effect.catchAll((err) => {
             console.error(`[preview] Failed to get fallback URL for ${result.id}:`, err);
             return Effect.succeed(null as string | null);
-          }));
+          }),
+        );
       }
 
       if (previewUrl) {

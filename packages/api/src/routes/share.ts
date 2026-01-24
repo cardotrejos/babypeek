@@ -52,9 +52,7 @@ app.get("/:shareId", async (c) => {
     return signedUrl;
   });
 
-  const signedPreviewUrl = await Effect.runPromise(
-    program.pipe(Effect.provide(R2ServiceLive)),
-  );
+  const signedPreviewUrl = await Effect.runPromise(program.pipe(Effect.provide(R2ServiceLive)));
 
   if (!signedPreviewUrl) {
     return c.json({ error: "Preview not available" }, 404);

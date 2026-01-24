@@ -221,7 +221,8 @@ function PreviewPage() {
     // Check if it's a not found error (expired or invalid)
     const isNotFound =
       queryError instanceof Error &&
-      (queryError.message.includes("not found") || queryError.message.includes("Portrait not found"));
+      (queryError.message.includes("not found") ||
+        queryError.message.includes("Portrait not found"));
 
     if (isNotFound) {
       return <ExpiredResult resultId={uploadId} source="preview" />;
@@ -249,9 +250,13 @@ function PreviewPage() {
             </div>
           </div>
           <div className="space-y-2">
-            <h1 className="font-display text-2xl text-charcoal">Couldn&apos;t load your portrait</h1>
+            <h1 className="font-display text-2xl text-charcoal">
+              Couldn&apos;t load your portrait
+            </h1>
             <p className="font-body text-warm-gray">
-              {queryError instanceof Error ? queryError.message : "Something went wrong. Please try again."}
+              {queryError instanceof Error
+                ? queryError.message
+                : "Something went wrong. Please try again."}
             </p>
           </div>
           <button
@@ -288,10 +293,10 @@ function PreviewPage() {
             </div>
           </div>
           <div className="space-y-2">
-            <h1 className="font-display text-2xl text-charcoal">Couldn&apos;t load your portrait</h1>
-            <p className="font-body text-warm-gray">
-              Portrait is not ready yet
-            </p>
+            <h1 className="font-display text-2xl text-charcoal">
+              Couldn&apos;t load your portrait
+            </h1>
+            <p className="font-body text-warm-gray">Portrait is not ready yet</p>
           </div>
           <button
             onClick={handleStartOver}

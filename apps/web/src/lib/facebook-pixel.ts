@@ -26,11 +26,7 @@ declare global {
 }
 
 type FacebookPixel = {
-  (
-    action: "init",
-    pixelId: string,
-    advancedMatching?: AdvancedMatchingParams
-  ): void;
+  (action: "init", pixelId: string, advancedMatching?: AdvancedMatchingParams): void;
   (action: "track", eventName: StandardEvent, params?: EventParams): void;
   (action: "trackCustom", eventName: string, params?: EventParams): void;
   callMethod?: (...args: unknown[]) => void;
@@ -114,10 +110,7 @@ export function getPixelId(): string | undefined {
 /**
  * Track a standard Facebook Pixel event
  */
-export function trackFBEvent(
-  eventName: StandardEvent,
-  params?: EventParams
-): void {
+export function trackFBEvent(eventName: StandardEvent, params?: EventParams): void {
   if (!isFBPixelConfigured()) {
     if (import.meta.env.DEV) {
       console.log(`[FB Pixel] Would track: ${eventName}`, params);
@@ -135,10 +128,7 @@ export function trackFBEvent(
 /**
  * Track a custom event (for events not in the standard list)
  */
-export function trackFBCustomEvent(
-  eventName: string,
-  params?: EventParams
-): void {
+export function trackFBCustomEvent(eventName: string, params?: EventParams): void {
   if (!isFBPixelConfigured()) {
     if (import.meta.env.DEV) {
       console.log(`[FB Pixel] Would track custom: ${eventName}`, params);
@@ -229,10 +219,7 @@ export function trackFBPurchase(params: {
  * Track when user submits email (lead capture)
  * Maps to Lead standard event
  */
-export function trackFBLead(params: {
-  uploadId?: string;
-  source?: string;
-}): void {
+export function trackFBLead(params: { uploadId?: string; source?: string }): void {
   trackFBEvent("Lead", {
     content_name: "Email Capture",
     content_category: "Upload Flow",

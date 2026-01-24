@@ -102,9 +102,9 @@ app.get("/:jobId", async (c) => {
     if (upload.status === "completed") {
       // Check purchase status
       const purchaseService = yield* PurchaseService;
-      const purchase = yield* purchaseService.getByUploadId(jobId).pipe(
-        Effect.catchAll(() => Effect.succeed(null)),
-      );
+      const purchase = yield* purchaseService
+        .getByUploadId(jobId)
+        .pipe(Effect.catchAll(() => Effect.succeed(null)));
       hasPurchased = purchase?.status === "completed";
 
       // Fetch all results from the results table

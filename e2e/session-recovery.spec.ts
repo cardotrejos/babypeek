@@ -242,7 +242,15 @@ test.describe("Session Recovery (Story 5.7)", () => {
               promptVersion: "v4",
               errorMessage: null,
               updatedAt: new Date().toISOString(),
-              results: [{ resultId, previewUrl: tinyPng, resultUrl: tinyPng, promptVersion: "v4", variantIndex: 1 }],
+              results: [
+                {
+                  resultId,
+                  previewUrl: tinyPng,
+                  resultUrl: tinyPng,
+                  promptVersion: "v4",
+                  variantIndex: 1,
+                },
+              ],
             }
           : {
               success: true,

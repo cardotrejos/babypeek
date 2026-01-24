@@ -26,13 +26,7 @@ function htmlEnvPlugin(): Plugin {
 }
 
 export default defineConfig({
-  plugins: [
-    htmlEnvPlugin(),
-    tsconfigPaths(),
-    tailwindcss(),
-    TanStackRouterVite(),
-    viteReact(),
-  ],
+  plugins: [htmlEnvPlugin(), tsconfigPaths(), tailwindcss(), TanStackRouterVite(), viteReact()],
   server: {
     port: 3001,
   },
