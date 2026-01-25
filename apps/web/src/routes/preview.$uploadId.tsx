@@ -355,6 +355,7 @@ function PreviewPage() {
           retryCount={retryCount}
           onCheckoutStart={handleCheckoutStart}
           onStartOver={handleStartOver}
+          hasPurchasedProp={hasPurchased}
         />
       </div>
     </div>

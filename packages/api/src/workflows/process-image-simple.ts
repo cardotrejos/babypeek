@@ -7,7 +7,7 @@
  * Uses Nano Banana Pro (gemini-3-pro-image-preview) with in-utero style prompts.
  */
 
-import { db, uploads, results } from "@babypeek/db";
+import { db, uploads, results, purchases } from "@babypeek/db";
 import { eq } from "drizzle-orm";
 import { createId } from "@paralleldrive/cuid2";
 import { S3Client, PutObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
@@ -612,6 +612,16 @@ async function sendCompletionEmail(uploadId: string, _resultId: string): Promise
 
   if (!upload?.email) {
     console.log("[workflow] No email found for upload, skipping notification");
+    return;
+  }
+
+  // Skip if user has already purchased - they'll get the HD download email instead
+  const existingPurchase = await db.query.purchases.findFirst({
+    where: eq(purchases.uploadId, uploadId),
+  });
+
+  if (existingPurchase?.status === "completed") {
+    console.log("[workflow] User already purchased, skipping completion email (HD email will be sent)");
     return;
   }
 

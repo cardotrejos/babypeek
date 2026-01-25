@@ -30,6 +30,8 @@ interface RevealUIProps {
   onCheckoutStart?: () => void;
   /** Callback to start over with a new upload */
   onStartOver?: () => void;
+  /** Whether purchase has already been completed (passed from parent, e.g., preview page) */
+  hasPurchasedProp?: boolean;
 }
 
 /**
@@ -57,10 +59,12 @@ export function RevealUI({
   retryCount = 0,
   onCheckoutStart,
   onStartOver,
+  hasPurchasedProp,
 }: RevealUIProps) {
   const sessionToken = getSession(uploadId);
 
   // Story 7.5 AC-2: Check if user has already purchased
+  // Skip the query if hasPurchasedProp is already provided (e.g., from preview page)
   const { data: downloadStatus, isLoading: checkingPurchase } = useQuery({
     queryKey: ["download-status", uploadId],
     queryFn: async () => {
@@ -76,12 +80,13 @@ export function RevealUI({
       if (!response.ok) return null;
       return response.json();
     },
-    enabled: !!sessionToken,
+    enabled: !!sessionToken && hasPurchasedProp === undefined,
     staleTime: 60 * 1000, // 1 minute
     retry: false,
   });
 
-  const hasPurchased = downloadStatus?.canDownload === true;
+  // Use prop if provided, otherwise fall back to query result
+  const hasPurchased = hasPurchasedProp ?? downloadStatus?.canDownload === true;
 
   const handleCheckoutError = useCallback((error: string) => {
     toast.error("Unable to start checkout", {
@@ -95,7 +100,7 @@ export function RevealUI({
       className="bg-white/95 backdrop-blur-sm rounded-2xl p-6 shadow-xl space-y-4"
     >
       {/* Primary CTA - Story 7.5 AC-2: Show Download if purchased, otherwise Checkout */}
-      {checkingPurchase ? (
+      {checkingPurchase && hasPurchasedProp === undefined ? (
         <Button
           disabled
           className="w-full bg-coral hover:bg-coral/90 text-white font-body text-lg py-6"
