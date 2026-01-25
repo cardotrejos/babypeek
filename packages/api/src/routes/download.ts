@@ -142,20 +142,21 @@ app.get("/:uploadId", async (c) => {
       }
     }
 
-    // AC-1, AC-2, AC-3: Get HD image URL (full.jpg, not preview)
+    // AC-1, AC-2, AC-3: Get HD image URL
     // Validate and extract R2 key from resultUrl
-    // Expected format: "results/{resultId}/full.jpg" or just resultId
+    // New format: "results/{uploadId}/{resultId}_v{n}.jpg" (stored as full path)
+    // Legacy format: "results/{resultId}/full.jpg" or just resultId
     let r2Key: string;
-    if (upload.resultUrl.startsWith("results/") && upload.resultUrl.includes("/full.jpg")) {
-      // Already a full path
+    if (upload.resultUrl.startsWith("results/") && upload.resultUrl.endsWith(".jpg")) {
+      // Already a full path with extension - use as-is (new format)
       r2Key = upload.resultUrl;
     } else if (upload.resultUrl.startsWith("results/")) {
-      // Has prefix but missing full.jpg - append it
+      // Has prefix but no extension - append full.jpg (legacy format)
       r2Key = upload.resultUrl.endsWith("/")
         ? `${upload.resultUrl}full.jpg`
         : `${upload.resultUrl}/full.jpg`;
     } else {
-      // Just a resultId - construct full path
+      // Just a resultId - construct full path (legacy format)
       r2Key = `results/${upload.resultUrl}/full.jpg`;
     }
 
