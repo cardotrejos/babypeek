@@ -13,6 +13,9 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { PRICE_DISPLAY } from "@/lib/pricing";
 
+// 🧪 A/B Testing Experiments
+import { MobileStickyCTA, TrustBadges } from "@/components/experiments";
+
 // SEO constants - meta tags are in index.html for SPA
 const SEO = {
   siteUrl: "https://babypeek.io/",
@@ -82,6 +85,9 @@ function LandingPage() {
         </div>
       </section>
 
+      {/* 🧪 Trust Badges Experiment - Build confidence before upload */}
+      <TrustBadges />
+
       {/* 🚀 Upload Section - MOVED TO TOP for better mobile conversion!
           Previously buried at bottom (0.16% conversion). Now visible without scrolling. */}
       <UploadSection id="upload" />
@@ -112,6 +118,9 @@ function LandingPage() {
           © {new Date().getFullYear()} BabyPeek. Made with love for expecting parents.
         </p>
       </footer>
+
+      {/* 🧪 Mobile Sticky CTA Experiment - Always visible on mobile */}
+      <MobileStickyCTA />
     </LandingLayout>
   );
 }
