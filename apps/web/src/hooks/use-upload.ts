@@ -14,8 +14,8 @@ import { startUploadAttempt } from "@/lib/upload-session";
 // Constants
 // =============================================================================
 
-/** Upload timeout in milliseconds (30 seconds) */
-const UPLOAD_TIMEOUT = 30 * 1000;
+/** Upload timeout in milliseconds (90 seconds - increased for slow mobile connections) */
+const UPLOAD_TIMEOUT = 90 * 1000;
 
 /** Progress milestone percentages for analytics */
 const PROGRESS_MILESTONES = [25, 50, 75] as const;
