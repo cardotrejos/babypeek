@@ -2,6 +2,10 @@ import "dotenv/config";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
+import { initSentry, sentryMiddleware, captureException } from "./lib/sentry";
+
+// Initialize Sentry early
+initSentry();
 
 import {
   healthRoutes,
@@ -23,6 +27,7 @@ import {
 const app = new Hono();
 
 // Middleware
+app.use(sentryMiddleware()); // Sentry error tracking
 app.use(logger());
 app.use(
   "/*",
@@ -66,6 +71,12 @@ app.notFound((c) => {
 // Error handler
 app.onError((err, c) => {
   console.error("Server error:", err);
+  // Capture error in Sentry with context
+  captureException(err instanceof Error ? err : new Error(String(err)), {
+    method: c.req.method,
+    url: c.req.url,
+    path: c.req.path,
+  });
   return c.json(
     {
       error: "Internal Server Error",
