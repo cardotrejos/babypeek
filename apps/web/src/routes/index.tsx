@@ -82,6 +82,10 @@ function LandingPage() {
         </div>
       </section>
 
+      {/* 🚀 Upload Section - MOVED TO TOP for better mobile conversion!
+          Previously buried at bottom (0.16% conversion). Now visible without scrolling. */}
+      <UploadSection id="upload" />
+
       {/* Gallery Section - Story 2.3 Implementation */}
       <section id="gallery" className="py-12">
         <h2 className="font-display text-2xl text-charcoal mb-2">
@@ -98,9 +102,6 @@ function LandingPage() {
 
       {/* Pricing Section - SEO + Clarity */}
       <PricingSection id="pricing" />
-
-      {/* Upload Section - Story 3.6 Implementation */}
-      <UploadSection id="upload" />
 
       {/* FAQ Section - Story 2.5 Implementation */}
       <FaqSection id="faq" />
