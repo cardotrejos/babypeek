@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
 import { posthog, isPostHogConfigured } from "@/lib/posthog";
 
@@ -40,6 +40,166 @@ const PROMPT_LABELS: Record<string, string> = {
   v4: "Style C",
   "v4-json": "Style D",
 };
+
+/**
+ * Canvas-rendered image for unpaid users.
+ * Prevents right-click save and URL inspection since pixels are drawn on canvas.
+ * Adds a client-side "PREVIEW" watermark overlay.
+ */
+function CanvasImage({
+  src,
+  alt,
+  onLoad,
+  className,
+}: {
+  src: string;
+  alt: string;
+  onLoad?: () => void;
+  className?: string;
+}) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const onLoadRef = useRef(onLoad);
+
+  useEffect(() => {
+    onLoadRef.current = onLoad;
+  }, [onLoad]);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas || !src) return;
+
+    let isDisposed = false;
+    let resizeObserver: ResizeObserver | null = null;
+    let removeResizeListener: (() => void) | null = null;
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+
+    const drawImageCover = (image: HTMLImageElement): boolean => {
+      const currentCanvas = canvasRef.current;
+      if (!currentCanvas) return false;
+
+      const ctx = currentCanvas.getContext("2d");
+      if (!ctx) return false;
+
+      const rect = currentCanvas.getBoundingClientRect();
+      const displayWidth = Math.max(
+        1,
+        Math.round(rect.width || currentCanvas.clientWidth || image.width),
+      );
+      const displayHeight = Math.max(
+        1,
+        Math.round(rect.height || currentCanvas.clientHeight || image.height),
+      );
+      const devicePixelRatio =
+        typeof window !== "undefined" ? Math.max(1, window.devicePixelRatio || 1) : 1;
+      const targetWidth = Math.max(1, Math.round(displayWidth * devicePixelRatio));
+      const targetHeight = Math.max(1, Math.round(displayHeight * devicePixelRatio));
+
+      if (currentCanvas.width !== targetWidth) {
+        currentCanvas.width = targetWidth;
+      }
+      if (currentCanvas.height !== targetHeight) {
+        currentCanvas.height = targetHeight;
+      }
+
+      const imageWidth = image.naturalWidth || image.width;
+      const imageHeight = image.naturalHeight || image.height;
+      const imageAspect = imageWidth / imageHeight;
+      const targetAspect = targetWidth / targetHeight;
+
+      let sourceX = 0;
+      let sourceY = 0;
+      let sourceWidth = imageWidth;
+      let sourceHeight = imageHeight;
+
+      // Match CSS object-fit: cover by center-cropping the source image.
+      if (imageAspect > targetAspect) {
+        sourceWidth = imageHeight * targetAspect;
+        sourceX = (imageWidth - sourceWidth) / 2;
+      } else if (imageAspect < targetAspect) {
+        sourceHeight = imageWidth / targetAspect;
+        sourceY = (imageHeight - sourceHeight) / 2;
+      }
+
+      ctx.clearRect(0, 0, targetWidth, targetHeight);
+      ctx.drawImage(
+        image,
+        sourceX,
+        sourceY,
+        sourceWidth,
+        sourceHeight,
+        0,
+        0,
+        targetWidth,
+        targetHeight,
+      );
+
+      // Add client-side watermark overlay
+      ctx.save();
+      ctx.translate(targetWidth / 2, targetHeight / 2);
+      ctx.rotate((-30 * Math.PI) / 180);
+      ctx.fillStyle = "rgba(255, 255, 255, 0.35)";
+      ctx.font = `bold ${Math.max(20, Math.floor(targetWidth / 8))}px Arial`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText("PREVIEW", 0, 0);
+      ctx.restore();
+
+      return true;
+    };
+
+    img.onload = () => {
+      if (isDisposed) return;
+      const didDraw = drawImageCover(img);
+      if (!didDraw) {
+        onLoadRef.current?.();
+        return;
+      }
+
+      const redraw = () => {
+        if (isDisposed) return;
+        drawImageCover(img);
+      };
+
+      if (typeof ResizeObserver !== "undefined") {
+        resizeObserver = new ResizeObserver(redraw);
+        resizeObserver.observe(canvas);
+      } else if (typeof window !== "undefined") {
+        window.addEventListener("resize", redraw);
+        removeResizeListener = () => window.removeEventListener("resize", redraw);
+      }
+
+      onLoadRef.current?.();
+    };
+
+    img.onerror = () => {
+      if (isDisposed) return;
+      // Fallback: still call onLoad so skeleton goes away
+      onLoadRef.current?.();
+    };
+
+    img.src = src;
+
+    return () => {
+      isDisposed = true;
+      resizeObserver?.disconnect();
+      removeResizeListener?.();
+      img.onload = null;
+      img.onerror = null;
+    };
+  }, [src]);
+
+  return (
+    <canvas
+      ref={canvasRef}
+      className={className}
+      style={{ width: "100%", height: "100%" }}
+      onContextMenu={(e) => e.preventDefault()}
+      draggable={false}
+      aria-label={alt}
+    />
+  );
+}
 
 /**
  * Skeleton placeholder for loading images
@@ -85,6 +245,10 @@ export function ResultsGallery({
   const handleImageLoad = useCallback(
     (index: number) => {
       setLoadedImages((prev) => {
+        if (prev.has(index)) {
+          return prev;
+        }
+
         const newSet = new Set(prev);
         newSet.add(index);
 
@@ -134,7 +298,13 @@ export function ResultsGallery({
           }
 
           const isLoaded = loadedImages.has(index);
-          const imageUrl = hasPurchased ? result.resultUrl : result.previewUrl || result.resultUrl;
+          const imageUrl = hasPurchased
+            ? (result.resultUrl ?? result.previewUrl)
+            : result.previewUrl;
+
+          if (!imageUrl) {
+            return <ImageSkeleton key={`missing-${result.resultId}`} label={label} />;
+          }
 
           return (
             <button
@@ -162,18 +332,31 @@ export function ResultsGallery({
                 </div>
               )}
 
-              <img
-                src={imageUrl}
-                alt={`Baby portrait - ${label}`}
-                className={cn(
-                  "w-full h-full object-cover transition-opacity duration-300",
-                  isLoaded ? "opacity-100" : "opacity-0",
-                )}
-                loading={index < 2 ? "eager" : "lazy"}
-                draggable={false}
-                onDragStart={(e) => e.preventDefault()}
-                onLoad={() => handleImageLoad(index)}
-              />
+              {/* SECURITY: Canvas rendering for unpaid users prevents right-click save */}
+              {hasPurchased ? (
+                <img
+                  src={imageUrl}
+                  alt={`Baby portrait - ${label}`}
+                  className={cn(
+                    "w-full h-full object-cover transition-opacity duration-300",
+                    isLoaded ? "opacity-100" : "opacity-0",
+                  )}
+                  loading={index < 2 ? "eager" : "lazy"}
+                  draggable={false}
+                  onDragStart={(e) => e.preventDefault()}
+                  onLoad={() => handleImageLoad(index)}
+                />
+              ) : (
+                <CanvasImage
+                  src={imageUrl}
+                  alt={`Baby portrait - ${label}`}
+                  className={cn(
+                    "transition-opacity duration-300",
+                    isLoaded ? "opacity-100" : "opacity-0",
+                  )}
+                  onLoad={() => handleImageLoad(index)}
+                />
+              )}
 
               {/* Style label */}
               <span

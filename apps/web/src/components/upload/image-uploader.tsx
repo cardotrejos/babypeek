@@ -131,8 +131,8 @@ export function ImageUploader({
 
   const handleFileSelect = useCallback(
     async (file: File) => {
-      // Track upload started
-      trackEvent("upload_started", {
+      // Track file selection (not actual upload - that's tracked in use-upload.ts)
+      trackEvent("upload_file_selected", {
         file_type: file.type,
         file_size: file.size,
       });
@@ -177,12 +177,6 @@ export function ImageUploader({
       const url = URL.createObjectURL(processedFile);
       setPreviewUrl(url);
       setSelectedFile(processedFile);
-
-      // Track successful file selection
-      trackEvent("upload_file_selected", {
-        fileType: processedFile.type,
-        fileSizeMB: Number((processedFile.size / (1024 * 1024)).toFixed(2)),
-      });
 
       // Notify parent with processed file
       onFileSelect(processedFile);

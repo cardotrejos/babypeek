@@ -57,7 +57,7 @@ describe("UploadForm", () => {
   it("renders submit button", () => {
     render(<UploadForm {...defaultProps} />);
 
-    expect(screen.getByRole("button", { name: /start/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /see your baby/i })).toBeInTheDocument();
   });
 
   it("shows helper text when form is incomplete", () => {
@@ -73,7 +73,7 @@ describe("UploadForm", () => {
   it("disables submit button when email is empty", async () => {
     render(<UploadForm {...defaultProps} />);
 
-    const submitButton = screen.getByRole("button", { name: /start/i });
+    const submitButton = screen.getByRole("button", { name: /see your baby/i });
     expect(submitButton).toBeDisabled();
   });
 
@@ -86,7 +86,7 @@ describe("UploadForm", () => {
     await user.type(emailInput, "test@example.com");
     await user.tab();
 
-    const submitButton = screen.getByRole("button", { name: /start/i });
+    const submitButton = screen.getByRole("button", { name: /see your baby/i });
     expect(submitButton).toBeDisabled();
   });
 
@@ -108,7 +108,7 @@ describe("UploadForm", () => {
     });
 
     await waitFor(() => {
-      const submitButton = screen.getByRole("button", { name: /start/i });
+      const submitButton = screen.getByRole("button", { name: /see your baby/i });
       expect(submitButton).not.toBeDisabled();
     });
   });
@@ -137,12 +137,12 @@ describe("UploadForm", () => {
 
     // Wait for button to be enabled
     await waitFor(() => {
-      const submitButton = screen.getByRole("button", { name: /start/i });
+      const submitButton = screen.getByRole("button", { name: /see your baby/i });
       expect(submitButton).not.toBeDisabled();
     });
 
     // Submit form
-    const submitButton = screen.getByRole("button", { name: /start/i });
+    const submitButton = screen.getByRole("button", { name: /see your baby/i });
     await user.click(submitButton);
 
     await waitFor(() => {

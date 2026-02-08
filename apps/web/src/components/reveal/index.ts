@@ -4,6 +4,7 @@ export { BeforeAfterSlider } from "./BeforeAfterSlider";
 export { DownloadPreviewButton } from "./DownloadPreviewButton";
 export { ResultsGallery } from "./ResultsGallery";
 export { PreferenceFeedback } from "./PreferenceFeedback";
+export { UpsellModal } from "./UpsellModal";
 export { revealAnimation, EASE_OUT_CUBIC } from "./animation-config";
 export type { RevealAnimationConfig } from "./animation-config";
 export type { ResultVariant } from "./ResultsGallery";

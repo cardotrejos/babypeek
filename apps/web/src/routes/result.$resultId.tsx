@@ -13,6 +13,7 @@ import {
   BeforeAfterSlider,
   ResultsGallery,
   PreferenceFeedback,
+  UpsellModal,
   type ResultVariant,
 } from "@/components/reveal";
 import { API_BASE_URL } from "@/lib/api-config";
@@ -78,6 +79,8 @@ function ResultPage() {
   const [hasUserSelectedVariant, setHasUserSelectedVariant] = useState(false);
   // Track if feedback has been submitted
   const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
+  // Track if upsell modal has been shown and dismissed
+  const [upsellDismissed, setUpsellDismissed] = useState(false);
 
   // Track if we came from session recovery
   const sessionRecoveryTrackedRef = useRef(false);
@@ -198,12 +201,12 @@ function ResultPage() {
 
       const data = await response.json();
 
-      // Verify the result is complete and has at least a preview URL
-      // Note: resultUrl is only available after purchase, previewUrl is always available
-      if (
-        data.status !== "completed" ||
-        (!data.resultUrl && !data.previewUrl && (!data.results || data.results.length === 0))
-      ) {
+      // Accept results if either completed OR first preview is ready (fast first result)
+      const hasResults =
+        data.resultUrl || data.previewUrl || (data.results && data.results.length > 0);
+      const isReady = data.status === "completed" || data.firstPreviewReady;
+
+      if (!isReady || !hasResults) {
         throw new Error("Portrait is not ready yet");
       }
 
@@ -211,7 +214,13 @@ function ResultPage() {
     },
     enabled: !!uploadId && !!sessionToken,
     retry: 1,
-    staleTime: Number.POSITIVE_INFINITY, // Result data doesn't change
+    // Keep polling while still processing (fast first result - remaining images generating)
+    refetchInterval: (query) => {
+      const data = query.state.data;
+      if (data?.status === "completed" || data?.status === "failed") return false;
+      return 3000; // Poll every 3s while remaining images generate
+    },
+    staleTime: 2000,
   });
 
   // Check if user has purchased (for showing HD vs watermarked images)
@@ -355,6 +364,29 @@ function ResultPage() {
     });
   }, [uploadId, resultId]);
 
+  // Handle upsell checkout start - dismiss modal and launch Stripe immediately
+  const handleUpsellCheckoutStart = useCallback(() => {
+    setUpsellDismissed(true);
+    handleCheckoutStart();
+  }, [handleCheckoutStart]);
+
+  const handleUpsellCheckoutError = useCallback((error: string) => {
+    toast.error("Unable to start checkout", {
+      description: error,
+    });
+  }, []);
+
+  // Handle upsell decline - dismiss and show gallery with what's available
+  const handleUpsellDecline = useCallback(() => {
+    setUpsellDismissed(true);
+    if (isPostHogConfigured()) {
+      posthog.capture("upsell_declined_waiting_for_rest", {
+        upload_id: uploadId,
+        results_available: allResults.length,
+      });
+    }
+  }, [uploadId, allResults.length]);
+
   // Trigger reveal UI immediately (no animation delay needed)
   // NOTE: This hook must be BEFORE any conditional returns to comply with Rules of Hooks
   useEffect(() => {
@@ -437,63 +469,105 @@ function ResultPage() {
   // Get the current result ID for the selected variant
   const currentResultId = selectedResult?.resultId ?? resultId;
 
+  // Determine if we should show the upsell modal
+  // Show when: we have results, not all 4 are ready yet (or just arrived), and not dismissed
+  const isStillProcessing = statusData?.status !== "completed";
+  const showUpsellModal =
+    !upsellDismissed &&
+    !hasPurchased &&
+    allResults.length >= 1 &&
+    allResults.length < 4 &&
+    isStillProcessing;
+
   // Clean gallery-first layout
   return (
     <div className="min-h-screen bg-cream flex flex-col items-center justify-start p-4 pt-8">
       <div className="w-full max-w-md mx-auto space-y-6">
         {/* Header */}
         <div className="text-center">
-          <h1 className="font-display text-2xl text-charcoal mb-2">Your Baby Portraits</h1>
-          <p className="text-sm text-warm-gray">Tap to select your favorite style</p>
+          <h1 className="font-display text-2xl text-charcoal mb-2">
+            {showUpsellModal ? "Meet Your Baby!" : "Your Baby Portraits"}
+          </h1>
+          <p className="text-sm text-warm-gray">
+            {showUpsellModal
+              ? "Your first portrait is ready"
+              : isStillProcessing
+                ? `${allResults.length} of 4 styles ready...`
+                : "Tap to select your favorite style"}
+          </p>
         </div>
 
-        {/* Comparison slider view (Story 5.5) */}
-        {showComparison && originalUrl ? (
-          <BeforeAfterSlider
-            beforeImage={originalUrl}
-            afterImage={previewUrl}
-            beforeLabel="Your Ultrasound"
-            afterLabel="AI Portrait"
-            allowImageSave={hasPurchased}
-          />
+        {/* Upsell modal overlay - shown when first image ready, before all 4 complete */}
+        {showUpsellModal ? (
+          <>
+            {/* Show first preview image */}
+            <ResultsGallery
+              results={allResults}
+              selectedIndex={0}
+              onSelect={() => {}}
+              uploadId={uploadId ?? undefined}
+              hasPurchased={false}
+            />
+
+            {/* Upsell modal */}
+            <UpsellModal
+              uploadId={uploadId ?? ""}
+              onCheckoutStart={handleUpsellCheckoutStart}
+              onCheckoutError={handleUpsellCheckoutError}
+              onDecline={handleUpsellDecline}
+            />
+          </>
         ) : (
-          /* Gallery - always show 4 images */
-          <ResultsGallery
-            results={allResults}
-            selectedIndex={selectedVariantIndex}
-            onSelect={(index) => {
-              setSelectedVariantIndex(index);
-              setHasUserSelectedVariant(true);
-              setFeedbackSubmitted(false);
-            }}
-            uploadId={uploadId ?? undefined}
-            hasPurchased={hasPurchased}
-          />
-        )}
+          <>
+            {/* Comparison slider view (Story 5.5) */}
+            {showComparison && originalUrl ? (
+              <BeforeAfterSlider
+                beforeImage={originalUrl}
+                afterImage={previewUrl}
+                beforeLabel="Your Ultrasound"
+                afterLabel="AI Portrait"
+                allowImageSave={hasPurchased}
+              />
+            ) : (
+              /* Gallery - show available images */
+              <ResultsGallery
+                results={allResults}
+                selectedIndex={selectedVariantIndex}
+                onSelect={(index) => {
+                  setSelectedVariantIndex(index);
+                  setHasUserSelectedVariant(true);
+                  setFeedbackSubmitted(false);
+                }}
+                uploadId={uploadId ?? undefined}
+                hasPurchased={hasPurchased}
+              />
+            )}
 
-        {/* Preference feedback after user selects a variant */}
-        {hasUserSelectedVariant && !feedbackSubmitted && selectedResult && (
-          <PreferenceFeedback
-            uploadId={uploadId ?? ""}
-            selectedResultId={selectedResult.resultId}
-            promptVersion={selectedResult.promptVersion}
-            onSubmit={() => setFeedbackSubmitted(true)}
-          />
-        )}
+            {/* Preference feedback after user selects a variant */}
+            {hasUserSelectedVariant && !feedbackSubmitted && selectedResult && (
+              <PreferenceFeedback
+                uploadId={uploadId ?? ""}
+                selectedResultId={selectedResult.resultId}
+                promptVersion={selectedResult.promptVersion}
+                onSubmit={() => setFeedbackSubmitted(true)}
+              />
+            )}
 
-        {/* Action buttons - always visible */}
-        <RevealUI
-          resultId={currentResultId}
-          uploadId={uploadId ?? ""}
-          previewUrl={previewUrl}
-          onShare={handleShare}
-          hasOriginalImage={!!originalUrl}
-          showComparison={showComparison}
-          onToggleComparison={handleToggleComparison}
-          retryCount={retryCount}
-          onCheckoutStart={handleCheckoutStart}
-          onStartOver={handleStartOver}
-        />
+            {/* Action buttons - always visible */}
+            <RevealUI
+              resultId={currentResultId}
+              uploadId={uploadId ?? ""}
+              previewUrl={previewUrl}
+              onShare={handleShare}
+              hasOriginalImage={!!originalUrl}
+              showComparison={showComparison}
+              onToggleComparison={handleToggleComparison}
+              retryCount={retryCount}
+              onCheckoutStart={handleCheckoutStart}
+              onStartOver={handleStartOver}
+            />
+          </>
+        )}
       </div>
     </div>
   );

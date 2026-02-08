@@ -38,6 +38,7 @@ export interface StageInfo {
 export const stageMapping: Record<string, StageInfo> = {
   validating: { ui: "analyzing", step: 1 },
   generating: { ui: "creating", step: 2 },
+  first_ready: { ui: "finishing", step: 3 },
   storing: { ui: "finishing", step: 3 },
   watermarking: { ui: "finishing", step: 3 },
   complete: { ui: "finishing", step: 3 },
