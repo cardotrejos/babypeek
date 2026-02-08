@@ -22,6 +22,8 @@ export function useExperiment(experimentName: string): {
   const hasTracked = useRef(false);
 
   useEffect(() => {
+    hasTracked.current = false;
+
     if (typeof window === "undefined" || !isPostHogConfigured()) {
       setIsLoading(false);
       return;

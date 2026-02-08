@@ -53,7 +53,7 @@ function captureNavigationMetrics(): void {
     const navObserver = new PerformanceObserver((list) => {
       const entry = list.getEntries()[0] as PerformanceNavigationTiming;
       if (entry) {
-        const ttfb = Math.round(entry.responseStart - entry.requestStart);
+        const ttfb = Math.round(entry.responseStart - entry.startTime);
         if (ttfb >= 0) captureMetric("TTFB", ttfb);
       }
       navObserver.disconnect();

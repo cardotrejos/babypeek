@@ -3,7 +3,7 @@
 **Created:** 2026-02-08
 **Status:** VizCraft project not found on filesystem — this document serves as the implementation checklist for when the project is available.
 
-**Note:** The `arch-visual` project in `/Users/cardotrejos/dev/indiehacking/` may be VizCraft. Verify with Ricardo.
+**Note:** The `arch-visual` project in your local development directory may be VizCraft. Verify with Ricardo.
 
 ---
 

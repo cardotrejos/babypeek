@@ -1,12 +1,12 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { RouterProvider } from "@tanstack/react-router";
-import { getRouter } from "./router";
-import { PostHogProvider, posthog } from "./lib/posthog";
-import { initSentry } from "./lib/sentry";
+import { getRouter } from "@/router";
+import { PostHogProvider, posthog } from "@/lib/posthog";
+import { initSentry } from "@/lib/sentry";
 import { trackFBPageView } from "@/lib/facebook-pixel";
 import { initPerformanceMonitoring } from "@/lib/performance-monitoring";
-import "./index.css";
+import "@/index.css";
 
 // Initialize Sentry early
 initSentry();
@@ -34,13 +34,21 @@ if (typeof window !== "undefined") {
 }
 
 const router = getRouter();
+let lastTrackedPath =
+  typeof window !== "undefined"
+    ? `${window.location.pathname}${window.location.search}`
+    : "";
 
 // Fire FB Pixel PageView on SPA navigations
 // (Initial PageView already fires from inline script in index.html)
-router.subscribe("onResolved", (event) => {
-  if (event.pathChanged) {
-    trackFBPageView();
-  }
+router.subscribe("onResolved", ({ pathChanged }) => {
+  if (!pathChanged || typeof window === "undefined") return;
+
+  const currentPath = `${window.location.pathname}${window.location.search}`;
+  if (currentPath === lastTrackedPath) return;
+
+  lastTrackedPath = currentPath;
+  trackFBPageView();
 });
 
 createRoot(document.getElementById("root")!).render(

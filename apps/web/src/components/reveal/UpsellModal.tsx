@@ -41,7 +41,6 @@ export function UpsellModal({
 }: UpsellModalProps) {
   const [timeLeft, setTimeLeft] = useState(600); // 10 minutes
   const [selectedTier, setSelectedTier] = useState<TierId | null>(null);
-  const [isCheckingOut, setIsCheckingOut] = useState(false);
 
   useEffect(() => {
     if (isPostHogConfigured()) {
@@ -66,7 +65,6 @@ export function UpsellModal({
   const handleTierSelected = useCallback(
     (tier: TierId) => {
       setSelectedTier(tier);
-      setIsCheckingOut(true);
 
       if (isPostHogConfigured()) {
         posthog.capture("upsell_tier_selected", {
@@ -120,11 +118,7 @@ export function UpsellModal({
 
         {/* Pricing tiers or checkout confirmation */}
         {!selectedTier ? (
-          <PricingTiers
-            onSelect={handleTierSelected}
-            uploadId={uploadId}
-            disabled={isCheckingOut}
-          />
+          <PricingTiers onSelect={handleTierSelected} uploadId={uploadId} />
         ) : (
           <div className="space-y-3">
             <CheckoutButton
@@ -132,7 +126,6 @@ export function UpsellModal({
               tier={selectedTier}
               onCheckoutStart={handleCheckoutStarted}
               onCheckoutError={(error) => {
-                setIsCheckingOut(false);
                 setSelectedTier(null);
                 onCheckoutError?.(error);
               }}
@@ -146,7 +139,6 @@ export function UpsellModal({
             <button
               onClick={() => {
                 setSelectedTier(null);
-                setIsCheckingOut(false);
               }}
               className="w-full text-center text-sm text-warm-gray hover:text-charcoal transition-colors"
             >

@@ -18,11 +18,12 @@ export interface TrustBadgesProps {
 }
 
 export function TrustBadges({ className }: TrustBadgesProps) {
-  const { variant } = useExperiment("trust_badges_test");
+  const { variant, isLoading } = useExperiment("trust_badges_test");
 
   useEffect(() => {
+    if (isLoading) return;
     posthog?.capture("trust_badges_shown", { variant });
-  }, [variant]);
+  }, [variant, isLoading]);
 
   const badges = [
     {

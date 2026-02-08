@@ -4,11 +4,17 @@ import { API_BASE_URL } from "@/lib/api-config";
 import { posthog, isPostHogConfigured } from "@/lib/posthog";
 import { trackFBInitiateCheckout } from "@/lib/facebook-pixel";
 import { getSession } from "@/lib/session";
-import { PRICE_CENTS, PRICE_DISPLAY, PRICING_TIERS, type TierId } from "@/lib/pricing";
+import {
+  DEFAULT_TIER,
+  PRICE_CENTS,
+  PRICE_DISPLAY,
+  PRICING_TIERS,
+  type TierId,
+} from "@/lib/pricing";
 
 interface CheckoutButtonProps extends Omit<ComponentPropsWithoutRef<typeof Button>, "onClick"> {
   uploadId: string;
-  /** Pricing tier to purchase (defaults to basic for backward compat) */
+  /** Pricing tier to purchase (defaults to DEFAULT_TIER when omitted) */
   tier?: TierId;
   /** Retry count for analytics (Story 6.6) */
   retryCount?: number;
@@ -38,8 +44,7 @@ export function CheckoutButton({
 }: CheckoutButtonProps) {
   const [isLoading, setIsLoading] = useState(false);
 
-  // Resolve pricing from tier (backward compat: no tier = basic)
-  const effectiveTier = tier ?? "basic";
+  const effectiveTier = tier ?? DEFAULT_TIER;
   const tierConfig = PRICING_TIERS[effectiveTier];
   const priceCents = tierConfig?.priceCents ?? PRICE_CENTS;
   const priceDisplay = tierConfig?.priceDisplay ?? PRICE_DISPLAY;

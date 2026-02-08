@@ -3,6 +3,21 @@ import { posthog } from "@/lib/posthog";
 import { cn } from "@/lib/utils";
 import { useExperiment } from "@/hooks/use-experiment";
 
+type StickyCTAVariant =
+  | "sticky_free_preview"
+  | "sticky_with_arrow"
+  | "sticky_with_countdown";
+
+const FALLBACK_VARIANT: StickyCTAVariant = "sticky_free_preview";
+
+function isStickyCTAVariant(variant: string): variant is StickyCTAVariant {
+  return (
+    variant === "sticky_free_preview" ||
+    variant === "sticky_with_arrow" ||
+    variant === "sticky_with_countdown"
+  );
+}
+
 /**
  * Mobile Sticky CTA - A/B Experiment
  *
@@ -22,8 +37,24 @@ export function MobileStickyCTA() {
   const { variant, isLoading } = useExperiment("sticky_cta_test");
   const [isMobile, setIsMobile] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
+  const [isLoadingTimedOut, setIsLoadingTimedOut] = useState(false);
   const [countdown, setCountdown] = useState(15 * 60);
   const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const resolvedVariant = isLoading && isLoadingTimedOut ? FALLBACK_VARIANT : variant;
+  const effectiveVariant = isStickyCTAVariant(resolvedVariant) ? resolvedVariant : null;
+
+  useEffect(() => {
+    if (!isLoading) {
+      setIsLoadingTimedOut(false);
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setIsLoadingTimedOut(true);
+    }, 3000);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [isLoading]);
 
   // Mobile detection
   useEffect(() => {
@@ -36,16 +67,16 @@ export function MobileStickyCTA() {
     checkMobile();
     window.addEventListener("resize", checkMobile);
 
-    if (isMobile && variant !== "control") {
+    if (isMobile && effectiveVariant) {
       posthog?.capture("sticky_cta_shown", {
         device: "mobile",
         viewport_width: window.innerWidth,
-        variant,
+        variant: effectiveVariant,
       });
     }
 
     return () => window.removeEventListener("resize", checkMobile);
-  }, [isMobile, variant]);
+  }, [effectiveVariant, isMobile]);
 
   // Hide sticky CTA when upload section is visible or upload starts
   useEffect(() => {
@@ -80,7 +111,7 @@ export function MobileStickyCTA() {
 
   // Countdown timer (only for sticky_with_countdown variant)
   useEffect(() => {
-    if (variant !== "sticky_with_countdown") return;
+    if (effectiveVariant !== "sticky_with_countdown") return;
 
     countdownRef.current = setInterval(() => {
       setCountdown((prev) => {
@@ -95,10 +126,10 @@ export function MobileStickyCTA() {
     return () => {
       if (countdownRef.current) clearInterval(countdownRef.current);
     };
-  }, [variant]);
+  }, [effectiveVariant]);
 
   // Early returns AFTER all hooks
-  if (isLoading || variant === "control") return null;
+  if (!effectiveVariant) return null;
   if (!isMobile) return null;
   if (!isVisible) return null;
 
@@ -106,7 +137,7 @@ export function MobileStickyCTA() {
     posthog?.capture("sticky_cta_clicked", {
       device: "mobile",
       scroll_position: window.scrollY,
-      variant,
+      variant: effectiveVariant,
     });
 
     const uploadSection = document.getElementById("upload");
@@ -124,7 +155,7 @@ export function MobileStickyCTA() {
   return (
     <>
       {/* Bounce animation for arrow variant */}
-      {variant === "sticky_with_arrow" && (
+      {effectiveVariant === "sticky_with_arrow" && (
         <style>{`
           @keyframes cta-bounce {
             0%, 100% { transform: translateY(0); }
@@ -154,14 +185,14 @@ export function MobileStickyCTA() {
             "flex items-center justify-center gap-2",
           )}
         >
-          {variant === "sticky_free_preview" && (
+          {effectiveVariant === "sticky_free_preview" && (
             <>
               <span className="text-2xl">👶</span>
               <span>Start FREE Preview</span>
             </>
           )}
 
-          {variant === "sticky_with_arrow" && (
+          {effectiveVariant === "sticky_with_arrow" && (
             <>
               <span>See Your Baby Now</span>
               <span
@@ -173,7 +204,7 @@ export function MobileStickyCTA() {
             </>
           )}
 
-          {variant === "sticky_with_countdown" && (
+          {effectiveVariant === "sticky_with_countdown" && (
             <>
               <span className="text-2xl">⏰</span>
               <span>See Your Baby Now</span>
@@ -184,17 +215,17 @@ export function MobileStickyCTA() {
           )}
         </button>
 
-        {variant === "sticky_free_preview" && (
+        {effectiveVariant === "sticky_free_preview" && (
           <p className="text-center text-xs text-warm-gray mt-2">
             See results before you pay
           </p>
         )}
-        {variant === "sticky_with_arrow" && (
+        {effectiveVariant === "sticky_with_arrow" && (
           <p className="text-center text-xs text-warm-gray mt-2">
             Free preview &bull; No credit card needed
           </p>
         )}
-        {variant === "sticky_with_countdown" && (
+        {effectiveVariant === "sticky_with_countdown" && (
           <p className="text-center text-xs text-warm-gray mt-2">
             {countdown > 0
               ? `${formatCountdown(countdown)} of free previews left`
