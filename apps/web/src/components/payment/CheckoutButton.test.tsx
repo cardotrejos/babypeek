@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { CheckoutButton } from "./CheckoutButton";
+import { DEFAULT_TIER, PRICING_TIERS } from "@/lib/pricing";
 
 // Mock PostHog
 vi.mock("@/lib/posthog", () => ({
@@ -42,7 +43,9 @@ describe("CheckoutButton", () => {
       render(<CheckoutButton {...defaultProps} />);
 
       expect(screen.getByText(/Get HD Version/)).toBeInTheDocument();
-      expect(screen.getByText(/\$9\.99/)).toBeInTheDocument();
+      expect(
+        screen.getByText(`Get HD Version - ${PRICING_TIERS[DEFAULT_TIER].priceDisplay}`),
+      ).toBeInTheDocument();
     });
 
     it("should have checkout-button test id", () => {
@@ -93,7 +96,11 @@ describe("CheckoutButton", () => {
               "Content-Type": "application/json",
               "X-Session-Token": "mock-session-token",
             },
-            body: JSON.stringify({ uploadId: "test-upload-123", type: "self" }),
+            body: JSON.stringify({
+              uploadId: "test-upload-123",
+              type: "self",
+              tier: DEFAULT_TIER,
+            }),
           }),
         );
       });
@@ -176,7 +183,8 @@ describe("CheckoutButton", () => {
       await waitFor(() => {
         expect(posthog.capture).toHaveBeenCalledWith("purchase_started", {
           uploadId: "test-upload-123",
-          amount: 999,
+          amount: PRICING_TIERS[DEFAULT_TIER].priceCents,
+          tier: DEFAULT_TIER,
           retry_count: 0,
         });
       });
@@ -198,7 +206,8 @@ describe("CheckoutButton", () => {
       await waitFor(() => {
         expect(posthog.capture).toHaveBeenCalledWith("checkout_created", {
           uploadId: "test-upload-123",
-          amount: 999,
+          amount: PRICING_TIERS[DEFAULT_TIER].priceCents,
+          tier: DEFAULT_TIER,
         });
       });
     });

@@ -4,6 +4,7 @@ import { db, uploads, purchases, type Purchase } from "@babypeek/db";
 import { StripeService } from "./StripeService";
 import { NotFoundError, PaymentError, ValidationError } from "../lib/errors";
 import { env } from "../lib/env";
+import { getTierPriceCents } from "../lib/pricing";
 
 // Purchase creation params from webhook
 export interface CreatePurchaseParams {
@@ -26,11 +27,13 @@ export class PurchaseService extends Context.Tag("PurchaseService")<
      *
      * @param uploadId - The upload ID to purchase
      * @param type - "self" or "gift" purchase
+     * @param tier - Pricing tier ID (defaults to "basic")
      * @returns Checkout session URL for redirect
      */
     createCheckout: (
       uploadId: string,
       type: "self" | "gift",
+      tier?: string,
     ) => Effect.Effect<
       { checkoutUrl: string; sessionId: string },
       NotFoundError | PaymentError | ValidationError
@@ -43,11 +46,13 @@ export class PurchaseService extends Context.Tag("PurchaseService")<
      *
      * @param uploadId - The upload ID to gift
      * @param purchaserEmail - The gift purchaser's email for receipt
+     * @param tier - Pricing tier ID (defaults to "basic")
      * @returns Checkout session URL for redirect
      */
     createGiftCheckout: (
       uploadId: string,
       purchaserEmail: string,
+      tier?: string,
     ) => Effect.Effect<
       { checkoutUrl: string; sessionId: string },
       NotFoundError | PaymentError | ValidationError
@@ -87,7 +92,11 @@ export class PurchaseService extends Context.Tag("PurchaseService")<
  * Pattern matches ResultService for consistent dependency injection.
  */
 const createCheckout = (stripeService: StripeService["Type"]) =>
-  Effect.fn("PurchaseService.createCheckout")(function* (uploadId: string, type: "self" | "gift") {
+  Effect.fn("PurchaseService.createCheckout")(function* (
+    uploadId: string,
+    type: "self" | "gift",
+    tier: string = "basic",
+  ) {
     // Get upload record
     const upload = yield* Effect.promise(async () => {
       return db.query.uploads.findFirst({
@@ -131,11 +140,16 @@ const createCheckout = (stripeService: StripeService["Type"]) =>
     // Use /preview/ (public, no session required) so cancel works on any device
     const cancelUrl = `${env.APP_URL}/preview/${uploadId}?cancelled=true`;
 
+    // Resolve tier price server-side (NEVER trust client-sent price)
+    const priceCents = getTierPriceCents(tier);
+
     // Create Stripe checkout session
     const session = yield* stripeService.createCheckoutSession({
       uploadId,
       email: upload.email,
       type,
+      tier,
+      priceCents,
       successUrl,
       cancelUrl,
     });
@@ -145,7 +159,7 @@ const createCheckout = (stripeService: StripeService["Type"]) =>
       return db.insert(purchases).values({
         uploadId,
         stripeSessionId: session.id,
-        amount: env.PRODUCT_PRICE_CENTS,
+        amount: priceCents,
         currency: "usd",
         status: "pending",
         isGift: type === "gift",
@@ -166,6 +180,7 @@ const createGiftCheckout = (stripeService: StripeService["Type"]) =>
   Effect.fn("PurchaseService.createGiftCheckout")(function* (
     uploadId: string,
     purchaserEmail: string,
+    tier: string = "basic",
   ) {
     // Get upload record (we need recipient email)
     const upload = yield* Effect.promise(async () => {
@@ -209,11 +224,16 @@ const createGiftCheckout = (stripeService: StripeService["Type"]) =>
     const successUrl = `${env.APP_URL}/checkout-success?session_id={CHECKOUT_SESSION_ID}&gift=true`;
     const cancelUrl = `${env.APP_URL}/share/${uploadId}?cancelled=true`;
 
+    // Resolve tier price server-side (NEVER trust client-sent price)
+    const priceCents = getTierPriceCents(tier);
+
     // Create Stripe checkout session with gift metadata
     const session = yield* stripeService.createCheckoutSession({
       uploadId,
       email: upload.email, // Recipient email (original uploader)
       type: "gift",
+      tier,
+      priceCents,
       successUrl,
       cancelUrl,
       purchaserEmail, // Purchaser email (for receipt)
@@ -224,7 +244,7 @@ const createGiftCheckout = (stripeService: StripeService["Type"]) =>
       return db.insert(purchases).values({
         uploadId,
         stripeSessionId: session.id,
-        amount: env.PRODUCT_PRICE_CENTS,
+        amount: priceCents,
         currency: "usd",
         status: "pending",
         isGift: true,

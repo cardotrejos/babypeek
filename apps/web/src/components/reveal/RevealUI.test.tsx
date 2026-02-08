@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent } from "@/test/test-utils";
 import { RevealUI } from "./RevealUI";
+import { DEFAULT_TIER, PRICING_TIERS } from "@/lib/pricing";
 
 // Mock PostHog for DownloadPreviewButton and CheckoutButton
 vi.mock("@/lib/posthog", () => ({
@@ -72,7 +73,9 @@ describe("RevealUI", () => {
     it("should display price in CTA", () => {
       render(<RevealUI {...defaultProps} />);
 
-      expect(screen.getByText(/\$9\.99/)).toBeInTheDocument();
+      expect(screen.getByTestId("checkout-button")).toHaveTextContent(
+        PRICING_TIERS[DEFAULT_TIER].priceDisplay,
+      );
     });
   });
 
