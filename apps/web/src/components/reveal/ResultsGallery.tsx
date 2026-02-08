@@ -58,17 +58,27 @@ function CanvasImage({
   className?: string;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const onLoadRef = useRef(onLoad);
+
+  useEffect(() => {
+    onLoadRef.current = onLoad;
+  }, [onLoad]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas || !src) return;
 
+    let isDisposed = false;
     const img = new Image();
     img.crossOrigin = "anonymous";
 
     img.onload = () => {
+      if (isDisposed) return;
       const ctx = canvas.getContext("2d");
-      if (!ctx) return;
+      if (!ctx) {
+        onLoadRef.current?.();
+        return;
+      }
 
       canvas.width = img.width;
       canvas.height = img.height;
@@ -87,16 +97,23 @@ function CanvasImage({
       ctx.fillText("PREVIEW", 0, 0);
       ctx.restore();
 
-      onLoad?.();
+      onLoadRef.current?.();
     };
 
     img.onerror = () => {
+      if (isDisposed) return;
       // Fallback: still call onLoad so skeleton goes away
-      onLoad?.();
+      onLoadRef.current?.();
     };
 
     img.src = src;
-  }, [src, onLoad]);
+
+    return () => {
+      isDisposed = true;
+      img.onload = null;
+      img.onerror = null;
+    };
+  }, [src]);
 
   return (
     <canvas
@@ -154,6 +171,10 @@ export function ResultsGallery({
   const handleImageLoad = useCallback(
     (index: number) => {
       setLoadedImages((prev) => {
+        if (prev.has(index)) {
+          return prev;
+        }
+
         const newSet = new Set(prev);
         newSet.add(index);
 
