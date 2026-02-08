@@ -30,7 +30,7 @@ export function LandingLayout({
           "px-4 sm:px-6",
           "sm:max-w-[560px] sm:mx-auto",
           "pt-20", // Space for absolute header
-          showCta ? "pb-28" : "pb-8", // Space for fixed CTA when shown
+          showCta ? "pb-8 sm:pb-28" : "pb-8", // Desktop fixed CTA only
         )}
       >
         {children}
@@ -40,7 +40,7 @@ export function LandingLayout({
       {showCta && (
         <div
           className={cn(
-            "fixed bottom-0 left-0 right-0 z-20",
+            "hidden sm:block fixed bottom-0 left-0 right-0 z-20",
             "p-4 safe-bottom",
             "bg-gradient-to-t from-cream via-cream to-transparent",
           )}

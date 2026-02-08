@@ -37,10 +37,7 @@ export function initSentry() {
     },
 
     // Ignore common errors
-    ignoreErrors: [
-      "ECONNRESET",
-      "ETIMEDOUT",
-    ],
+    ignoreErrors: ["ECONNRESET", "ETIMEDOUT"],
   });
 
   isInitialized = true;

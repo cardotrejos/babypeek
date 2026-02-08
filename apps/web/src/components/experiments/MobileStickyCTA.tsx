@@ -4,10 +4,10 @@ import { cn } from "@/lib/utils";
 
 /**
  * Mobile Sticky CTA - A/B Experiment
- * 
+ *
  * Shows a large, sticky upload button at the bottom of the screen on mobile devices.
  * This is designed to improve conversion by making the CTA always visible.
- * 
+ *
  * Experiment: mobile-sticky-cta
  * Expected lift: 2-4x upload conversion
  */
@@ -18,8 +18,8 @@ export function MobileStickyCTA() {
   useEffect(() => {
     // Check if mobile device
     const checkMobile = () => {
-      const mobile = window.innerWidth < 768 || 
-        /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+      const mobile =
+        window.innerWidth < 768 || /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
       setIsMobile(mobile);
     };
 
@@ -36,6 +36,37 @@ export function MobileStickyCTA() {
 
     return () => window.removeEventListener("resize", checkMobile);
   }, [isMobile]);
+
+  // Hide sticky CTA when upload section is visible or upload starts
+  useEffect(() => {
+    const handleUploadStarted = () => {
+      setIsVisible(false);
+      posthog?.capture("sticky_cta_hidden_on_upload");
+    };
+
+    window.addEventListener("babypeek:upload_started", handleUploadStarted);
+
+    // Also hide when upload section scrolls into view
+    const uploadSection = document.getElementById("upload");
+    if (!uploadSection) return () => window.removeEventListener("babypeek:upload_started", handleUploadStarted);
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(false);
+          posthog?.capture("sticky_cta_hidden_on_scroll");
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.3 },
+    );
+    observer.observe(uploadSection);
+
+    return () => {
+      window.removeEventListener("babypeek:upload_started", handleUploadStarted);
+      observer.disconnect();
+    };
+  }, []);
 
   // Don't show on desktop
   if (!isMobile) return null;
@@ -59,13 +90,13 @@ export function MobileStickyCTA() {
   return (
     <>
       {/* Fixed CTA at bottom of screen */}
-      <div 
+      <div
         className={cn(
           "fixed bottom-0 left-0 right-0 z-50",
           "p-4 pb-6 bg-white/95 backdrop-blur-sm",
           "border-t border-warm-gray/20",
           "shadow-[0_-4px_20px_rgba(0,0,0,0.1)]",
-          "safe-area-inset-bottom"
+          "safe-area-inset-bottom",
         )}
       >
         <button
@@ -76,7 +107,7 @@ export function MobileStickyCTA() {
             "text-white text-xl font-bold",
             "rounded-full shadow-lg",
             "active:scale-[0.98] transition-transform",
-            "flex items-center justify-center gap-2"
+            "flex items-center justify-center gap-2",
           )}
         >
           <span className="text-2xl">👶</span>

@@ -20,6 +20,7 @@ export type { UploadStage };
 const STAGE_ORDER: UploadStage[] = [
   "validating",
   "generating",
+  "first_ready",
   "storing",
   "watermarking",
   "complete",

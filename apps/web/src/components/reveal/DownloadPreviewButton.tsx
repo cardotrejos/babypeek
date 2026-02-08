@@ -84,7 +84,7 @@ export function DownloadPreviewButton({
       let response: Response;
       try {
         response = await fetch(previewUrl);
-      } catch (fetchError) {
+      } catch {
         // Network error (offline, CORS, etc.)
         const isOffline = typeof navigator !== "undefined" && !navigator.onLine;
         throw new Error(

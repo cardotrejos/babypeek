@@ -200,6 +200,16 @@ app.post("/", async (c) => {
 
       createdResults.push(createdResult);
 
+      // After first variant: mark first_ready so frontend can show upsell immediately
+      if (i === 0) {
+        yield* uploadService.updateStage(uploadId, "first_ready", 35);
+        yield* posthog.capture("first_preview_ready", sessionToken, {
+          upload_id: uploadId,
+          result_id: createdResult.resultId,
+          generation_time_ms: variantDurationMs,
+        });
+      }
+
       // Track result storage
       yield* posthog.capture("result_stored", sessionToken, {
         upload_id: uploadId,

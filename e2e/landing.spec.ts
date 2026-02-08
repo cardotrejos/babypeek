@@ -12,7 +12,7 @@ test.describe("Landing Page", () => {
     // Check for main headline
     const headline = page.getByRole("heading", { level: 1 });
     await expect(headline).toBeVisible();
-    await expect(headline).toHaveText(/meet your baby/i);
+    await expect(headline).toHaveText(/see your future baby before they arrive/i);
   });
 
   test("has CTA button", async ({ page }) => {

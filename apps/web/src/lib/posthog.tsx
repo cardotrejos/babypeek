@@ -22,7 +22,7 @@ function initPostHog() {
     persistence: "localStorage",
     // Respect Do Not Track
     respect_dnt: true,
-    
+
     // 🎥 SESSION RECORDINGS - See exactly where users drop off!
     disable_session_recording: false,
     session_recording: {
@@ -31,9 +31,9 @@ function initPostHog() {
       // Record console logs for debugging
       recordCrossOriginIframes: false,
     },
-    
+
     // Disable in development if no key
-    loaded: (posthog) => {
+    loaded: () => {
       if (import.meta.env.DEV) {
         console.log("📊 PostHog initialized with session recordings");
       }

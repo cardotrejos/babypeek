@@ -5,10 +5,10 @@ import { cn } from "@/lib/utils";
 
 /**
  * Trust Badges - A/B Experiment
- * 
+ *
  * Shows trust signals near the upload section to reduce privacy concerns
  * and increase confidence in uploading personal ultrasound images.
- * 
+ *
  * Experiment: trust-badges-test
  * Expected lift: 1-2x upload conversion
  */
@@ -53,17 +53,13 @@ export function TrustBadges({ className }: TrustBadgesProps) {
               "flex-shrink-0 flex items-center gap-3",
               "px-4 py-3 rounded-xl",
               "bg-cream/50 border border-warm-gray/20",
-              "min-w-[200px] sm:min-w-0"
+              "min-w-[200px] sm:min-w-0",
             )}
           >
             <span className="text-2xl">{badge.emoji}</span>
             <div>
-              <p className="font-medium text-charcoal text-sm whitespace-nowrap">
-                {badge.text}
-              </p>
-              <p className="text-xs text-warm-gray whitespace-nowrap">
-                {badge.subtext}
-              </p>
+              <p className="font-medium text-charcoal text-sm whitespace-nowrap">{badge.text}</p>
+              <p className="text-xs text-warm-gray whitespace-nowrap">{badge.subtext}</p>
             </div>
           </div>
         ))}

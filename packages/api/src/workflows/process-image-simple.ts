@@ -621,7 +621,9 @@ async function sendCompletionEmail(uploadId: string, _resultId: string): Promise
   });
 
   if (existingPurchase?.status === "completed") {
-    console.log("[workflow] User already purchased, skipping completion email (HD email will be sent)");
+    console.log(
+      "[workflow] User already purchased, skipping completion email (HD email will be sent)",
+    );
     return;
   }
 
@@ -715,8 +717,8 @@ export async function processImageWorkflowSimple(
       const variant = PROMPT_VARIANTS[i] as PromptVersion;
       const variantIndex = i + 1;
 
-      // Update progress (5-90% range for generation + watermarking, divided among 4 variants)
-      const progress = 5 + Math.floor((i / PROMPT_VARIANTS.length) * 85);
+      // Keep generation progress monotonic so first-ready state doesn't regress.
+      const progress = 15 + Math.floor(((i + 1) / PROMPT_VARIANTS.length) * 75);
       await updateUploadStage(uploadId, "generating", progress);
 
       console.log(
@@ -750,6 +752,9 @@ export async function processImageWorkflowSimple(
       // Keep first result ID for backward compatibility
       if (!firstResultId) {
         firstResultId = resultId;
+        // Fast first-result signal: front-end can navigate to reveal immediately.
+        await updateUploadStage(uploadId, "first_ready", 35);
+        console.log(`[workflow] First preview ready for upload: ${uploadId}, result: ${resultId}`);
       }
 
       console.log(
