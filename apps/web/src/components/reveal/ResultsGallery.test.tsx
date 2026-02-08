@@ -20,6 +20,7 @@ describe("ResultsGallery", () => {
 
   const originalImage = globalThis.Image;
   const imageSrcAssignments: string[] = [];
+  const drawImageSpy = vi.fn();
 
   class MockImage {
     onload: (() => void) | null = null;
@@ -42,11 +43,13 @@ describe("ResultsGallery", () => {
 
   beforeEach(() => {
     imageSrcAssignments.length = 0;
+    drawImageSpy.mockClear();
 
     vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockImplementation(
       () =>
         ({
-          drawImage: vi.fn(),
+          clearRect: vi.fn(),
+          drawImage: drawImageSpy,
           save: vi.fn(),
           translate: vi.fn(),
           rotate: vi.fn(),
@@ -80,6 +83,8 @@ describe("ResultsGallery", () => {
     await new Promise((resolve) => setTimeout(resolve, 25));
 
     expect(imageSrcAssignments).toHaveLength(1);
+    expect(drawImageSpy).toHaveBeenCalled();
+    expect(drawImageSpy.mock.calls[0]).toHaveLength(9);
   });
 
   it("ignores duplicate onLoad events for the same image", async () => {

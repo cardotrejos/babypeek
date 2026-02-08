@@ -364,6 +364,29 @@ function ResultPage() {
     });
   }, [uploadId, resultId]);
 
+  // Handle upsell checkout start - dismiss modal and launch Stripe immediately
+  const handleUpsellCheckoutStart = useCallback(() => {
+    setUpsellDismissed(true);
+    handleCheckoutStart();
+  }, [handleCheckoutStart]);
+
+  const handleUpsellCheckoutError = useCallback((error: string) => {
+    toast.error("Unable to start checkout", {
+      description: error,
+    });
+  }, []);
+
+  // Handle upsell decline - dismiss and show gallery with what's available
+  const handleUpsellDecline = useCallback(() => {
+    setUpsellDismissed(true);
+    if (isPostHogConfigured()) {
+      posthog.capture("upsell_declined_waiting_for_rest", {
+        upload_id: uploadId,
+        results_available: allResults.length,
+      });
+    }
+  }, [uploadId, allResults.length]);
+
   // Trigger reveal UI immediately (no animation delay needed)
   // NOTE: This hook must be BEFORE any conditional returns to comply with Rules of Hooks
   useEffect(() => {
@@ -455,29 +478,6 @@ function ResultPage() {
     allResults.length >= 1 &&
     allResults.length < 4 &&
     isStillProcessing;
-
-  // Handle upsell checkout start - dismiss modal and launch Stripe immediately
-  const handleUpsellCheckoutStart = useCallback(() => {
-    setUpsellDismissed(true);
-    handleCheckoutStart();
-  }, [handleCheckoutStart]);
-
-  const handleUpsellCheckoutError = useCallback((error: string) => {
-    toast.error("Unable to start checkout", {
-      description: error,
-    });
-  }, []);
-
-  // Handle upsell decline - dismiss and show gallery with what's available
-  const handleUpsellDecline = useCallback(() => {
-    setUpsellDismissed(true);
-    if (isPostHogConfigured()) {
-      posthog.capture("upsell_declined_waiting_for_rest", {
-        upload_id: uploadId,
-        results_available: allResults.length,
-      });
-    }
-  }, [uploadId, allResults.length]);
 
   // Clean gallery-first layout
   return (

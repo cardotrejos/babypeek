@@ -69,33 +69,105 @@ function CanvasImage({
     if (!canvas || !src) return;
 
     let isDisposed = false;
+    let resizeObserver: ResizeObserver | null = null;
+    let removeResizeListener: (() => void) | null = null;
     const img = new Image();
     img.crossOrigin = "anonymous";
 
-    img.onload = () => {
-      if (isDisposed) return;
-      const ctx = canvas.getContext("2d");
-      if (!ctx) {
-        onLoadRef.current?.();
-        return;
+    const drawImageCover = (image: HTMLImageElement): boolean => {
+      const currentCanvas = canvasRef.current;
+      if (!currentCanvas) return false;
+
+      const ctx = currentCanvas.getContext("2d");
+      if (!ctx) return false;
+
+      const rect = currentCanvas.getBoundingClientRect();
+      const displayWidth = Math.max(
+        1,
+        Math.round(rect.width || currentCanvas.clientWidth || image.width),
+      );
+      const displayHeight = Math.max(
+        1,
+        Math.round(rect.height || currentCanvas.clientHeight || image.height),
+      );
+      const devicePixelRatio =
+        typeof window !== "undefined" ? Math.max(1, window.devicePixelRatio || 1) : 1;
+      const targetWidth = Math.max(1, Math.round(displayWidth * devicePixelRatio));
+      const targetHeight = Math.max(1, Math.round(displayHeight * devicePixelRatio));
+
+      if (currentCanvas.width !== targetWidth) {
+        currentCanvas.width = targetWidth;
+      }
+      if (currentCanvas.height !== targetHeight) {
+        currentCanvas.height = targetHeight;
       }
 
-      canvas.width = img.width;
-      canvas.height = img.height;
+      const imageWidth = image.naturalWidth || image.width;
+      const imageHeight = image.naturalHeight || image.height;
+      const imageAspect = imageWidth / imageHeight;
+      const targetAspect = targetWidth / targetHeight;
 
-      // Draw image
-      ctx.drawImage(img, 0, 0);
+      let sourceX = 0;
+      let sourceY = 0;
+      let sourceWidth = imageWidth;
+      let sourceHeight = imageHeight;
+
+      // Match CSS object-fit: cover by center-cropping the source image.
+      if (imageAspect > targetAspect) {
+        sourceWidth = imageHeight * targetAspect;
+        sourceX = (imageWidth - sourceWidth) / 2;
+      } else if (imageAspect < targetAspect) {
+        sourceHeight = imageWidth / targetAspect;
+        sourceY = (imageHeight - sourceHeight) / 2;
+      }
+
+      ctx.clearRect(0, 0, targetWidth, targetHeight);
+      ctx.drawImage(
+        image,
+        sourceX,
+        sourceY,
+        sourceWidth,
+        sourceHeight,
+        0,
+        0,
+        targetWidth,
+        targetHeight,
+      );
 
       // Add client-side watermark overlay
       ctx.save();
-      ctx.translate(canvas.width / 2, canvas.height / 2);
+      ctx.translate(targetWidth / 2, targetHeight / 2);
       ctx.rotate((-30 * Math.PI) / 180);
       ctx.fillStyle = "rgba(255, 255, 255, 0.35)";
-      ctx.font = `bold ${Math.max(20, Math.floor(canvas.width / 8))}px Arial`;
+      ctx.font = `bold ${Math.max(20, Math.floor(targetWidth / 8))}px Arial`;
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
       ctx.fillText("PREVIEW", 0, 0);
       ctx.restore();
+
+      return true;
+    };
+
+    img.onload = () => {
+      if (isDisposed) return;
+      const didDraw = drawImageCover(img);
+      if (!didDraw) {
+        onLoadRef.current?.();
+        return;
+      }
+
+      const redraw = () => {
+        if (isDisposed) return;
+        drawImageCover(img);
+      };
+
+      if (typeof ResizeObserver !== "undefined") {
+        resizeObserver = new ResizeObserver(redraw);
+        resizeObserver.observe(canvas);
+      } else if (typeof window !== "undefined") {
+        window.addEventListener("resize", redraw);
+        removeResizeListener = () => window.removeEventListener("resize", redraw);
+      }
 
       onLoadRef.current?.();
     };
@@ -110,6 +182,8 @@ function CanvasImage({
 
     return () => {
       isDisposed = true;
+      resizeObserver?.disconnect();
+      removeResizeListener?.();
       img.onload = null;
       img.onerror = null;
     };
@@ -119,7 +193,7 @@ function CanvasImage({
     <canvas
       ref={canvasRef}
       className={className}
-      style={{ width: "100%", height: "100%", objectFit: "cover" }}
+      style={{ width: "100%", height: "100%" }}
       onContextMenu={(e) => e.preventDefault()}
       draggable={false}
       aria-label={alt}
