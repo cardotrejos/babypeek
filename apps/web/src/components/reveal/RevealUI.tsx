@@ -1,7 +1,6 @@
 import { useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { DownloadPreviewButton } from "./DownloadPreviewButton";
 import { CheckoutButton } from "@/components/payment";
 import { DownloadButton } from "@/components/download";
 import { ShareButtons } from "@/components/share";
@@ -124,18 +123,47 @@ export function RevealUI({
         />
       )}
 
-      {/* Secondary actions */}
-      <div className="flex gap-3">
-        <Button variant="outline" className="flex-1" onClick={onShare}>
-          Share
-        </Button>
-      </div>
+      {/* Secondary actions - only show share for paid users */}
+      {hasPurchased && (
+        <>
+          <div className="flex gap-3">
+            <Button variant="outline" className="flex-1" onClick={onShare}>
+              Share
+            </Button>
+          </div>
 
-      {/* Share buttons section (Story 8.1) */}
-      <div className="pt-2 border-t border-gray-200">
-        <p className="text-sm text-warm-gray text-center mb-3">Share your portrait</p>
-        <ShareButtons uploadId={uploadId} resultId={resultId} />
-      </div>
+          {/* Share buttons section (Story 8.1) */}
+          <div className="pt-2 border-t border-gray-200">
+            <p className="text-sm text-warm-gray text-center mb-3">Share your portrait</p>
+            <ShareButtons uploadId={uploadId} resultId={resultId} />
+          </div>
+        </>
+      )}
+
+      {/* Paywall comparison for unpaid users - no download, clear upgrade path */}
+      {!hasPurchased && !checkingPurchase && (
+        <div className="bg-gradient-to-b from-coral/5 to-transparent rounded-xl p-4 space-y-3">
+          <div className="grid grid-cols-2 gap-3 text-sm">
+            <div className="space-y-1">
+              <p className="font-medium text-warm-gray">Preview</p>
+              <ul className="text-warm-gray/70 space-y-0.5 text-xs">
+                <li>Low resolution</li>
+                <li>Watermarked</li>
+                <li>No download</li>
+              </ul>
+            </div>
+            <div className="space-y-1">
+              <p className="font-medium text-coral">HD Version</p>
+              <ul className="text-charcoal space-y-0.5 text-xs">
+                <li>Full resolution</li>
+                <li>No watermarks</li>
+                <li>Instant download</li>
+                <li>Print-ready</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Compare toggle (Story 5.5 AC-1) */}
       {hasOriginalImage && onToggleComparison && (

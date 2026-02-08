@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
 import { posthog, isPostHogConfigured } from "@/lib/posthog";
 
@@ -40,6 +40,75 @@ const PROMPT_LABELS: Record<string, string> = {
   v4: "Style C",
   "v4-json": "Style D",
 };
+
+/**
+ * Canvas-rendered image for unpaid users.
+ * Prevents right-click save and URL inspection since pixels are drawn on canvas.
+ * Adds a client-side "PREVIEW" watermark overlay.
+ */
+function CanvasImage({
+  src,
+  alt,
+  onLoad,
+  className,
+}: {
+  src: string;
+  alt: string;
+  onLoad?: () => void;
+  className?: string;
+}) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas || !src) return;
+
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+
+    img.onload = () => {
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
+
+      canvas.width = img.width;
+      canvas.height = img.height;
+
+      // Draw image
+      ctx.drawImage(img, 0, 0);
+
+      // Add client-side watermark overlay
+      ctx.save();
+      ctx.translate(canvas.width / 2, canvas.height / 2);
+      ctx.rotate((-30 * Math.PI) / 180);
+      ctx.fillStyle = "rgba(255, 255, 255, 0.35)";
+      ctx.font = `bold ${Math.max(20, Math.floor(canvas.width / 8))}px Arial`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText("PREVIEW", 0, 0);
+      ctx.restore();
+
+      onLoad?.();
+    };
+
+    img.onerror = () => {
+      // Fallback: still call onLoad so skeleton goes away
+      onLoad?.();
+    };
+
+    img.src = src;
+  }, [src, onLoad]);
+
+  return (
+    <canvas
+      ref={canvasRef}
+      className={className}
+      style={{ width: "100%", height: "100%", objectFit: "cover" }}
+      onContextMenu={(e) => e.preventDefault()}
+      draggable={false}
+      aria-label={alt}
+    />
+  );
+}
 
 /**
  * Skeleton placeholder for loading images
@@ -162,18 +231,31 @@ export function ResultsGallery({
                 </div>
               )}
 
-              <img
-                src={imageUrl}
-                alt={`Baby portrait - ${label}`}
-                className={cn(
-                  "w-full h-full object-cover transition-opacity duration-300",
-                  isLoaded ? "opacity-100" : "opacity-0",
-                )}
-                loading={index < 2 ? "eager" : "lazy"}
-                draggable={false}
-                onDragStart={(e) => e.preventDefault()}
-                onLoad={() => handleImageLoad(index)}
-              />
+              {/* SECURITY: Canvas rendering for unpaid users prevents right-click save */}
+              {hasPurchased ? (
+                <img
+                  src={imageUrl}
+                  alt={`Baby portrait - ${label}`}
+                  className={cn(
+                    "w-full h-full object-cover transition-opacity duration-300",
+                    isLoaded ? "opacity-100" : "opacity-0",
+                  )}
+                  loading={index < 2 ? "eager" : "lazy"}
+                  draggable={false}
+                  onDragStart={(e) => e.preventDefault()}
+                  onLoad={() => handleImageLoad(index)}
+                />
+              ) : (
+                <CanvasImage
+                  src={imageUrl}
+                  alt={`Baby portrait - ${label}`}
+                  className={cn(
+                    "transition-opacity duration-300",
+                    isLoaded ? "opacity-100" : "opacity-0",
+                  )}
+                  onLoad={() => handleImageLoad(index)}
+                />
+              )}
 
               {/* Style label */}
               <span

@@ -86,6 +86,7 @@ function ProcessingPage() {
     resultUrl: polledResultUrl,
     promptVersion: polledPromptVersion,
     errorMessage: polledErrorMessage,
+    firstPreviewReady: polledFirstPreviewReady,
     refetch: refetchStatus,
   } = useStatus(shouldPoll ? jobId : null);
 
@@ -208,26 +209,48 @@ function ProcessingPage() {
     { enabled: shouldCoordinate },
   );
 
-  // Handle completion - navigate to reveal page (Story 5.3)
+  // Fast first result: navigate as soon as first preview is ready
+  // This lets users see their first image in ~10s instead of waiting 40+s for all 4
+  const firstReadyNavigatedRef = useRef(false);
   useEffect(() => {
-    if (isComplete && resultId) {
+    if (polledFirstPreviewReady && resultId && !firstReadyNavigatedRef.current) {
+      firstReadyNavigatedRef.current = true;
+
+      if (isPostHogConfigured()) {
+        posthog.capture("first_preview_navigating", {
+          upload_id: jobId,
+          result_id: resultId,
+          is_complete: isComplete,
+        });
+      }
+
+      // Store mapping of result -> upload for session token retrieval
+      localStorage.setItem(`babypeek-result-upload-${resultId}`, jobId);
+      updateJobResult(jobId, resultId);
+
+      // Navigate to reveal page immediately
+      setTimeout(() => {
+        navigate({ to: "/result/$resultId", params: { resultId } });
+      }, 300);
+    }
+  }, [polledFirstPreviewReady, resultId, jobId, navigate, isComplete]);
+
+  // Handle full completion (legacy fallback if first_ready didn't fire)
+  useEffect(() => {
+    if (isComplete && resultId && !firstReadyNavigatedRef.current) {
       setState("complete");
-      // Track completion
       if (isPostHogConfigured()) {
         posthog.capture("processing_complete", {
           upload_id: jobId,
           result_id: resultId,
         });
       }
-      // Store mapping of result -> upload for session token retrieval
       localStorage.setItem(`babypeek-result-upload-${resultId}`, jobId);
-      // Story 5.7: Update session with result for recovery
       updateJobResult(jobId, resultId);
 
-      // Navigate to reveal page
       setTimeout(() => {
         navigate({ to: "/result/$resultId", params: { resultId } });
-      }, 500); // Brief delay for visual feedback
+      }, 500);
     }
   }, [isComplete, resultId, jobId, navigate]);
 

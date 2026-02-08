@@ -13,6 +13,7 @@ export type ProcessingStatus = "pending" | "processing" | "completed" | "failed"
 export type ProcessingStage =
   | "validating"
   | "generating"
+  | "first_ready"
   | "storing"
   | "watermarking"
   | "complete"
@@ -31,6 +32,8 @@ interface StatusApiResponse {
   promptVersion: PromptVersion;
   errorMessage: string | null;
   updatedAt: string;
+  /** True when at least 1 preview image is ready (for fast first result) */
+  firstPreviewReady?: boolean;
   error?: {
     code: string;
     message: string;
@@ -52,6 +55,8 @@ export interface UseStatusResult {
   promptVersion: PromptVersion;
   /** Error message if processing failed */
   errorMessage: string | null;
+  /** True when first preview is ready (fast first result) */
+  firstPreviewReady: boolean;
   /** Force an immediate status refetch */
   refetch: () => Promise<unknown>;
   /** Whether the initial fetch is loading */
@@ -241,6 +246,7 @@ export function useStatus(jobId: string | null): UseStatusResult {
     resultUrl: data?.resultUrl ?? null,
     promptVersion: data?.promptVersion ?? null,
     errorMessage: data?.errorMessage ?? null,
+    firstPreviewReady: data?.firstPreviewReady ?? false,
     refetch,
     isLoading,
     isComplete,

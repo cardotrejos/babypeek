@@ -18,7 +18,7 @@ export function MobileStickyCTA() {
   useEffect(() => {
     // Check if mobile device
     const checkMobile = () => {
-      const mobile = window.innerWidth < 768 || 
+      const mobile = window.innerWidth < 768 ||
         /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
       setIsMobile(mobile);
     };
@@ -36,6 +36,17 @@ export function MobileStickyCTA() {
 
     return () => window.removeEventListener("resize", checkMobile);
   }, [isMobile]);
+
+  // Hide sticky CTA when upload starts to avoid button confusion
+  useEffect(() => {
+    const handleUploadStarted = () => {
+      setIsVisible(false);
+      posthog?.capture("sticky_cta_hidden_on_upload");
+    };
+
+    window.addEventListener("babypeek:upload_started", handleUploadStarted);
+    return () => window.removeEventListener("babypeek:upload_started", handleUploadStarted);
+  }, []);
 
   // Don't show on desktop
   if (!isMobile) return null;

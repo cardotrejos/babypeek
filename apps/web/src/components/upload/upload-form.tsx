@@ -94,6 +94,9 @@ export function UploadForm({
         fileSizeMB: Number((selectedFile.size / (1024 * 1024)).toFixed(2)),
       });
 
+      // Notify other components (e.g., MobileStickyCTA) that upload has started
+      window.dispatchEvent(new CustomEvent("babypeek:upload_started"));
+
       // If upload is enabled, use built-in upload
       if (enableUpload) {
         const result = await startUpload(selectedFile, email);

@@ -98,14 +98,19 @@ app.get("/:jobId", async (c) => {
 
     // SECURITY: Check if user has purchased before exposing HD URLs
     let hasPurchased = false;
+    // Flag: first preview is ready (stage === "first_ready" or later, while still processing)
+    const firstPreviewReady = upload.stage === "first_ready" ||
+      upload.stage === "generating" && (upload.progress ?? 0) >= 35;
 
-    if (upload.status === "completed") {
-      // Check purchase status
-      const purchaseService = yield* PurchaseService;
-      const purchase = yield* purchaseService
-        .getByUploadId(jobId)
-        .pipe(Effect.catchAll(() => Effect.succeed(null)));
-      hasPurchased = purchase?.status === "completed";
+    if (upload.status === "completed" || firstPreviewReady) {
+      // Check purchase status (only for completed uploads; during processing, no purchase yet)
+      if (upload.status === "completed") {
+        const purchaseService = yield* PurchaseService;
+        const purchase = yield* purchaseService
+          .getByUploadId(jobId)
+          .pipe(Effect.catchAll(() => Effect.succeed(null)));
+        hasPurchased = purchase?.status === "completed";
+      }
 
       // Fetch all results from the results table
       const resultRows = yield* Effect.promise(() =>
@@ -202,8 +207,10 @@ app.get("/:jobId", async (c) => {
       previewUrl, // Watermarked preview (for unpaid users) - first variant
       originalUrl,
       promptVersion: upload.promptVersion ?? null,
-      // All 4 variants
+      // All available variants (may be 1 during processing, 4 when complete)
       results: allResults,
+      // Fast first result: true when at least 1 preview is ready
+      firstPreviewReady: firstPreviewReady || upload.status === "completed",
       errorMessage:
         upload.status === "failed"
           ? (upload.errorMessage ?? "Processing failed. Please try again.")

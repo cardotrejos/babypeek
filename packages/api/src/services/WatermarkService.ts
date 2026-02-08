@@ -4,15 +4,15 @@
  * Applies watermarks and resizes images for preview generation.
  * Uses Jimp for image processing (pure JS, works in serverless).
  *
- * Watermark Specs (enhanced for better protection):
+ * Watermark Specs (heavy protection to prevent free downloads):
  * - Multiple diagonal "babypeek.io" text across entire image
  * - Semi-transparent white text with dark outline
- * - Opacity: 25-35% (visible but not intrusive)
- * - Pattern: Repeating diagonal text watermarks
+ * - Opacity: 60% (clearly visible, prevents usable screenshots)
+ * - Pattern: Dense repeating diagonal text watermarks
  *
  * Preview Specs:
- * - Max dimension: 800px (preserving aspect ratio)
- * - Format: JPEG @ 85% quality
+ * - Max dimension: 400px (too small for print/use)
+ * - Format: JPEG @ 60% quality (visible compression)
  *
  * @see Story 5.2 - Watermark Application
  */
@@ -81,7 +81,7 @@ function drawDiagonalTextPattern(
   const text = "babypeek.io";
   const charWidth = Math.max(8, Math.floor(imageWidth / 50)); // ~2% of image width per char
   const charHeight = Math.floor(charWidth * 1.5);
-  const spacing = Math.floor(imageWidth / 4); // Space between watermark repetitions
+  const spacing = Math.floor(imageWidth / 3); // Dense spacing for heavy watermark coverage
 
   // Simple pixel-based text rendering for "babypeek.io"
   // Each letter is a simple 5x7 pixel pattern scaled up
@@ -224,8 +224,8 @@ function drawDiagonalTextPattern(
     const startX = diagOffset;
     const startY = Math.floor(imageHeight * 0.3); // Start from 30% down
 
-    // Multiple rows of watermarks
-    for (let row = 0; row < 3; row++) {
+    // Multiple rows of watermarks (dense coverage)
+    for (let row = 0; row < 5; row++) {
       const rowY = startY + row * spacing * 0.7;
       if (rowY >= 0 && rowY < imageHeight - charHeight * scale) {
         drawWatermarkAt(startX + row * spacing * 0.3, Math.floor(rowY));
@@ -238,7 +238,7 @@ const applyWatermark = Effect.fn("WatermarkService.apply")(function* (
   imageBuffer: Buffer,
   options: WatermarkOptions = {},
 ) {
-  const { opacity = 0.3 } = options; // 30% opacity - visible but not intrusive
+  const { opacity = 0.6 } = options; // 60% opacity - heavy protection to prevent free use
 
   // Load image with Jimp
   const image = yield* Effect.tryPromise({
@@ -265,10 +265,10 @@ const applyWatermark = Effect.fn("WatermarkService.apply")(function* (
   // Apply diagonal text pattern watermark
   drawDiagonalTextPattern(image, opacity);
 
-  // Convert to JPEG buffer
+  // Convert to JPEG buffer (low quality for preview protection)
   const watermarked = yield* Effect.tryPromise({
     try: async () => {
-      const buffer = await image.getBuffer("image/jpeg", { quality: 85 });
+      const buffer = await image.getBuffer("image/jpeg", { quality: 60 });
       return Buffer.from(buffer);
     },
     catch: (e) =>
@@ -315,10 +315,10 @@ const resizeImage = Effect.fn("WatermarkService.resize")(function* (
 });
 
 const createPreview = Effect.fn("WatermarkService.createPreview")(function* (imageBuffer: Buffer) {
-  // Step 1: Resize to 800px max (smaller image = faster watermark)
-  const resized = yield* resizeImage(imageBuffer, 800);
+  // Step 1: Resize to 400px max (too small for print or social media use)
+  const resized = yield* resizeImage(imageBuffer, 400);
 
-  // Step 2: Apply watermark
+  // Step 2: Apply heavy watermark (60% opacity)
   const preview = yield* applyWatermark(resized);
 
   return preview;
