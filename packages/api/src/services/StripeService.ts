@@ -61,11 +61,16 @@ const createCheckoutSession = Effect.fn("StripeService.createCheckoutSession")(f
   const isGift = params.type === "gift";
   const customerEmail = isGift && params.purchaserEmail ? params.purchaserEmail : params.email;
 
-  // Use price_data with server-validated tier price (dev & production fallback)
-  // In production with STRIPE_PRICE_ID configured and basic tier, use that price ID
-  const useStripePriceId = env.STRIPE_PRICE_ID && params.tier === "basic";
-  const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = useStripePriceId
-    ? [{ price: env.STRIPE_PRICE_ID, quantity: 1 }]
+  // Map tier to Stripe Price ID (env-configured, production-safe)
+  const tierPriceIds: Record<string, string | undefined> = {
+    basic: env.STRIPE_PRICE_ID,
+    plus: env.STRIPE_PRICE_ID_PLUS,
+    pro: env.STRIPE_PRICE_ID_PRO,
+  };
+  const stripePriceId = tierPriceIds[params.tier];
+
+  const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = stripePriceId
+    ? [{ price: stripePriceId, quantity: 1 }]
     : [
         {
           price_data: {
