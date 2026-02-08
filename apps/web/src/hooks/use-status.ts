@@ -270,6 +270,8 @@ export function getStageLabel(stage: ProcessingStage): string {
       return "Preparing your image...";
     case "generating":
       return "Creating your portrait...";
+    case "first_ready":
+      return "Your first portrait is ready!";
     case "storing":
       return "Saving your masterpiece...";
     case "watermarking":
@@ -292,6 +294,8 @@ export function getStageEmoji(stage: ProcessingStage): string {
       return "🔍";
     case "generating":
       return "🎨";
+    case "first_ready":
+      return "🖼️";
     case "storing":
       return "💾";
     case "watermarking":
