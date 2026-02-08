@@ -41,6 +41,14 @@ const envSchema = z.object({
     .string()
     .startsWith("price_", "STRIPE_PRICE_ID must start with 'price_'")
     .optional(),
+  STRIPE_PRICE_ID_PLUS: z
+    .string()
+    .startsWith("price_", "STRIPE_PRICE_ID_PLUS must start with 'price_'")
+    .optional(),
+  STRIPE_PRICE_ID_PRO: z
+    .string()
+    .startsWith("price_", "STRIPE_PRICE_ID_PRO must start with 'price_'")
+    .optional(),
 
   // ─────────────────────────────────────────────────────────────────────────────
   // Resend Email (Optional in dev, required in production)
@@ -133,6 +141,8 @@ export const env = parsed.success
       STRIPE_SECRET_KEY: undefined,
       STRIPE_WEBHOOK_SECRET: undefined,
       STRIPE_PRICE_ID: undefined,
+      STRIPE_PRICE_ID_PLUS: undefined,
+      STRIPE_PRICE_ID_PRO: undefined,
       RESEND_API_KEY: undefined,
       POSTHOG_KEY: undefined,
       SENTRY_DSN: undefined,

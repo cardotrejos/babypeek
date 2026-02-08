@@ -9,13 +9,13 @@ import { useAnalytics } from "@/hooks/use-analytics";
 // =============================================================================
 
 const LARGE_FILE_THRESHOLD = 15 * 1024 * 1024; // 15MB - mobile Safari memory concern
-const JPEG_QUALITY = 0.9; // Balance of quality and file size
+const JPEG_QUALITY = 0.85; // Balance of quality and file size
 
 /** Compression threshold - files larger than this will be compressed */
 const COMPRESSION_THRESHOLD = 2 * 1024 * 1024; // 2MB
 
 /** Max dimension for compressed images */
-const MAX_DIMENSION = 2048;
+const MAX_DIMENSION = 1920;
 
 /** Toast duration for warning messages (ms) */
 const TOAST_WARNING_DURATION = 4000;

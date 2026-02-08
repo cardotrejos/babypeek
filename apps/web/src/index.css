@@ -181,6 +181,10 @@
     padding-bottom: calc(1rem + var(--safe-area-inset-bottom));
   }
 
+  .safe-bottom-min {
+    padding-bottom: max(16px, env(safe-area-inset-bottom, 0px));
+  }
+
   .safe-top {
     padding-top: calc(1rem + var(--safe-area-inset-top));
   }
