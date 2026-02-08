@@ -9,6 +9,7 @@ export type UploadStatus = (typeof uploadStatusValues)[number];
 export const uploadStageValues = [
   "validating",
   "generating",
+  "first_ready",
   "storing",
   "watermarking",
   "complete",

@@ -37,21 +37,36 @@ describe("RevealUI", () => {
       expect(purchaseButton).toBeInTheDocument();
     });
 
-    it("should render share button", () => {
+    it("should not render share button for unpaid users", () => {
       render(<RevealUI {...defaultProps} />);
 
-      // Get the original Share button (exact text match to avoid WhatsApp button)
+      const shareButton = screen.queryByRole("button", { name: /^Share$/ });
+      expect(shareButton).not.toBeInTheDocument();
+    });
+
+    it("should render share button for paid users", () => {
+      render(<RevealUI {...defaultProps} hasPurchasedProp={true} />);
+
       const shareButton = screen.getByRole("button", { name: /^Share$/ });
       expect(shareButton).toBeInTheDocument();
     });
 
-    it("should render WhatsApp share button (Story 8.1)", () => {
-      render(<RevealUI {...defaultProps} />);
+    it("should render WhatsApp share button for paid users (Story 8.1)", () => {
+      render(<RevealUI {...defaultProps} hasPurchasedProp={true} />);
 
       const whatsappButton = screen.getByRole("button", {
         name: /share to whatsapp/i,
       });
       expect(whatsappButton).toBeInTheDocument();
+    });
+
+    it("should not render WhatsApp share button for unpaid users", () => {
+      render(<RevealUI {...defaultProps} />);
+
+      const whatsappButton = screen.queryByRole("button", {
+        name: /share to whatsapp/i,
+      });
+      expect(whatsappButton).not.toBeInTheDocument();
     });
 
     it("should display price in CTA", () => {
@@ -64,7 +79,7 @@ describe("RevealUI", () => {
   describe("Interactions", () => {
     it("should call onShare when share button clicked", () => {
       const onShare = vi.fn();
-      render(<RevealUI {...defaultProps} onShare={onShare} />);
+      render(<RevealUI {...defaultProps} onShare={onShare} hasPurchasedProp={true} />);
 
       // Get the original Share button (exact text match)
       const shareButton = screen.getByRole("button", { name: /^Share$/ });

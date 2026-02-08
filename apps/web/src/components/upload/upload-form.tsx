@@ -175,7 +175,7 @@ export function UploadForm({
           </span>
         ) : (
           <span className="flex items-center gap-2">
-            Start
+            See Your Baby
             <ArrowRightIcon className="size-5" />
           </span>
         )}

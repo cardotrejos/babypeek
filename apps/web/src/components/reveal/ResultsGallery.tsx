@@ -203,7 +203,13 @@ export function ResultsGallery({
           }
 
           const isLoaded = loadedImages.has(index);
-          const imageUrl = hasPurchased ? result.resultUrl : result.previewUrl || result.resultUrl;
+          const imageUrl = hasPurchased
+            ? (result.resultUrl ?? result.previewUrl)
+            : result.previewUrl;
+
+          if (!imageUrl) {
+            return <ImageSkeleton key={`missing-${result.resultId}`} label={label} />;
+          }
 
           return (
             <button

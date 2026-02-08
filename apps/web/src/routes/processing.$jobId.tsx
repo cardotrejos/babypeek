@@ -294,6 +294,8 @@ function ProcessingPage() {
     setState("starting");
 
     try {
+      const promptVersionToUse = urlPromptVersion ?? selectedPrompt;
+
       const response = await fetch(`${API_BASE_URL}/api/process`, {
         method: "POST",
         headers: {
@@ -302,8 +304,7 @@ function ProcessingPage() {
         },
         body: JSON.stringify({
           uploadId: jobId,
-          // Include promptVersion when provided via URL
-          ...(urlPromptVersion && { promptVersion: urlPromptVersion }),
+          promptVersion: promptVersionToUse,
         }),
       });
 
@@ -364,7 +365,7 @@ function ProcessingPage() {
       });
       setState("error");
     }
-  }, [jobId, selectedPrompt]);
+  }, [jobId, selectedPrompt, urlPromptVersion]);
 
   // Start processing on mount (auto-start in prod, manual in dev for testing)
   const [devManualStart, setDevManualStart] = useState(false);

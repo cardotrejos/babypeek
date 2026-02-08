@@ -12,7 +12,7 @@ import { WatermarkError } from "../lib/errors";
  * - AC-2: Watermark positioned bottom-right
  * - AC-3: Watermark is 15% of image width
  * - AC-4: Watermark text is "babypeek.com"
- * - AC-5: Preview resized to 800px max dimension
+ * - AC-5: Preview resized to 400px max dimension
  * - AC-7: Uses Jimp library (pure JS, serverless compatible)
  */
 
@@ -255,9 +255,9 @@ describe("WatermarkService", () => {
       const result = await Effect.runPromise(program);
       const image = await Jimp.read(result);
 
-      // Height should be capped at 800
-      expect(image.height).toBeLessThanOrEqual(800);
-      expect(image.width).toBeLessThanOrEqual(800);
+      // Height should be capped at 400
+      expect(image.height).toBeLessThanOrEqual(400);
+      expect(image.width).toBeLessThanOrEqual(400);
     });
 
     it("handles square images correctly", async () => {
@@ -271,9 +271,9 @@ describe("WatermarkService", () => {
       const result = await Effect.runPromise(program);
       const image = await Jimp.read(result);
 
-      // Should be 800x800
-      expect(image.width).toBe(800);
-      expect(image.height).toBe(800);
+      // Should be 400x400
+      expect(image.width).toBe(400);
+      expect(image.height).toBe(400);
     });
   });
 

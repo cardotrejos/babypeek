@@ -50,7 +50,7 @@ interface RevealUIProps {
 export function RevealUI({
   resultId,
   uploadId,
-  previewUrl,
+  previewUrl: _previewUrl,
   onShare,
   hasOriginalImage = false,
   showComparison = false,

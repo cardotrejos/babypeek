@@ -1,13 +1,15 @@
 import { useState, useEffect, useCallback } from "react";
 import { posthog, isPostHogConfigured } from "@/lib/posthog";
 import { cn } from "@/lib/utils";
-import { PRICE_DISPLAY } from "@/lib/pricing";
+import { CheckoutButton } from "@/components/payment";
 
 interface UpsellModalProps {
   /** Upload ID for analytics and checkout */
   uploadId: string;
-  /** Called when user clicks buy */
-  onPurchase: () => void;
+  /** Called when checkout starts */
+  onCheckoutStart?: () => void;
+  /** Called when checkout fails */
+  onCheckoutError?: (error: string) => void;
   /** Called when user declines */
   onDecline: () => void;
   className?: string;
@@ -28,7 +30,13 @@ function formatTime(seconds: number): string {
  *
  * Conversion Fix #3: Fast First Result + Immediate Upsell
  */
-export function UpsellModal({ uploadId, onPurchase, onDecline, className }: UpsellModalProps) {
+export function UpsellModal({
+  uploadId,
+  onCheckoutStart,
+  onCheckoutError,
+  onDecline,
+  className,
+}: UpsellModalProps) {
   const [timeLeft, setTimeLeft] = useState(600); // 10 minutes
 
   useEffect(() => {
@@ -51,15 +59,15 @@ export function UpsellModal({ uploadId, onPurchase, onDecline, className }: Upse
     return () => clearInterval(interval);
   }, [uploadId]);
 
-  const handlePurchase = useCallback(() => {
+  const handleCheckoutStarted = useCallback(() => {
     if (isPostHogConfigured()) {
       posthog.capture("upsell_buy_clicked", {
         upload_id: uploadId,
         time_remaining: timeLeft,
       });
     }
-    onPurchase();
-  }, [uploadId, timeLeft, onPurchase]);
+    onCheckoutStart?.();
+  }, [uploadId, timeLeft, onCheckoutStart]);
 
   const handleDecline = useCallback(() => {
     if (isPostHogConfigured()) {
@@ -83,9 +91,7 @@ export function UpsellModal({ uploadId, onPurchase, onDecline, className }: Upse
       <div className="p-6 space-y-5">
         {/* Header */}
         <div className="text-center">
-          <h2 className="font-display text-xl text-charcoal">
-            Unlock All 4 HD Portraits
-          </h2>
+          <h2 className="font-display text-xl text-charcoal">Unlock All 4 HD Portraits</h2>
           <p className="text-sm text-warm-gray mt-1">
             This is 1 of 4 professional styles we created for you
           </p>
@@ -117,22 +123,22 @@ export function UpsellModal({ uploadId, onPurchase, onDecline, className }: Upse
 
         {/* Social proof */}
         <div className="text-center text-xs text-warm-gray bg-cream/50 rounded-lg py-2 px-3">
-          <span className="text-yellow-500">&#9733;&#9733;&#9733;&#9733;&#9733;</span>{" "}
-          Loved by 2,800+ parents
+          <span className="text-yellow-500">&#9733;&#9733;&#9733;&#9733;&#9733;</span> Loved by
+          2,800+ parents
         </div>
 
-        {/* CTA */}
-        <button
-          onClick={handlePurchase}
+        {/* CTA: Starts Stripe checkout directly (no extra click) */}
+        <CheckoutButton
+          uploadId={uploadId}
+          onCheckoutStart={handleCheckoutStarted}
+          onCheckoutError={onCheckoutError}
           className={cn(
-            "w-full py-4 rounded-xl text-lg font-bold text-white",
+            "w-full py-6 rounded-xl text-lg font-bold text-white",
             "bg-gradient-to-r from-coral to-pink-500",
             "hover:opacity-90 active:scale-[0.98] transition-all",
             "shadow-lg shadow-coral/25",
           )}
-        >
-          Unlock HD Images - {PRICE_DISPLAY}
-        </button>
+        />
 
         {/* Decline */}
         <button

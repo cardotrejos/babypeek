@@ -202,7 +202,8 @@ function ResultPage() {
       const data = await response.json();
 
       // Accept results if either completed OR first preview is ready (fast first result)
-      const hasResults = data.resultUrl || data.previewUrl || (data.results && data.results.length > 0);
+      const hasResults =
+        data.resultUrl || data.previewUrl || (data.results && data.results.length > 0);
       const isReady = data.status === "completed" || data.firstPreviewReady;
 
       if (!isReady || !hasResults) {
@@ -448,14 +449,24 @@ function ResultPage() {
   // Determine if we should show the upsell modal
   // Show when: we have results, not all 4 are ready yet (or just arrived), and not dismissed
   const isStillProcessing = statusData?.status !== "completed";
-  const showUpsellModal = !upsellDismissed && !hasPurchased && allResults.length >= 1 && allResults.length < 4 && isStillProcessing;
+  const showUpsellModal =
+    !upsellDismissed &&
+    !hasPurchased &&
+    allResults.length >= 1 &&
+    allResults.length < 4 &&
+    isStillProcessing;
 
-  // Handle upsell purchase - proceed to checkout
-  const handleUpsellPurchase = useCallback(() => {
+  // Handle upsell checkout start - dismiss modal and launch Stripe immediately
+  const handleUpsellCheckoutStart = useCallback(() => {
     setUpsellDismissed(true);
     handleCheckoutStart();
-    // The CheckoutButton in RevealUI handles actual Stripe checkout
   }, [handleCheckoutStart]);
+
+  const handleUpsellCheckoutError = useCallback((error: string) => {
+    toast.error("Unable to start checkout", {
+      description: error,
+    });
+  }, []);
 
   // Handle upsell decline - dismiss and show gallery with what's available
   const handleUpsellDecline = useCallback(() => {
@@ -501,7 +512,8 @@ function ResultPage() {
             {/* Upsell modal */}
             <UpsellModal
               uploadId={uploadId ?? ""}
-              onPurchase={handleUpsellPurchase}
+              onCheckoutStart={handleUpsellCheckoutStart}
+              onCheckoutError={handleUpsellCheckoutError}
               onDecline={handleUpsellDecline}
             />
           </>

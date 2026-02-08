@@ -99,8 +99,9 @@ app.get("/:jobId", async (c) => {
     // SECURITY: Check if user has purchased before exposing HD URLs
     let hasPurchased = false;
     // Flag: first preview is ready (stage === "first_ready" or later, while still processing)
-    const firstPreviewReady = upload.stage === "first_ready" ||
-      upload.stage === "generating" && (upload.progress ?? 0) >= 35;
+    const firstPreviewReady =
+      upload.stage === "first_ready" ||
+      (upload.stage === "generating" && (upload.progress ?? 0) >= 35);
 
     if (upload.status === "completed" || firstPreviewReady) {
       // Check purchase status (only for completed uploads; during processing, no purchase yet)
@@ -136,14 +137,6 @@ app.get("/:jobId", async (c) => {
           resultPreviewUrl = yield* r2Service
             .getDownloadUrl(result.previewUrl, 60 * 60)
             .pipe(Effect.catchAll(() => Effect.succeed(null as string | null)));
-        } else if (!hasPurchased) {
-          // Fallback: If no preview exists yet, generate URL for HD but use it as preview
-          // This is for backward compatibility with uploads before watermarking was added
-          // Note: This exposes HD URL - new uploads should have proper previews
-          signedHdUrl = yield* r2Service
-            .getDownloadUrl(result.resultUrl, 60 * 60)
-            .pipe(Effect.catchAll(() => Effect.succeed(null as string | null)));
-          resultPreviewUrl = signedHdUrl;
         }
 
         // Include result if we have either HD or preview URL
@@ -179,11 +172,6 @@ app.get("/:jobId", async (c) => {
         if (upload.previewUrl) {
           previewUrl = yield* r2Service
             .getDownloadUrl(upload.previewUrl, 60 * 60)
-            .pipe(Effect.catchAll(() => Effect.succeed(null as string | null)));
-        } else if (!hasPurchased && upload.resultUrl) {
-          // Fallback for uploads without preview - still expose HD as preview
-          previewUrl = yield* r2Service
-            .getDownloadUrl(upload.resultUrl, 60 * 60)
             .pipe(Effect.catchAll(() => Effect.succeed(null as string | null)));
         }
       }

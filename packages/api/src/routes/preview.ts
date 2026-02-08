@@ -113,8 +113,8 @@ app.get("/:uploadId", async (c) => {
         );
       }
 
-      // Fallback: if no preview exists, use HD URL as preview (backward compat)
-      if (!previewUrl && result.resultUrl) {
+      // Fallback for paid users only (never expose HD assets to unpaid users)
+      if (!previewUrl && hasPurchased && result.resultUrl) {
         console.log(`[preview] Using HD URL as fallback for ${result.id}`);
         previewUrl = yield* r2Service.getDownloadUrl(result.resultUrl, 60 * 60).pipe(
           Effect.catchAll((err) => {
