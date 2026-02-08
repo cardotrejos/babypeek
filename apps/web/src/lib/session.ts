@@ -20,6 +20,7 @@ export interface JobData {
   createdAt: number;
   resultId?: string;
   status?: "pending" | "processing" | "completed" | "failed";
+  selectedTier?: string;
 }
 
 /**
@@ -152,6 +153,21 @@ export function updateJobResult(jobId: string, resultId: string): void {
     if (data) {
       data.resultId = resultId;
       data.status = "completed";
+      localStorage.setItem(`${JOB_DATA_PREFIX}${jobId}`, JSON.stringify(data));
+    }
+  } catch {
+    // Silent fail
+  }
+}
+
+/**
+ * Store selected pricing tier for a job
+ */
+export function updateJobTier(jobId: string, tier: string): void {
+  try {
+    const data = getJobData(jobId);
+    if (data) {
+      data.selectedTier = tier;
       localStorage.setItem(`${JOB_DATA_PREFIX}${jobId}`, JSON.stringify(data));
     }
   } catch {

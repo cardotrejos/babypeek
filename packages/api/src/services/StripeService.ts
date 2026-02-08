@@ -8,6 +8,8 @@ export interface CheckoutSessionParams {
   uploadId: string;
   email: string; // Recipient email (original uploader for gifts)
   type: "self" | "gift";
+  tier: string; // Pricing tier ID ("basic" | "plus" | "pro")
+  priceCents: number; // Server-validated price for this tier
   successUrl: string;
   cancelUrl: string;
   purchaserEmail?: string; // Gift purchaser email (for receipt)
@@ -59,15 +61,21 @@ const createCheckoutSession = Effect.fn("StripeService.createCheckoutSession")(f
   const isGift = params.type === "gift";
   const customerEmail = isGift && params.purchaserEmail ? params.purchaserEmail : params.email;
 
-  // Use Stripe Price ID if configured, otherwise fall back to price_data (dev only)
-  const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = env.STRIPE_PRICE_ID
+  // Use price_data with server-validated tier price (dev & production fallback)
+  // In production with STRIPE_PRICE_ID configured and basic tier, use that price ID
+  const useStripePriceId = env.STRIPE_PRICE_ID && params.tier === "basic";
+  const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = useStripePriceId
     ? [{ price: env.STRIPE_PRICE_ID, quantity: 1 }]
     : [
         {
           price_data: {
             currency: "usd",
-            product_data: { name: isGift ? "BabyPeek HD Photo Gift" : "BabyPeek HD Photo" },
-            unit_amount: env.PRODUCT_PRICE_CENTS,
+            product_data: {
+              name: isGift
+                ? `BabyPeek HD Photo Gift (${params.tier})`
+                : `BabyPeek HD Photo (${params.tier})`,
+            },
+            unit_amount: params.priceCents,
           },
           quantity: 1,
         },
@@ -88,6 +96,7 @@ const createCheckoutSession = Effect.fn("StripeService.createCheckoutSession")(f
           uploadId: params.uploadId,
           email: params.email, // Recipient email (for HD download link)
           type: params.type,
+          tier: params.tier, // Pricing tier
           purchaserEmail: params.purchaserEmail || "", // Gift purchaser email
         },
       }),

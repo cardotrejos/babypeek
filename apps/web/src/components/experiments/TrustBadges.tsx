@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { ShieldCheckIcon, ZapIcon, HeartIcon } from "lucide-react";
 import { posthog } from "@/lib/posthog";
 import { cn } from "@/lib/utils";
+import { useExperiment } from "@/hooks/use-experiment";
 
 /**
  * Trust Badges - A/B Experiment
@@ -9,7 +10,7 @@ import { cn } from "@/lib/utils";
  * Shows trust signals near the upload section to reduce privacy concerns
  * and increase confidence in uploading personal ultrasound images.
  *
- * Experiment: trust-badges-test
+ * Experiment: trust_badges_test
  * Expected lift: 1-2x upload conversion
  */
 export interface TrustBadgesProps {
@@ -17,9 +18,11 @@ export interface TrustBadgesProps {
 }
 
 export function TrustBadges({ className }: TrustBadgesProps) {
+  const { variant } = useExperiment("trust_badges_test");
+
   useEffect(() => {
-    posthog?.capture("trust_badges_shown");
-  }, []);
+    posthog?.capture("trust_badges_shown", { variant });
+  }, [variant]);
 
   const badges = [
     {

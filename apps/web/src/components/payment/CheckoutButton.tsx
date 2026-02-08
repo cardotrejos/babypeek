@@ -4,10 +4,12 @@ import { API_BASE_URL } from "@/lib/api-config";
 import { posthog, isPostHogConfigured } from "@/lib/posthog";
 import { trackFBInitiateCheckout } from "@/lib/facebook-pixel";
 import { getSession } from "@/lib/session";
-import { PRICE_CENTS, PRICE_DISPLAY } from "@/lib/pricing";
+import { PRICE_CENTS, PRICE_DISPLAY, PRICING_TIERS, type TierId } from "@/lib/pricing";
 
 interface CheckoutButtonProps extends Omit<ComponentPropsWithoutRef<typeof Button>, "onClick"> {
   uploadId: string;
+  /** Pricing tier to purchase (defaults to basic for backward compat) */
+  tier?: TierId;
   /** Retry count for analytics (Story 6.6) */
   retryCount?: number;
   /** Callback when checkout starts - use to increment retry count */
@@ -26,6 +28,7 @@ interface CheckoutButtonProps extends Omit<ComponentPropsWithoutRef<typeof Butto
  */
 export function CheckoutButton({
   uploadId,
+  tier,
   retryCount = 0,
   onCheckoutStart,
   onCheckoutError,
@@ -34,6 +37,12 @@ export function CheckoutButton({
   ...buttonProps
 }: CheckoutButtonProps) {
   const [isLoading, setIsLoading] = useState(false);
+
+  // Resolve pricing from tier (backward compat: no tier = basic)
+  const effectiveTier = tier ?? "basic";
+  const tierConfig = PRICING_TIERS[effectiveTier];
+  const priceCents = tierConfig?.priceCents ?? PRICE_CENTS;
+  const priceDisplay = tierConfig?.priceDisplay ?? PRICE_DISPLAY;
 
   const handleCheckout = useCallback(async () => {
     if (isLoading || !uploadId) return;
@@ -45,7 +54,8 @@ export function CheckoutButton({
     if (isPostHogConfigured()) {
       posthog.capture("purchase_started", {
         uploadId,
-        amount: PRICE_CENTS,
+        amount: priceCents,
+        tier: effectiveTier,
         retry_count: retryCount,
       });
     }
@@ -54,7 +64,7 @@ export function CheckoutButton({
     trackFBInitiateCheckout({
       resultId: uploadId,
       uploadId,
-      value: PRICE_CENTS / 100,
+      value: priceCents / 100,
       retryCount,
     });
 
@@ -71,7 +81,7 @@ export function CheckoutButton({
           "Content-Type": "application/json",
           "X-Session-Token": sessionToken,
         },
-        body: JSON.stringify({ uploadId, type: "self" }),
+        body: JSON.stringify({ uploadId, type: "self", tier: effectiveTier }),
       });
 
       if (!response.ok) {
@@ -85,7 +95,8 @@ export function CheckoutButton({
       if (isPostHogConfigured()) {
         posthog.capture("checkout_created", {
           uploadId,
-          amount: PRICE_CENTS,
+          amount: priceCents,
+          tier: effectiveTier,
         });
       }
 
@@ -112,7 +123,7 @@ export function CheckoutButton({
       onCheckoutError?.(error instanceof Error ? error.message : "Unable to start checkout");
       setIsLoading(false);
     }
-  }, [uploadId, isLoading, retryCount, onCheckoutStart, onCheckoutError]);
+  }, [uploadId, isLoading, retryCount, effectiveTier, priceCents, onCheckoutStart, onCheckoutError]);
 
   return (
     <Button
@@ -129,7 +140,7 @@ export function CheckoutButton({
           Processing...
         </>
       ) : (
-        `Get HD Version - ${PRICE_DISPLAY}`
+        `Get HD Version - ${priceDisplay}`
       )}
     </Button>
   );

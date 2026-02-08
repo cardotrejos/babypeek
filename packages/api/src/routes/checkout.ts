@@ -7,6 +7,7 @@ import { StripeServiceLive } from "../services/StripeService";
 import { UploadService, UploadServiceLive } from "../services/UploadService";
 import { NotFoundError, PaymentError, ValidationError } from "../lib/errors";
 import { rateLimitMiddleware } from "../middleware/rate-limit";
+import { VALID_TIER_IDS, DEFAULT_TIER_ID } from "../lib/pricing";
 
 // Composed layer: PurchaseService needs StripeService
 const CheckoutRoutesLive = PurchaseServiceLive.pipe(Layer.provide(StripeServiceLive));
@@ -20,6 +21,7 @@ app.use("*", rateLimitMiddleware());
 const checkoutSchema = z.object({
   uploadId: z.string().min(1, "Upload ID is required"),
   type: z.enum(["self", "gift"]).default("self"),
+  tier: z.enum(VALID_TIER_IDS).default(DEFAULT_TIER_ID),
 });
 
 /**
@@ -60,7 +62,7 @@ app.post("/", async (c) => {
     );
   }
 
-  const { uploadId, type } = parsed.data;
+  const { uploadId, type, tier } = parsed.data;
 
   // Verify session token matches upload before proceeding
   const verifyAndCheckout = Effect.fn("routes.checkout.verifyAndCreate")(function* () {
@@ -70,7 +72,7 @@ app.post("/", async (c) => {
     yield* uploadService.getByIdWithAuth(uploadId, sessionToken);
 
     const purchaseService = yield* PurchaseService;
-    return yield* purchaseService.createCheckout(uploadId, type);
+    return yield* purchaseService.createCheckout(uploadId, type, tier);
   });
 
   const program = verifyAndCheckout().pipe(
@@ -108,6 +110,7 @@ app.post("/", async (c) => {
 const giftCheckoutSchema = z.object({
   uploadId: z.string().min(1, "Upload ID is required"),
   purchaserEmail: z.string().email("Valid email is required"),
+  tier: z.enum(VALID_TIER_IDS).default(DEFAULT_TIER_ID),
 });
 
 /**
@@ -141,12 +144,12 @@ app.post("/gift", async (c) => {
     );
   }
 
-  const { uploadId, purchaserEmail } = parsed.data;
+  const { uploadId, purchaserEmail, tier } = parsed.data;
 
   // Create gift checkout (no auth - anyone can gift)
   const createGiftCheckout = Effect.fn("routes.checkout.createGift")(function* () {
     const purchaseService = yield* PurchaseService;
-    return yield* purchaseService.createGiftCheckout(uploadId, purchaserEmail);
+    return yield* purchaseService.createGiftCheckout(uploadId, purchaserEmail, tier);
   });
 
   const program = createGiftCheckout().pipe(Effect.provide(CheckoutRoutesLive));

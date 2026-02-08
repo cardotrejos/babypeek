@@ -2,6 +2,8 @@ import { useState, useEffect, useCallback } from "react";
 import { posthog, isPostHogConfigured } from "@/lib/posthog";
 import { cn } from "@/lib/utils";
 import { CheckoutButton } from "@/components/payment";
+import { PricingTiers } from "@/components/payment/PricingTiers";
+import type { TierId } from "@/lib/pricing";
 
 interface UpsellModalProps {
   /** Upload ID for analytics and checkout */
@@ -25,8 +27,8 @@ function formatTime(seconds: number): string {
  * UpsellModal Component
  *
  * Shown immediately after the first preview image is generated.
- * Creates urgency with a countdown timer and highlights the value
- * of upgrading to HD quality.
+ * Displays pricing tiers for the user to select from, with a
+ * countdown timer for urgency.
  *
  * Conversion Fix #3: Fast First Result + Immediate Upsell
  */
@@ -38,6 +40,8 @@ export function UpsellModal({
   className,
 }: UpsellModalProps) {
   const [timeLeft, setTimeLeft] = useState(600); // 10 minutes
+  const [selectedTier, setSelectedTier] = useState<TierId | null>(null);
+  const [isCheckingOut, setIsCheckingOut] = useState(false);
 
   useEffect(() => {
     if (isPostHogConfigured()) {
@@ -59,15 +63,32 @@ export function UpsellModal({
     return () => clearInterval(interval);
   }, [uploadId]);
 
+  const handleTierSelected = useCallback(
+    (tier: TierId) => {
+      setSelectedTier(tier);
+      setIsCheckingOut(true);
+
+      if (isPostHogConfigured()) {
+        posthog.capture("upsell_tier_selected", {
+          upload_id: uploadId,
+          tier,
+          time_remaining: timeLeft,
+        });
+      }
+    },
+    [uploadId, timeLeft],
+  );
+
   const handleCheckoutStarted = useCallback(() => {
     if (isPostHogConfigured()) {
       posthog.capture("upsell_buy_clicked", {
         upload_id: uploadId,
+        tier: selectedTier,
         time_remaining: timeLeft,
       });
     }
     onCheckoutStart?.();
-  }, [uploadId, timeLeft, onCheckoutStart]);
+  }, [uploadId, selectedTier, timeLeft, onCheckoutStart]);
 
   const handleDecline = useCallback(() => {
     if (isPostHogConfigured()) {
@@ -91,54 +112,54 @@ export function UpsellModal({
       <div className="p-6 space-y-5">
         {/* Header */}
         <div className="text-center">
-          <h2 className="font-display text-xl text-charcoal">Unlock All 4 HD Portraits</h2>
+          <h2 className="font-display text-xl text-charcoal">Unlock Your HD Portraits</h2>
           <p className="text-sm text-warm-gray mt-1">
-            This is 1 of 4 professional styles we created for you
+            Choose the package that's right for you
           </p>
         </div>
 
-        {/* Benefits */}
-        <ul className="space-y-2 text-sm">
-          <li className="flex items-center gap-2">
-            <span className="text-green-500 flex-shrink-0">&#10003;</span>
-            <span>3 additional professional styles</span>
-          </li>
-          <li className="flex items-center gap-2">
-            <span className="text-green-500 flex-shrink-0">&#10003;</span>
-            <span>Remove all watermarks</span>
-          </li>
-          <li className="flex items-center gap-2">
-            <span className="text-green-500 flex-shrink-0">&#10003;</span>
-            <span>HD quality - print ready</span>
-          </li>
-          <li className="flex items-center gap-2">
-            <span className="text-green-500 flex-shrink-0">&#10003;</span>
-            <span>Instant download + email delivery</span>
-          </li>
-          <li className="flex items-center gap-2">
-            <span className="text-green-500 flex-shrink-0">&#10003;</span>
-            <span>100% satisfaction guarantee</span>
-          </li>
-        </ul>
+        {/* Pricing tiers or checkout confirmation */}
+        {!selectedTier ? (
+          <PricingTiers
+            onSelect={handleTierSelected}
+            uploadId={uploadId}
+            disabled={isCheckingOut}
+          />
+        ) : (
+          <div className="space-y-3">
+            <CheckoutButton
+              uploadId={uploadId}
+              tier={selectedTier}
+              onCheckoutStart={handleCheckoutStarted}
+              onCheckoutError={(error) => {
+                setIsCheckingOut(false);
+                setSelectedTier(null);
+                onCheckoutError?.(error);
+              }}
+              className={cn(
+                "w-full py-6 rounded-xl text-lg font-bold text-white",
+                "bg-gradient-to-r from-coral to-pink-500",
+                "hover:opacity-90 active:scale-[0.98] transition-all",
+                "shadow-lg shadow-coral/25",
+              )}
+            />
+            <button
+              onClick={() => {
+                setSelectedTier(null);
+                setIsCheckingOut(false);
+              }}
+              className="w-full text-center text-sm text-warm-gray hover:text-charcoal transition-colors"
+            >
+              Change plan
+            </button>
+          </div>
+        )}
 
         {/* Social proof */}
         <div className="text-center text-xs text-warm-gray bg-cream/50 rounded-lg py-2 px-3">
           <span className="text-yellow-500">&#9733;&#9733;&#9733;&#9733;&#9733;</span> Loved by
           2,800+ parents
         </div>
-
-        {/* CTA: Starts Stripe checkout directly (no extra click) */}
-        <CheckoutButton
-          uploadId={uploadId}
-          onCheckoutStart={handleCheckoutStarted}
-          onCheckoutError={onCheckoutError}
-          className={cn(
-            "w-full py-6 rounded-xl text-lg font-bold text-white",
-            "bg-gradient-to-r from-coral to-pink-500",
-            "hover:opacity-90 active:scale-[0.98] transition-all",
-            "shadow-lg shadow-coral/25",
-          )}
-        />
 
         {/* Decline */}
         <button
