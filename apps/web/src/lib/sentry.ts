@@ -52,6 +52,13 @@ export function initSentry() {
       "Non-Error promise rejection captured",
       // Facebook In-App Browser injects scripts that throw regex errors
       "Invalid regular expression",
+      // Facebook In-App Browser native bridge errors (BABYPEEK-4, BABYPEEK-5)
+      // Android: Facebook's injected JS fails to invoke Java bridge postMessage
+      /Java bridge method invocation error/,
+      // iOS: Facebook's injected JS tries to access webkit.messageHandlers that don't exist
+      /evaluating 'window\.webkit\.messageHandlers\[.*\]\.postMessage'/,
+      // Generic postMessage bridge failures from in-app browsers
+      /Error invoking postMessage/,
       // Common third-party script errors
       "fb_xd_fragment",
       "instantSearchSDKJSBridgeClearHighlight",
