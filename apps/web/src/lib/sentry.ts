@@ -46,8 +46,25 @@ export function initSentry() {
       return event;
     },
 
-    // Ignore common browser errors
-    ignoreErrors: ["ResizeObserver loop limit exceeded", "Non-Error promise rejection captured"],
+    // Ignore common browser errors and third-party noise
+    ignoreErrors: [
+      "ResizeObserver loop limit exceeded",
+      "Non-Error promise rejection captured",
+      // Facebook In-App Browser injects scripts that throw regex errors
+      "Invalid regular expression",
+      // Common third-party script errors
+      "fb_xd_fragment",
+      "instantSearchSDKJSBridgeClearHighlight",
+    ],
+
+    // Ignore errors from third-party scripts (Facebook, analytics, etc.)
+    denyUrls: [
+      /connect\.facebook\.net/i,
+      /graph\.facebook\.com/i,
+      /extensions\//i,
+      /^chrome:\/\//i,
+      /^moz-extension:\/\//i,
+    ],
   });
 
   isInitialized = true;
