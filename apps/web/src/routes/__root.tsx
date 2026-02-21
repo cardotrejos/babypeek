@@ -6,6 +6,7 @@ import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 
 import { Toaster } from "@/components/ui/sonner";
 import { SessionRecoveryPrompt } from "@/components/session-recovery-prompt";
+import { OfflineBanner } from "@/components/offline-banner";
 
 export interface RouterAppContext {
   queryClient: QueryClient;
@@ -25,6 +26,7 @@ function RootDocument() {
       >
         Skip to main content
       </a>
+      <OfflineBanner />
       <Outlet />
       {/* Story 5.7: Session recovery prompt for mobile users */}
       <SessionRecoveryPrompt />

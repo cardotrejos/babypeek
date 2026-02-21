@@ -14,33 +14,39 @@ function initPostHog() {
     return;
   }
 
-  posthog.init(POSTHOG_KEY, {
-    api_host: POSTHOG_HOST,
-    capture_pageview: true,
-    capture_pageleave: true,
-    autocapture: true,
-    persistence: "localStorage",
-    // Respect Do Not Track
-    respect_dnt: true,
+  try {
+    posthog.init(POSTHOG_KEY, {
+      api_host: POSTHOG_HOST,
+      capture_pageview: true,
+      capture_pageleave: true,
+      autocapture: true,
+      persistence: "localStorage",
+      // Respect Do Not Track
+      respect_dnt: true,
 
-    // 🎥 SESSION RECORDINGS - See exactly where users drop off!
-    disable_session_recording: false,
-    session_recording: {
-      // Privacy: mask all form inputs (emails, etc.)
-      maskAllInputs: true,
-      // Record console logs for debugging
-      recordCrossOriginIframes: false,
-    },
+      // 🎥 SESSION RECORDINGS - See exactly where users drop off!
+      disable_session_recording: false,
+      session_recording: {
+        // Privacy: mask all form inputs (emails, etc.)
+        maskAllInputs: true,
+        // Record console logs for debugging
+        recordCrossOriginIframes: false,
+      },
 
-    // Disable in development if no key
-    loaded: () => {
-      if (import.meta.env.DEV) {
-        console.log("📊 PostHog initialized with session recordings");
-      }
-    },
-  });
+      // Disable in development if no key
+      loaded: () => {
+        if (import.meta.env.DEV) {
+          console.log("📊 PostHog initialized with session recordings");
+        }
+      },
+    });
 
-  isInitialized = true;
+    isInitialized = true;
+  } catch (error) {
+    if (import.meta.env.DEV) {
+      console.error("PostHog initialization failed:", error);
+    }
+  }
 }
 
 interface PostHogProviderProps {

@@ -274,7 +274,7 @@ export function useUpload(): UseUploadResult {
       const analyticsContext = getAnalyticsContext();
 
       // Check online status before starting
-      const currentlyOnline = checkStatus();
+      const currentlyOnline = await checkStatus();
       if (!currentlyOnline) {
         const offlineError = {
           type: "NETWORK" as const,
@@ -535,7 +535,7 @@ export function useUpload(): UseUploadResult {
         xhrRef.current = null;
       }
     },
-    [requestPresignedUrl, uploadToR2, confirmUpload, trackEvent, cleanupUpload],
+    [requestPresignedUrl, uploadToR2, confirmUpload, trackEvent, cleanupUpload, checkStatus],
   );
 
   /**
