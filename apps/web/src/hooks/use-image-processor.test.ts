@@ -217,7 +217,7 @@ describe("useImageProcessor", () => {
       expect(mockHeic2any).toHaveBeenCalledWith({
         blob: heicFile,
         toType: "image/jpeg",
-        quality: 0.9,
+        quality: 0.85,
       });
       expect(processResult!.wasConverted).toBe(true);
       expect(processResult!.file.type).toBe("image/jpeg");
@@ -304,7 +304,7 @@ describe("useImageProcessor", () => {
         largeJpegFile,
         expect.objectContaining({
           maxSizeMB: 2,
-          maxWidthOrHeight: 2048,
+          maxWidthOrHeight: 1920,
           useWebWorker: true,
         }),
       );
