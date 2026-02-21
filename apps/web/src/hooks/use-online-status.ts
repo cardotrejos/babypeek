@@ -5,7 +5,77 @@ import { API_BASE_URL } from "@/lib/api-config";
 const CONNECTIVITY_DEBOUNCE_MS = 750;
 const STATUS_FLAP_COOLDOWN_MS = 2500;
 const HEALTH_CHECK_TIMEOUT_MS = 3500;
+const HEALTH_CHECK_DEDUPE_WINDOW_MS = 2000;
 const HEALTH_CHECK_URL = `${API_BASE_URL}/api/health`;
+
+type SharedHealthCheckState = {
+  inFlightPromise: Promise<boolean> | null;
+  lastCheckedAt: number;
+  lastResult: boolean | null;
+  lastFetchRef: typeof fetch | null;
+};
+
+const sharedHealthCheckState: SharedHealthCheckState = {
+  inFlightPromise: null,
+  lastCheckedAt: 0,
+  lastResult: null,
+  lastFetchRef: null,
+};
+
+async function runSharedHealthCheck(useRecentResult: boolean = false): Promise<boolean> {
+  if (typeof window === "undefined") {
+    return true;
+  }
+
+  if (sharedHealthCheckState.inFlightPromise) {
+    return sharedHealthCheckState.inFlightPromise;
+  }
+
+  const now = Date.now();
+  const hasFreshResult =
+    useRecentResult &&
+    sharedHealthCheckState.lastResult !== null &&
+    now - sharedHealthCheckState.lastCheckedAt < HEALTH_CHECK_DEDUPE_WINDOW_MS &&
+    sharedHealthCheckState.lastFetchRef === fetch;
+
+  if (hasFreshResult) {
+    return sharedHealthCheckState.lastResult;
+  }
+
+  const fetchRef = fetch;
+  sharedHealthCheckState.lastFetchRef = fetchRef;
+
+  sharedHealthCheckState.inFlightPromise = (async () => {
+    const controller = new AbortController();
+    const timeoutId = window.setTimeout(() => {
+      controller.abort();
+    }, HEALTH_CHECK_TIMEOUT_MS);
+
+    let nextStatus = false;
+    try {
+      const response = await fetchRef(HEALTH_CHECK_URL, {
+        method: "GET",
+        cache: "no-store",
+        headers: {
+          "Cache-Control": "no-cache",
+        },
+        signal: controller.signal,
+      });
+
+      nextStatus = response.ok;
+      return nextStatus;
+    } catch {
+      return nextStatus;
+    } finally {
+      window.clearTimeout(timeoutId);
+      sharedHealthCheckState.lastCheckedAt = Date.now();
+      sharedHealthCheckState.lastResult = nextStatus;
+      sharedHealthCheckState.inFlightPromise = null;
+    }
+  })();
+
+  return sharedHealthCheckState.inFlightPromise;
+}
 
 /**
  * Hook to track the user's online/offline status.
@@ -27,7 +97,6 @@ export function useOnlineStatus() {
   const statusRef = useRef<boolean>(isOnline);
   const lastStatusChangeAtRef = useRef<number>(0);
   const debounceTimerRef = useRef<number | null>(null);
-  const healthCheckAbortRef = useRef<AbortController | null>(null);
 
   const setStatus = useCallback((nextStatus: boolean, respectCooldown: boolean = true) => {
     const now = Date.now();
@@ -50,46 +119,13 @@ export function useOnlineStatus() {
     setIsOnline(nextStatus);
   }, []);
 
-  const verifyConnectivity = useCallback(async (): Promise<boolean> => {
-    if (typeof window === "undefined") {
-      return true;
-    }
-
-    if (healthCheckAbortRef.current) {
-      healthCheckAbortRef.current.abort();
-    }
-
-    const controller = new AbortController();
-    healthCheckAbortRef.current = controller;
-
-    const timeoutId = window.setTimeout(() => {
-      controller.abort();
-    }, HEALTH_CHECK_TIMEOUT_MS);
-
-    try {
-      const response = await fetch(HEALTH_CHECK_URL, {
-        method: "GET",
-        cache: "no-store",
-        headers: {
-          "Cache-Control": "no-cache",
-        },
-        signal: controller.signal,
-      });
-
-      return response.ok;
-    } catch {
-      return false;
-    } finally {
-      window.clearTimeout(timeoutId);
-      if (healthCheckAbortRef.current === controller) {
-        healthCheckAbortRef.current = null;
-      }
-    }
+  const verifyConnectivity = useCallback(async (useRecentResult: boolean = false): Promise<boolean> => {
+    return runSharedHealthCheck(useRecentResult);
   }, []);
 
   // Force check the current status with a real connectivity probe
   const checkStatus = useCallback(async (): Promise<boolean> => {
-    const connected = await verifyConnectivity();
+    const connected = await verifyConnectivity(false);
     setStatus(connected, false);
     return connected;
   }, [setStatus, verifyConnectivity]);
@@ -104,7 +140,7 @@ export function useOnlineStatus() {
 
       debounceTimerRef.current = window.setTimeout(() => {
         void (async () => {
-          const connected = await verifyConnectivity();
+          const connected = await verifyConnectivity(false);
           setStatus(connected, true);
         })();
       }, CONNECTIVITY_DEBOUNCE_MS);
@@ -118,17 +154,13 @@ export function useOnlineStatus() {
 
     // Verify immediately on mount (skip cooldown for first truthy state sync)
     void (async () => {
-      const connected = await verifyConnectivity();
+      const connected = await verifyConnectivity(true);
       setStatus(connected, false);
     })();
 
     return () => {
       if (debounceTimerRef.current !== null) {
         window.clearTimeout(debounceTimerRef.current);
-      }
-
-      if (healthCheckAbortRef.current) {
-        healthCheckAbortRef.current.abort();
       }
 
       window.removeEventListener("online", handleOnline);
