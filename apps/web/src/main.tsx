@@ -18,21 +18,50 @@ function renderStartupFallback(
   description: string,
   buttonText: string = "Reload BabyPeek",
 ) {
-  rootElement.innerHTML = `
-    <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;background:#fdf8f5;font-family:'DM Sans',system-ui,-apple-system,sans-serif;color:#2f2f2f;text-align:center;">
-      <div style="max-width:420px;">
-        <h1 style="margin:0 0 12px 0;font-size:1.6rem;line-height:1.2;">${title}</h1>
-        <p style="margin:0 0 20px 0;font-size:1rem;line-height:1.5;color:#5b5b5b;">${description}</p>
-        <button
-          type="button"
-          onclick="window.location.reload()"
-          style="border:none;cursor:pointer;border-radius:12px;background:#f26d5b;color:white;padding:12px 18px;font-weight:600;"
-        >
-          ${buttonText}
-        </button>
-      </div>
-    </div>
-  `;
+  const wrapper = document.createElement("div");
+  wrapper.style.minHeight = "100vh";
+  wrapper.style.display = "flex";
+  wrapper.style.alignItems = "center";
+  wrapper.style.justifyContent = "center";
+  wrapper.style.padding = "24px";
+  wrapper.style.background = "#fdf8f5";
+  wrapper.style.fontFamily = '"DM Sans",system-ui,-apple-system,sans-serif';
+  wrapper.style.color = "#2f2f2f";
+  wrapper.style.textAlign = "center";
+
+  const container = document.createElement("div");
+  container.style.maxWidth = "420px";
+
+  const heading = document.createElement("h1");
+  heading.style.margin = "0 0 12px 0";
+  heading.style.fontSize = "1.6rem";
+  heading.style.lineHeight = "1.2";
+  heading.textContent = title;
+
+  const body = document.createElement("p");
+  body.style.margin = "0 0 20px 0";
+  body.style.fontSize = "1rem";
+  body.style.lineHeight = "1.5";
+  body.style.color = "#5b5b5b";
+  body.textContent = description;
+
+  const reloadButton = document.createElement("button");
+  reloadButton.type = "button";
+  reloadButton.style.border = "none";
+  reloadButton.style.cursor = "pointer";
+  reloadButton.style.borderRadius = "12px";
+  reloadButton.style.background = "#f26d5b";
+  reloadButton.style.color = "white";
+  reloadButton.style.padding = "12px 18px";
+  reloadButton.style.fontWeight = "600";
+  reloadButton.textContent = buttonText;
+  reloadButton.addEventListener("click", () => {
+    window.location.reload();
+  });
+
+  container.append(heading, body, reloadButton);
+  wrapper.appendChild(container);
+  rootElement.replaceChildren(wrapper);
 }
 
 function safeCapture(eventName: string, properties: Record<string, unknown>) {
