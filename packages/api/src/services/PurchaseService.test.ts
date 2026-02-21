@@ -115,6 +115,8 @@ describe("PurchaseService", () => {
         uploadId: "upload_123",
         email: "test@example.com",
         type: "self",
+        tier: "basic",
+        priceCents: 999,
         successUrl: "http://localhost:3001/checkout-success?session_id={CHECKOUT_SESSION_ID}",
         cancelUrl: "http://localhost:3001/preview/upload_123?cancelled=true",
       });
