@@ -3,10 +3,20 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 import { useUpload } from "./use-upload";
 
+const mockCheckStatus = vi.fn();
+
 // Mock analytics
 vi.mock("@/hooks/use-analytics", () => ({
   useAnalytics: () => ({
     trackEvent: vi.fn(),
+  }),
+}));
+
+// Mock online status hook so upload tests focus on upload behavior
+vi.mock("@/hooks/use-online-status", () => ({
+  useOnlineStatus: () => ({
+    isOnline: true,
+    checkStatus: mockCheckStatus,
   }),
 }));
 
@@ -98,6 +108,8 @@ describe("useUpload", () => {
     originalXMLHttpRequest = globalThis.XMLHttpRequest;
 
     vi.clearAllMocks();
+    mockCheckStatus.mockReset();
+    mockCheckStatus.mockResolvedValue(true);
   });
 
   afterEach(() => {
@@ -142,6 +154,55 @@ describe("useUpload", () => {
     await waitFor(() => {
       expect(result.current.state.status).toBe("requesting");
     });
+  });
+
+  it("should allow upload to succeed after connection is restored", async () => {
+    mockCheckStatus.mockResolvedValueOnce(false).mockResolvedValueOnce(true);
+
+    globalThis.fetch = vi
+      .fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve(mockPresignedResponse),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve(mockConfirmResponse),
+      });
+
+    class MockXHR {
+      upload = { onprogress: null };
+      onload: any = null;
+      onerror = null;
+      onabort = null;
+      ontimeout = null;
+      timeout = 0;
+      status = 200;
+      open = vi.fn();
+      setRequestHeader = vi.fn();
+      send = vi.fn().mockImplementation(function (this: any) {
+        setTimeout(() => {
+          if (this.onload) this.onload();
+        }, 10);
+      });
+      abort = vi.fn();
+    }
+    globalThis.XMLHttpRequest = MockXHR as any;
+
+    const { result } = renderHook(() => useUpload());
+    const file = createMockFile("test.jpg", "image/jpeg");
+
+    await act(async () => {
+      const firstAttempt = await result.current.startUpload(file, "test@example.com");
+      expect(firstAttempt).toBeNull();
+    });
+
+    await act(async () => {
+      const secondAttempt = await result.current.startUpload(file, "test@example.com");
+      expect(secondAttempt?.uploadId).toBe("test-upload-id");
+    });
+
+    expect(result.current.state.status).toBe("complete");
   });
 
   it("should transition to uploading state after getting presigned URL", async () => {

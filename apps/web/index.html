@@ -90,7 +90,55 @@
         src="https://www.facebook.com/tr?id=%VITE_FACEBOOK_PIXEL_ID%&ev=PageView&noscript=1"
       />
     </noscript>
-    <div id="root"></div>
+    <div id="root">
+      <style>
+        #root .app-loading-shell {
+          min-height: 100vh;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 24px;
+          background: linear-gradient(180deg, #fdf8f5 0%, #fffaf7 100%);
+          font-family: "DM Sans", system-ui, -apple-system, sans-serif;
+          color: #2f2f2f;
+          text-align: center;
+        }
+        #root .app-loading-card {
+          max-width: 360px;
+        }
+        #root .app-loading-spinner {
+          width: 40px;
+          height: 40px;
+          margin: 0 auto 16px;
+          border-radius: 999px;
+          border: 4px solid rgba(242, 109, 91, 0.2);
+          border-top-color: #f26d5b;
+          animation: app-loading-spin 0.9s linear infinite;
+        }
+        #root .app-loading-title {
+          margin: 0;
+          font-size: 1.125rem;
+          font-weight: 600;
+        }
+        #root .app-loading-subtitle {
+          margin: 8px 0 0;
+          font-size: 0.9375rem;
+          color: #5b5b5b;
+        }
+        @keyframes app-loading-spin {
+          to {
+            transform: rotate(360deg);
+          }
+        }
+      </style>
+      <div class="app-loading-shell" role="status" aria-live="polite">
+        <div class="app-loading-card">
+          <div class="app-loading-spinner" aria-hidden="true"></div>
+          <p class="app-loading-title">Loading BabyPeek...</p>
+          <p class="app-loading-subtitle">Getting your portrait experience ready.</p>
+        </div>
+      </div>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
