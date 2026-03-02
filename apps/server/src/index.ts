@@ -40,16 +40,6 @@ app.use(
   }),
 );
 
-app.use(
-  "/api/auth/*",
-  cors({
-    origin: process.env.WEB_URL || process.env.CORS_ORIGIN || "http://localhost:3001",
-    allowHeaders: ["Content-Type", "Authorization"],
-    allowMethods: ["POST", "GET", "OPTIONS"],
-    credentials: true,
-  }),
-);
-
 app.on(["POST", "GET"], "/api/auth/*", (c) => auth.handler(c.req.raw));
 
 // Routes

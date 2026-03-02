@@ -9,14 +9,13 @@ import { db, user as authUsers } from "@babypeek/db";
 import { R2Service, R2ServiceLive } from "../services/R2Service";
 import { UploadService, UploadServiceLive } from "../services/UploadService";
 import { R2Error } from "../lib/errors";
-import { requireAuth } from "../middleware/auth";
+import { auth } from "../lib/auth";
 import { rateLimit } from "../middleware/rateLimit";
 
 // Combined layer for upload routes
 const UploadRoutesLive = Layer.merge(R2ServiceLive, UploadServiceLive);
 
 const app = new Hono();
-
 
 // =============================================================================
 // Request Schemas
@@ -97,7 +96,28 @@ const handleR2Error = (error: R2Error) => {
  * - key: string - R2 object key
  * - expiresAt: string - ISO timestamp when URL expires
  */
-app.post("/", rateLimit({ limit: 10, windowMs: 60 * 60 * 1000 }), async (c) => {
+app.post(
+  "/",
+  rateLimit({
+    limit: 10,
+    windowMs: 60 * 60 * 1000,
+    keyGenerator: async (c) => {
+      const contentType = c.req.header("content-type") ?? "";
+      if (!contentType.includes("application/json")) return null;
+
+      const body = await c.req.raw.clone().json().catch(() => null);
+      const email =
+        body && typeof body === "object" && "email" in body
+          ? (body as { email?: unknown }).email
+          : null;
+
+      if (typeof email !== "string") return null;
+
+      const normalized = email.trim().toLowerCase();
+      return normalized ? `email:${normalized}` : null;
+    },
+  }),
+  async (c) => {
   // Parse and validate request body
   const body = await c.req.json().catch(() => ({}));
   const parsed = initiateUploadSchema.safeParse(body);
@@ -141,7 +161,7 @@ app.post("/", rateLimit({ limit: 10, windowMs: 60 * 60 * 1000 }), async (c) => {
           id: `usr_${createHash("md5").update(email).digest("hex").slice(0, 24)}`,
           name: email.split("@")[0] || "BabyPeek User",
           email,
-          emailVerified: true, // magic link IS the email verification
+          emailVerified: false,
         })
         .onConflictDoNothing();
 
@@ -212,7 +232,7 @@ app.post("/", rateLimit({ limit: 10, windowMs: 60 * 60 * 1000 }), async (c) => {
  * - jobId: string - Same as uploadId
  * - status: string - Current upload status
  */
-app.post("/:uploadId/confirm", requireAuth, async (c) => {
+app.post("/:uploadId/confirm", rateLimit({ limit: 20, windowMs: 60 * 60 * 1000 }), async (c) => {
   const uploadId = c.req.param("uploadId");
 
   if (!uploadId) {
@@ -298,7 +318,9 @@ app.post("/:uploadId/confirm", requireAuth, async (c) => {
  * DELETE /api/upload/:uploadId
  *
  * Clean up a partial/failed upload from R2 storage.
- * Requires authenticated ownership of the upload.
+ * Authentication is optional:
+ * - Authenticated users can clean up their own uploads.
+ * - Unauthenticated users can clean up pending uploads (pre-auth flow only).
  * Handles "not found" gracefully (idempotent).
  *
  * Path params:
@@ -307,20 +329,32 @@ app.post("/:uploadId/confirm", requireAuth, async (c) => {
  * Response:
  * - success: boolean
  */
-app.delete("/:uploadId", requireAuth, async (c) => {
+app.delete("/:uploadId", async (c) => {
   const uploadId = c.req.param("uploadId");
-  const user = c.get("user") as { id: string };
-
-  if (!user?.id) {
-    return c.json({ error: "Authentication required", code: "UNAUTHENTICATED" }, 401);
-  }
 
   const cleanupUpload = Effect.gen(function* () {
     const uploadService = yield* UploadService;
     const r2 = yield* R2Service;
 
-    // Verify upload ownership before cleanup.
-    yield* uploadService.getByIdWithAuth(uploadId, user.id);
+    // Resolve upload first so we can enforce ownership/status checks.
+    const upload = yield* uploadService.getById(uploadId);
+
+    const cookieHeader = c.req.header("cookie") ?? "";
+    const hasSessionCookie = cookieHeader.includes("better-auth.session_token");
+
+    const session = hasSessionCookie
+      ? yield* Effect.promise(() =>
+          auth.api.getSession({ headers: c.req.raw.headers }).catch(() => null),
+        )
+      : null;
+
+    if (session?.user?.id) {
+      if (upload.userId !== session.user.id) {
+        return yield* Effect.fail({ _tag: "UnauthorizedError" as const });
+      }
+    } else if (upload.status !== "pending") {
+      return yield* Effect.fail({ _tag: "UnauthorizedError" as const });
+    }
 
     // Delete all files with the upload prefix (uploads/{uploadId}/)
     // This cleans up original, processed, and any temporary files
@@ -346,6 +380,14 @@ app.delete("/:uploadId", requireAuth, async (c) => {
       (error as { _tag?: string })._tag === "NotFoundError"
     ) {
       return c.json({ error: "Upload not found", code: "NOT_FOUND" }, 404);
+    }
+    if (
+      error &&
+      typeof error === "object" &&
+      "_tag" in error &&
+      (error as { _tag?: string })._tag === "UnauthorizedError"
+    ) {
+      return c.json({ error: "Authentication required", code: "UNAUTHENTICATED" }, 401);
     }
     // Check for R2 config error
     if (

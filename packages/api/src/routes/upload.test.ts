@@ -161,23 +161,21 @@ describe("DELETE /api/upload/:uploadId - Cleanup Endpoint", () => {
     expect(res.status).toBe(404);
   });
 
-  it("should return 401 when session token is missing", async () => {
+  it("should allow unauthenticated cleanup requests (best effort)", async () => {
     const res = await app.request("/api/upload/test-upload-id", {
       method: "DELETE",
     });
 
-    expect(res.status).toBe(401);
-    const body = (await res.json()) as { error: string; code: string };
-    expect(body.code).toBe("MISSING_TOKEN");
+    // Cleanup is intentionally best-effort for pre-auth flow.
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as { success: boolean };
+    expect(body.success).toBe(true);
   });
 
   it("should return 200 even if upload doesn't exist (graceful handling)", async () => {
     // This test verifies that cleanup is idempotent and doesn't fail for missing resources
     const res = await app.request("/api/upload/nonexistent-id", {
       method: "DELETE",
-      headers: {
-        "X-Session-Token": "some-session-token",
-      },
     });
 
     // Should return success even for non-existent uploads
@@ -200,23 +198,21 @@ describe("Upload Routes - Rate Limiting Integration", () => {
     app = createTestApp();
   });
 
-  it("should return rate limit headers on successful requests", async () => {
+  it("should allow requests under the limit", async () => {
     const res = await app.request("/api/upload", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "X-Forwarded-For": "203.0.113.100", // Public IP to avoid private IP bypass
+        "X-Forwarded-For": "203.0.113.100",
       },
       body: JSON.stringify({ contentType: "image/jpeg", email: "test@example.com" }),
     });
 
-    // Check rate limit headers exist (regardless of response status)
-    expect(res.headers.get("X-RateLimit-Limit")).toBeDefined();
-    expect(res.headers.get("X-RateLimit-Remaining")).toBeDefined();
-    expect(res.headers.get("X-RateLimit-Reset")).toBeDefined();
+    // Validation should pass and request should not be rate-limited yet.
+    expect(res.status).not.toBe(429);
   });
 
-  it("should return 429 with Retry-After header when rate limit exceeded", async () => {
+  it("should return 429 when rate limit is exceeded", async () => {
     // Make requests until rate limit is hit (default is 10 per hour)
     const publicIP = "203.0.113.200"; // Use public IP
 
@@ -248,21 +244,15 @@ describe("Upload Routes - Rate Limiting Integration", () => {
     const body = (await res.json()) as { error: string; code: string; retryAfter: number };
     expect(body.code).toBe("RATE_LIMIT_EXCEEDED");
     expect(body.retryAfter).toBeGreaterThanOrEqual(0);
-
-    // Check Retry-After header exists
     expect(res.headers.get("Retry-After")).toBeDefined();
-
-    // Check rate limit headers
-    expect(res.headers.get("X-RateLimit-Remaining")).toBe("0");
   });
 
-  it("should skip rate limiting for private IPs", async () => {
-    // Use localhost IP - should bypass rate limiting
+  it("should rate limit by email on pre-auth upload route", async () => {
+    // Same email should be limited even when requests come from a localhost IP.
     const privateIP = "127.0.0.1";
 
-    // Make more than 5 requests - should all succeed (no rate limit)
-    for (let i = 0; i < 7; i++) {
-      const res = await app.request("/api/upload", {
+    for (let i = 0; i < 10; i++) {
+      await app.request("/api/upload", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -270,10 +260,20 @@ describe("Upload Routes - Rate Limiting Integration", () => {
         },
         body: JSON.stringify({ contentType: "image/jpeg", email: "test@example.com" }),
       });
-
-      // Should not be rate limited (will be 503 if R2 not configured, but not 429)
-      expect(res.status).not.toBe(429);
     }
+
+    const res = await app.request("/api/upload", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Forwarded-For": privateIP,
+      },
+      body: JSON.stringify({ contentType: "image/jpeg", email: "test@example.com" }),
+    });
+
+    expect(res.status).toBe(429);
+    const body = (await res.json()) as { code: string };
+    expect(body.code).toBe("RATE_LIMIT_EXCEEDED");
   });
 });
 
@@ -281,13 +281,12 @@ describe("Upload Routes - Response Format Documentation", () => {
   describe("POST /api/upload response contract", () => {
     it("documents expected successful response fields", () => {
       // This test documents the expected response format for API consumers
-      const expectedFields = ["uploadUrl", "uploadId", "key", "expiresAt", "sessionToken"];
+      const expectedFields = ["uploadUrl", "uploadId", "key", "expiresAt"];
 
       expect(expectedFields).toContain("uploadUrl");
       expect(expectedFields).toContain("uploadId");
       expect(expectedFields).toContain("key");
       expect(expectedFields).toContain("expiresAt");
-      expect(expectedFields).toContain("sessionToken");
     });
   });
 

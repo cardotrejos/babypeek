@@ -158,6 +158,8 @@ export const env = parsed.success
       STRIPE_PRICE_ID_PRO: undefined,
       RESEND_API_KEY: undefined,
       BETTER_AUTH_SECRET: undefined,
+      UPSTASH_REDIS_REST_URL: undefined,
+      UPSTASH_REDIS_REST_TOKEN: undefined,
       BETTER_AUTH_URL: undefined,
       POSTHOG_KEY: undefined,
       SENTRY_DSN: undefined,
@@ -190,7 +192,7 @@ export const isStripeConfigured = () => {
 
 /** Check if Better Auth is configured */
 export const isBetterAuthConfigured = () => {
-  return !!env.BETTER_AUTH_SECRET;
+  return !!(env.BETTER_AUTH_SECRET && env.BETTER_AUTH_URL);
 };
 
 /** Check if PostHog analytics is configured */
@@ -245,7 +247,7 @@ export const checkProductionConfig = () => {
   if (!isStripeConfigured()) missing.push("Stripe Payments");
   if (!isResendConfigured()) missing.push("Resend Email");
   if (!isGeminiConfigured()) missing.push("Gemini AI");
-  if (!isBetterAuthConfigured()) missing.push("Better Auth Secret");
+  if (!isBetterAuthConfigured()) missing.push("Better Auth Secret/URL");
 
   if (env.NODE_ENV === "production" && missing.length > 0) {
     throw new Error(`❌ Missing production configuration: ${missing.join(", ")}`);
