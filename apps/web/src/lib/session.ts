@@ -99,7 +99,7 @@ export function hasSession(jobId: string): boolean {
 export function getSessionHeader(jobId: string): Record<string, string> | null {
   const token = getSession(jobId);
   if (!token) return null;
-  return { Authorization: `Bearer ${token}` };
+  return { "X-Session-Token": token };
 }
 
 // =============================================================================

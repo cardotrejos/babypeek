@@ -7,6 +7,7 @@ import { db } from "@babypeek/db";
 import { env } from "./env";
 
 const MAGIC_LINK_EXPIRATION_SECONDS = 5 * 60;
+const DEV_AUTH_BASE_URL = "http://localhost:3000";
 
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
@@ -26,8 +27,8 @@ export const auth = betterAuth({
           "BETTER_AUTH_URL is required in production (must point to the API server, not the web app)"
         );
       }
-      // In dev, default to APP_URL (assumes API and web run on same origin)
-      return env.APP_URL;
+      // In development, Better Auth must point to the API server where /api/auth/* is mounted.
+      return DEV_AUTH_BASE_URL;
     }
     return env.BETTER_AUTH_URL;
   })(),
