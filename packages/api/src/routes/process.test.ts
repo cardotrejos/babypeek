@@ -2,7 +2,6 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 import { Hono } from "hono";
 
 import processRoutes from "./process";
-import { clearRateLimitStore } from "../services/RateLimitService";
 
 // =============================================================================
 // Mocks
@@ -79,7 +78,6 @@ describe("Process Routes - Request Validation", () => {
   let app: Hono;
 
   beforeEach(() => {
-    clearRateLimitStore();
     app = createTestApp();
     vi.clearAllMocks();
   });

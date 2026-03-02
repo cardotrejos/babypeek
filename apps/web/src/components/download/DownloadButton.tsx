@@ -19,7 +19,6 @@ import { API_BASE_URL } from "@/lib/api-config";
 
 interface DownloadButtonProps {
   uploadId: string;
-  sessionToken: string;
   /** Result ID for analytics tracking (Story 7.3 AC-5) */
   resultId?: string;
   onSuccess?: () => void;
@@ -31,7 +30,6 @@ type DownloadState = "idle" | "fetching" | "downloading" | "success" | "error";
 
 export function DownloadButton({
   uploadId,
-  sessionToken,
   resultId,
   onSuccess,
   onError,
@@ -56,8 +54,8 @@ export function DownloadButton({
       const response = await fetch(`${API_BASE_URL}/api/download/${uploadId}`, {
         headers: {
           "Content-Type": "application/json",
-          "X-Session-Token": sessionToken,
         },
+        credentials: "include",
       });
 
       if (!response.ok) {
@@ -116,7 +114,7 @@ export function DownloadButton({
       onError?.(errorMessage);
       // Keep error state - user must click again to retry (better UX)
     }
-  }, [uploadId, sessionToken, resultId, onSuccess, onError]);
+  }, [uploadId, resultId, onSuccess, onError]);
 
   const buttonContent = {
     idle: (

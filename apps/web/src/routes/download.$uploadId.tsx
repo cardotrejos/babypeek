@@ -1,6 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { getSession } from "@/lib/session";
 import { DownloadButton, DownloadExpired } from "@/components/download";
 import { API_BASE_URL } from "@/lib/api-config";
 import { posthog, isPostHogConfigured } from "@/lib/posthog";
@@ -35,27 +34,14 @@ interface DownloadStatus {
 function DownloadPage() {
   const { uploadId } = Route.useParams();
   const navigate = useNavigate();
-  const sessionToken = getSession(uploadId);
 
   // Check download eligibility
   const { data, isLoading, error } = useQuery<DownloadStatus>({
     queryKey: ["download-status", uploadId],
     queryFn: async () => {
-      if (!sessionToken) {
-        return {
-          canDownload: false,
-          isExpired: false,
-          expiresAt: null,
-          daysRemaining: null,
-          error: { code: "SESSION_NOT_FOUND", message: "Session not found" },
-        };
-      }
-
       const response = await fetch(`${API_BASE_URL}/api/download/${uploadId}/status`, {
-        headers: {
-          "Content-Type": "application/json",
-          "X-Session-Token": sessionToken,
-        },
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
       });
 
       const result = await response.json();
@@ -69,7 +55,7 @@ function DownloadPage() {
 
       return result;
     },
-    enabled: !!sessionToken,
+    enabled: true,
     staleTime: 30 * 1000, // 30 seconds
     retry: 1,
   });
@@ -79,32 +65,6 @@ function DownloadPage() {
     return (
       <div className="min-h-screen bg-cream flex items-center justify-center">
         <div className="size-12 animate-spin rounded-full border-4 border-coral border-t-transparent" />
-      </div>
-    );
-  }
-
-  // No session - user may have come from a different device
-  if (!sessionToken) {
-    return (
-      <div className="min-h-screen bg-cream flex items-center justify-center p-4">
-        <div className="max-w-md text-center space-y-4">
-          <div className="flex justify-center">
-            <div className="size-16 rounded-full bg-warm-gray/10 flex items-center justify-center">
-              <span className="text-3xl">🔒</span>
-            </div>
-          </div>
-          <h1 className="font-display text-2xl text-charcoal">Session Not Found</h1>
-          <p className="text-warm-gray">
-            We couldn't find your download session. This usually happens if you're on a different
-            device. Try accessing the link from your email.
-          </p>
-          <button
-            onClick={() => navigate({ to: "/" })}
-            className="px-6 py-3 bg-coral text-white rounded-lg hover:bg-coral/90 transition-colors"
-          >
-            Create New Portrait
-          </button>
-        </div>
       </div>
     );
   }
@@ -159,7 +119,6 @@ function DownloadPage() {
         {/* Download button - AC-4: Fresh URL generated each click */}
         <DownloadButton
           uploadId={uploadId}
-          sessionToken={sessionToken}
           onSuccess={() => {
             // AC-5: Track re-download completion with is_redownload flag
             if (isPostHogConfigured()) {

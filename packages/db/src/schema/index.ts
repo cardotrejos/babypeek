@@ -1,5 +1,8 @@
-import { pgTable, text, timestamp, integer, boolean } from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp, integer, boolean, index } from "drizzle-orm/pg-core";
 import { createId } from "@paralleldrive/cuid2";
+import { user } from "./auth-schema";
+
+export * from "./auth-schema";
 
 // Upload status enum values
 export const uploadStatusValues = ["pending", "processing", "completed", "failed"] as const;
@@ -28,33 +31,42 @@ export type PurchaseStatus = (typeof purchaseStatusValues)[number];
 /**
  * Uploads table - tracks ultrasound uploads and AI processing
  */
-export const uploads = pgTable("uploads", {
-  id: text("id")
-    .primaryKey()
-    .$defaultFn(() => createId()),
+export const uploads = pgTable(
+  "uploads",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => createId()),
 
-  // User identification (no auth, just email + session)
-  email: text("email").notNull(),
-  sessionToken: text("session_token").notNull().unique(),
+    // User identity from Better Auth
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id),
+    // Keep email denormalized for convenience and analytics
+    email: text("email").notNull(),
 
-  // Image URLs (R2 signed URLs)
-  originalUrl: text("original_url").notNull(),
-  resultUrl: text("result_url"),
-  previewUrl: text("preview_url"),
+    // Image URLs (R2 signed URLs)
+    originalUrl: text("original_url").notNull(),
+    resultUrl: text("result_url"),
+    previewUrl: text("preview_url"),
 
-  // Processing status
-  status: text("status", { enum: uploadStatusValues }).default("pending").notNull(),
-  stage: text("stage", { enum: uploadStageValues }), // Processing stage for progress UI
-  progress: integer("progress").default(0), // Progress percentage 0-100
-  workflowRunId: text("workflow_run_id"), // useworkflow.dev run ID
-  promptVersion: text("prompt_version", { enum: promptVersionValues }), // Which prompt version was used
-  errorMessage: text("error_message"),
+    // Processing status
+    status: text("status", { enum: uploadStatusValues }).default("pending").notNull(),
+    stage: text("stage", { enum: uploadStageValues }), // Processing stage for progress UI
+    progress: integer("progress").default(0), // Progress percentage 0-100
+    workflowRunId: text("workflow_run_id"), // useworkflow.dev run ID
+    promptVersion: text("prompt_version", { enum: promptVersionValues }), // Which prompt version was used
+    errorMessage: text("error_message"),
 
-  // Timestamps
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
-  expiresAt: timestamp("expires_at"), // For auto-deletion (30 days)
-});
+    // Timestamps
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+    expiresAt: timestamp("expires_at"), // For auto-deletion (30 days)
+  },
+  (table) => ({
+    userIdIdx: index("uploads_user_id_idx").on(table.userId),
+  }),
+);
 
 /**
  * Purchases table - tracks Stripe payments

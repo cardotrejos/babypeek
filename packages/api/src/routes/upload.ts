@@ -2,23 +2,19 @@ import { Hono } from "hono";
 import { Effect, Layer } from "effect";
 import { createId } from "@paralleldrive/cuid2";
 import { z } from "zod";
+import { eq } from "drizzle-orm";
 
+import { db, user as authUsers } from "@babypeek/db";
 import { R2Service, R2ServiceLive } from "../services/R2Service";
 import { UploadService, UploadServiceLive } from "../services/UploadService";
 import { R2Error } from "../lib/errors";
-import { rateLimitMiddleware } from "../middleware/rate-limit";
+import { requireAuth } from "../middleware/auth";
 
 // Combined layer for upload routes
 const UploadRoutesLive = Layer.merge(R2ServiceLive, UploadServiceLive);
 
 const app = new Hono();
 
-// =============================================================================
-// Rate Limiting Middleware
-// =============================================================================
-
-// Apply rate limiting to all upload routes
-app.use("*", rateLimitMiddleware());
 
 // =============================================================================
 // Request Schemas
@@ -121,9 +117,6 @@ app.post("/", async (c) => {
   const extension = getExtensionFromContentType(contentType);
   const key = `uploads/${uploadId}/original.${extension}`;
 
-  // Generate session token for this upload
-  const sessionToken = crypto.randomUUID();
-
   const initiateUpload = Effect.fn("routes.upload.initiate")(function* () {
     const r2 = yield* R2Service;
     const uploadService = yield* UploadService;
@@ -131,12 +124,42 @@ app.post("/", async (c) => {
     // Generate presigned URL
     const presignedResult = yield* r2.generatePresignedUploadUrl(key, contentType);
 
+    // Ensure an auth user exists for this email so upload ownership can
+    // transition to authenticated userId checks after magic-link sign-in.
+    const authUser = yield* Effect.promise(async () => {
+      const existing = await db.query.user.findFirst({
+        where: eq(authUsers.email, email),
+      });
+
+      if (existing) return existing;
+
+      await db
+        .insert(authUsers)
+        .values({
+          id: createId(),
+          name: email.split("@")[0] || "BabyPeek User",
+          email,
+          emailVerified: false,
+        })
+        .onConflictDoNothing();
+
+      const created = await db.query.user.findFirst({
+        where: eq(authUsers.email, email),
+      });
+
+      if (!created) {
+        throw new Error("Failed to create auth user");
+      }
+
+      return created;
+    });
+
     // Create database record with pending status
     // Pass uploadId to ensure DB ID matches R2 key
     const upload = yield* uploadService.create({
       id: uploadId,
+      userId: authUser.id,
       email,
-      sessionToken,
       originalUrl: key, // Store R2 key, not full URL
     });
 
@@ -160,13 +183,12 @@ app.post("/", async (c) => {
     return c.json({ error: "Failed to create upload record", code: "DB_ERROR" }, 500);
   }
 
-  // Return upload details including session token
+  // Return upload details (auth will happen through magic-link cookies)
   return c.json({
     uploadUrl: result.right.presignedResult.url,
     uploadId: result.right.upload.id,
     key,
     expiresAt: result.right.presignedResult.expiresAt.toISOString(),
-    sessionToken, // NEW: For authenticated access
   });
 });
 
@@ -274,29 +296,29 @@ app.post("/:uploadId/confirm", async (c) => {
  * DELETE /api/upload/:uploadId
  *
  * Clean up a partial/failed upload from R2 storage.
- * Requires session token for authorization.
+ * Requires authenticated ownership of the upload.
  * Handles "not found" gracefully (idempotent).
  *
  * Path params:
  * - uploadId: string - The upload ID to clean up
  *
- * Headers:
- * - X-Session-Token: string - Session token for authorization
- *
  * Response:
  * - success: boolean
  */
-app.delete("/:uploadId", async (c) => {
+app.delete("/:uploadId", requireAuth, async (c) => {
   const uploadId = c.req.param("uploadId");
-  const sessionToken = c.req.header("X-Session-Token");
+  const user = c.get("user") as { id: string };
 
-  // Require session token
-  if (!sessionToken) {
-    return c.json({ error: "Session token is required", code: "MISSING_TOKEN" }, 401);
+  if (!user?.id) {
+    return c.json({ error: "Authentication required", code: "UNAUTHENTICATED" }, 401);
   }
 
   const cleanupUpload = Effect.gen(function* () {
+    const uploadService = yield* UploadService;
     const r2 = yield* R2Service;
+
+    // Verify upload ownership before cleanup.
+    yield* uploadService.getByIdWithAuth(uploadId, user.id);
 
     // Delete all files with the upload prefix (uploads/{uploadId}/)
     // This cleans up original, processed, and any temporary files
@@ -309,13 +331,20 @@ app.delete("/:uploadId", async (c) => {
     return { success: true, deletedCount };
   });
 
-  // Run with R2 service layer
-  const program = cleanupUpload.pipe(Effect.provide(R2ServiceLive));
+  const program = cleanupUpload.pipe(Effect.provide(UploadRoutesLive));
 
   try {
     await Effect.runPromise(program);
     return c.json({ success: true });
   } catch (error: unknown) {
+    if (
+      error &&
+      typeof error === "object" &&
+      "_tag" in error &&
+      (error as { _tag?: string })._tag === "NotFoundError"
+    ) {
+      return c.json({ error: "Upload not found", code: "NOT_FOUND" }, 404);
+    }
     // Check for R2 config error
     if (
       error &&

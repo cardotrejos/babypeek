@@ -56,6 +56,12 @@ const envSchema = z.object({
   RESEND_API_KEY: z.string().startsWith("re_", "RESEND_API_KEY must start with 're_'").optional(),
 
   // ─────────────────────────────────────────────────────────────────────────────
+  // Better Auth (Magic Link Authentication)
+  // ─────────────────────────────────────────────────────────────────────────────
+  BETTER_AUTH_SECRET: z.string().min(1, "BETTER_AUTH_SECRET cannot be empty").optional(),
+  BETTER_AUTH_URL: z.string().url("BETTER_AUTH_URL must be a valid URL").optional(),
+
+  // ─────────────────────────────────────────────────────────────────────────────
   // PostHog Analytics (Optional)
   // ─────────────────────────────────────────────────────────────────────────────
   POSTHOG_KEY: z.string().min(1, "POSTHOG_KEY cannot be empty").optional(),
@@ -69,6 +75,7 @@ const envSchema = z.object({
   // CORS Configuration
   // ─────────────────────────────────────────────────────────────────────────────
   CORS_ORIGIN: z.string().url("CORS_ORIGIN must be a valid URL").optional(),
+  WEB_URL: z.string().url("WEB_URL must be a valid URL").optional(),
 
   // ─────────────────────────────────────────────────────────────────────────────
   // Application Config
@@ -144,8 +151,11 @@ export const env = parsed.success
       STRIPE_PRICE_ID_PLUS: undefined,
       STRIPE_PRICE_ID_PRO: undefined,
       RESEND_API_KEY: undefined,
+      BETTER_AUTH_SECRET: undefined,
+      BETTER_AUTH_URL: undefined,
       POSTHOG_KEY: undefined,
       SENTRY_DSN: undefined,
+      WEB_URL: undefined,
       IP_HASH_SALT: undefined,
       CRON_SECRET: undefined,
     };

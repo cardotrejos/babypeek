@@ -8,6 +8,7 @@ import { initSentry, sentryMiddleware, captureException } from "./lib/sentry";
 initSentry();
 
 import {
+  auth,
   healthRoutes,
   storageRoutes,
   uploadRoutes,
@@ -32,11 +33,24 @@ app.use(logger());
 app.use(
   "/*",
   cors({
-    origin: process.env.CORS_ORIGIN || "http://localhost:3001",
+    origin: process.env.WEB_URL || process.env.CORS_ORIGIN || "http://localhost:3001",
     allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowHeaders: ["Content-Type", "X-Session-Token"],
+    allowHeaders: ["Content-Type", "Authorization"],
+    credentials: true,
   }),
 );
+
+app.use(
+  "/api/auth/*",
+  cors({
+    origin: process.env.WEB_URL || process.env.CORS_ORIGIN || "http://localhost:3001",
+    allowHeaders: ["Content-Type", "Authorization"],
+    allowMethods: ["POST", "GET", "OPTIONS"],
+    credentials: true,
+  }),
+);
+
+app.on(["POST", "GET"], "/api/auth/*", (c) => auth.handler(c.req.raw));
 
 // Routes
 app.route("/api/health", healthRoutes);

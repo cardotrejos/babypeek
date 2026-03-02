@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState, useEffect, useCallback, useRef } from "react";
 import { z } from "zod";
-import { getSession, hasSession, updateJobStatus, updateJobResult } from "@/lib/session";
+import { updateJobStatus, updateJobResult } from "@/lib/session";
 import { posthog, isPostHogConfigured } from "@/lib/posthog";
 import { useStatus } from "@/hooks/use-status";
 import { usePreloadImage } from "@/hooks/use-preload-image";
@@ -9,6 +9,7 @@ import { useVisibilityChange } from "@/hooks/use-visibility-change";
 import { useTabCoordinator } from "@/hooks/use-tab-coordinator";
 import { ProcessingScreen } from "@/components/processing";
 import { API_BASE_URL } from "@/lib/api-config";
+import { useSession } from "@/lib/auth-client";
 
 /**
  * Processing Page
@@ -61,6 +62,7 @@ function ProcessingPage() {
   const { jobId } = Route.useParams();
   const { prompts: showPromptSelector, promptVersion: urlPromptVersion } = Route.useSearch();
   const navigate = useNavigate();
+  const { data: authSession, isPending: isAuthLoading } = useSession();
 
   const [state, setState] = useState<ProcessingState>("idle");
   const [error, setError] = useState<ProcessingError | null>(null);
@@ -269,22 +271,14 @@ function ProcessingPage() {
   }, [isFailed, polledErrorMessage, jobId]);
 
   const startProcessing = useCallback(async () => {
-    // Check if we have a session for this job
-    if (!hasSession(jobId)) {
-      setError({
-        message: "Session not found. Please start a new upload.",
-        code: "SESSION_NOT_FOUND",
-        canRetry: false,
-      });
-      setState("error");
+    if (isAuthLoading) {
       return;
     }
 
-    const sessionToken = getSession(jobId);
-    if (!sessionToken) {
+    if (!authSession?.user) {
       setError({
-        message: "Invalid session. Please start a new upload.",
-        code: "INVALID_SESSION",
+        message: "Please authenticate via your magic link to continue.",
+        code: "UNAUTHENTICATED",
         canRetry: false,
       });
       setState("error");
@@ -300,8 +294,8 @@ function ProcessingPage() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "X-Session-Token": sessionToken,
         },
+        credentials: "include",
         body: JSON.stringify({
           uploadId: jobId,
           promptVersion: promptVersionToUse,
@@ -365,7 +359,7 @@ function ProcessingPage() {
       });
       setState("error");
     }
-  }, [jobId, selectedPrompt, urlPromptVersion]);
+  }, [jobId, selectedPrompt, urlPromptVersion, authSession?.user, isAuthLoading]);
 
   // Start processing on mount (auto-start in prod, manual in dev for testing)
   const [devManualStart, setDevManualStart] = useState(false);
@@ -381,11 +375,10 @@ function ProcessingPage() {
 
   // Handle retry by calling the retry endpoint first, then restarting processing
   const handleRetry = async () => {
-    const sessionToken = getSession(jobId);
-    if (!sessionToken) {
+    if (!authSession?.user) {
       setError({
-        message: "Session expired. Please start a new upload.",
-        code: "SESSION_EXPIRED",
+        message: "Please authenticate via your magic link to retry.",
+        code: "UNAUTHENTICATED",
         canRetry: false,
       });
       setState("error");
@@ -405,9 +398,7 @@ function ProcessingPage() {
       // First, reset the job state via retry endpoint
       const retryResponse = await fetch(`${API_BASE_URL}/api/retry/${jobId}`, {
         method: "POST",
-        headers: {
-          "X-Session-Token": sessionToken,
-        },
+        credentials: "include",
       });
 
       if (!retryResponse.ok) {

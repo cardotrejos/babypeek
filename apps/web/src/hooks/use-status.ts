@@ -3,7 +3,6 @@ import { useCallback, useEffect, useRef } from "react";
 
 import { useAnalytics } from "@/hooks/use-analytics";
 import { API_BASE_URL } from "@/lib/api-config";
-import { getSession } from "@/lib/session";
 
 // =============================================================================
 // Types
@@ -116,8 +115,6 @@ const POLL_SAMPLE_RATE = 10;
  * ```
  */
 export function useStatus(jobId: string | null): UseStatusResult {
-  // Get session token from localStorage
-  const sessionToken = jobId ? getSession(jobId) : null;
   const { trackEvent } = useAnalytics();
 
   // Track when polling started for duration calculation
@@ -133,14 +130,12 @@ export function useStatus(jobId: string | null): UseStatusResult {
   const { data, isLoading, error, isFetching, refetch } = useQuery<StatusApiResponse>({
     queryKey: ["status", jobId],
     queryFn: async (): Promise<StatusApiResponse> => {
-      if (!jobId || !sessionToken) {
-        throw new Error("Missing job ID or session");
+      if (!jobId) {
+        throw new Error("Missing job ID");
       }
 
       const response = await fetch(`${API_BASE_URL}/api/status/${jobId}`, {
-        headers: {
-          "X-Session-Token": sessionToken,
-        },
+        credentials: "include",
       });
 
       if (!response.ok) {
@@ -153,8 +148,7 @@ export function useStatus(jobId: string | null): UseStatusResult {
       return response.json();
     },
 
-    // Only enable when we have both jobId and sessionToken
-    enabled: Boolean(jobId) && Boolean(sessionToken),
+    enabled: Boolean(jobId),
 
     // Poll every 2.5 seconds until complete or failed
     refetchInterval: (query) => {

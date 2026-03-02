@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { GiftCheckoutButton } from "./GiftCheckoutButton";
 
@@ -20,7 +20,6 @@ const mockFetch = vi.fn();
 global.fetch = mockFetch;
 
 // Mock window.location
-const mockLocationHref = vi.fn();
 Object.defineProperty(window, "location", {
   value: { href: "" },
   writable: true,

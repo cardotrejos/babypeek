@@ -2,7 +2,6 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 import { Hono } from "hono";
 
 import retryRoutes from "./retry";
-import { clearRateLimitStore } from "../services/RateLimitService";
 
 // =============================================================================
 // Mocks
@@ -58,7 +57,6 @@ describe("Retry Routes - Request Validation", () => {
   let app: Hono;
 
   beforeEach(() => {
-    clearRateLimitStore();
     app = createTestApp();
     vi.clearAllMocks();
   });

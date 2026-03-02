@@ -93,13 +93,13 @@ export function hasSession(jobId: string): boolean {
 }
 
 /**
- * Get session token header value for API requests
- * Returns null if no session exists for the job
+ * Legacy helper kept for compatibility with old tests/utilities.
+ * New auth flow uses Better Auth cookies instead of manual headers.
  */
 export function getSessionHeader(jobId: string): Record<string, string> | null {
   const token = getSession(jobId);
   if (!token) return null;
-  return { "X-Session-Token": token };
+  return { Authorization: `Bearer ${token}` };
 }
 
 // =============================================================================

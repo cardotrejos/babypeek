@@ -3,7 +3,6 @@ import { Button } from "@/components/ui/button";
 import { API_BASE_URL } from "@/lib/api-config";
 import { posthog, isPostHogConfigured } from "@/lib/posthog";
 import { trackFBInitiateCheckout } from "@/lib/facebook-pixel";
-import { getSession } from "@/lib/session";
 import {
   DEFAULT_TIER,
   PRICE_CENTS,
@@ -74,18 +73,12 @@ export function CheckoutButton({
     });
 
     try {
-      // Get session token for authentication
-      const sessionToken = getSession(uploadId);
-      if (!sessionToken) {
-        throw new Error("Session expired. Please start a new upload.");
-      }
-
       const response = await fetch(`${API_BASE_URL}/api/checkout`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "X-Session-Token": sessionToken,
         },
+        credentials: "include",
         body: JSON.stringify({ uploadId, type: "self", tier: effectiveTier }),
       });
 

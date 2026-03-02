@@ -46,8 +46,8 @@ function isValidStageTransition(currentStage: UploadStage | null, newStage: Uplo
 // Create upload parameters
 export interface CreateUploadParams {
   id: string; // Pre-generated ID to match R2 key
+  userId: string;
   email: string;
-  sessionToken: string;
   originalUrl: string;
 }
 
@@ -57,17 +57,17 @@ export class UploadService extends Context.Tag("UploadService")<
   {
     create: (params: CreateUploadParams) => Effect.Effect<Upload, never>;
     getById: (id: string) => Effect.Effect<Upload, NotFoundError>;
-    getBySessionToken: (token: string) => Effect.Effect<Upload, NotFoundError>;
+    getByUserId: (userId: string) => Effect.Effect<Upload, NotFoundError>;
     /**
-     * Get upload by ID with session token verification.
+     * Get upload by ID with user ownership verification.
      * Used for authenticated status polling.
      *
      * @param id - The upload ID
-     * @param sessionToken - Session token to verify ownership
-     * @returns The upload record if found and token matches
-     * @throws NotFoundError if upload doesn't exist or token doesn't match
+     * @param userId - Authenticated user ID to verify ownership
+     * @returns The upload record if found and user owns it
+     * @throws NotFoundError if upload doesn't exist or user doesn't own it
      */
-    getByIdWithAuth: (id: string, sessionToken: string) => Effect.Effect<Upload, NotFoundError>;
+    getByIdWithAuth: (id: string, userId: string) => Effect.Effect<Upload, NotFoundError>;
     updateStatus: (
       id: string,
       status: UploadStatus,
@@ -141,8 +141,8 @@ const create = Effect.fn("UploadService.create")(function* (params: CreateUpload
       .insert(uploads)
       .values({
         id: params.id, // Use pre-generated ID to match R2 key
+        userId: params.userId,
         email: params.email,
-        sessionToken: params.sessionToken,
         originalUrl: params.originalUrl,
         status: "pending",
         expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
@@ -165,25 +165,25 @@ const getById = Effect.fn("UploadService.getById")(function* (id: string) {
   return upload;
 });
 
-const getBySessionToken = Effect.fn("UploadService.getBySessionToken")(function* (token: string) {
+const getByUserId = Effect.fn("UploadService.getByUserId")(function* (userId: string) {
   const upload = yield* Effect.promise(async () => {
     return db.query.uploads.findFirst({
-      where: eq(uploads.sessionToken, token),
+      where: eq(uploads.userId, userId),
     });
   });
   if (!upload) {
-    return yield* Effect.fail(new NotFoundError({ resource: "upload", id: token }));
+    return yield* Effect.fail(new NotFoundError({ resource: "upload", id: userId }));
   }
   return upload;
 });
 
 const getByIdWithAuth = Effect.fn("UploadService.getByIdWithAuth")(function* (
   id: string,
-  sessionToken: string,
+  userId: string,
 ) {
   const upload = yield* Effect.promise(async () => {
     return db.query.uploads.findFirst({
-      where: and(eq(uploads.id, id), eq(uploads.sessionToken, sessionToken)),
+      where: and(eq(uploads.id, id), eq(uploads.userId, userId)),
     });
   });
   if (!upload) {
@@ -402,10 +402,10 @@ const updatePromptVersion = Effect.fn("UploadService.updatePromptVersion")(funct
 
 // Upload Service implementation
 export const UploadServiceLive = Layer.succeed(UploadService, {
-  create,
-  getById,
-  getBySessionToken,
-  getByIdWithAuth,
+      create,
+      getById,
+      getByUserId,
+      getByIdWithAuth,
   updateStatus,
   updateResult,
   updateStage,

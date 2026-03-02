@@ -12,23 +12,6 @@ export const config = {
   runtime: "edge",
 };
 
-// Social media crawler User-Agent patterns
-const CRAWLER_PATTERNS = [
-  /facebookexternalhit/i,
-  /Facebot/i,
-  /Twitterbot/i,
-  /WhatsApp/i,
-  /LinkedInBot/i,
-  /Slackbot/i,
-  /TelegramBot/i,
-  /Discordbot/i,
-  /Pinterest/i,
-  /Googlebot/i,
-  /bingbot/i,
-  /Applebot/i,
-  /iMessageLinkPreview/i,
-];
-
 const API_BASE_URL = process.env.VITE_API_URL || "https://api.babypeek.io";
 const SITE_URL = process.env.VITE_SITE_URL || "https://babypeek.io";
 

@@ -10,7 +10,12 @@ export class NotFoundError extends Data.TaggedError("NotFoundError")<{
 }> {}
 
 export class UnauthorizedError extends Data.TaggedError("UnauthorizedError")<{
-  reason: "MISSING_TOKEN" | "INVALID_TOKEN" | "EXPIRED_TOKEN" | "PURCHASE_REQUIRED";
+  reason:
+    | "MISSING_TOKEN"
+    | "INVALID_TOKEN"
+    | "EXPIRED_TOKEN"
+    | "PURCHASE_REQUIRED"
+    | "UNAUTHORIZED_USER";
 }> {}
 
 export class ValidationError extends Data.TaggedError("ValidationError")<{

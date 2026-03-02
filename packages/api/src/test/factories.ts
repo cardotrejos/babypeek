@@ -9,8 +9,8 @@
 export function createMockUpload(overrides: Partial<MockUpload> = {}): MockUpload {
   return {
     id: `upload_${Date.now()}`,
+    userId: `user_${Math.random().toString(36).slice(2)}`,
     email: "test@example.com",
-    sessionToken: `session_${Math.random().toString(36).slice(2)}`,
     originalUrl: "https://example.com/uploads/original.jpg",
     status: "pending",
     stage: undefined,
@@ -22,8 +22,8 @@ export function createMockUpload(overrides: Partial<MockUpload> = {}): MockUploa
 
 interface MockUpload {
   id: string;
+  userId: string;
   email: string;
-  sessionToken: string;
   originalUrl: string;
   status: "pending" | "processing" | "completed" | "failed";
   stage?: "validating" | "generating" | "watermarking" | "complete";

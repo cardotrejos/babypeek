@@ -5,7 +5,6 @@ import * as Sentry from "@sentry/react";
 import { useAnalytics } from "@/hooks/use-analytics";
 import { useOnlineStatus } from "@/hooks/use-online-status";
 import { API_BASE_URL } from "@/lib/api-config";
-import { storeSession } from "@/lib/session";
 import { categorizeError } from "@/lib/upload-errors";
 import { getAnalyticsContext } from "@/lib/analytics-context";
 import { startUploadAttempt } from "@/lib/upload-session";
@@ -43,7 +42,6 @@ export interface UploadState {
 export interface UploadResult {
   uploadId: string;
   key: string;
-  sessionToken: string;
 }
 
 export interface UseUploadResult {
@@ -60,7 +58,6 @@ interface PresignedUrlResponse {
   uploadId: string;
   key: string;
   expiresAt: string;
-  sessionToken: string;
 }
 
 interface ConfirmUploadResponse {
@@ -132,6 +129,7 @@ export function useUpload(): UseUploadResult {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ contentType, email }),
+        credentials: "include",
         signal,
       });
 
@@ -166,6 +164,7 @@ export function useUpload(): UseUploadResult {
         headers: {
           "Content-Type": "application/json",
         },
+        credentials: "include",
         signal,
       });
 
@@ -186,14 +185,12 @@ export function useUpload(): UseUploadResult {
    * Fire-and-forget - doesn't block or report errors to UI.
    */
   const cleanupUpload = useCallback(
-    async (uploadId: string, sessionToken: string) => {
+    async (uploadId: string) => {
       try {
         // Fire and forget - don't await or block on this
         fetch(`${API_BASE_URL}/api/upload/${uploadId}`, {
           method: "DELETE",
-          headers: {
-            "X-Session-Token": sessionToken,
-          },
+          credentials: "include",
         }).catch(() => {
           // Silent fail - cleanup is best-effort
         });
@@ -376,7 +373,7 @@ export function useUpload(): UseUploadResult {
         } catch (uploadError) {
           timings.uploadEnd = performance.now();
           // Clean up partial upload on R2 failure (fire and forget)
-          cleanupUpload(presignedData.uploadId, presignedData.sessionToken);
+          cleanupUpload(presignedData.uploadId);
           throw uploadError;
         }
 
@@ -387,12 +384,6 @@ export function useUpload(): UseUploadResult {
 
         // Phase 3: Confirm upload with server
         await confirmUpload(presignedData.uploadId, abortController.signal);
-
-        // Phase 4: Store session in localStorage
-        storeSession(presignedData.uploadId, presignedData.sessionToken);
-
-        // Track session creation
-        trackEvent("session_created", { upload_id: presignedData.uploadId });
 
         // Upload complete - calculate all timings
         const endTime = performance.now();
@@ -436,7 +427,6 @@ export function useUpload(): UseUploadResult {
         return {
           uploadId: presignedData.uploadId,
           key: presignedData.key,
-          sessionToken: presignedData.sessionToken,
         };
       } catch (error) {
         // Handle cancellation separately (no error toast)

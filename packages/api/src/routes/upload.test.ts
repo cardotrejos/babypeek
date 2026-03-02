@@ -2,7 +2,6 @@ import { describe, it, expect, beforeEach } from "vitest";
 import { Hono } from "hono";
 
 import uploadRoutes from "./upload";
-import { clearRateLimitStore } from "../services/RateLimitService";
 
 // =============================================================================
 // Test Setup
@@ -33,7 +32,6 @@ describe("Upload Routes - Request Validation", () => {
 
   beforeEach(() => {
     // Clear rate limit store between tests
-    clearRateLimitStore();
     app = createTestApp();
   });
 
@@ -151,7 +149,6 @@ describe("DELETE /api/upload/:uploadId - Cleanup Endpoint", () => {
   let app: Hono;
 
   beforeEach(() => {
-    clearRateLimitStore();
     app = createTestApp();
   });
 
@@ -200,7 +197,6 @@ describe("Upload Routes - Rate Limiting Integration", () => {
   let app: Hono;
 
   beforeEach(() => {
-    clearRateLimitStore();
     app = createTestApp();
   });
 

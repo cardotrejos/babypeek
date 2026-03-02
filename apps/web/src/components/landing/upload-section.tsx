@@ -1,8 +1,10 @@
 import { useCallback, useState } from "react";
-import { useNavigate, useSearch } from "@tanstack/react-router";
+import { useSearch } from "@tanstack/react-router";
+import { toast } from "sonner";
 
-import { UploadForm } from "@/components/upload/upload-form";
+import { CheckEmail, UploadForm } from "@/components/upload";
 import type { UploadResult } from "@/hooks/use-upload";
+import { signIn } from "@/lib/auth-client";
 
 export interface UploadSectionProps {
   /** Optional id for scroll targeting */
@@ -27,23 +29,42 @@ const PROMPT_OPTIONS: { value: PromptVersion; label: string }[] = [
  * Add ?prompts=true to URL to show prompt selector (for testing)
  */
 export function UploadSection({ id }: UploadSectionProps) {
-  const navigate = useNavigate();
   const search = useSearch({ strict: false }) as { prompts?: boolean };
   const showPromptSelector = search?.prompts === true;
 
   const [selectedPrompt, setSelectedPrompt] = useState<PromptVersion>("v4");
+  const [pendingEmail, setPendingEmail] = useState<string | null>(null);
+  const [isSendingMagicLink, setIsSendingMagicLink] = useState(false);
 
   const handleUploadComplete = useCallback(
-    (result: UploadResult & { email: string }) => {
-      // Navigate to processing page with the job ID and optional prompt
-      navigate({
-        to: "/processing/$jobId",
-        params: { jobId: result.uploadId },
-        search: showPromptSelector ? { prompts: true, promptVersion: selectedPrompt } : undefined,
-      });
+    async (result: UploadResult & { email: string }) => {
+      setIsSendingMagicLink(true);
+
+      try {
+        const callbackPath = showPromptSelector
+          ? `/processing/${result.uploadId}?prompts=true&promptVersion=${selectedPrompt}`
+          : `/processing/${result.uploadId}`;
+
+        await signIn.magicLink({
+          email: result.email,
+          callbackURL: callbackPath,
+        });
+
+        setPendingEmail(result.email);
+      } catch (error) {
+        toast.error(
+          error instanceof Error ? error.message : "Failed to send magic link. Please try again.",
+        );
+      } finally {
+        setIsSendingMagicLink(false);
+      }
     },
-    [navigate, showPromptSelector, selectedPrompt],
+    [showPromptSelector, selectedPrompt],
   );
+
+  const handleTryDifferentEmail = useCallback(() => {
+    setPendingEmail(null);
+  }, []);
 
   return (
     <section id={id} className="py-12">
@@ -92,7 +113,15 @@ export function UploadSection({ id }: UploadSectionProps) {
           </div>
         )}
 
-        <UploadForm enableUpload onUploadComplete={handleUploadComplete} />
+        {pendingEmail ? (
+          <CheckEmail email={pendingEmail} onTryDifferentEmail={handleTryDifferentEmail} />
+        ) : (
+          <UploadForm
+            enableUpload
+            onUploadComplete={handleUploadComplete}
+            disabled={isSendingMagicLink}
+          />
+        )}
       </div>
     </section>
   );

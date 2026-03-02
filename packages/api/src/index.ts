@@ -4,6 +4,8 @@
 export * from "./lib/errors";
 export * from "./lib/env";
 export * from "./lib/effect-runtime";
+export * from "./lib/auth";
+export * from "./middleware/auth";
 
 // Services
 export * from "./services";

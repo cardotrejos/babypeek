@@ -6,16 +6,14 @@ import { PurchaseService, PurchaseServiceLive } from "../services/PurchaseServic
 import { StripeServiceLive } from "../services/StripeService";
 import { UploadService, UploadServiceLive } from "../services/UploadService";
 import { NotFoundError, PaymentError, ValidationError } from "../lib/errors";
-import { rateLimitMiddleware } from "../middleware/rate-limit";
 import { VALID_TIER_IDS, DEFAULT_TIER_ID } from "../lib/pricing";
+import { requireAuth } from "../middleware/auth";
 
 // Composed layer: PurchaseService needs StripeService
 const CheckoutRoutesLive = PurchaseServiceLive.pipe(Layer.provide(StripeServiceLive));
 
 const app = new Hono();
 
-// Apply rate limiting to prevent abuse
-app.use("*", rateLimitMiddleware());
 
 // Request schema
 const checkoutSchema = z.object({
@@ -31,7 +29,7 @@ const checkoutSchema = z.object({
  * Requires session token for authentication.
  *
  * Headers:
- * - X-Session-Token: string - Session token for authorization
+ * - Authentication cookie required via Better Auth
  *
  * Request body:
  * - uploadId: string - The upload ID to purchase
@@ -41,11 +39,10 @@ const checkoutSchema = z.object({
  * - checkoutUrl: string - Stripe Checkout URL for redirect
  * - sessionId: string - Stripe session ID
  */
-app.post("/", async (c) => {
-  // Require session token for authentication
-  const sessionToken = c.req.header("X-Session-Token");
-  if (!sessionToken) {
-    return c.json({ error: "Session token required", code: "MISSING_TOKEN" }, 401);
+app.post("/", requireAuth, async (c) => {
+  const user = c.get("user") as { id: string };
+  if (!user?.id) {
+    return c.json({ error: "Authentication required", code: "UNAUTHENTICATED" }, 401);
   }
 
   // Parse and validate request body
@@ -68,8 +65,8 @@ app.post("/", async (c) => {
   const verifyAndCheckout = Effect.fn("routes.checkout.verifyAndCreate")(function* () {
     const uploadService = yield* UploadService;
 
-    // This throws NotFoundError if upload doesn't exist or token doesn't match
-    yield* uploadService.getByIdWithAuth(uploadId, sessionToken);
+    // This throws NotFoundError if upload doesn't exist or user doesn't own it
+    yield* uploadService.getByIdWithAuth(uploadId, user.id);
 
     const purchaseService = yield* PurchaseService;
     return yield* purchaseService.createCheckout(uploadId, type, tier);

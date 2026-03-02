@@ -122,12 +122,12 @@ export function useAnalytics() {
   const posthog = usePostHog();
 
   /**
-   * Identify user by session token
+   * Identify user by authenticated user ID
    * Call this when a session is created (e.g., after upload)
    */
   const identify = useCallback(
-    (sessionToken: string, properties?: Record<string, unknown>) => {
-      posthog?.identify(sessionToken, properties);
+    (userId: string, properties?: Record<string, unknown>) => {
+      posthog?.identify(userId, properties);
     },
     [posthog],
   );

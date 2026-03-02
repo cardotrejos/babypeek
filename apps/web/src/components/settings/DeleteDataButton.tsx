@@ -18,7 +18,6 @@ import { API_BASE_URL } from "@/lib/api-config";
 
 interface DeleteDataButtonProps {
   uploadId: string;
-  sessionToken: string;
 }
 
 /**
@@ -28,14 +27,14 @@ interface DeleteDataButtonProps {
  * AC-1: Tap "Delete My Data" shows confirmation dialog
  * AC-5: Shows confirmation "Your data has been deleted"
  * AC-6: Redirects to homepage
- * AC-7: Session token cleared from localStorage
+ * AC-7: Local session metadata cleared from localStorage
  */
-export function DeleteDataButton({ uploadId, sessionToken }: DeleteDataButtonProps) {
+export function DeleteDataButton({ uploadId }: DeleteDataButtonProps) {
   const navigate = useNavigate();
   const [isDeleting, setIsDeleting] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
 
-  // AC-2: Call DELETE /api/data/:token
+  // AC-2: Call DELETE /api/data/:uploadId
   const handleDelete = useCallback(async () => {
     // Task 4: Track deletion requested (no PII)
     if (isPostHogConfigured()) {
@@ -47,8 +46,9 @@ export function DeleteDataButton({ uploadId, sessionToken }: DeleteDataButtonPro
     setIsDeleting(true);
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/data/${sessionToken}`, {
+      const response = await fetch(`${API_BASE_URL}/api/data/${uploadId}`, {
         method: "DELETE",
+        credentials: "include",
       });
 
       if (!response.ok) {
@@ -88,7 +88,7 @@ export function DeleteDataButton({ uploadId, sessionToken }: DeleteDataButtonPro
       setIsDeleting(false);
       setIsOpen(false);
     }
-  }, [uploadId, sessionToken, navigate]);
+  }, [uploadId, navigate]);
 
   return (
     <AlertDialog open={isOpen} onOpenChange={setIsOpen}>

@@ -85,8 +85,8 @@ export function initSentry() {
  * Set session context for error correlation
  * Call this when a session is created
  */
-export function setSessionContext(sessionToken: string) {
-  Sentry.setUser({ id: sessionToken });
+export function setSessionContext(userId: string) {
+  Sentry.setUser({ id: userId });
 }
 
 /**

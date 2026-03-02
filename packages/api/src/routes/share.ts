@@ -58,7 +58,7 @@ app.get("/:shareId", async (c) => {
     return c.json({ error: "Preview not available" }, 404);
   }
 
-  // Return only public info - NO PII (email, sessionToken, resultUrl)
+  // Return only public info - NO PII (email, userId, resultUrl)
   return c.json({
     shareId,
     uploadId: upload.id,

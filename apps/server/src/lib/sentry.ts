@@ -77,10 +77,10 @@ export function sentryMiddleware(): MiddlewareHandler {
 }
 
 /**
- * Set session context for error correlation
+ * Set user context for error correlation
  */
-export function setSessionContext(sessionToken: string) {
-  Sentry.setUser({ id: sessionToken });
+export function setSessionContext(userId: string) {
+  Sentry.setUser({ id: userId });
 }
 
 /**

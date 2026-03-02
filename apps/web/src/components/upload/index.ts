@@ -15,3 +15,5 @@ export type { UploadProgressProps } from "./upload-progress";
 
 export { UploadError } from "./upload-error";
 export type { UploadErrorProps } from "./upload-error";
+
+export { CheckEmail } from "./check-email";

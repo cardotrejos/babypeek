@@ -68,7 +68,7 @@ export class ResultService extends Context.Tag("ResultService")<
      */
     getByIdWithAuth: (
       id: string,
-      sessionToken: string,
+      userId: string,
     ) => Effect.Effect<ResultView, NotFoundError | UnauthorizedError>;
 
     /**
@@ -81,7 +81,7 @@ export class ResultService extends Context.Tag("ResultService")<
      */
     getByUploadIdWithAuth: (
       uploadId: string,
-      sessionToken: string,
+      userId: string,
     ) => Effect.Effect<ResultSet, NotFoundError | UnauthorizedError>;
   }
 >() {}
@@ -113,7 +113,7 @@ const getById = Effect.fn("ResultService.getById")(function* (id: string) {
 
 const getByIdWithAuth = Effect.fn("ResultService.getByIdWithAuth")(function* (
   id: string,
-  sessionToken: string,
+  userId: string,
 ) {
   // First get the result
   const result = yield* Effect.promise(async () => {
@@ -126,15 +126,15 @@ const getByIdWithAuth = Effect.fn("ResultService.getByIdWithAuth")(function* (
     return yield* Effect.fail(new NotFoundError({ resource: "result", id }));
   }
 
-  // Then verify the session token via the upload
+  // Then verify user ownership via the upload
   const upload = yield* Effect.promise(async () => {
     return db.query.uploads.findFirst({
       where: eq(uploads.id, result.uploadId),
     });
   });
 
-  if (!upload || upload.sessionToken !== sessionToken) {
-    return yield* Effect.fail(new UnauthorizedError({ reason: "INVALID_TOKEN" }));
+  if (!upload || upload.userId !== userId) {
+    return yield* Effect.fail(new UnauthorizedError({ reason: "UNAUTHORIZED_USER" }));
   }
 
   return toResultView(result);
@@ -171,7 +171,7 @@ const getByUploadId = Effect.fn("ResultService.getByUploadId")(function* (upload
 
 const getByUploadIdWithAuth = Effect.fn("ResultService.getByUploadIdWithAuth")(function* (
   uploadId: string,
-  sessionToken: string,
+  userId: string,
 ) {
   // Get the upload first
   const upload = yield* Effect.promise(async () => {
@@ -184,8 +184,8 @@ const getByUploadIdWithAuth = Effect.fn("ResultService.getByUploadIdWithAuth")(f
     return yield* Effect.fail(new NotFoundError({ resource: "upload", id: uploadId }));
   }
 
-  if (upload.sessionToken !== sessionToken) {
-    return yield* Effect.fail(new UnauthorizedError({ reason: "INVALID_TOKEN" }));
+  if (upload.userId !== userId) {
+    return yield* Effect.fail(new UnauthorizedError({ reason: "UNAUTHORIZED_USER" }));
   }
 
   // Get all results for this upload

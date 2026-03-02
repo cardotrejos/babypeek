@@ -7,6 +7,7 @@ import { R2Service, R2ServiceLive } from "../services/R2Service";
 import { PurchaseService, PurchaseServiceLive } from "../services/PurchaseService";
 import { StripeServiceLive } from "../services/StripeService";
 import { db, results } from "@babypeek/db";
+import { requireAuth } from "../middleware/auth";
 
 const app = new Hono();
 
@@ -24,7 +25,7 @@ const app = new Hono();
  * - jobId: string - The upload/job ID to check
  *
  * Headers:
- * - X-Session-Token: string - Session token for authorization
+ * - Authentication cookie required via Better Auth
  *
  * Response (processing):
  * {
@@ -61,14 +62,13 @@ const app = new Hono();
  * - 401: Invalid or missing session token
  * - 404: Upload not found
  */
-app.get("/:jobId", async (c) => {
+app.get("/:jobId", requireAuth, async (c) => {
   const jobId = c.req.param("jobId");
-  const sessionToken = c.req.header("X-Session-Token");
+  const user = c.get("user") as { id: string };
 
-  // Require session token
-  if (!sessionToken) {
+  if (!user?.id) {
     return c.json(
-      { success: false, error: { code: "UNAUTHORIZED", message: "Session token required" } },
+      { success: false, error: { code: "UNAUTHENTICATED", message: "Authentication required" } },
       401,
     );
   }
@@ -77,8 +77,8 @@ app.get("/:jobId", async (c) => {
     const uploadService = yield* UploadService;
     const r2Service = yield* R2Service;
 
-    // Get upload with session token verification
-    const upload = yield* uploadService.getByIdWithAuth(jobId, sessionToken);
+    // Get upload with user ownership verification
+    const upload = yield* uploadService.getByIdWithAuth(jobId, user.id);
 
     // Determine resultId and generate signed URLs if completed
     let resultId: string | null = null;

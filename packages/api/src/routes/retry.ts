@@ -5,16 +5,9 @@ import { UploadService } from "../services/UploadService";
 import { PostHogService } from "../services/PostHogService";
 import { AppServicesLive } from "../services";
 import { UploadStatusError, ValidationError } from "../lib/errors";
-import { rateLimitMiddleware } from "../middleware/rate-limit";
+import { requireAuth } from "../middleware/auth";
 
 const app = new Hono();
-
-// =============================================================================
-// Rate Limiting Middleware
-// =============================================================================
-
-// Apply rate limiting to prevent abuse of retry endpoint
-app.use("*", rateLimitMiddleware());
 
 // =============================================================================
 // Routes
@@ -27,7 +20,7 @@ app.use("*", rateLimitMiddleware());
  * Resets the upload state and triggers a new processing attempt.
  *
  * Headers:
- * - X-Session-Token: string - Required session token for authentication
+ * - Authentication cookie required via Better Auth
  *
  * Response:
  * - success: boolean
@@ -35,15 +28,15 @@ app.use("*", rateLimitMiddleware());
  * - status: "pending" - Ready for reprocessing
  * - message: string - User-friendly message
  */
-app.post("/:jobId", async (c) => {
+app.post("/:jobId", requireAuth, async (c) => {
   const jobId = c.req.param("jobId");
-  const sessionToken = c.req.header("X-Session-Token");
+  const user = c.get("user") as { id: string; email?: string };
 
-  if (!sessionToken) {
+  if (!user?.id) {
     return c.json(
       {
-        error: "Session token is required",
-        code: "MISSING_TOKEN",
+        error: "Authentication required",
+        code: "UNAUTHENTICATED",
       },
       401,
     );
@@ -63,8 +56,8 @@ app.post("/:jobId", async (c) => {
     const uploadService = yield* UploadService;
     const posthog = yield* PostHogService;
 
-    // Get upload and verify session token ownership
-    const upload = yield* uploadService.getByIdWithAuth(jobId, sessionToken);
+    // Get upload and verify ownership
+    const upload = yield* uploadService.getByIdWithAuth(jobId, user.id);
 
     // Only allow retry for failed jobs (AC-3)
     if (upload.status !== "failed") {
@@ -83,7 +76,7 @@ app.post("/:jobId", async (c) => {
     const resetUpload = yield* uploadService.resetForRetry(jobId);
 
     // Track retry analytics
-    yield* posthog.capture("processing_retry", sessionToken, {
+    yield* posthog.capture("processing_retry", user.id, {
       upload_id: jobId,
       previous_error: previousError,
       previous_stage: upload.stage,

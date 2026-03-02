@@ -5,6 +5,7 @@ import { db, uploads, results } from "@babypeek/db";
 import { R2Service, R2ServiceLive } from "../services/R2Service";
 import { PurchaseService, PurchaseServiceLive } from "../services/PurchaseService";
 import { StripeServiceLive } from "../services/StripeService";
+import { requireAuth } from "../middleware/auth";
 
 const app = new Hono();
 
@@ -25,11 +26,16 @@ const app = new Hono();
  * - results: Array of variant previews with watermarked URLs
  * - hasPurchased: boolean - Whether user has already purchased
  */
-app.get("/:uploadId", async (c) => {
+app.get("/:uploadId", requireAuth, async (c) => {
   const uploadId = c.req.param("uploadId");
+  const user = c.get("user") as { id: string };
 
   if (!uploadId) {
     return c.json({ error: "Upload ID required" }, 400);
+  }
+
+  if (!user?.id) {
+    return c.json({ error: "Authentication required" }, 401);
   }
 
   const program = Effect.gen(function* () {
@@ -44,6 +50,10 @@ app.get("/:uploadId", async (c) => {
     );
 
     if (!upload) {
+      return { error: "not_found" as const };
+    }
+
+    if (upload.userId !== user.id) {
       return { error: "not_found" as const };
     }
 
