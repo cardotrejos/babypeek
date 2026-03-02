@@ -77,6 +77,10 @@ FROM "uploads"
 ON CONFLICT ("email") DO NOTHING;
 --> statement-breakpoint
 
+-- Safety: remove orphaned uploads without a valid email (can't be linked to a user).
+-- Without this, the NOT NULL constraint below fails if any upload has NULL/empty email.
+DELETE FROM "uploads" WHERE "email" IS NULL OR "email" = '';
+
 UPDATE "uploads" AS u
 SET "user_id" = usr."id"
 FROM "user" AS usr

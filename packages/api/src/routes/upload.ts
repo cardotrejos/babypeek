@@ -1,3 +1,4 @@
+import { createHash } from "crypto";
 import { Hono } from "hono";
 import { Effect, Layer } from "effect";
 import { createId } from "@paralleldrive/cuid2";
@@ -137,10 +138,10 @@ app.post("/", rateLimit({ limit: 10, windowMs: 60 * 60 * 1000 }), async (c) => {
       await db
         .insert(authUsers)
         .values({
-          id: createId(),
+          id: `usr_${createHash("md5").update(email).digest("hex").slice(0, 24)}`,
           name: email.split("@")[0] || "BabyPeek User",
           email,
-          emailVerified: false,
+          emailVerified: true, // magic link IS the email verification
         })
         .onConflictDoNothing();
 
@@ -211,7 +212,7 @@ app.post("/", rateLimit({ limit: 10, windowMs: 60 * 60 * 1000 }), async (c) => {
  * - jobId: string - Same as uploadId
  * - status: string - Current upload status
  */
-app.post("/:uploadId/confirm", async (c) => {
+app.post("/:uploadId/confirm", requireAuth, async (c) => {
   const uploadId = c.req.param("uploadId");
 
   if (!uploadId) {

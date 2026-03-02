@@ -57,7 +57,7 @@ export class UploadService extends Context.Tag("UploadService")<
   {
     create: (params: CreateUploadParams) => Effect.Effect<Upload, never>;
     getById: (id: string) => Effect.Effect<Upload, NotFoundError>;
-    getByUserId: (userId: string) => Effect.Effect<Upload, NotFoundError>;
+    getByUserId: (userId: string) => Effect.Effect<Upload[], never>;
     /**
      * Get upload by ID with user ownership verification.
      * Used for authenticated status polling.

@@ -19,7 +19,18 @@ export const auth = betterAuth({
     }
     return env.BETTER_AUTH_SECRET;
   })(),
-  baseURL: env.BETTER_AUTH_URL || env.APP_URL,
+  baseURL: (() => {
+    if (!env.BETTER_AUTH_URL) {
+      if (env.NODE_ENV === "production") {
+        throw new Error(
+          "BETTER_AUTH_URL is required in production (must point to the API server, not the web app)"
+        );
+      }
+      // In dev, default to APP_URL (assumes API and web run on same origin)
+      return env.APP_URL;
+    }
+    return env.BETTER_AUTH_URL;
+  })(),
   trustedOrigins: [env.WEB_URL || env.CORS_ORIGIN || "http://localhost:3001"],
   emailAndPassword: {
     enabled: false,
