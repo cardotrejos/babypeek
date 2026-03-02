@@ -104,12 +104,8 @@ app.post("/", requireAuth, async (c) => {
     const r2 = yield* R2Service;
     const resultService = yield* ResultService;
 
-    // Get upload and verify ownership
-    const upload = yield* uploadService.getById(uploadId);
-
-    if (upload.userId !== user.id) {
-      return yield* Effect.fail(new UnauthorizedError({ reason: "UNAUTHORIZED_USER" }));
-    }
+    // Get upload and verify ownership (single query)
+    const upload = yield* uploadService.getByIdWithAuth(uploadId, user.id);
 
     // Track overall processing start time
     const processingStartTime = Date.now();

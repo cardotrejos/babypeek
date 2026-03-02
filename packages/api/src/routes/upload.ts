@@ -9,6 +9,7 @@ import { R2Service, R2ServiceLive } from "../services/R2Service";
 import { UploadService, UploadServiceLive } from "../services/UploadService";
 import { R2Error } from "../lib/errors";
 import { requireAuth } from "../middleware/auth";
+import { rateLimit } from "../middleware/rateLimit";
 
 // Combined layer for upload routes
 const UploadRoutesLive = Layer.merge(R2ServiceLive, UploadServiceLive);
@@ -95,7 +96,7 @@ const handleR2Error = (error: R2Error) => {
  * - key: string - R2 object key
  * - expiresAt: string - ISO timestamp when URL expires
  */
-app.post("/", async (c) => {
+app.post("/", rateLimit({ limit: 10, windowMs: 60 * 60 * 1000 }), async (c) => {
   // Parse and validate request body
   const body = await c.req.json().catch(() => ({}));
   const parsed = initiateUploadSchema.safeParse(body);
