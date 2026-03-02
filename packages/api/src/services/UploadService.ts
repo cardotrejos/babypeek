@@ -166,15 +166,13 @@ const getById = Effect.fn("UploadService.getById")(function* (id: string) {
 });
 
 const getByUserId = Effect.fn("UploadService.getByUserId")(function* (userId: string) {
-  const upload = yield* Effect.promise(async () => {
-    return db.query.uploads.findFirst({
+  const userUploads = yield* Effect.promise(async () => {
+    return db.query.uploads.findMany({
       where: eq(uploads.userId, userId),
+      orderBy: (uploads, { desc }) => [desc(uploads.createdAt)],
     });
   });
-  if (!upload) {
-    return yield* Effect.fail(new NotFoundError({ resource: "upload", id: userId }));
-  }
-  return upload;
+  return userUploads;
 });
 
 const getByIdWithAuth = Effect.fn("UploadService.getByIdWithAuth")(function* (

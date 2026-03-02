@@ -45,9 +45,14 @@ export function UploadSection({ id }: UploadSectionProps) {
           ? `/processing/${result.uploadId}?prompts=true&promptVersion=${selectedPrompt}`
           : `/processing/${result.uploadId}`;
 
+        // Must be an absolute URL — Better Auth resolves callbackURL relative to
+        // its baseURL (the API server), so a relative path would redirect users
+        // to the API instead of the web app after clicking the magic link.
+        const callbackURL = `${window.location.origin}${callbackPath}`;
+
         await signIn.magicLink({
           email: result.email,
-          callbackURL: callbackPath,
+          callbackURL,
         });
 
         setPendingEmail(result.email);

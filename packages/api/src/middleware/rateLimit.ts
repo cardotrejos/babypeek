@@ -1,4 +1,5 @@
 import type { Context, Next } from "hono";
+import type { Ratelimit } from "@upstash/ratelimit";
 
 /**
  * Rate limiter middleware.
@@ -25,22 +26,23 @@ function memRateLimit(key: string, limit: number, windowMs: number): boolean {
 
   if (!entry || now - entry.windowStart > windowMs) {
     memStore.set(key, { count: 1, windowStart: now });
-    return true; // allowed
+    return true;
   }
 
-  if (entry.count >= limit) return false; // blocked
+  if (entry.count >= limit) return false;
 
   entry.count++;
-  return true; // allowed
+  return true;
 }
 
 // ── Upstash-backed limiter (production) ──────────────────────────────────────
 
-let upstashLimiter: ((key: string) => Promise<{ success: boolean }>) | null = null;
-
-async function getUpstashLimiter(limit: number, windowMs: number) {
-  if (upstashLimiter) return upstashLimiter;
-
+// Each call to rateLimit() creates its own Upstash Ratelimit instance so that
+// different limit/windowMs configurations are respected independently.
+async function createUpstashLimiter(
+  limit: number,
+  windowMs: number,
+): Promise<Ratelimit | null> {
   const url = process.env.UPSTASH_REDIS_REST_URL;
   const token = process.env.UPSTASH_REDIS_REST_TOKEN;
   if (!url || !token) return null;
@@ -49,14 +51,11 @@ async function getUpstashLimiter(limit: number, windowMs: number) {
   const { Ratelimit } = await import("@upstash/ratelimit");
 
   const redis = new Redis({ url, token });
-  const ratelimit = new Ratelimit({
+  return new Ratelimit({
     redis,
     limiter: Ratelimit.slidingWindow(limit, `${windowMs}ms`),
     analytics: false,
   });
-
-  upstashLimiter = (key: string) => ratelimit.limit(key);
-  return upstashLimiter;
 }
 
 // ── Middleware factory ────────────────────────────────────────────────────────
@@ -69,6 +68,10 @@ interface RateLimitOptions {
 }
 
 export function rateLimit({ limit, windowMs }: RateLimitOptions) {
+  // Each factory call gets its own lazily-initialised Upstash instance,
+  // ensuring limit/windowMs are never shared across different rateLimit() calls.
+  let upstashLimiter: Ratelimit | null | undefined;
+
   return async function rateLimitMiddleware(c: Context, next: Next) {
     const user = c.get("user") as { id: string } | undefined;
     const ip = c.req.header("x-forwarded-for") ?? c.req.header("x-real-ip") ?? "unknown";
@@ -76,9 +79,12 @@ export function rateLimit({ limit, windowMs }: RateLimitOptions) {
 
     let allowed: boolean;
 
-    const upstash = await getUpstashLimiter(limit, windowMs);
-    if (upstash) {
-      const result = await upstash(key);
+    if (upstashLimiter === undefined) {
+      upstashLimiter = await createUpstashLimiter(limit, windowMs);
+    }
+
+    if (upstashLimiter) {
+      const result = await upstashLimiter.limit(key);
       allowed = result.success;
     } else {
       allowed = memRateLimit(key, limit, windowMs);

@@ -56,12 +56,18 @@ export function initSentry() {
  */
 export const sentryMiddleware = createMiddleware(async (c, next) => {
   // Attach authenticated user context when available.
+  // Only attempt session lookup when a session cookie is present to avoid
+  // an unnecessary DB round-trip on every unauthenticated request.
   if (isSentryConfigured()) {
-    const session = await auth.api.getSession({ headers: c.req.raw.headers }).catch(() => null);
-    if (session?.user?.id) {
-      Sentry.setUser({ id: session.user.id });
-    } else {
-      Sentry.setUser(null);
+    const cookieHeader = c.req.header("cookie") ?? "";
+    const hasSessionCookie = cookieHeader.includes("better-auth.session_token");
+    if (hasSessionCookie) {
+      const session = await auth.api.getSession({ headers: c.req.raw.headers }).catch(() => null);
+      if (session?.user?.id) {
+        Sentry.setUser({ id: session.user.id });
+      } else {
+        Sentry.setUser(null);
+      }
     }
   }
 
