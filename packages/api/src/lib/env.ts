@@ -181,6 +181,12 @@ export const isStripeConfigured = () => {
   return !!(env.STRIPE_SECRET_KEY && env.STRIPE_WEBHOOK_SECRET);
 };
 
+
+/** Check if Better Auth is configured */
+export const isBetterAuthConfigured = () => {
+  return !!env.BETTER_AUTH_SECRET;
+};
+
 /** Check if PostHog analytics is configured */
 export const isPostHogConfigured = () => {
   return !!env.POSTHOG_KEY;
@@ -233,6 +239,7 @@ export const checkProductionConfig = () => {
   if (!isStripeConfigured()) missing.push("Stripe Payments");
   if (!isResendConfigured()) missing.push("Resend Email");
   if (!isGeminiConfigured()) missing.push("Gemini AI");
+  if (!isBetterAuthConfigured()) missing.push("Better Auth Secret");
 
   if (env.NODE_ENV === "production" && missing.length > 0) {
     throw new Error(`❌ Missing production configuration: ${missing.join(", ")}`);

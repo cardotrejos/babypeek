@@ -12,7 +12,13 @@ export const auth = betterAuth({
   database: drizzleAdapter(db, {
     provider: "pg",
   }),
-  secret: env.BETTER_AUTH_SECRET || "dev-secret-change-me",
+  secret: (() => {
+    if (!env.BETTER_AUTH_SECRET) {
+      if (env.NODE_ENV === "production") throw new Error("BETTER_AUTH_SECRET is required in production");
+      return "dev-secret-change-me-not-for-production";
+    }
+    return env.BETTER_AUTH_SECRET;
+  })(),
   baseURL: env.BETTER_AUTH_URL || env.APP_URL,
   trustedOrigins: [env.WEB_URL || env.CORS_ORIGIN || "http://localhost:3001"],
   emailAndPassword: {
