@@ -59,6 +59,12 @@ const envSchema = z.object({
   // Better Auth (Magic Link Authentication)
   // ─────────────────────────────────────────────────────────────────────────────
   BETTER_AUTH_SECRET: z.string().min(1, "BETTER_AUTH_SECRET cannot be empty").optional(),
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Upstash Redis (Rate Limiting — required in production)
+  // ─────────────────────────────────────────────────────────────────────────────
+  UPSTASH_REDIS_REST_URL: z.string().url("UPSTASH_REDIS_REST_URL must be a valid URL").optional(),
+  UPSTASH_REDIS_REST_TOKEN: z.string().min(1, "UPSTASH_REDIS_REST_TOKEN cannot be empty").optional(),
   BETTER_AUTH_URL: z.string().url("BETTER_AUTH_URL must be a valid URL").optional(),
 
   // ─────────────────────────────────────────────────────────────────────────────

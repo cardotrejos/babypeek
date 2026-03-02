@@ -1,18 +1,65 @@
 import type { Context, Next } from "hono";
 
 /**
- * Simple in-memory per-user rate limiter.
- * Uses a sliding window approach keyed by userId.
+ * Rate limiter middleware.
  *
- * For production scale, swap the Map for Redis.
+ * Uses @upstash/ratelimit backed by Redis when UPSTASH_REDIS_REST_URL +
+ * UPSTASH_REDIS_REST_TOKEN are set (production on Vercel).
+ *
+ * Falls back to an in-memory sliding window for local development.
+ * The in-memory store resets on cold starts — do NOT rely on it in production.
  */
 
-interface RateLimitEntry {
+// ── In-memory fallback (dev only) ────────────────────────────────────────────
+
+interface MemEntry {
   count: number;
   windowStart: number;
 }
 
-const store = new Map<string, RateLimitEntry>();
+const memStore = new Map<string, MemEntry>();
+
+function memRateLimit(key: string, limit: number, windowMs: number): boolean {
+  const now = Date.now();
+  const entry = memStore.get(key);
+
+  if (!entry || now - entry.windowStart > windowMs) {
+    memStore.set(key, { count: 1, windowStart: now });
+    return true; // allowed
+  }
+
+  if (entry.count >= limit) return false; // blocked
+
+  entry.count++;
+  return true; // allowed
+}
+
+// ── Upstash-backed limiter (production) ──────────────────────────────────────
+
+let upstashLimiter: ((key: string) => Promise<{ success: boolean }>) | null = null;
+
+async function getUpstashLimiter(limit: number, windowMs: number) {
+  if (upstashLimiter) return upstashLimiter;
+
+  const url = process.env.UPSTASH_REDIS_REST_URL;
+  const token = process.env.UPSTASH_REDIS_REST_TOKEN;
+  if (!url || !token) return null;
+
+  const { Redis } = await import("@upstash/redis");
+  const { Ratelimit } = await import("@upstash/ratelimit");
+
+  const redis = new Redis({ url, token });
+  const ratelimit = new Ratelimit({
+    redis,
+    limiter: Ratelimit.slidingWindow(limit, `${windowMs}ms`),
+    analytics: false,
+  });
+
+  upstashLimiter = (key: string) => ratelimit.limit(key);
+  return upstashLimiter;
+}
+
+// ── Middleware factory ────────────────────────────────────────────────────────
 
 interface RateLimitOptions {
   /** Max requests per window */
@@ -23,29 +70,27 @@ interface RateLimitOptions {
 
 export function rateLimit({ limit, windowMs }: RateLimitOptions) {
   return async function rateLimitMiddleware(c: Context, next: Next) {
-    // Key by userId if authenticated, fall back to IP
     const user = c.get("user") as { id: string } | undefined;
     const ip = c.req.header("x-forwarded-for") ?? c.req.header("x-real-ip") ?? "unknown";
     const key = user?.id ?? `ip:${ip}`;
 
-    const now = Date.now();
-    const entry = store.get(key);
+    let allowed: boolean;
 
-    if (!entry || now - entry.windowStart > windowMs) {
-      store.set(key, { count: 1, windowStart: now });
-      return next();
+    const upstash = await getUpstashLimiter(limit, windowMs);
+    if (upstash) {
+      const result = await upstash(key);
+      allowed = result.success;
+    } else {
+      allowed = memRateLimit(key, limit, windowMs);
     }
 
-    if (entry.count >= limit) {
-      const retryAfter = Math.ceil((entry.windowStart + windowMs - now) / 1000);
-      c.header("Retry-After", String(retryAfter));
+    if (!allowed) {
       return c.json(
         { error: "Too many requests. Please try again later.", code: "RATE_LIMITED" },
         429,
       );
     }
 
-    entry.count++;
     return next();
   };
 }
