@@ -92,9 +92,33 @@ export function UploadSection({ id }: UploadSectionProps) {
 
   const handleSubmitNewEmail = useCallback(async () => {
     if (!pendingUploadResult || !newEmail) return;
-    const updatedResult = { ...pendingUploadResult, email: newEmail };
-    setIsEditingEmail(false);
-    await handleUploadComplete(updatedResult);
+    
+    setIsSendingMagicLink(true);
+    
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL}/api/upload/${pendingUploadResult.uploadId}/email`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Upload-Cleanup-Token": pendingUploadResult.cleanupToken,
+          },
+          body: JSON.stringify({ email: newEmail }),
+        },
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to update email");
+      }
+
+      const updatedResult = { ...pendingUploadResult, email: newEmail };
+      setIsEditingEmail(false);
+      await handleUploadComplete(updatedResult);
+    } catch (error) {
+      toast.error("Failed to update email. Please try again.");
+      setIsSendingMagicLink(false);
+    }
   }, [pendingUploadResult, newEmail, handleUploadComplete]);
 
   const handleRetryMagicLink = useCallback(async () => {

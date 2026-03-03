@@ -379,6 +379,113 @@ app.post("/:uploadId/confirm", rateLimit({ limit: 20, windowMs: 60 * 60 * 1000 }
 });
 
 // =============================================================================
+// PUT /api/upload/:uploadId/email - Update Email
+// =============================================================================
+
+/**
+ * PUT /api/upload/:uploadId/email
+ *
+ * Update the email and userId for an upload.
+ * Used in error recovery flow when user wants to use a different email.
+ * Requires a valid cleanup token (pre-auth flow).
+ *
+ * Path params:
+ * - uploadId: string - The upload ID to update
+ *
+ * Request body:
+ * - email: string - The new email address
+ *
+ * Response:
+ * - success: boolean
+ */
+app.put("/:uploadId/email", async (c) => {
+  const uploadId = c.req.param("uploadId");
+  const cleanupToken = c.req.header("x-upload-cleanup-token");
+
+  if (!uploadId) {
+    return c.json({ error: "Upload ID is required", code: "INVALID_REQUEST" }, 400);
+  }
+
+  const body = await c.req.json().catch(() => ({}));
+  const email =
+    body && typeof body === "object" && "email" in body && typeof body.email === "string"
+      ? body.email.trim().toLowerCase()
+      : null;
+
+  if (!email) {
+    return c.json({ error: "Email is required", code: "INVALID_REQUEST" }, 400);
+  }
+
+  const updateEmail = Effect.fn("routes.upload.updateEmail")(function* () {
+    const uploadService = yield* UploadService;
+
+    // Get the upload record first for token verification
+    const upload = yield* uploadService.getById(uploadId);
+
+    // Verify cleanup token
+    const canUpdate =
+      upload.status === "pending" &&
+      typeof cleanupToken === "string" &&
+      isValidCleanupToken(cleanupToken, upload.id, upload.userId);
+
+    if (!canUpdate) {
+      return yield* Effect.fail({ _tag: "UnauthorizedError" as const });
+    }
+
+    // Find or create auth user for the new email
+    const authUser = yield* Effect.promise(async () => {
+      const existing = await db.query.user.findFirst({
+        where: eq(authUsers.email, email),
+      });
+
+      if (existing) return existing;
+
+      await db
+        .insert(authUsers)
+        .values({
+          id: `usr_${createHash("md5").update(email).digest("hex").slice(0, 24)}`,
+          name: email.split("@")[0] || "BabyPeek User",
+          email,
+          emailVerified: false,
+        })
+        .onConflictDoNothing();
+
+      const created = await db.query.user.findFirst({
+        where: eq(authUsers.email, email),
+      });
+
+      if (!created) {
+        throw new Error("Failed to create auth user");
+      }
+
+      return created;
+    });
+
+    // Update the upload with new email and userId
+    yield* uploadService.updateEmail(uploadId, email, authUser.id);
+
+    return { success: true };
+  });
+
+  const program = updateEmail().pipe(Effect.provide(UploadRoutesLive));
+
+  const result = await Effect.runPromise(Effect.either(program));
+
+  if (result._tag === "Left") {
+    const error = result.left;
+    if ("_tag" in error && error._tag === "UnauthorizedError") {
+      return c.json({ error: "Authentication required", code: "UNAUTHENTICATED" }, 401);
+    }
+    if ("_tag" in error && error._tag === "NotFoundError") {
+      return c.json({ error: "Upload not found", code: "NOT_FOUND" }, 404);
+    }
+    return c.json({ error: "Internal server error", code: "UNKNOWN" }, 500);
+  }
+
+  return c.json({ success: true });
+});
+
+// =============================================================================
 // DELETE /api/upload/:uploadId - Cleanup Partial Uploads
 // =============================================================================
 

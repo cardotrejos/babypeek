@@ -43,6 +43,7 @@ export interface UploadState {
 export interface UploadResult {
   uploadId: string;
   key: string;
+  cleanupToken: string;
 }
 
 export interface UseUploadResult {
@@ -450,6 +451,7 @@ export function useUpload(): UseUploadResult {
         return {
           uploadId: presignedData.uploadId,
           key: presignedData.key,
+          cleanupToken: presignedData.cleanupToken,
         };
       } catch (error) {
         // Handle cancellation separately (no error toast)

@@ -132,6 +132,21 @@ export class UploadService extends Context.Tag("UploadService")<
       uploadId: string,
       promptVersion: PromptVersion,
     ) => Effect.Effect<void, NotFoundError>;
+    /**
+     * Update the email and userId for an upload.
+     * Used in error recovery flow when user wants to use a different email.
+     *
+     * @param uploadId - The upload ID
+     * @param email - The new email address
+     * @param userId - The new user ID
+     * @returns The updated upload record
+     * @throws NotFoundError if upload doesn't exist
+     */
+    updateEmail: (
+      uploadId: string,
+      email: string,
+      userId: string,
+    ) => Effect.Effect<Upload, NotFoundError>;
   }
 >() {}
 
@@ -398,16 +413,39 @@ const updatePromptVersion = Effect.fn("UploadService.updatePromptVersion")(funct
   }
 });
 
+const updateEmail = Effect.fn("UploadService.updateEmail")(function* (
+  uploadId: string,
+  email: string,
+  userId: string,
+) {
+  const result = yield* Effect.promise(async () => {
+    return db
+      .update(uploads)
+      .set({
+        email,
+        userId,
+        updatedAt: new Date(),
+      })
+      .where(eq(uploads.id, uploadId))
+      .returning();
+  });
+  if (!result[0]) {
+    return yield* Effect.fail(new NotFoundError({ resource: "upload", id: uploadId }));
+  }
+  return result[0];
+});
+
 // Upload Service implementation
 export const UploadServiceLive = Layer.succeed(UploadService, {
-      create,
-      getById,
-      getByUserId,
-      getByIdWithAuth,
+  create,
+  getById,
+  getByUserId,
+  getByIdWithAuth,
   updateStatus,
   updateResult,
   updateStage,
   startProcessing,
   resetForRetry,
   updatePromptVersion,
+  updateEmail,
 });
