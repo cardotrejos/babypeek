@@ -432,6 +432,15 @@ function ProcessingPage() {
     navigate({ to: "/" });
   };
 
+  // Show auth loading state
+  if (isAuthLoading && state === "idle") {
+    return (
+      <div className="min-h-screen bg-cream flex items-center justify-center">
+        <div className="size-12 animate-spin rounded-full border-4 border-coral border-t-transparent" />
+      </div>
+    );
+  }
+
   // Show prompt selector when ?prompts=true is in URL
   if (showPromptSelector && state === "idle" && !devManualStart) {
     return (

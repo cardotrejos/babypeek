@@ -101,7 +101,7 @@ export function UploadForm({
       if (enableUpload) {
         const result = await startUpload(selectedFile, email);
         if (result && onUploadComplete) {
-          onUploadComplete({ ...result, email });
+          await onUploadComplete({ ...result, email });
         }
       } else {
         // Otherwise, just call onSubmit

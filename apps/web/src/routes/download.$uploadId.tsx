@@ -44,6 +44,10 @@ function DownloadPage() {
         credentials: "include",
       });
 
+      if (!response.ok) {
+        throw new Error("Failed to check download status");
+      }
+
       const result = await response.json();
 
       // AC-5: Track expiry view
