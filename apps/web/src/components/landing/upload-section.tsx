@@ -4,6 +4,7 @@ import { toast } from "sonner";
 
 import { CheckEmail, UploadForm } from "@/components/upload";
 import type { UploadResult } from "@/hooks/use-upload";
+import { API_BASE_URL } from "@/lib/api-config";
 import { signIn } from "@/lib/auth-client";
 
 export interface UploadSectionProps {
@@ -80,7 +81,6 @@ export function UploadSection({ id }: UploadSectionProps) {
 
   const handleTryDifferentEmail = useCallback(() => {
     setPendingEmail(null);
-    setPendingUploadResult(null);
     setIsEditingEmail(false);
     setNewEmail("");
   }, []);
@@ -97,7 +97,7 @@ export function UploadSection({ id }: UploadSectionProps) {
     
     try {
       const response = await fetch(
-        `${import.meta.env.VITE_API_URL}/api/upload/${pendingUploadResult.uploadId}/email`,
+        `${API_BASE_URL}/api/upload/${pendingUploadResult.uploadId}/email`,
         {
           method: "PUT",
           headers: {
