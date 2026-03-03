@@ -46,6 +46,7 @@ export function UploadSection({ id }: UploadSectionProps) {
   const handleUploadComplete = useCallback(
     async (result: UploadResult & { email: string }) => {
       setIsSendingMagicLink(true);
+      const wasAlreadyPending = pendingEmail !== null;
 
       try {
         const callbackPath = showPromptSelector
@@ -69,7 +70,9 @@ export function UploadSection({ id }: UploadSectionProps) {
         setPendingEmail(result.email);
         setPendingUploadResult(result);
       } catch (error) {
-        setPendingEmail(null);
+        if (!wasAlreadyPending) {
+          setPendingEmail(null);
+        }
         setPendingUploadResult(result);
         toast.error(
           error instanceof Error ? error.message : "Failed to send magic link. Please try again.",
@@ -79,7 +82,7 @@ export function UploadSection({ id }: UploadSectionProps) {
         setIsSendingMagicLink(false);
       }
     },
-    [showPromptSelector, selectedPrompt],
+    [showPromptSelector, selectedPrompt, pendingEmail],
   );
 
   const handleEditEmail = useCallback(() => {
