@@ -8,7 +8,7 @@ import { API_BASE_URL } from "@/lib/api-config";
 import { categorizeError } from "@/lib/upload-errors";
 import { getAnalyticsContext } from "@/lib/analytics-context";
 import { startUploadAttempt } from "@/lib/upload-session";
-import { initializeJobTracking } from "@/lib/session";
+import { initializeJobTracking, clearSession } from "@/lib/session";
 
 // =============================================================================
 // Constants
@@ -362,6 +362,7 @@ export function useUpload(): UseUploadResult {
 
         // Check if cancelled
         if (abortController.signal.aborted) {
+          clearSession(presignedData.uploadId);
           return null;
         }
 
@@ -387,11 +388,13 @@ export function useUpload(): UseUploadResult {
           timings.uploadEnd = performance.now();
           // Clean up partial upload on R2 failure (fire and forget)
           cleanupUpload(presignedData.uploadId, presignedData.cleanupToken);
+          clearSession(presignedData.uploadId);
           throw uploadError;
         }
 
         // Check if cancelled before confirmation
         if (abortController.signal.aborted) {
+          clearSession(presignedData.uploadId);
           return null;
         }
 
@@ -454,6 +457,11 @@ export function useUpload(): UseUploadResult {
           // Use ref for accurate progress at cancellation time
           trackEvent("upload_cancelled", { progressPercent: progressRef.current });
 
+          // Clean up job tracking for cancelled upload
+          if (state.uploadId) {
+            clearSession(state.uploadId);
+          }
+
           progressRef.current = 0;
           setState(initialState);
           return null;
@@ -476,6 +484,11 @@ export function useUpload(): UseUploadResult {
           });
 
           toast.error(userMessage, { duration: TOAST_ERROR_DURATION });
+
+          // Clean up job tracking for failed upload
+          if (state.uploadId) {
+            clearSession(state.uploadId);
+          }
 
           setState((prev) => ({
             status: "error",
@@ -526,6 +539,11 @@ export function useUpload(): UseUploadResult {
         const userMessage =
           categorizedError.userMessage || getErrorMessage(categorizedError.message);
         toast.error(userMessage, { duration: TOAST_ERROR_DURATION });
+
+        // Clean up job tracking for failed upload
+        if (state.uploadId) {
+          clearSession(state.uploadId);
+        }
 
         setState((prev) => ({
           status: "error",
