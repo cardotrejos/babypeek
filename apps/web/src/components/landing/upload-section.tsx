@@ -74,7 +74,6 @@ export function UploadSection({ id }: UploadSectionProps) {
         toast.error(
           error instanceof Error ? error.message : "Failed to send magic link. Please try again.",
         );
-        throw error;
       } finally {
         setIsSendingMagicLink(false);
       }
