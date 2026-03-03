@@ -114,7 +114,7 @@ export function useSessionRecovery() {
             if (data.status === "failed") {
               updateJobStatus(pending.jobId, "failed");
             }
-          } else {
+          } else if (response.status === 401 || response.status === 403) {
             // Auth expired or job not accessible - skip recovery prompt
             setIsChecking(false);
             return;

@@ -69,6 +69,7 @@ export function UploadSection({ id }: UploadSectionProps) {
         setPendingEmail(result.email);
         setPendingUploadResult(result);
       } catch (error) {
+        setPendingEmail(null);
         setPendingUploadResult(result);
         toast.error(
           error instanceof Error ? error.message : "Failed to send magic link. Please try again.",
