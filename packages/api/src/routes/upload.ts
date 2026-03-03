@@ -31,6 +31,10 @@ const initiateUploadSchema = z.object({
   email: z.string().min(1, "Email is required").email("Invalid email format"),
 });
 
+const updateEmailSchema = z.object({
+  email: z.string().min(1, "Email is required").email("Invalid email format"),
+});
+
 const CLEANUP_TOKEN_TTL_SECONDS = 15 * 60;
 const CLEANUP_TOKEN_SECRET = env.BETTER_AUTH_SECRET || "dev-secret-change-me-not-for-production";
 
@@ -407,14 +411,19 @@ app.put("/:uploadId/email", async (c) => {
   }
 
   const body = await c.req.json().catch(() => ({}));
-  const email =
-    body && typeof body === "object" && "email" in body && typeof body.email === "string"
-      ? body.email.trim().toLowerCase()
-      : null;
+  const parsed = updateEmailSchema.safeParse(body);
 
-  if (!email) {
-    return c.json({ error: "Email is required", code: "INVALID_REQUEST" }, 400);
+  if (!parsed.success) {
+    return c.json(
+      {
+        error: "Invalid request",
+        details: parsed.error.flatten().fieldErrors,
+      },
+      400,
+    );
   }
+
+  const email = parsed.data.email.trim().toLowerCase();
 
   const updateEmail = Effect.fn("routes.upload.updateEmail")(function* () {
     const uploadService = yield* UploadService;

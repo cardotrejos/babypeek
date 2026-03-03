@@ -145,6 +145,14 @@ export function UploadSection({ id }: UploadSectionProps) {
     setPendingEmail(previousPendingEmail);
   }, [previousPendingEmail]);
 
+  const handleStartOver = useCallback(() => {
+    setPendingEmail(null);
+    setPendingUploadResult(null);
+    setIsEditingEmail(false);
+    setNewEmail("");
+    setPreviousPendingEmail(null);
+  }, []);
+
   return (
     <section id={id} className="py-12">
       <div className="max-w-md mx-auto">
@@ -254,6 +262,13 @@ export function UploadSection({ id }: UploadSectionProps) {
                   className="w-full px-6 py-3 bg-charcoal/10 text-charcoal font-body rounded-lg hover:bg-charcoal/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Try Different Email
+                </button>
+                <button
+                  onClick={handleStartOver}
+                  disabled={isSendingMagicLink}
+                  className="w-full px-6 py-3 text-charcoal/60 font-body rounded-lg hover:text-charcoal transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                >
+                  Start Over
                 </button>
               </div>
             )}
