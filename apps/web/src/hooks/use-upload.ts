@@ -8,6 +8,7 @@ import { API_BASE_URL } from "@/lib/api-config";
 import { categorizeError } from "@/lib/upload-errors";
 import { getAnalyticsContext } from "@/lib/analytics-context";
 import { startUploadAttempt } from "@/lib/upload-session";
+import { initializeJobTracking } from "@/lib/session";
 
 // =============================================================================
 // Constants
@@ -350,6 +351,9 @@ export function useUpload(): UseUploadResult {
         timings.presignStart = performance.now();
         const presignedData = await requestPresignedUrl(file.type, email, abortController.signal);
         timings.presignEnd = performance.now();
+
+        // Initialize job tracking for session recovery
+        initializeJobTracking(presignedData.uploadId);
 
         // Check if cancelled
         if (abortController.signal.aborted) {

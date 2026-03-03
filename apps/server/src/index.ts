@@ -35,7 +35,7 @@ app.use(
   cors({
     origin: process.env.WEB_URL || process.env.CORS_ORIGIN || "http://localhost:3001",
     allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowHeaders: ["Content-Type", "Authorization"],
+    allowHeaders: ["Content-Type", "Authorization", "X-Upload-Cleanup-Token"],
     credentials: true,
   }),
 );

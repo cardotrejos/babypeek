@@ -47,6 +47,28 @@ export function storeSession(jobId: string, token: string): void {
 }
 
 /**
+ * Initialize job tracking data for session recovery without storing a session token
+ * Used when auth is handled by Better Auth cookies instead of manual session tokens
+ */
+export function initializeJobTracking(jobId: string): void {
+  try {
+    localStorage.setItem(CURRENT_JOB_KEY, jobId);
+
+    // Store job data with empty token (auth handled by Better Auth)
+    const jobData: JobData = {
+      jobId,
+      token: "", // No session token needed - using Better Auth cookies
+      createdAt: Date.now(),
+      status: "pending",
+    };
+    localStorage.setItem(`${JOB_DATA_PREFIX}${jobId}`, JSON.stringify(jobData));
+  } catch (error) {
+    // Silent fail - localStorage may not be available (SSR, private browsing)
+    console.warn("Failed to initialize job tracking:", error);
+  }
+}
+
+/**
  * Retrieve a session token for a specific job
  */
 export function getSession(jobId: string): string | null {
