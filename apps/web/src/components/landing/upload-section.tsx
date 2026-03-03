@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useState, useRef } from "react";
 import { useSearch } from "@tanstack/react-router";
 import { toast } from "sonner";
 
@@ -35,6 +35,7 @@ export function UploadSection({ id }: UploadSectionProps) {
 
   const [selectedPrompt, setSelectedPrompt] = useState<PromptVersion>("v4");
   const [pendingEmail, setPendingEmail] = useState<string | null>(null);
+  const pendingEmailRef = useRef<string | null>(null);
   const [isSendingMagicLink, setIsSendingMagicLink] = useState(false);
   const [pendingUploadResult, setPendingUploadResult] = useState<
     (UploadResult & { email: string }) | null
@@ -43,10 +44,13 @@ export function UploadSection({ id }: UploadSectionProps) {
   const [newEmail, setNewEmail] = useState("");
   const [previousPendingEmail, setPreviousPendingEmail] = useState<string | null>(null);
 
+  // Keep ref in sync with state
+  pendingEmailRef.current = pendingEmail;
+
   const handleUploadComplete = useCallback(
     async (result: UploadResult & { email: string }) => {
       setIsSendingMagicLink(true);
-      const wasAlreadyPending = pendingEmail !== null;
+      const wasAlreadyPending = pendingEmailRef.current !== null;
 
       try {
         const callbackPath = showPromptSelector
@@ -82,7 +86,7 @@ export function UploadSection({ id }: UploadSectionProps) {
         setIsSendingMagicLink(false);
       }
     },
-    [showPromptSelector, selectedPrompt, pendingEmail],
+    [showPromptSelector, selectedPrompt],
   );
 
   const handleEditEmail = useCallback(() => {

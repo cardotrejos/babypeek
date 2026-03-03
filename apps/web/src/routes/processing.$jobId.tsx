@@ -274,7 +274,13 @@ function ProcessingPage() {
   }, [isFailed, polledErrorMessage, jobId]);
 
   const startProcessing = useCallback(async () => {
+    if (processingStartedRef.current) {
+      return;
+    }
+    processingStartedRef.current = true;
+
     if (isAuthLoading) {
+      processingStartedRef.current = false;
       return;
     }
 
@@ -285,13 +291,9 @@ function ProcessingPage() {
         canRetry: false,
       });
       setState("error");
+      processingStartedRef.current = false;
       return;
     }
-
-    if (processingStartedRef.current) {
-      return;
-    }
-    processingStartedRef.current = true;
 
     setState("starting");
 

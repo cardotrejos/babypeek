@@ -42,7 +42,18 @@ app.use(
 
 app.all("/api/auth/*", async (c) => {
   const response = await auth.handler(c.req.raw);
-  return c.newResponse(response.body, response);
+  const newResponse = c.newResponse(response.body, {
+    status: response.status,
+    statusText: response.statusText,
+  });
+  // Copy headers from Better Auth response, excluding CORS headers
+  // that Hono's CORS middleware will handle
+  for (const [key, value] of response.headers.entries()) {
+    if (!key.toLowerCase().startsWith("access-control-")) {
+      newResponse.headers.set(key, value);
+    }
+  }
+  return newResponse;
 });
 
 // Routes
