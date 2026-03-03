@@ -339,6 +339,7 @@ function ProcessingPage() {
             lastProgress: data.lastProgress,
           });
           setState("timeout");
+          processingStartedRef.current = false;
           return;
         }
 
@@ -350,6 +351,7 @@ function ProcessingPage() {
           canRetry: data.canRetry ?? (response.status >= 500 || response.status === 0),
         });
         setState("error");
+        processingStartedRef.current = false;
         return;
       }
 
@@ -366,6 +368,7 @@ function ProcessingPage() {
         canRetry: true,
       });
       setState("error");
+      processingStartedRef.current = false;
     }
   }, [jobId, selectedPrompt, urlPromptVersion, authSession?.user, isAuthLoading]);
 

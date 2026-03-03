@@ -125,21 +125,6 @@ export function updateJobResult(jobId: string, resultId: string): void {
 }
 
 /**
- * Store selected pricing tier for a job
- */
-export function updateJobTier(jobId: string, tier: string): void {
-  try {
-    const data = getJobData(jobId);
-    if (data) {
-      data.selectedTier = tier;
-      localStorage.setItem(`${JOB_DATA_PREFIX}${jobId}`, JSON.stringify(data));
-    }
-  } catch {
-    // Silent fail
-  }
-}
-
-/**
  * Get pending job for session recovery (Story 5.7: AC5, AC6)
  * Returns the current job if it's incomplete and not expired
  */

@@ -9,7 +9,6 @@ import {
   getJobData,
   updateJobStatus,
   updateJobResult,
-  updateJobTier,
   getPendingJob,
   getCompletedJobNeedingRedirect,
   clearStaleSessions,
@@ -88,14 +87,6 @@ describe("session tracking utilities (Better Auth)", () => {
     const data = getJobData("job-123");
     expect(data?.resultId).toBe("result-999");
     expect(data?.status).toBe("completed");
-  });
-
-  it("updates selected tier", () => {
-    initializeJobTracking("job-123");
-    updateJobTier("job-123", "pro");
-
-    const data = getJobData("job-123");
-    expect(data?.selectedTier).toBe("pro");
   });
 
   it("returns pending/processing job for recovery", () => {

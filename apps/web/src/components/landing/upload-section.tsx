@@ -63,7 +63,7 @@ export function UploadSection({ id }: UploadSectionProps) {
         }
 
         setPendingEmail(result.email);
-        setPendingUploadResult(null);
+        setPendingUploadResult(result);
       } catch (error) {
         setPendingUploadResult(result);
         toast.error(
@@ -78,7 +78,6 @@ export function UploadSection({ id }: UploadSectionProps) {
 
   const handleTryDifferentEmail = useCallback(() => {
     setPendingEmail(null);
-    setPendingUploadResult(null);
   }, []);
 
   const handleRetryMagicLink = useCallback(async () => {
