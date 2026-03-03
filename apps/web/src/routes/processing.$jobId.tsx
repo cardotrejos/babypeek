@@ -92,7 +92,7 @@ function ProcessingPage() {
     firstPreviewReady: polledFirstPreviewReady,
     refetch: refetchStatus,
   } = useStatus(shouldPoll ? jobId : null, {
-    enabled: shouldPoll && !isAuthLoading && Boolean(authSession?.user),
+    enabled: !isAuthLoading && Boolean(authSession?.user),
   });
 
   // Story 5.7: Merge polled status with updates from leader tab (AC8)

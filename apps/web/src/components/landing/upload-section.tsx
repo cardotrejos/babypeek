@@ -78,7 +78,6 @@ export function UploadSection({ id }: UploadSectionProps) {
 
   const handleTryDifferentEmail = useCallback(() => {
     setPendingEmail(null);
-    setPendingUploadResult(null);
   }, []);
 
   const handleRetryMagicLink = useCallback(async () => {

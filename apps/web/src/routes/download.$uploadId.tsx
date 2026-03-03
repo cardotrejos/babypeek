@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { DownloadButton, DownloadExpired } from "@/components/download";
 import { API_BASE_URL } from "@/lib/api-config";
 import { posthog, isPostHogConfigured } from "@/lib/posthog";
+import { useSession } from "@/lib/auth-client";
 
 /**
  * Download Page Route
@@ -34,6 +35,7 @@ interface DownloadStatus {
 function DownloadPage() {
   const { uploadId } = Route.useParams();
   const navigate = useNavigate();
+  const { data: authSession, isPending: isAuthLoading } = useSession();
 
   // Check download eligibility
   const { data, isLoading, error } = useQuery<DownloadStatus>({
@@ -59,16 +61,42 @@ function DownloadPage() {
 
       return result;
     },
-    enabled: true,
+    enabled: !isAuthLoading && Boolean(authSession?.user),
     staleTime: 30 * 1000, // 30 seconds
     retry: 1,
   });
 
   // Loading state
-  if (isLoading) {
+  if (isLoading || isAuthLoading) {
     return (
       <div className="min-h-screen bg-cream flex items-center justify-center">
         <div className="size-12 animate-spin rounded-full border-4 border-coral border-t-transparent" />
+      </div>
+    );
+  }
+
+  // Unauthenticated state
+  if (!authSession?.user) {
+    return (
+      <div className="min-h-screen bg-cream flex items-center justify-center p-4">
+        <div className="max-w-md text-center space-y-4">
+          <div className="flex justify-center">
+            <div className="size-16 rounded-full bg-warm-gray/10 flex items-center justify-center">
+              <span className="text-3xl">🔒</span>
+            </div>
+          </div>
+          <h1 className="font-display text-2xl text-charcoal">Session Not Found</h1>
+          <p className="text-warm-gray">
+            Please access this download link from the device where you received the email, or click the
+            magic link in your email to authenticate.
+          </p>
+          <button
+            onClick={() => navigate({ to: "/" })}
+            className="px-6 py-3 bg-coral text-white rounded-lg hover:bg-coral/90 transition-colors"
+          >
+            Go Home
+          </button>
+        </div>
       </div>
     );
   }
