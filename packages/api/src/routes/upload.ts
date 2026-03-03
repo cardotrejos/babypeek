@@ -166,7 +166,8 @@ app.post(
     );
   }
 
-  const { contentType, email } = parsed.data;
+  const { contentType, email: rawEmail } = parsed.data;
+  const email = rawEmail.trim().toLowerCase();
 
   // Generate unique upload ID and R2 key
   const uploadId = createId();

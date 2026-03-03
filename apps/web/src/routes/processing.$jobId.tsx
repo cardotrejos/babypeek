@@ -372,6 +372,15 @@ function ProcessingPage() {
     }
   }, [jobId, selectedPrompt, urlPromptVersion, authSession?.user, isAuthLoading]);
 
+  // Reset auth error state when user authenticates
+  useEffect(() => {
+    if (authSession?.user && state === "error" && error?.code === "UNAUTHENTICATED") {
+      setError(null);
+      processingStartedRef.current = false;
+      setState("idle");
+    }
+  }, [authSession?.user, state, error?.code]);
+
   // Start processing on mount (auto-start in prod, manual in dev for testing)
   const [devManualStart, setDevManualStart] = useState(false);
   useEffect(() => {
