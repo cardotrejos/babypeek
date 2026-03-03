@@ -49,18 +49,22 @@ export const auth = betterAuth({
           from: "BabyPeek <noreply@babypeek.io>",
           to: email,
           subject: "Your BabyPeek Magic Link",
-          html: `
+          html: (() => {
+            // Escape the URL to prevent HTML injection via crafted redirect params
+            const safeUrl = url.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+            return `
             <div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">
               <h2>Almost there!</h2>
               <p>Click below to continue with your baby portrait:</p>
-              <a href="${url}" style="display: inline-block; padding: 12px 24px; background: #f97362; color: #fff; border-radius: 8px; text-decoration: none; font-weight: 700;">
+              <a href="${safeUrl}" style="display: inline-block; padding: 12px 24px; background: #f97362; color: #fff; border-radius: 8px; text-decoration: none; font-weight: 700;">
                 Continue to BabyPeek
               </a>
               <p style="color: #666; font-size: 14px; margin-top: 16px;">
                 This link expires in 5 minutes.
               </p>
             </div>
-          `,
+          `;
+          })(),
         });
       },
     }),
