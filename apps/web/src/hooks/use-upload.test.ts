@@ -422,6 +422,7 @@ describe("useUpload", () => {
     expect(uploadResult).toEqual({
       uploadId: "test-upload-id",
       key: "uploads/test-upload-id/original.jpg",
+      cleanupToken: "cleanup-token",
     });
   });
 
