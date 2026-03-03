@@ -1,5 +1,6 @@
 import "dotenv/config";
 import { Hono } from "hono";
+import type { StatusCode } from "hono/utils/http-status";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
 import { initSentry, sentryMiddleware, captureException } from "./lib/sentry";
@@ -43,7 +44,7 @@ app.use(
 app.all("/api/auth/*", async (c) => {
   const response = await auth.handler(c.req.raw);
   const newResponse = c.newResponse(response.body, {
-    status: response.status,
+    status: response.status as StatusCode,
     statusText: response.statusText,
   });
   // Copy headers from Better Auth response, excluding CORS headers
