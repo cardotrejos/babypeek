@@ -333,6 +333,8 @@ export function useUpload(): UseUploadResult {
         uploadEnd: 0,
       };
 
+      let uploadIdForCleanup: string | null = null;
+
       try {
         // Track upload started with enriched context
         trackEvent("upload_started", {
@@ -359,6 +361,7 @@ export function useUpload(): UseUploadResult {
 
         // Initialize job tracking for session recovery
         initializeJobTracking(presignedData.uploadId);
+        uploadIdForCleanup = presignedData.uploadId;
 
         // Check if cancelled
         if (abortController.signal.aborted) {
@@ -458,8 +461,8 @@ export function useUpload(): UseUploadResult {
           trackEvent("upload_cancelled", { progressPercent: progressRef.current });
 
           // Clean up job tracking for cancelled upload
-          if (state.uploadId) {
-            clearSession(state.uploadId);
+          if (uploadIdForCleanup) {
+            clearSession(uploadIdForCleanup);
           }
 
           progressRef.current = 0;
@@ -486,8 +489,8 @@ export function useUpload(): UseUploadResult {
           toast.error(userMessage, { duration: TOAST_ERROR_DURATION });
 
           // Clean up job tracking for failed upload
-          if (state.uploadId) {
-            clearSession(state.uploadId);
+          if (uploadIdForCleanup) {
+            clearSession(uploadIdForCleanup);
           }
 
           setState((prev) => ({
@@ -541,8 +544,8 @@ export function useUpload(): UseUploadResult {
         toast.error(userMessage, { duration: TOAST_ERROR_DURATION });
 
         // Clean up job tracking for failed upload
-        if (state.uploadId) {
-          clearSession(state.uploadId);
+        if (uploadIdForCleanup) {
+          clearSession(uploadIdForCleanup);
         }
 
         setState((prev) => ({

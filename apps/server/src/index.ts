@@ -40,7 +40,10 @@ app.use(
   }),
 );
 
-app.on(["POST", "GET"], "/api/auth/*", (c) => auth.handler(c.req.raw));
+app.on(["POST", "GET"], "/api/auth/*", async (c) => {
+  const response = await auth.handler(c.req.raw);
+  return c.newResponse(response.body, response);
+});
 
 // Routes
 app.route("/api/health", healthRoutes);
