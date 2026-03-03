@@ -128,6 +128,11 @@ export function UploadSection({ id }: UploadSectionProps) {
     await handleUploadComplete(pendingUploadResult);
   }, [pendingUploadResult, handleUploadComplete]);
 
+  const handleCancelEdit = useCallback(() => {
+    setIsEditingEmail(false);
+    setPendingEmail(pendingUploadResult?.email || null);
+  }, [pendingUploadResult]);
+
   return (
     <section id={id} className="py-12">
       <div className="max-w-md mx-auto">
@@ -215,7 +220,7 @@ export function UploadSection({ id }: UploadSectionProps) {
                   {isSendingMagicLink ? "Sending..." : "Send Magic Link"}
                 </button>
                 <button
-                  onClick={() => setIsEditingEmail(false)}
+                  onClick={handleCancelEdit}
                   disabled={isSendingMagicLink}
                   className="w-full px-6 py-3 bg-charcoal/10 text-charcoal font-body rounded-lg hover:bg-charcoal/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
