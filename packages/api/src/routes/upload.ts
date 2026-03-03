@@ -12,6 +12,7 @@ import { R2Error } from "../lib/errors";
 import { auth } from "../lib/auth";
 import { env } from "../lib/env";
 import { rateLimit } from "../middleware/rateLimit";
+import { canAccessUpload } from "./uploadAuth";
 
 // Combined layer for upload routes
 const UploadRoutesLive = Layer.merge(R2ServiceLive, UploadServiceLive);
@@ -296,19 +297,18 @@ app.post("/:uploadId/confirm", rateLimit({ limit: 20, windowMs: 60 * 60 * 1000 }
         )
       : null;
 
-    if (session?.user?.id) {
-      if (upload.userId !== session.user.id) {
-        return yield* Effect.fail({ _tag: "UnauthorizedError" as const });
-      }
-    } else {
-      const canConfirmUnauthenticated =
-        upload.status === "pending" &&
+    const canConfirmUpload = canAccessUpload({
+      uploadUserId: upload.userId,
+      uploadStatus: upload.status,
+      sessionUserId: session?.user?.id,
+      cleanupToken,
+      isCleanupTokenValid:
         typeof cleanupToken === "string" &&
-        isValidCleanupToken(cleanupToken, upload.id, upload.userId);
+        isValidCleanupToken(cleanupToken, upload.id, upload.userId),
+    });
 
-      if (!canConfirmUnauthenticated) {
-        return yield* Effect.fail({ _tag: "UnauthorizedError" as const });
-      }
+    if (!canConfirmUpload) {
+      return yield* Effect.fail({ _tag: "UnauthorizedError" as const });
     }
 
     // Verify the file exists in R2 using HEAD request
@@ -525,19 +525,18 @@ app.delete("/:uploadId", async (c) => {
         )
       : null;
 
-    if (session?.user?.id) {
-      if (upload.userId !== session.user.id) {
-        return yield* Effect.fail({ _tag: "UnauthorizedError" as const });
-      }
-    } else {
-      const canCleanupUnauthenticated =
-        upload.status === "pending" &&
+    const canCleanupUpload = canAccessUpload({
+      uploadUserId: upload.userId,
+      uploadStatus: upload.status,
+      sessionUserId: session?.user?.id,
+      cleanupToken,
+      isCleanupTokenValid:
         typeof cleanupToken === "string" &&
-        isValidCleanupToken(cleanupToken, upload.id, upload.userId);
+        isValidCleanupToken(cleanupToken, upload.id, upload.userId),
+    });
 
-      if (!canCleanupUnauthenticated) {
-        return yield* Effect.fail({ _tag: "UnauthorizedError" as const });
-      }
+    if (!canCleanupUpload) {
+      return yield* Effect.fail({ _tag: "UnauthorizedError" as const });
     }
 
     // Delete all files with the upload prefix (uploads/{uploadId}/)
