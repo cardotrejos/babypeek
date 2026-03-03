@@ -149,8 +149,14 @@ export function UploadSection({ id }: UploadSectionProps) {
 
   const handleCancelEdit = useCallback(() => {
     setIsEditingEmail(false);
-    setPendingEmail(previousPendingEmail);
-  }, [previousPendingEmail]);
+    // If server-side email update succeeded, pendingUploadResult.email will differ from previousPendingEmail
+    // In that case, we can't revert to the old email - use the updated email instead
+    if (pendingUploadResult && pendingUploadResult.email !== previousPendingEmail) {
+      setPendingEmail(pendingUploadResult.email);
+    } else {
+      setPendingEmail(previousPendingEmail);
+    }
+  }, [previousPendingEmail, pendingUploadResult]);
 
   const handleStartOver = useCallback(() => {
     setPendingEmail(null);
