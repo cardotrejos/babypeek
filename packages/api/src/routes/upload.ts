@@ -464,7 +464,7 @@ app.put("/:uploadId/email", async (c) => {
     // Update the upload with new email and userId
     yield* uploadService.updateEmail(uploadId, email, authUser.id);
 
-    return { success: true };
+    return { success: true, cleanupToken: createCleanupToken(uploadId, authUser.id) };
   });
 
   const program = updateEmail().pipe(Effect.provide(UploadRoutesLive));
@@ -482,7 +482,7 @@ app.put("/:uploadId/email", async (c) => {
     return c.json({ error: "Internal server error", code: "UNKNOWN" }, 500);
   }
 
-  return c.json({ success: true });
+  return c.json({ success: true, cleanupToken: result.right.cleanupToken });
 });
 
 // =============================================================================

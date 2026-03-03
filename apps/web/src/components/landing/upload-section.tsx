@@ -112,7 +112,12 @@ export function UploadSection({ id }: UploadSectionProps) {
         throw new Error("Failed to update email");
       }
 
-      const updatedResult = { ...pendingUploadResult, email: newEmail };
+      const data = await response.json();
+      const updatedResult = { 
+        ...pendingUploadResult, 
+        email: newEmail,
+        cleanupToken: data.cleanupToken || pendingUploadResult.cleanupToken
+      };
       setIsEditingEmail(false);
       await handleUploadComplete(updatedResult);
     } catch (error) {

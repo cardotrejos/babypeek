@@ -23,7 +23,7 @@ export interface UploadFormProps {
   /** Called when form is submitted with valid email and file (simple mode) */
   onSubmit?: (data: UploadFormData) => void;
   /** Called when upload completes successfully (with upload enabled) */
-  onUploadComplete?: (result: UploadResult & { email: string }) => void;
+  onUploadComplete?: (result: UploadResult & { email: string }) => void | Promise<void>;
   /** Whether to enable built-in upload functionality */
   enableUpload?: boolean;
   /** Whether the form is disabled (e.g., during upload) */
