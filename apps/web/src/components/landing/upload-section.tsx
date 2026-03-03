@@ -38,6 +38,8 @@ export function UploadSection({ id }: UploadSectionProps) {
   const [pendingUploadResult, setPendingUploadResult] = useState<
     (UploadResult & { email: string }) | null
   >(null);
+  const [isEditingEmail, setIsEditingEmail] = useState(false);
+  const [newEmail, setNewEmail] = useState("");
 
   const handleUploadComplete = useCallback(
     async (result: UploadResult & { email: string }) => {
@@ -79,7 +81,21 @@ export function UploadSection({ id }: UploadSectionProps) {
   const handleTryDifferentEmail = useCallback(() => {
     setPendingEmail(null);
     setPendingUploadResult(null);
+    setIsEditingEmail(false);
+    setNewEmail("");
   }, []);
+
+  const handleStartEditingEmail = useCallback(() => {
+    setIsEditingEmail(true);
+    setNewEmail(pendingUploadResult?.email || "");
+  }, [pendingUploadResult]);
+
+  const handleSubmitNewEmail = useCallback(async () => {
+    if (!pendingUploadResult || !newEmail) return;
+    const updatedResult = { ...pendingUploadResult, email: newEmail };
+    setIsEditingEmail(false);
+    await handleUploadComplete(updatedResult);
+  }, [pendingUploadResult, newEmail, handleUploadComplete]);
 
   const handleRetryMagicLink = useCallback(async () => {
     if (!pendingUploadResult) return;
@@ -134,32 +150,70 @@ export function UploadSection({ id }: UploadSectionProps) {
         )}
 
         {pendingEmail ? (
-          <CheckEmail email={pendingEmail} onTryDifferentEmail={handleTryDifferentEmail} />
+          <CheckEmail
+            email={pendingEmail}
+            onTryDifferentEmail={handleTryDifferentEmail}
+            onResend={handleRetryMagicLink}
+            isResending={isSendingMagicLink}
+          />
         ) : pendingUploadResult ? (
           <div className="bg-white rounded-lg shadow-lg p-6 space-y-4">
             <div className="text-center space-y-2">
               <h3 className="font-display text-xl text-charcoal">Upload Complete</h3>
-              <p className="text-sm text-warm-gray">
-                Your image was uploaded successfully, but we couldn't send the magic link to{" "}
-                <strong>{pendingUploadResult.email}</strong>.
-              </p>
+              {isEditingEmail ? (
+                <p className="text-sm text-warm-gray">
+                  Enter a different email address to receive the magic link.
+                </p>
+              ) : (
+                <p className="text-sm text-warm-gray">
+                  Your image was uploaded successfully, but we couldn't send the magic link to{" "}
+                  <strong>{pendingUploadResult.email}</strong>.
+                </p>
+              )}
             </div>
-            <div className="flex flex-col gap-2">
-              <button
-                onClick={handleRetryMagicLink}
-                disabled={isSendingMagicLink}
-                className="w-full px-6 py-3 bg-coral text-white font-body rounded-lg hover:bg-coral/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isSendingMagicLink ? "Sending..." : "Resend Magic Link"}
-              </button>
-              <button
-                onClick={handleTryDifferentEmail}
-                disabled={isSendingMagicLink}
-                className="w-full px-6 py-3 bg-charcoal/10 text-charcoal font-body rounded-lg hover:bg-charcoal/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Try Different Email
-              </button>
-            </div>
+            {isEditingEmail ? (
+              <div className="flex flex-col gap-2">
+                <input
+                  type="email"
+                  value={newEmail}
+                  onChange={(e) => setNewEmail(e.target.value)}
+                  placeholder="Enter your email"
+                  className="w-full px-4 py-3 border border-warm-gray/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-coral"
+                  disabled={isSendingMagicLink}
+                />
+                <button
+                  onClick={handleSubmitNewEmail}
+                  disabled={isSendingMagicLink || !newEmail}
+                  className="w-full px-6 py-3 bg-coral text-white font-body rounded-lg hover:bg-coral/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isSendingMagicLink ? "Sending..." : "Send Magic Link"}
+                </button>
+                <button
+                  onClick={() => setIsEditingEmail(false)}
+                  disabled={isSendingMagicLink}
+                  className="w-full px-6 py-3 bg-charcoal/10 text-charcoal font-body rounded-lg hover:bg-charcoal/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Cancel
+                </button>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-2">
+                <button
+                  onClick={handleRetryMagicLink}
+                  disabled={isSendingMagicLink}
+                  className="w-full px-6 py-3 bg-coral text-white font-body rounded-lg hover:bg-coral/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isSendingMagicLink ? "Sending..." : "Resend Magic Link"}
+                </button>
+                <button
+                  onClick={handleStartEditingEmail}
+                  disabled={isSendingMagicLink}
+                  className="w-full px-6 py-3 bg-charcoal/10 text-charcoal font-body rounded-lg hover:bg-charcoal/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Try Different Email
+                </button>
+              </div>
+            )}
           </div>
         ) : (
           <UploadForm
