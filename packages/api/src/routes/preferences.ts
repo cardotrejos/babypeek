@@ -42,7 +42,7 @@ const app = new Hono();
  *
  * Error responses:
  * - 400: Invalid request body
- * - 401: Invalid or missing session token
+ * - 401: Missing or invalid authentication session
  * - 404: Upload or result not found
  */
 app.post("/", requireAuth, async (c) => {

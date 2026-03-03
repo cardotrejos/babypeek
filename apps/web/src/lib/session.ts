@@ -1,10 +1,9 @@
 // =============================================================================
 // Session Storage Utilities
 // =============================================================================
-// Manages localStorage-based session tokens for upload tracking
+// Manages localStorage-based job tracking for session recovery
 // Story 5.7: Enhanced with TTL, result tracking, and recovery support
 
-export const SESSION_PREFIX = "babypeek-session-";
 export const CURRENT_JOB_KEY = "babypeek-current-job";
 export const JOB_DATA_PREFIX = "babypeek-job-";
 
@@ -16,7 +15,6 @@ export const SESSION_TTL_MS = 24 * 60 * 60 * 1000;
  */
 export interface JobData {
   jobId: string;
-  token: string;
   createdAt: number;
   resultId?: string;
   status?: "pending" | "processing" | "completed" | "failed";
@@ -24,40 +22,16 @@ export interface JobData {
 }
 
 /**
- * Store a session token for a specific job
- * Also updates the current job reference for session recovery
- */
-export function storeSession(jobId: string, token: string): void {
-  try {
-    localStorage.setItem(`${SESSION_PREFIX}${jobId}`, token);
-    localStorage.setItem(CURRENT_JOB_KEY, jobId);
-
-    // Store enhanced job data with timestamp (Story 5.7: AC4)
-    const jobData: JobData = {
-      jobId,
-      token,
-      createdAt: Date.now(),
-      status: "pending",
-    };
-    localStorage.setItem(`${JOB_DATA_PREFIX}${jobId}`, JSON.stringify(jobData));
-  } catch (error) {
-    // Silent fail - localStorage may not be available (SSR, private browsing)
-    console.warn("Failed to store session:", error);
-  }
-}
-
-/**
- * Initialize job tracking data for session recovery without storing a session token
- * Used when auth is handled by Better Auth cookies instead of manual session tokens
+ * Initialize job tracking data for session recovery.
+ * Authentication is handled by Better Auth cookies.
  */
 export function initializeJobTracking(jobId: string): void {
   try {
     localStorage.setItem(CURRENT_JOB_KEY, jobId);
 
-    // Store job data with empty token (auth handled by Better Auth)
+    // Store job metadata for recovery
     const jobData: JobData = {
       jobId,
-      token: "", // No session token needed - using Better Auth cookies
       createdAt: Date.now(),
       status: "pending",
     };
@@ -65,17 +39,6 @@ export function initializeJobTracking(jobId: string): void {
   } catch (error) {
     // Silent fail - localStorage may not be available (SSR, private browsing)
     console.warn("Failed to initialize job tracking:", error);
-  }
-}
-
-/**
- * Retrieve a session token for a specific job
- */
-export function getSession(jobId: string): string | null {
-  try {
-    return localStorage.getItem(`${SESSION_PREFIX}${jobId}`);
-  } catch {
-    return null;
   }
 }
 
@@ -90,13 +53,9 @@ export function getCurrentJob(): string | null {
   }
 }
 
-/**
- * Clear a session token for a specific job
- * Also clears current job reference if it matches
- */
+/** Clear job tracking for a specific job */
 export function clearSession(jobId: string): void {
   try {
-    localStorage.removeItem(`${SESSION_PREFIX}${jobId}`);
     localStorage.removeItem(`${JOB_DATA_PREFIX}${jobId}`);
     const current = getCurrentJob();
     if (current === jobId) {
@@ -107,25 +66,8 @@ export function clearSession(jobId: string): void {
   }
 }
 
-/**
- * Check if a session exists for a job
- */
-export function hasSession(jobId: string): boolean {
-  return getSession(jobId) !== null;
-}
-
-/**
- * Legacy helper kept for compatibility with old tests/utilities.
- * New auth flow uses Better Auth cookies instead of manual headers.
- */
-export function getSessionHeader(jobId: string): Record<string, string> | null {
-  const token = getSession(jobId);
-  if (!token) return null;
-  return { "X-Session-Token": token };
-}
-
 // =============================================================================
-// Enhanced Session Recovery (Story 5.7)
+// Session Recovery (Story 5.7)
 // =============================================================================
 
 /**
@@ -261,7 +203,6 @@ export function clearStaleSessions(): void {
           if (now - data.createdAt > SESSION_TTL_MS) {
             // Clear all related data for this job
             localStorage.removeItem(key);
-            localStorage.removeItem(`${SESSION_PREFIX}${data.jobId}`);
             // Clear current job if it matches
             if (getCurrentJob() === data.jobId) {
               localStorage.removeItem(CURRENT_JOB_KEY);

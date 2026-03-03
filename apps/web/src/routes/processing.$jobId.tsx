@@ -228,7 +228,7 @@ function ProcessingPage() {
         });
       }
 
-      // Store mapping of result -> upload for session token retrieval
+      // Store mapping of result -> upload for session recovery/navigation
       localStorage.setItem(`babypeek-result-upload-${resultId}`, jobId);
       updateJobResult(jobId, resultId);
 

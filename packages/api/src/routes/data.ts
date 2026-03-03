@@ -16,13 +16,13 @@ const app = new Hono();
  *
  * Story 8.6: Delete My Data Button
  *
- * Deletes all user data associated with the session token:
+ * Deletes all user data associated with an authenticated upload:
  * - Upload record
  * - Result images from R2
  * - Purchase records (anonymized for accounting)
  * - Download records
  *
- * AC-2: Confirming calls DELETE /api/data/:token
+ * AC-2: Confirming calls DELETE /api/data/:uploadId
  * AC-3: Deletion removes: upload record, result images from R2, email hash
  * AC-4: The deletion is logged for compliance audit
  */

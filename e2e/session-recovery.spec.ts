@@ -10,10 +10,6 @@ import { test, expect, Page } from "@playwright/test";
  * - AC7: Session is cleared after TTL
  */
 
-const SESSION_PREFIX = "babypeek-session-";
-const JOB_DATA_PREFIX = "babypeek-job-";
-const CURRENT_JOB_KEY = "babypeek-current-job";
-
 // Helper to set up a mock session in localStorage
 async function setupMockSession(
   page: Page,
@@ -30,14 +26,11 @@ async function setupMockSession(
     ({ jobId, status, resultId, expired }) => {
       const createdAt = expired ? Date.now() - 25 * 60 * 60 * 1000 : Date.now();
 
-      // Set session token
-      localStorage.setItem(`babypeek-session-${jobId}`, `mock-token-${jobId}`);
       localStorage.setItem("babypeek-current-job", jobId);
 
       // Set job data
       const jobData = {
         jobId,
-        token: `mock-token-${jobId}`,
         createdAt,
         status,
         ...(resultId && { resultId }),

@@ -12,12 +12,12 @@ const app = new Hono();
 /**
  * GET /api/preview/:uploadId
  *
- * Public endpoint to get preview data for email links.
- * Returns watermarked previews for all 4 variants (no auth required).
+ * Authenticated endpoint to get preview data for email links.
+ * Returns watermarked previews for all 4 variants.
  * Users can view their portraits and purchase HD versions.
  *
- * This endpoint is used for email links where the user may not have
- * the session token in localStorage (different device/browser).
+ * This endpoint is used for email links where users may return from a
+ * different device/browser and rely on Better Auth cookies.
  *
  * Response:
  * - uploadId: string - The upload ID

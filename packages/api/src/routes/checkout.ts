@@ -26,7 +26,7 @@ const checkoutSchema = z.object({
  * POST /api/checkout
  *
  * Create a Stripe Checkout session for purchasing an HD image.
- * Requires session token for authentication.
+ * Requires Better Auth authentication.
  *
  * Headers:
  * - Authentication cookie required via Better Auth
@@ -61,7 +61,7 @@ app.post("/", requireAuth, async (c) => {
 
   const { uploadId, type, tier } = parsed.data;
 
-  // Verify session token matches upload before proceeding
+  // Verify authenticated user owns the upload before checkout
   const verifyAndCheckout = Effect.fn("routes.checkout.verifyAndCreate")(function* () {
     const uploadService = yield* UploadService;
 
@@ -114,7 +114,7 @@ const giftCheckoutSchema = z.object({
  * POST /api/checkout/gift
  *
  * Create a Stripe Checkout session for gift purchase.
- * PUBLIC endpoint - no session token required (anyone can gift).
+ * PUBLIC endpoint - no authentication required (anyone can gift).
  *
  * Story 6.7: Gift Purchase Option (AC-1, AC-2)
  *

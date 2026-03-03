@@ -47,7 +47,7 @@ const processRequestSchema = z.object({
  * This endpoint processes the image synchronously (within Vercel's function timeout).
  *
  * Flow:
- * 1. Validates the session token
+ * 1. Validates the Better Auth session
  * 2. Verifies the upload exists and is in "pending" status
  * 3. Updates status to "processing"
  * 4. Fetches original image from R2
@@ -312,7 +312,7 @@ app.post("/", requireAuth, async (c) => {
     if (error instanceof UnauthorizedError) {
       return c.json(
         {
-          error: "Invalid session token",
+          error: "Authentication required",
           code: error.reason,
         },
         401,

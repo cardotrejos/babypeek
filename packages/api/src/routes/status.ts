@@ -19,7 +19,7 @@ const app = new Hono();
  * GET /api/status/:jobId
  *
  * Get the current processing status of an upload/job.
- * Requires session token for authorization.
+ * Requires Better Auth authentication.
  *
  * Path params:
  * - jobId: string - The upload/job ID to check
@@ -59,7 +59,7 @@ const app = new Hono();
  * }
  *
  * Error responses:
- * - 401: Invalid or missing session token
+ * - 401: Missing or invalid authentication session
  * - 404: Upload not found
  */
 app.get("/:jobId", requireAuth, async (c) => {
@@ -218,7 +218,7 @@ app.get("/:jobId", requireAuth, async (c) => {
   if (result._tag === "Left") {
     const error = result.left;
 
-    // Handle NotFoundError (upload not found OR session token doesn't match)
+    // Handle NotFoundError (upload not found or user doesn't own it)
     if (error._tag === "NotFoundError") {
       return c.json(
         { success: false, error: { code: "NOT_FOUND", message: "Upload not found" } },
