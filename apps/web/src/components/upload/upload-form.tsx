@@ -106,11 +106,7 @@ export function UploadForm({
             await onUploadComplete({ ...result, email });
           } catch (error) {
             console.error("Error in onUploadComplete callback:", error);
-            toast.error(
-              error instanceof Error
-                ? error.message
-                : "Failed to complete upload. Please try again.",
-            );
+            // Error already handled by onUploadComplete callback
           }
         }
       } else {
