@@ -1,5 +1,6 @@
 import { useCallback, useState } from "react";
 import { ArrowRightIcon } from "lucide-react";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { EmailInput } from "@/components/upload/email-input";
@@ -105,6 +106,11 @@ export function UploadForm({
             await onUploadComplete({ ...result, email });
           } catch (error) {
             console.error("Error in onUploadComplete callback:", error);
+            toast.error(
+              error instanceof Error
+                ? error.message
+                : "Failed to complete upload. Please try again.",
+            );
           }
         }
       } else {
