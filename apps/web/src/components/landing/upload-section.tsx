@@ -80,13 +80,8 @@ export function UploadSection({ id }: UploadSectionProps) {
     [showPromptSelector, selectedPrompt],
   );
 
-  const handleTryDifferentEmail = useCallback(() => {
+  const handleEditEmail = useCallback(() => {
     setPendingEmail(null);
-    setIsEditingEmail(true);
-    setNewEmail(pendingUploadResult?.email || "");
-  }, [pendingUploadResult]);
-
-  const handleStartEditingEmail = useCallback(() => {
     setIsEditingEmail(true);
     setNewEmail(pendingUploadResult?.email || "");
   }, [pendingUploadResult]);
@@ -101,6 +96,7 @@ export function UploadSection({ id }: UploadSectionProps) {
         `${API_BASE_URL}/api/upload/${pendingUploadResult.uploadId}/email`,
         {
           method: "PUT",
+          credentials: "include",
           headers: {
             "Content-Type": "application/json",
             "X-Upload-Cleanup-Token": pendingUploadResult.cleanupToken,
@@ -182,7 +178,7 @@ export function UploadSection({ id }: UploadSectionProps) {
         {pendingEmail ? (
           <CheckEmail
             email={pendingEmail}
-            onTryDifferentEmail={handleTryDifferentEmail}
+            onTryDifferentEmail={handleEditEmail}
             onResend={handleRetryMagicLink}
             isResending={isSendingMagicLink}
           />
@@ -236,7 +232,7 @@ export function UploadSection({ id }: UploadSectionProps) {
                   {isSendingMagicLink ? "Sending..." : "Resend Magic Link"}
                 </button>
                 <button
-                  onClick={handleStartEditingEmail}
+                  onClick={handleEditEmail}
                   disabled={isSendingMagicLink}
                   className="w-full px-6 py-3 bg-charcoal/10 text-charcoal font-body rounded-lg hover:bg-charcoal/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
