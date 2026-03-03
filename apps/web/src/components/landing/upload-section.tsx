@@ -74,6 +74,7 @@ export function UploadSection({ id }: UploadSectionProps) {
         toast.error(
           error instanceof Error ? error.message : "Failed to send magic link. Please try again.",
         );
+        throw error;
       } finally {
         setIsSendingMagicLink(false);
       }
@@ -117,8 +118,13 @@ export function UploadSection({ id }: UploadSectionProps) {
         email: newEmail,
         cleanupToken: data.cleanupToken || pendingUploadResult.cleanupToken,
       };
-      await handleUploadComplete(updatedResult);
-      setIsEditingEmail(false);
+      try {
+        await handleUploadComplete(updatedResult);
+        setIsEditingEmail(false);
+      } catch {
+        // Magic link error already handled by handleUploadComplete
+        // Keep user in edit mode to retry
+      }
     } catch (error) {
       toast.error("Failed to update email. Please try again.");
       setIsSendingMagicLink(false);
@@ -127,7 +133,11 @@ export function UploadSection({ id }: UploadSectionProps) {
 
   const handleRetryMagicLink = useCallback(async () => {
     if (!pendingUploadResult) return;
-    await handleUploadComplete(pendingUploadResult);
+    try {
+      await handleUploadComplete(pendingUploadResult);
+    } catch {
+      // Error already handled by handleUploadComplete
+    }
   }, [pendingUploadResult, handleUploadComplete]);
 
   const handleCancelEdit = useCallback(() => {
