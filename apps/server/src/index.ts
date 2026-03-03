@@ -50,7 +50,7 @@ app.all("/api/auth/*", async (c) => {
   // that Hono's CORS middleware will handle
   for (const [key, value] of response.headers.entries()) {
     if (!key.toLowerCase().startsWith("access-control-")) {
-      newResponse.headers.set(key, value);
+      newResponse.headers.append(key, value);
     }
   }
   return newResponse;
