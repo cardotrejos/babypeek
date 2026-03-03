@@ -8,6 +8,7 @@ import { env } from "./env";
 
 const MAGIC_LINK_EXPIRATION_SECONDS = 5 * 60;
 const DEV_AUTH_BASE_URL = "http://localhost:3000";
+const resendClient = env.RESEND_API_KEY ? new Resend(env.RESEND_API_KEY) : null;
 
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
@@ -40,13 +41,11 @@ export const auth = betterAuth({
     magicLink({
       expiresIn: MAGIC_LINK_EXPIRATION_SECONDS,
       sendMagicLink: async ({ email, url }) => {
-        if (!env.RESEND_API_KEY) {
+        if (!resendClient) {
           throw new Error("RESEND_API_KEY is required for magic links");
         }
 
-        const resend = new Resend(env.RESEND_API_KEY);
-
-        await resend.emails.send({
+        await resendClient.emails.send({
           from: "BabyPeek <noreply@babypeek.io>",
           to: email,
           subject: "Your BabyPeek Magic Link",

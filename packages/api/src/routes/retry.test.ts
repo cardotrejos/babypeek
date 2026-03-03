@@ -26,6 +26,19 @@ vi.mock("../services/PostHogService", () => ({
   },
 }));
 
+vi.mock("../middleware/auth", () => ({
+  requireAuth: async (c: { req: { header: (name: string) => string | undefined }; set: (k: string, v: unknown) => void; json: (body: unknown, status: number) => Response }, next: () => Promise<void>) => {
+    const cookieHeader = c.req.header("cookie") ?? "";
+    if (!cookieHeader.includes("better-auth.session_token=")) {
+      return c.json({ error: "Authentication required", code: "UNAUTHENTICATED" }, 401);
+    }
+
+    c.set("user", { id: "test-user-id" });
+    c.set("session", { id: "test-session-id", userId: "test-user-id" });
+    await next();
+  },
+}));
+
 // =============================================================================
 // Test Setup
 // =============================================================================
@@ -69,8 +82,8 @@ describe("Retry Routes - Request Validation", () => {
 
       expect(res.status).toBe(401);
       const body = (await res.json()) as ErrorResponse;
-      expect(body.error).toBe("Session token is required");
-      expect(body.code).toBe("MISSING_TOKEN");
+      expect(body.error).toBe("Authentication required");
+      expect(body.code).toBe("UNAUTHENTICATED");
     });
   });
 });
@@ -98,7 +111,7 @@ describe("Retry Routes - Response Format Documentation", () => {
   describe("Error codes", () => {
     it("documents all possible error codes", () => {
       const errorCodes = [
-        "MISSING_TOKEN",
+        "UNAUTHENTICATED",
         "MISSING_JOB_ID",
         "NOT_FOUND",
         "INVALID_STATUS",
@@ -106,7 +119,7 @@ describe("Retry Routes - Response Format Documentation", () => {
         "RETRY_ERROR",
       ];
 
-      expect(errorCodes).toContain("MISSING_TOKEN");
+      expect(errorCodes).toContain("UNAUTHENTICATED");
       expect(errorCodes).toContain("NOT_FOUND");
       expect(errorCodes).toContain("INVALID_STATUS");
       expect(errorCodes).toContain("INVALID_TRANSITION");

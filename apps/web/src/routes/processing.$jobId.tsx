@@ -90,7 +90,9 @@ function ProcessingPage() {
     errorMessage: polledErrorMessage,
     firstPreviewReady: polledFirstPreviewReady,
     refetch: refetchStatus,
-  } = useStatus(shouldPoll ? jobId : null);
+  } = useStatus(shouldPoll ? jobId : null, {
+    enabled: shouldPoll && !isAuthLoading && Boolean(authSession?.user),
+  });
 
   // Story 5.7: Merge polled status with updates from leader tab (AC8)
   // If we have a status update from another tab, use it; otherwise use polled data

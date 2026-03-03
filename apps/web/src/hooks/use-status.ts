@@ -72,6 +72,14 @@ export interface UseStatusResult {
   updatedAt: Date | null;
 }
 
+export interface UseStatusOptions {
+  /**
+   * Optional external gate for polling.
+   * Useful when auth/session readiness must be confirmed before querying.
+   */
+  enabled?: boolean;
+}
+
 // =============================================================================
 // Constants
 // =============================================================================
@@ -114,8 +122,9 @@ const POLL_SAMPLE_RATE = 10;
  * <p>Stage: {stage}</p>
  * ```
  */
-export function useStatus(jobId: string | null): UseStatusResult {
+export function useStatus(jobId: string | null, options?: UseStatusOptions): UseStatusResult {
   const { trackEvent } = useAnalytics();
+  const isEnabled = Boolean(jobId) && (options?.enabled ?? true);
 
   // Track when polling started for duration calculation
   const pollingStartTimeRef = useRef<number | null>(null);
@@ -148,7 +157,7 @@ export function useStatus(jobId: string | null): UseStatusResult {
       return response.json();
     },
 
-    enabled: Boolean(jobId),
+    enabled: isEnabled,
 
     // Poll every 2.5 seconds until complete or failed
     refetchInterval: (query) => {

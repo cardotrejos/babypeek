@@ -79,6 +79,7 @@ const mockPresignedResponse = {
   uploadId: "test-upload-id",
   key: "uploads/test-upload-id/original.jpg",
   expiresAt: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
+  cleanupToken: "cleanup-token",
 };
 
 const mockConfirmResponse = {

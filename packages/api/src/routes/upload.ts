@@ -1,4 +1,4 @@
-import { createHash } from "crypto";
+import { createHash, createHmac, timingSafeEqual } from "crypto";
 import { Hono } from "hono";
 import { Effect, Layer } from "effect";
 import { createId } from "@paralleldrive/cuid2";
@@ -10,6 +10,7 @@ import { R2Service, R2ServiceLive } from "../services/R2Service";
 import { UploadService, UploadServiceLive } from "../services/UploadService";
 import { R2Error } from "../lib/errors";
 import { auth } from "../lib/auth";
+import { env } from "../lib/env";
 import { rateLimit } from "../middleware/rateLimit";
 
 // Combined layer for upload routes
@@ -29,6 +30,9 @@ const initiateUploadSchema = z.object({
   email: z.string().min(1, "Email is required").email("Invalid email format"),
 });
 
+const CLEANUP_TOKEN_TTL_SECONDS = 15 * 60;
+const CLEANUP_TOKEN_SECRET = env.BETTER_AUTH_SECRET || "dev-secret-change-me-not-for-production";
+
 // =============================================================================
 // Helpers
 // =============================================================================
@@ -43,6 +47,35 @@ const getExtensionFromContentType = (contentType: string): string => {
     "image/webp": "webp",
   };
   return typeMap[contentType.toLowerCase()] ?? "jpg";
+};
+
+const createCleanupToken = (uploadId: string, userId: string): string => {
+  const issuedAt = Math.floor(Date.now() / 1000).toString();
+  const payload = `${uploadId}:${userId}:${issuedAt}`;
+  const signature = createHmac("sha256", CLEANUP_TOKEN_SECRET).update(payload).digest("hex");
+  return `${issuedAt}.${signature}`;
+};
+
+const isValidCleanupToken = (token: string, uploadId: string, userId: string): boolean => {
+  const [issuedAtRaw, providedSignature] = token.split(".");
+  if (!issuedAtRaw || !providedSignature) return false;
+
+  const issuedAt = Number(issuedAtRaw);
+  if (!Number.isFinite(issuedAt)) return false;
+
+  const ageSeconds = Math.floor(Date.now() / 1000) - issuedAt;
+  if (ageSeconds < 0 || ageSeconds > CLEANUP_TOKEN_TTL_SECONDS) return false;
+
+  const payload = `${uploadId}:${userId}:${issuedAtRaw}`;
+  const expectedSignature = createHmac("sha256", CLEANUP_TOKEN_SECRET)
+    .update(payload)
+    .digest("hex");
+
+  const providedBuffer = Buffer.from(providedSignature, "utf8");
+  const expectedBuffer = Buffer.from(expectedSignature, "utf8");
+  if (providedBuffer.length !== expectedBuffer.length) return false;
+
+  return timingSafeEqual(providedBuffer, expectedBuffer);
 };
 
 /** Handle R2 errors with appropriate HTTP responses */
@@ -95,6 +128,7 @@ const handleR2Error = (error: R2Error) => {
  * - uploadId: string - Unique identifier for this upload (cuid2)
  * - key: string - R2 object key
  * - expiresAt: string - ISO timestamp when URL expires
+ * - cleanupToken: string - Short-lived token for unauthenticated cleanup calls
  */
 app.post(
   "/",
@@ -211,6 +245,7 @@ app.post(
     uploadId: result.right.upload.id,
     key,
     expiresAt: result.right.presignedResult.expiresAt.toISOString(),
+    cleanupToken: createCleanupToken(result.right.upload.id, result.right.upload.userId),
   });
 });
 
@@ -320,7 +355,8 @@ app.post("/:uploadId/confirm", rateLimit({ limit: 20, windowMs: 60 * 60 * 1000 }
  * Clean up a partial/failed upload from R2 storage.
  * Authentication is optional:
  * - Authenticated users can clean up their own uploads.
- * - Unauthenticated users can clean up pending uploads (pre-auth flow only).
+ * - Unauthenticated users must provide a valid `X-Upload-Cleanup-Token`
+ *   to clean up pending uploads (pre-auth flow only).
  * Handles "not found" gracefully (idempotent).
  *
  * Path params:
@@ -331,6 +367,7 @@ app.post("/:uploadId/confirm", rateLimit({ limit: 20, windowMs: 60 * 60 * 1000 }
  */
 app.delete("/:uploadId", async (c) => {
   const uploadId = c.req.param("uploadId");
+  const cleanupToken = c.req.header("x-upload-cleanup-token");
 
   const cleanupUpload = Effect.gen(function* () {
     const uploadService = yield* UploadService;
@@ -352,8 +389,15 @@ app.delete("/:uploadId", async (c) => {
       if (upload.userId !== session.user.id) {
         return yield* Effect.fail({ _tag: "UnauthorizedError" as const });
       }
-    } else if (upload.status !== "pending") {
-      return yield* Effect.fail({ _tag: "UnauthorizedError" as const });
+    } else {
+      const canCleanupUnauthenticated =
+        upload.status === "pending" &&
+        typeof cleanupToken === "string" &&
+        isValidCleanupToken(cleanupToken, upload.id, upload.userId);
+
+      if (!canCleanupUnauthenticated) {
+        return yield* Effect.fail({ _tag: "UnauthorizedError" as const });
+      }
     }
 
     // Delete all files with the upload prefix (uploads/{uploadId}/)

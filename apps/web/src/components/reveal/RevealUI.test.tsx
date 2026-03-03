@@ -22,6 +22,7 @@ describe("RevealUI", () => {
     uploadId: "test-upload-123",
     previewUrl: "https://example.com/preview.jpg",
     onShare: vi.fn(),
+    hasPurchasedProp: false,
   };
 
   beforeEach(() => {

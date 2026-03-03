@@ -58,6 +58,7 @@ interface PresignedUrlResponse {
   uploadId: string;
   key: string;
   expiresAt: string;
+  cleanupToken: string;
 }
 
 interface ConfirmUploadResponse {
@@ -185,11 +186,14 @@ export function useUpload(): UseUploadResult {
    * Fire-and-forget - doesn't block or report errors to UI.
    */
   const cleanupUpload = useCallback(
-    async (uploadId: string) => {
+    async (uploadId: string, cleanupToken: string) => {
       try {
         // Fire and forget - don't await or block on this
         fetch(`${API_BASE_URL}/api/upload/${uploadId}`, {
           method: "DELETE",
+          headers: {
+            "X-Upload-Cleanup-Token": cleanupToken,
+          },
           credentials: "include",
         }).catch(() => {
           // Silent fail - cleanup is best-effort
@@ -373,7 +377,7 @@ export function useUpload(): UseUploadResult {
         } catch (uploadError) {
           timings.uploadEnd = performance.now();
           // Clean up partial upload on R2 failure (fire and forget)
-          cleanupUpload(presignedData.uploadId);
+          cleanupUpload(presignedData.uploadId, presignedData.cleanupToken);
           throw uploadError;
         }
 

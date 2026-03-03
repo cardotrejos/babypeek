@@ -50,10 +50,14 @@ export function UploadSection({ id }: UploadSectionProps) {
         // to the API instead of the web app after clicking the magic link.
         const callbackURL = `${window.location.origin}${callbackPath}`;
 
-        await signIn.magicLink({
+        const { error } = await signIn.magicLink({
           email: result.email,
           callbackURL,
         });
+
+        if (error) {
+          throw new Error(error.message || "Failed to send magic link. Please try again.");
+        }
 
         setPendingEmail(result.email);
       } catch (error) {
