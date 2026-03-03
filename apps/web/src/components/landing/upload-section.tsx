@@ -41,6 +41,7 @@ export function UploadSection({ id }: UploadSectionProps) {
   >(null);
   const [isEditingEmail, setIsEditingEmail] = useState(false);
   const [newEmail, setNewEmail] = useState("");
+  const [previousPendingEmail, setPreviousPendingEmail] = useState<string | null>(null);
 
   const handleUploadComplete = useCallback(
     async (result: UploadResult & { email: string }) => {
@@ -81,10 +82,11 @@ export function UploadSection({ id }: UploadSectionProps) {
   );
 
   const handleEditEmail = useCallback(() => {
+    setPreviousPendingEmail(pendingEmail);
     setPendingEmail(null);
     setIsEditingEmail(true);
     setNewEmail(pendingUploadResult?.email || "");
-  }, [pendingUploadResult]);
+  }, [pendingEmail, pendingUploadResult]);
 
   const handleSubmitNewEmail = useCallback(async () => {
     if (!pendingUploadResult || !newEmail) return;
@@ -130,8 +132,8 @@ export function UploadSection({ id }: UploadSectionProps) {
 
   const handleCancelEdit = useCallback(() => {
     setIsEditingEmail(false);
-    setPendingEmail(pendingUploadResult?.email || null);
-  }, [pendingUploadResult]);
+    setPendingEmail(previousPendingEmail);
+  }, [previousPendingEmail]);
 
   return (
     <section id={id} className="py-12">
