@@ -46,7 +46,6 @@ export function UploadSection({ id }: UploadSectionProps) {
   const handleUploadComplete = useCallback(
     async (result: UploadResult & { email: string }) => {
       setIsSendingMagicLink(true);
-      const isResend = pendingEmail !== null;
 
       try {
         const callbackPath = showPromptSelector
@@ -78,7 +77,7 @@ export function UploadSection({ id }: UploadSectionProps) {
         setIsSendingMagicLink(false);
       }
     },
-    [showPromptSelector, selectedPrompt, pendingEmail],
+    [showPromptSelector, selectedPrompt],
   );
 
   const handleEditEmail = useCallback(() => {
