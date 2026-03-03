@@ -160,11 +160,16 @@ export function useUpload(): UseUploadResult {
    * Confirm upload completion with the server
    */
   const confirmUpload = useCallback(
-    async (uploadId: string, signal: AbortSignal): Promise<ConfirmUploadResponse> => {
+    async (
+      uploadId: string,
+      cleanupToken: string,
+      signal: AbortSignal,
+    ): Promise<ConfirmUploadResponse> => {
       const response = await fetch(`${API_BASE_URL}/api/upload/${uploadId}/confirm`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "X-Upload-Cleanup-Token": cleanupToken,
         },
         credentials: "include",
         signal,
@@ -391,7 +396,11 @@ export function useUpload(): UseUploadResult {
         }
 
         // Phase 3: Confirm upload with server
-        await confirmUpload(presignedData.uploadId, abortController.signal);
+        await confirmUpload(
+          presignedData.uploadId,
+          presignedData.cleanupToken,
+          abortController.signal,
+        );
 
         // Upload complete - calculate all timings
         const endTime = performance.now();

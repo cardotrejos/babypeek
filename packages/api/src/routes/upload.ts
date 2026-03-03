@@ -258,6 +258,10 @@ app.post(
  *
  * Confirm that an upload has completed successfully.
  * Verifies the file exists in R2 and updates the status.
+ * Authentication requirements:
+ * - Authenticated users can confirm their own uploads.
+ * - Unauthenticated users must provide a valid `X-Upload-Cleanup-Token`
+ *   for pending uploads created in the pre-auth flow.
  *
  * Path params:
  * - uploadId: string - The upload ID to confirm
@@ -269,6 +273,7 @@ app.post(
  */
 app.post("/:uploadId/confirm", rateLimit({ limit: 20, windowMs: 60 * 60 * 1000 }), async (c) => {
   const uploadId = c.req.param("uploadId");
+  const cleanupToken = c.req.header("x-upload-cleanup-token");
 
   if (!uploadId) {
     return c.json({ error: "Upload ID is required", code: "INVALID_REQUEST" }, 400);
@@ -278,8 +283,32 @@ app.post("/:uploadId/confirm", rateLimit({ limit: 20, windowMs: 60 * 60 * 1000 }
     const r2 = yield* R2Service;
     const uploadService = yield* UploadService;
 
-    // Get the upload record
+    // Get the upload record first so token/session checks can verify ownership.
     const upload = yield* uploadService.getById(uploadId);
+
+    const cookieHeader = c.req.header("cookie") ?? "";
+    const hasSessionCookie = cookieHeader.includes("better-auth.session_token");
+
+    const session = hasSessionCookie
+      ? yield* Effect.promise(() =>
+          auth.api.getSession({ headers: c.req.raw.headers }).catch(() => null),
+        )
+      : null;
+
+    if (session?.user?.id) {
+      if (upload.userId !== session.user.id) {
+        return yield* Effect.fail({ _tag: "UnauthorizedError" as const });
+      }
+    } else {
+      const canConfirmUnauthenticated =
+        upload.status === "pending" &&
+        typeof cleanupToken === "string" &&
+        isValidCleanupToken(cleanupToken, upload.id, upload.userId);
+
+      if (!canConfirmUnauthenticated) {
+        return yield* Effect.fail({ _tag: "UnauthorizedError" as const });
+      }
+    }
 
     // Verify the file exists in R2 using HEAD request
     const exists = yield* r2.headObject(upload.originalUrl);
@@ -313,6 +342,9 @@ app.post("/:uploadId/confirm", rateLimit({ limit: 20, windowMs: 60 * 60 * 1000 }
 
   if (result._tag === "Left") {
     const error = result.left;
+    if ("_tag" in error && error._tag === "UnauthorizedError") {
+      return c.json({ error: "Authentication required", code: "UNAUTHENTICATED" }, 401);
+    }
     // Handle NotFoundError
     if ("_tag" in error && error._tag === "NotFoundError") {
       return c.json({ error: "Upload not found. Please try again.", code: "NOT_FOUND" }, 404);

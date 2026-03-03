@@ -468,7 +468,12 @@ describe("useUpload", () => {
     expect(globalThis.fetch).toHaveBeenNthCalledWith(
       2,
       expect.stringContaining("/api/upload/test-upload-id/confirm"),
-      expect.objectContaining({ method: "POST" }),
+      expect.objectContaining({
+        method: "POST",
+        headers: expect.objectContaining({
+          "X-Upload-Cleanup-Token": "cleanup-token",
+        }),
+      }),
     );
   });
 

@@ -18,28 +18,30 @@ interface MemEntry {
   windowStart: number;
 }
 
-const memStore = new Map<string, MemEntry>();
-
-function memRateLimit(
-  key: string,
+function createMemRateLimiter(
   limit: number,
   windowMs: number,
-): { allowed: boolean; retryAfter: number } {
-  const now = Date.now();
-  const entry = memStore.get(key);
+): (key: string) => { allowed: boolean; retryAfter: number } {
+  // Per-middleware store to avoid cross-route counter bleed in development.
+  const memStore = new Map<string, MemEntry>();
 
-  if (!entry || now - entry.windowStart > windowMs) {
-    memStore.set(key, { count: 1, windowStart: now });
+  return (key: string) => {
+    const now = Date.now();
+    const entry = memStore.get(key);
+
+    if (!entry || now - entry.windowStart > windowMs) {
+      memStore.set(key, { count: 1, windowStart: now });
+      return { allowed: true, retryAfter: 0 };
+    }
+
+    if (entry.count >= limit) {
+      const retryAfter = Math.max(1, Math.ceil((entry.windowStart + windowMs - now) / 1000));
+      return { allowed: false, retryAfter };
+    }
+
+    entry.count++;
     return { allowed: true, retryAfter: 0 };
-  }
-
-  if (entry.count >= limit) {
-    const retryAfter = Math.max(1, Math.ceil((entry.windowStart + windowMs - now) / 1000));
-    return { allowed: false, retryAfter };
-  }
-
-  entry.count++;
-  return { allowed: true, retryAfter: 0 };
+  };
 }
 
 // ── Upstash-backed limiter (production) ──────────────────────────────────────
@@ -91,6 +93,7 @@ export function rateLimit({ limit, windowMs, keyGenerator }: RateLimitOptions) {
   // Each factory call gets its own lazily-initialised Upstash instance,
   // ensuring limit/windowMs are never shared across different rateLimit() calls.
   let upstashLimiter: Ratelimit | null | undefined;
+  const memRateLimit = createMemRateLimiter(limit, windowMs);
 
   return async function rateLimitMiddleware(c: Context, next: Next) {
     const user = c.get("user") as { id: string } | undefined;
@@ -126,7 +129,7 @@ export function rateLimit({ limit, windowMs, keyGenerator }: RateLimitOptions) {
         retryAfter = Math.max(1, Math.ceil((resetAt - Date.now()) / 1000));
       }
     } else {
-      const result = memRateLimit(key, limit, windowMs);
+      const result = memRateLimit(key);
       allowed = result.allowed;
       retryAfter = result.retryAfter;
     }
