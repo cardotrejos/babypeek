@@ -69,6 +69,7 @@ function ProcessingPage() {
   const [workflowRunId, setWorkflowRunId] = useState<string | null>(null);
   // Use URL prompt version if provided, otherwise default
   const [selectedPrompt, setSelectedPrompt] = useState<PromptVersion>(urlPromptVersion || "v4");
+  const processingStartedRef = useRef(false);
 
   // Story 5.7: Tab coordination - only leader tab polls (AC8)
   const shouldCoordinate = state === "processing" || state === "already-processing";
@@ -287,6 +288,11 @@ function ProcessingPage() {
       return;
     }
 
+    if (processingStartedRef.current) {
+      return;
+    }
+    processingStartedRef.current = true;
+
     setState("starting");
 
     try {
@@ -410,6 +416,7 @@ function ProcessingPage() {
 
       // Then restart processing
       setError(null);
+      processingStartedRef.current = false;
       setState("idle");
     } catch (err) {
       console.error("[processing] Error during retry:", err);

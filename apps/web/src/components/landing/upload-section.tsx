@@ -35,6 +35,9 @@ export function UploadSection({ id }: UploadSectionProps) {
   const [selectedPrompt, setSelectedPrompt] = useState<PromptVersion>("v4");
   const [pendingEmail, setPendingEmail] = useState<string | null>(null);
   const [isSendingMagicLink, setIsSendingMagicLink] = useState(false);
+  const [pendingUploadResult, setPendingUploadResult] = useState<
+    (UploadResult & { email: string }) | null
+  >(null);
 
   const handleUploadComplete = useCallback(
     async (result: UploadResult & { email: string }) => {
@@ -60,7 +63,9 @@ export function UploadSection({ id }: UploadSectionProps) {
         }
 
         setPendingEmail(result.email);
+        setPendingUploadResult(null);
       } catch (error) {
+        setPendingUploadResult(result);
         toast.error(
           error instanceof Error ? error.message : "Failed to send magic link. Please try again.",
         );
@@ -73,7 +78,13 @@ export function UploadSection({ id }: UploadSectionProps) {
 
   const handleTryDifferentEmail = useCallback(() => {
     setPendingEmail(null);
+    setPendingUploadResult(null);
   }, []);
+
+  const handleRetryMagicLink = useCallback(async () => {
+    if (!pendingUploadResult) return;
+    await handleUploadComplete(pendingUploadResult);
+  }, [pendingUploadResult, handleUploadComplete]);
 
   return (
     <section id={id} className="py-12">
@@ -124,6 +135,32 @@ export function UploadSection({ id }: UploadSectionProps) {
 
         {pendingEmail ? (
           <CheckEmail email={pendingEmail} onTryDifferentEmail={handleTryDifferentEmail} />
+        ) : pendingUploadResult ? (
+          <div className="bg-white rounded-lg shadow-lg p-6 space-y-4">
+            <div className="text-center space-y-2">
+              <h3 className="font-display text-xl text-charcoal">Upload Complete</h3>
+              <p className="text-sm text-warm-gray">
+                Your image was uploaded successfully, but we couldn't send the magic link to{" "}
+                <strong>{pendingUploadResult.email}</strong>.
+              </p>
+            </div>
+            <div className="flex flex-col gap-2">
+              <button
+                onClick={handleRetryMagicLink}
+                disabled={isSendingMagicLink}
+                className="w-full px-6 py-3 bg-coral text-white font-body rounded-lg hover:bg-coral/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isSendingMagicLink ? "Sending..." : "Resend Magic Link"}
+              </button>
+              <button
+                onClick={handleTryDifferentEmail}
+                disabled={isSendingMagicLink}
+                className="w-full px-6 py-3 bg-charcoal/10 text-charcoal font-body rounded-lg hover:bg-charcoal/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Try Different Email
+              </button>
+            </div>
+          </div>
         ) : (
           <UploadForm
             enableUpload
