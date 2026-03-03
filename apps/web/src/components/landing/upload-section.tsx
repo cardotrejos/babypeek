@@ -82,9 +82,9 @@ export function UploadSection({ id }: UploadSectionProps) {
 
   const handleTryDifferentEmail = useCallback(() => {
     setPendingEmail(null);
-    setIsEditingEmail(false);
-    setNewEmail("");
-  }, []);
+    setIsEditingEmail(true);
+    setNewEmail(pendingUploadResult?.email || "");
+  }, [pendingUploadResult]);
 
   const handleStartEditingEmail = useCallback(() => {
     setIsEditingEmail(true);
