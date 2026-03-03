@@ -70,9 +70,6 @@ export function UploadSection({ id }: UploadSectionProps) {
         setPendingEmail(result.email);
         setPendingUploadResult(result);
       } catch (error) {
-        if (!isResend) {
-          setPendingEmail(null);
-        }
         setPendingUploadResult(result);
         toast.error(
           error instanceof Error ? error.message : "Failed to send magic link. Please try again.",
@@ -93,9 +90,9 @@ export function UploadSection({ id }: UploadSectionProps) {
 
   const handleSubmitNewEmail = useCallback(async () => {
     if (!pendingUploadResult || !newEmail) return;
-    
+
     setIsSendingMagicLink(true);
-    
+
     try {
       const response = await fetch(
         `${API_BASE_URL}/api/upload/${pendingUploadResult.uploadId}/email`,
@@ -115,13 +112,13 @@ export function UploadSection({ id }: UploadSectionProps) {
       }
 
       const data = await response.json();
-      const updatedResult = { 
-        ...pendingUploadResult, 
+      const updatedResult = {
+        ...pendingUploadResult,
         email: newEmail,
-        cleanupToken: data.cleanupToken || pendingUploadResult.cleanupToken
+        cleanupToken: data.cleanupToken || pendingUploadResult.cleanupToken,
       };
-      setIsEditingEmail(false);
       await handleUploadComplete(updatedResult);
+      setIsEditingEmail(false);
     } catch (error) {
       toast.error("Failed to update email. Please try again.");
       setIsSendingMagicLink(false);
