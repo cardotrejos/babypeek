@@ -1,5 +1,6 @@
 import "dotenv/config";
 import { Hono } from "hono";
+import type { StatusCode } from "hono/utils/http-status";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
 import { initSentry, sentryMiddleware, captureException } from "./lib/sentry";
@@ -8,6 +9,7 @@ import { initSentry, sentryMiddleware, captureException } from "./lib/sentry";
 initSentry();
 
 import {
+  auth,
   healthRoutes,
   storageRoutes,
   uploadRoutes,
@@ -32,11 +34,28 @@ app.use(logger());
 app.use(
   "/*",
   cors({
-    origin: process.env.CORS_ORIGIN || "http://localhost:3001",
+    origin: process.env.WEB_URL || process.env.CORS_ORIGIN || "http://localhost:3001",
     allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowHeaders: ["Content-Type", "X-Session-Token"],
+    allowHeaders: ["Content-Type", "Authorization", "X-Upload-Cleanup-Token"],
+    credentials: true,
   }),
 );
+
+app.all("/api/auth/*", async (c) => {
+  const response = await auth.handler(c.req.raw);
+  const newResponse = c.newResponse(response.body, {
+    status: response.status as StatusCode,
+    statusText: response.statusText,
+  });
+  // Copy headers from Better Auth response, excluding CORS headers
+  // that Hono's CORS middleware will handle
+  for (const [key, value] of response.headers.entries()) {
+    if (!key.toLowerCase().startsWith("access-control-")) {
+      newResponse.headers.append(key, value);
+    }
+  }
+  return newResponse;
+});
 
 // Routes
 app.route("/api/health", healthRoutes);

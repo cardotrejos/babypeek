@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { DownloadButton } from "@/components/download";
 import { posthog, isPostHogConfigured } from "@/lib/posthog";
 import { trackFBPurchase, generateEventId } from "@/lib/facebook-pixel";
-import { getSession } from "@/lib/session";
 import { toast } from "sonner";
 
 /**
@@ -28,7 +27,6 @@ function CheckoutSuccessPage() {
   const navigate = useNavigate();
   const { session_id } = Route.useSearch();
   const [uploadId, setUploadId] = useState<string | null>(null);
-  const [sessionToken, setSessionToken] = useState<string | null>(null);
 
   // Get uploadId from localStorage (stored during checkout in Story 7.3)
   useEffect(() => {
@@ -38,8 +36,6 @@ function CheckoutSuccessPage() {
       const storedUploadId = localStorage.getItem("babypeek-last-checkout-upload");
       if (storedUploadId) {
         setUploadId(storedUploadId);
-        const token = getSession(storedUploadId);
-        setSessionToken(token);
       }
     } catch {
       // localStorage may not be available (SSR, private browsing)
@@ -133,10 +129,9 @@ function CheckoutSuccessPage() {
 
         {/* Download button - Story 7.3 AC-1 */}
         <div className="space-y-3">
-          {uploadId && sessionToken ? (
+          {uploadId ? (
             <DownloadButton
               uploadId={uploadId}
-              sessionToken={sessionToken}
               onSuccess={handleDownloadSuccess}
               onError={handleDownloadError}
             />

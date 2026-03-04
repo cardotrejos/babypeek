@@ -79,10 +79,8 @@ export function useSessionRecovery() {
       if (pending && (pending.status === "pending" || pending.status === "processing")) {
         try {
           const response = await fetch(`${API_BASE_URL}/api/status/${pending.jobId}`, {
-            headers: {
-              "Content-Type": "application/json",
-              "X-Session-Token": pending.token,
-            },
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
           });
 
           if (response.ok) {
@@ -116,6 +114,10 @@ export function useSessionRecovery() {
             if (data.status === "failed") {
               updateJobStatus(pending.jobId, "failed");
             }
+          } else if (response.status === 401 || response.status === 403) {
+            // Auth expired or job not accessible - skip recovery prompt
+            setIsChecking(false);
+            return;
           }
         } catch {
           // Ignore network errors; user can resume manually

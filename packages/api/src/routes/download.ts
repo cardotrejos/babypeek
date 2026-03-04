@@ -10,6 +10,7 @@ import { NotFoundError, UnauthorizedError, DownloadExpiredError } from "../lib/e
 import { captureException, addBreadcrumb } from "../middleware/sentry";
 import { captureEvent } from "../services/PostHogService";
 import { hashIP } from "../lib/hash";
+import { requireAuth } from "../middleware/auth";
 
 const app = new Hono();
 
@@ -21,14 +22,14 @@ const app = new Hono();
  * Story 7.2: Signed Download URL Generation (enhanced response)
  *
  * Requires:
- * - X-Session-Token header matching upload record
+ * - Authenticated user ownership check via Better Auth
  * - Completed purchase for the upload
  *
  * Story 7.1 ACs:
  * AC-1: Full-resolution image available after purchase
  * AC-2: Image is not watermarked (returns full.jpg, not preview)
  * AC-3: Maximum quality from AI generation
- * AC-4: Access verified via sessionToken + purchase record
+ * AC-4: Access verified via user ownership + purchase record
  * AC-5: Unauthorized requests return 401/403 with warm error message
  *
  * Story 7.2 ACs:
@@ -38,28 +39,25 @@ const app = new Hono();
  * AC-4: Signed URLs via R2Service
  * AC-5: URL expiration enforced by R2/S3 presigning
  */
-app.get("/:uploadId", async (c) => {
+app.get("/:uploadId", requireAuth, async (c) => {
   const uploadId = c.req.param("uploadId");
-  const token = c.req.header("X-Session-Token");
+  const user = c.get("user") as { id: string };
 
   // Add breadcrumb for download attempt
-  addBreadcrumb("Download requested", "download", { uploadId, hasToken: !!token });
+  addBreadcrumb("Download requested", "download", { uploadId, userId: user?.id });
 
-  // AC-4, AC-5: Verify session token present
-  if (!token) {
-    // Log unauthorized attempt to Sentry (no PII - just uploadId)
-    addBreadcrumb("Download unauthorized - missing token", "download", { uploadId });
+  if (!user?.id) {
     return c.json(
       {
         success: false,
-        error: { code: "UNAUTHORIZED", message: "Session token required" },
+        error: { code: "UNAUTHENTICATED", message: "Authentication required" },
       },
       401,
     );
   }
 
   const program = Effect.gen(function* () {
-    // Get upload record and validate session token
+    // Get upload record and validate ownership
     const upload = yield* Effect.promise(() =>
       db.query.uploads.findFirst({
         where: eq(uploads.id, uploadId),
@@ -70,11 +68,9 @@ app.get("/:uploadId", async (c) => {
       return yield* Effect.fail(new NotFoundError({ resource: "upload", id: uploadId }));
     }
 
-    // AC-4: Validate session token matches
-    if (upload.sessionToken !== token) {
-      // Log unauthorized attempt to Sentry (no PII)
-      addBreadcrumb("Download unauthorized - invalid token", "download", { uploadId });
-      return yield* Effect.fail(new UnauthorizedError({ reason: "INVALID_TOKEN" }));
+    if (upload.userId !== user.id) {
+      addBreadcrumb("Download unauthorized - wrong user", "download", { uploadId });
+      return yield* Effect.fail(new UnauthorizedError({ reason: "UNAUTHORIZED_USER" }));
     }
 
     // Verify result exists (upload must be completed)
@@ -311,25 +307,25 @@ app.get("/:uploadId", async (c) => {
  * AC-1: Check purchase exists and is < 30 days old
  * AC-3: Return expiry info for expired downloads
  */
-app.get("/:uploadId/status", async (c) => {
+app.get("/:uploadId/status", requireAuth, async (c) => {
   const uploadId = c.req.param("uploadId");
-  const token = c.req.header("X-Session-Token");
+  const user = c.get("user") as { id: string };
 
-  addBreadcrumb("Download status check", "download", { uploadId, hasToken: !!token });
+  addBreadcrumb("Download status check", "download", { uploadId, userId: user?.id });
 
-  if (!token) {
+  if (!user?.id) {
     return c.json(
       {
         canDownload: false,
         isExpired: false,
-        error: { code: "UNAUTHORIZED", message: "Session token required" },
+        error: { code: "UNAUTHENTICATED", message: "Authentication required" },
       },
       401,
     );
   }
 
   const program = Effect.gen(function* () {
-    // Get upload record and validate session token
+    // Get upload record and validate user ownership
     const upload = yield* Effect.promise(() =>
       db.query.uploads.findFirst({
         where: eq(uploads.id, uploadId),
@@ -346,14 +342,13 @@ app.get("/:uploadId/status", async (c) => {
       };
     }
 
-    // Validate session token matches
-    if (upload.sessionToken !== token) {
+    if (upload.userId !== user.id) {
       return {
         canDownload: false,
         isExpired: false,
         expiresAt: null,
         daysRemaining: null,
-        error: { code: "FORBIDDEN", message: "Invalid session" },
+        error: { code: "FORBIDDEN", message: "Upload not found for this user" },
       };
     }
 

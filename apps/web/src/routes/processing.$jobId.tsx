@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState, useEffect, useCallback, useRef } from "react";
 import { z } from "zod";
-import { getSession, hasSession, updateJobStatus, updateJobResult } from "@/lib/session";
+import { updateJobStatus, updateJobResult } from "@/lib/session";
 import { posthog, isPostHogConfigured } from "@/lib/posthog";
 import { useStatus } from "@/hooks/use-status";
 import { usePreloadImage } from "@/hooks/use-preload-image";
@@ -9,6 +9,7 @@ import { useVisibilityChange } from "@/hooks/use-visibility-change";
 import { useTabCoordinator } from "@/hooks/use-tab-coordinator";
 import { ProcessingScreen } from "@/components/processing";
 import { API_BASE_URL } from "@/lib/api-config";
+import { useSession } from "@/lib/auth-client";
 
 /**
  * Processing Page
@@ -61,12 +62,14 @@ function ProcessingPage() {
   const { jobId } = Route.useParams();
   const { prompts: showPromptSelector, promptVersion: urlPromptVersion } = Route.useSearch();
   const navigate = useNavigate();
+  const { data: authSession, isPending: isAuthLoading } = useSession();
 
   const [state, setState] = useState<ProcessingState>("idle");
   const [error, setError] = useState<ProcessingError | null>(null);
   const [workflowRunId, setWorkflowRunId] = useState<string | null>(null);
   // Use URL prompt version if provided, otherwise default
   const [selectedPrompt, setSelectedPrompt] = useState<PromptVersion>(urlPromptVersion || "v4");
+  const processingStartedRef = useRef(false);
 
   // Story 5.7: Tab coordination - only leader tab polls (AC8)
   const shouldCoordinate = state === "processing" || state === "already-processing";
@@ -88,7 +91,9 @@ function ProcessingPage() {
     errorMessage: polledErrorMessage,
     firstPreviewReady: polledFirstPreviewReady,
     refetch: refetchStatus,
-  } = useStatus(shouldPoll ? jobId : null);
+  } = useStatus(shouldPoll ? jobId : null, {
+    enabled: !isAuthLoading && Boolean(authSession?.user),
+  });
 
   // Story 5.7: Merge polled status with updates from leader tab (AC8)
   // If we have a status update from another tab, use it; otherwise use polled data
@@ -224,7 +229,7 @@ function ProcessingPage() {
         });
       }
 
-      // Store mapping of result -> upload for session token retrieval
+      // Store mapping of result -> upload for session recovery/navigation
       localStorage.setItem(`babypeek-result-upload-${resultId}`, jobId);
       updateJobResult(jobId, resultId);
 
@@ -269,25 +274,24 @@ function ProcessingPage() {
   }, [isFailed, polledErrorMessage, jobId]);
 
   const startProcessing = useCallback(async () => {
-    // Check if we have a session for this job
-    if (!hasSession(jobId)) {
-      setError({
-        message: "Session not found. Please start a new upload.",
-        code: "SESSION_NOT_FOUND",
-        canRetry: false,
-      });
-      setState("error");
+    if (processingStartedRef.current) {
+      return;
+    }
+    processingStartedRef.current = true;
+
+    if (isAuthLoading) {
+      processingStartedRef.current = false;
       return;
     }
 
-    const sessionToken = getSession(jobId);
-    if (!sessionToken) {
+    if (!authSession?.user) {
       setError({
-        message: "Invalid session. Please start a new upload.",
-        code: "INVALID_SESSION",
+        message: "Please authenticate via your magic link to continue.",
+        code: "UNAUTHENTICATED",
         canRetry: false,
       });
       setState("error");
+      processingStartedRef.current = false;
       return;
     }
 
@@ -300,8 +304,8 @@ function ProcessingPage() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "X-Session-Token": sessionToken,
         },
+        credentials: "include",
         body: JSON.stringify({
           uploadId: jobId,
           promptVersion: promptVersionToUse,
@@ -337,6 +341,7 @@ function ProcessingPage() {
             lastProgress: data.lastProgress,
           });
           setState("timeout");
+          processingStartedRef.current = false;
           return;
         }
 
@@ -348,6 +353,7 @@ function ProcessingPage() {
           canRetry: data.canRetry ?? (response.status >= 500 || response.status === 0),
         });
         setState("error");
+        processingStartedRef.current = false;
         return;
       }
 
@@ -364,8 +370,18 @@ function ProcessingPage() {
         canRetry: true,
       });
       setState("error");
+      processingStartedRef.current = false;
     }
-  }, [jobId, selectedPrompt, urlPromptVersion]);
+  }, [jobId, selectedPrompt, urlPromptVersion, authSession?.user, isAuthLoading]);
+
+  // Reset auth error state when user authenticates
+  useEffect(() => {
+    if (authSession?.user && state === "error" && error?.code === "UNAUTHENTICATED") {
+      setError(null);
+      processingStartedRef.current = false;
+      setState("idle");
+    }
+  }, [authSession?.user, state, error?.code]);
 
   // Start processing on mount (auto-start in prod, manual in dev for testing)
   const [devManualStart, setDevManualStart] = useState(false);
@@ -381,11 +397,10 @@ function ProcessingPage() {
 
   // Handle retry by calling the retry endpoint first, then restarting processing
   const handleRetry = async () => {
-    const sessionToken = getSession(jobId);
-    if (!sessionToken) {
+    if (!authSession?.user) {
       setError({
-        message: "Session expired. Please start a new upload.",
-        code: "SESSION_EXPIRED",
+        message: "Please authenticate via your magic link to retry.",
+        code: "UNAUTHENTICATED",
         canRetry: false,
       });
       setState("error");
@@ -405,9 +420,7 @@ function ProcessingPage() {
       // First, reset the job state via retry endpoint
       const retryResponse = await fetch(`${API_BASE_URL}/api/retry/${jobId}`, {
         method: "POST",
-        headers: {
-          "X-Session-Token": sessionToken,
-        },
+        credentials: "include",
       });
 
       if (!retryResponse.ok) {
@@ -417,6 +430,7 @@ function ProcessingPage() {
 
       // Then restart processing
       setError(null);
+      processingStartedRef.current = false;
       setState("idle");
     } catch (err) {
       console.error("[processing] Error during retry:", err);
@@ -438,6 +452,15 @@ function ProcessingPage() {
   const handleStartOver = () => {
     navigate({ to: "/" });
   };
+
+  // Show auth loading state
+  if (isAuthLoading && state === "idle") {
+    return (
+      <div className="min-h-screen bg-cream flex items-center justify-center">
+        <div className="size-12 animate-spin rounded-full border-4 border-coral border-t-transparent" />
+      </div>
+    );
+  }
 
   // Show prompt selector when ?prompts=true is in URL
   if (showPromptSelector && state === "idle" && !devManualStart) {

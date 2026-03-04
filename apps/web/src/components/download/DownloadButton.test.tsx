@@ -21,7 +21,6 @@ import { posthog } from "@/lib/posthog";
 describe("DownloadButton", () => {
   const defaultProps = {
     uploadId: "test-upload-123",
-    sessionToken: "test-token-abc",
     resultId: "test-result-456",
   };
 
@@ -82,8 +81,9 @@ describe("DownloadButton", () => {
       expect(global.fetch).toHaveBeenCalledWith(
         `http://localhost:3000/api/download/${defaultProps.uploadId}`,
         expect.objectContaining({
+          credentials: "include",
           headers: expect.objectContaining({
-            "X-Session-Token": defaultProps.sessionToken,
+            "Content-Type": "application/json",
           }),
         }),
       );
@@ -235,7 +235,7 @@ describe("DownloadButton", () => {
     });
   });
 
-  it("sends X-Session-Token header in API request", async () => {
+  it("uses cookie auth credentials in API request", async () => {
     global.fetch = vi.fn().mockResolvedValue({
       ok: true,
       json: () =>
@@ -256,8 +256,9 @@ describe("DownloadButton", () => {
       expect(global.fetch).toHaveBeenCalledWith(
         `http://localhost:3000/api/download/${defaultProps.uploadId}`,
         expect.objectContaining({
+          credentials: "include",
           headers: expect.objectContaining({
-            "X-Session-Token": defaultProps.sessionToken,
+            "Content-Type": "application/json",
           }),
         }),
       );

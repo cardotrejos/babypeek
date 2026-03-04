@@ -6,47 +6,51 @@ import { R2Service, R2ServiceLive } from "../services/R2Service";
 import { NotFoundError } from "../lib/errors";
 import { addBreadcrumb, captureException } from "../middleware/sentry";
 import { captureEvent } from "../services/PostHogService";
+import { requireAuth } from "../middleware/auth";
 
 const app = new Hono();
 
 /**
- * DELETE /api/data/:token
+ * DELETE /api/data/:uploadId
  * GDPR Data Deletion Endpoint
  *
  * Story 8.6: Delete My Data Button
  *
- * Deletes all user data associated with the session token:
+ * Deletes all user data associated with an authenticated upload:
  * - Upload record
  * - Result images from R2
  * - Purchase records (anonymized for accounting)
  * - Download records
  *
- * AC-2: Confirming calls DELETE /api/data/:token
+ * AC-2: Confirming calls DELETE /api/data/:uploadId
  * AC-3: Deletion removes: upload record, result images from R2, email hash
  * AC-4: The deletion is logged for compliance audit
  */
-app.delete("/:token", async (c) => {
-  const token = c.req.param("token");
+app.delete("/:uploadId", requireAuth, async (c) => {
+  const uploadId = c.req.param("uploadId");
+  const user = c.get("user") as { id: string };
 
-  if (!token) {
-    return c.json({ success: false, error: "Token required" }, 400);
+  if (!user?.id) {
+    return c.json({ success: false, error: "Authentication required" }, 401);
   }
 
-  addBreadcrumb("GDPR deletion requested", "data", { hasToken: true });
+  if (!uploadId) {
+    return c.json({ success: false, error: "Upload ID required" }, 400);
+  }
+
+  addBreadcrumb("GDPR deletion requested", "data", { uploadId, userId: user.id });
 
   const program = Effect.gen(function* () {
-    // Find upload by session token
+    // Find upload and verify ownership
     const upload = yield* Effect.promise(() =>
       db.query.uploads.findFirst({
-        where: eq(uploads.sessionToken, token),
+        where: eq(uploads.id, uploadId),
       }),
     );
 
-    if (!upload) {
-      return yield* Effect.fail(new NotFoundError({ resource: "upload", id: "token" }));
+    if (!upload || upload.userId !== user.id) {
+      return yield* Effect.fail(new NotFoundError({ resource: "upload", id: uploadId }));
     }
-
-    const uploadId = upload.id;
 
     // AC-4: Log deletion request for GDPR audit (no PII - only uploadId)
     console.log(`[GDPR] Data deletion requested for upload: ${uploadId}`);

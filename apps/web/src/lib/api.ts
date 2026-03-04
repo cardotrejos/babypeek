@@ -6,23 +6,19 @@ import { API_BASE_URL } from "./api-config";
 type RequestOptions = {
   method?: "GET" | "POST" | "PUT" | "DELETE";
   body?: unknown;
-  sessionToken?: string;
 };
 
 async function request<T>(endpoint: string, options: RequestOptions = {}): Promise<T> {
-  const { method = "GET", body, sessionToken } = options;
+  const { method = "GET", body } = options;
 
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
   };
 
-  if (sessionToken) {
-    headers["X-Session-Token"] = sessionToken;
-  }
-
   const response = await fetch(`${API_BASE_URL}${endpoint}`, {
     method,
     headers,
+    credentials: "include",
     body: body ? JSON.stringify(body) : undefined,
   });
 

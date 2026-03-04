@@ -14,9 +14,9 @@ import {
   AlreadyProcessingError,
   ProcessingError,
 } from "../lib/errors";
-import { rateLimitMiddleware } from "../middleware/rate-limit";
 import { getPrompt, type PromptVersion } from "../prompts/baby-portrait";
 import { captureEffectError } from "../lib/sentry-effect";
+import { requireAuth } from "../middleware/auth";
 
 // Processing timeout constant (FR-2.3: Complete processing in <90 seconds)
 // Increased to 180s for generating 4 images
@@ -27,12 +27,6 @@ const PROMPT_VARIANTS: PromptVersion[] = ["v3", "v3-json", "v4", "v4-json"];
 
 const app = new Hono();
 
-// =============================================================================
-// Rate Limiting Middleware
-// =============================================================================
-
-// Apply rate limiting to prevent DoS attacks on workflow trigger
-app.use("*", rateLimitMiddleware());
 
 // =============================================================================
 // Request Schemas
@@ -53,7 +47,7 @@ const processRequestSchema = z.object({
  * This endpoint processes the image synchronously (within Vercel's function timeout).
  *
  * Flow:
- * 1. Validates the session token
+ * 1. Validates the Better Auth session
  * 2. Verifies the upload exists and is in "pending" status
  * 3. Updates status to "processing"
  * 4. Fetches original image from R2
@@ -62,7 +56,7 @@ const processRequestSchema = z.object({
  * 7. Updates status to "complete"
  *
  * Headers:
- * - X-Session-Token: string - Required session token for authentication
+ * - Authentication cookie required via Better Auth
  *
  * Request body:
  * - uploadId: string - The upload ID to process
@@ -74,15 +68,13 @@ const processRequestSchema = z.object({
  * - resultId?: string - The result ID (on success)
  * - error?: string - Error message (on failure)
  */
-app.post("/", async (c) => {
-  // Get session token from header
-  const sessionToken = c.req.header("X-Session-Token");
-
-  if (!sessionToken) {
+app.post("/", requireAuth, async (c) => {
+  const user = c.get("user") as { id: string };
+  if (!user?.id) {
     return c.json(
       {
-        error: "Session token is required",
-        code: "MISSING_TOKEN",
+        error: "Authentication required",
+        code: "UNAUTHENTICATED",
       },
       401,
     );
@@ -112,19 +104,14 @@ app.post("/", async (c) => {
     const r2 = yield* R2Service;
     const resultService = yield* ResultService;
 
-    // Get upload and verify session token
-    const upload = yield* uploadService.getById(uploadId);
-
-    // Verify session token matches
-    if (upload.sessionToken !== sessionToken) {
-      return yield* Effect.fail(new UnauthorizedError({ reason: "INVALID_TOKEN" }));
-    }
+    // Get upload and verify ownership (single query)
+    const upload = yield* uploadService.getByIdWithAuth(uploadId, user.id);
 
     // Track overall processing start time
     const processingStartTime = Date.now();
 
     // Track processing start
-    yield* posthog.capture("processing_started", sessionToken, {
+    yield* posthog.capture("processing_started", user.id, {
       upload_id: uploadId,
     });
 
@@ -180,7 +167,7 @@ app.post("/", async (c) => {
       const variantDurationMs = Date.now() - variantStartTime;
 
       // Track individual Gemini call
-      yield* posthog.capture("gemini_call_completed", sessionToken, {
+      yield* posthog.capture("gemini_call_completed", user.id, {
         upload_id: uploadId,
         variant_index: variantIndex,
         prompt_version: promptVersion,
@@ -203,7 +190,7 @@ app.post("/", async (c) => {
       // After first variant: mark first_ready so frontend can show upsell immediately
       if (i === 0) {
         yield* uploadService.updateStage(uploadId, "first_ready", 35);
-        yield* posthog.capture("first_preview_ready", sessionToken, {
+        yield* posthog.capture("first_preview_ready", user.id, {
           upload_id: uploadId,
           result_id: createdResult.resultId,
           generation_time_ms: variantDurationMs,
@@ -211,7 +198,7 @@ app.post("/", async (c) => {
       }
 
       // Track result storage
-      yield* posthog.capture("result_stored", sessionToken, {
+      yield* posthog.capture("result_stored", user.id, {
         upload_id: uploadId,
         result_id: createdResult.resultId,
         variant_index: variantIndex,
@@ -229,7 +216,7 @@ app.post("/", async (c) => {
     yield* uploadService.updateStage(uploadId, "complete", 100);
 
     // Track processing complete
-    yield* posthog.capture("processing_completed", sessionToken, {
+    yield* posthog.capture("processing_completed", user.id, {
       upload_id: uploadId,
       result_count: createdResults.length,
       result_ids: createdResults.map((r) => r.resultId),
@@ -325,7 +312,7 @@ app.post("/", async (c) => {
     if (error instanceof UnauthorizedError) {
       return c.json(
         {
-          error: "Invalid session token",
+          error: "Authentication required",
           code: error.reason,
         },
         401,

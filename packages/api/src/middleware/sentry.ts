@@ -1,6 +1,7 @@
 import * as Sentry from "@sentry/node";
 import { createMiddleware } from "hono/factory";
 import { env, isSentryConfigured } from "../lib/env";
+import { auth } from "../lib/auth";
 
 // =============================================================================
 // Sentry Initialization
@@ -50,15 +51,24 @@ export function initSentry() {
 
 /**
  * Sentry middleware for Hono
- * - Attaches session token to Sentry user context
+ * - Attaches authenticated user ID to Sentry user context
  * - Captures unhandled errors
  */
 export const sentryMiddleware = createMiddleware(async (c, next) => {
-  // Attach session token to Sentry context if present
-  const sessionToken = c.req.header("X-Session-Token");
-
-  if (sessionToken && isSentryConfigured()) {
-    Sentry.setUser({ id: sessionToken });
+  // Attach authenticated user context when available.
+  // Only attempt session lookup when a session cookie is present to avoid
+  // an unnecessary DB round-trip on every unauthenticated request.
+  if (isSentryConfigured()) {
+    const cookieHeader = c.req.header("cookie") ?? "";
+    const hasSessionCookie = cookieHeader.includes("better-auth.session_token");
+    if (hasSessionCookie) {
+      const session = await auth.api.getSession({ headers: c.req.raw.headers }).catch(() => null);
+      if (session?.user?.id) {
+        Sentry.setUser({ id: session.user.id });
+      } else {
+        Sentry.setUser(null);
+      }
+    }
   }
 
   try {
@@ -86,9 +96,9 @@ export const sentryMiddleware = createMiddleware(async (c, next) => {
 /**
  * Set session context for error correlation
  */
-export function setSessionContext(sessionToken: string) {
+export function setSessionContext(userId: string) {
   if (isSentryConfigured()) {
-    Sentry.setUser({ id: sessionToken });
+    Sentry.setUser({ id: userId });
   }
 }
 

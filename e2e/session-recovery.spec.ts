@@ -10,10 +10,6 @@ import { test, expect, Page } from "@playwright/test";
  * - AC7: Session is cleared after TTL
  */
 
-const SESSION_PREFIX = "babypeek-session-";
-const JOB_DATA_PREFIX = "babypeek-job-";
-const CURRENT_JOB_KEY = "babypeek-current-job";
-
 // Helper to set up a mock session in localStorage
 async function setupMockSession(
   page: Page,
@@ -30,14 +26,11 @@ async function setupMockSession(
     ({ jobId, status, resultId, expired }) => {
       const createdAt = expired ? Date.now() - 25 * 60 * 60 * 1000 : Date.now();
 
-      // Set session token
-      localStorage.setItem(`babypeek-session-${jobId}`, `mock-token-${jobId}`);
       localStorage.setItem("babypeek-current-job", jobId);
 
       // Set job data
       const jobData = {
         jobId,
-        token: `mock-token-${jobId}`,
         createdAt,
         status,
         ...(resultId && { resultId }),
@@ -51,6 +44,26 @@ async function setupMockSession(
     },
     { jobId, status, resultId, expired },
   );
+}
+
+async function mockAuthenticatedSession(page: Page) {
+  await page.route("**/api/auth/get-session**", async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        user: {
+          id: "test-user-id",
+          email: "test@example.com",
+        },
+        session: {
+          id: "test-session-id",
+          userId: "test-user-id",
+          expiresAt: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
+        },
+      }),
+    });
+  });
 }
 
 // Helper to simulate visibility change
@@ -208,6 +221,7 @@ test.describe("Session Recovery (Story 5.7)", () => {
       const resultId = "result-123";
 
       await setupMockSession(page, jobId, { status: "processing" });
+      await mockAuthenticatedSession(page);
 
       const tinyPng =
         "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/w8AAn8B9pRkqQAAAABJRU5ErkJggg==";
@@ -277,7 +291,7 @@ test.describe("Session Recovery (Story 5.7)", () => {
       await page.goto(`/processing/${jobId}`);
 
       // Wait for the initial status call to happen
-      await page.waitForRequest(new RegExp(`/api/status/${jobId}$`));
+      await page.waitForRequest((request) => request.url().includes(`/api/status/${jobId}`));
 
       // Simulate app backgrounding and returning
       await simulateVisibilityChange(page, "hidden");

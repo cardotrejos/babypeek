@@ -1,9 +1,9 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { getSession } from "@/lib/session";
 import { DownloadButton, DownloadExpired } from "@/components/download";
 import { API_BASE_URL } from "@/lib/api-config";
 import { posthog, isPostHogConfigured } from "@/lib/posthog";
+import { useSession } from "@/lib/auth-client";
 
 /**
  * Download Page Route
@@ -35,28 +35,20 @@ interface DownloadStatus {
 function DownloadPage() {
   const { uploadId } = Route.useParams();
   const navigate = useNavigate();
-  const sessionToken = getSession(uploadId);
+  const { data: authSession, isPending: isAuthLoading } = useSession();
 
   // Check download eligibility
   const { data, isLoading, error } = useQuery<DownloadStatus>({
     queryKey: ["download-status", uploadId],
     queryFn: async () => {
-      if (!sessionToken) {
-        return {
-          canDownload: false,
-          isExpired: false,
-          expiresAt: null,
-          daysRemaining: null,
-          error: { code: "SESSION_NOT_FOUND", message: "Session not found" },
-        };
-      }
-
       const response = await fetch(`${API_BASE_URL}/api/download/${uploadId}/status`, {
-        headers: {
-          "Content-Type": "application/json",
-          "X-Session-Token": sessionToken,
-        },
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
       });
+
+      if (!response.ok) {
+        throw new Error("Failed to check download status");
+      }
 
       const result = await response.json();
 
@@ -69,13 +61,13 @@ function DownloadPage() {
 
       return result;
     },
-    enabled: !!sessionToken,
+    enabled: !isAuthLoading && Boolean(authSession?.user),
     staleTime: 30 * 1000, // 30 seconds
     retry: 1,
   });
 
   // Loading state
-  if (isLoading) {
+  if (isLoading || isAuthLoading) {
     return (
       <div className="min-h-screen bg-cream flex items-center justify-center">
         <div className="size-12 animate-spin rounded-full border-4 border-coral border-t-transparent" />
@@ -83,8 +75,8 @@ function DownloadPage() {
     );
   }
 
-  // No session - user may have come from a different device
-  if (!sessionToken) {
+  // Unauthenticated state
+  if (!authSession?.user) {
     return (
       <div className="min-h-screen bg-cream flex items-center justify-center p-4">
         <div className="max-w-md text-center space-y-4">
@@ -95,14 +87,14 @@ function DownloadPage() {
           </div>
           <h1 className="font-display text-2xl text-charcoal">Session Not Found</h1>
           <p className="text-warm-gray">
-            We couldn't find your download session. This usually happens if you're on a different
-            device. Try accessing the link from your email.
+            Please access this download link from the device where you received the email, or click the
+            magic link in your email to authenticate.
           </p>
           <button
             onClick={() => navigate({ to: "/" })}
             className="px-6 py-3 bg-coral text-white rounded-lg hover:bg-coral/90 transition-colors"
           >
-            Create New Portrait
+            Go Home
           </button>
         </div>
       </div>
@@ -159,7 +151,6 @@ function DownloadPage() {
         {/* Download button - AC-4: Fresh URL generated each click */}
         <DownloadButton
           uploadId={uploadId}
-          sessionToken={sessionToken}
           onSuccess={() => {
             // AC-5: Track re-download completion with is_redownload flag
             if (isPostHogConfigured()) {

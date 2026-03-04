@@ -80,7 +80,7 @@ export function GiftCheckoutButton({ shareId, uploadId }: GiftCheckoutButtonProp
     addBreadcrumb("Gift purchase started", "checkout", { share_id: shareId });
 
     try {
-      // Gift checkout - no session token required (public purchase)
+      // Gift checkout is public (no authentication required)
       const response = await fetch(`${API_BASE_URL}/api/checkout/gift`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },

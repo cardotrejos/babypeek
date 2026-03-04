@@ -11,6 +11,7 @@ import { start } from "workflow/api";
 import { db, uploads } from "@babypeek/db";
 import { eq } from "drizzle-orm";
 import { processImageWorkflowSimple, type PromptVersion } from "../workflows/process-image-simple";
+import { requireAuth } from "../middleware/auth";
 
 const app = new Hono();
 
@@ -25,12 +26,10 @@ const processRequestSchema = z.object({
  * Trigger image processing via durable workflow.
  * This endpoint validates auth and triggers the workflow asynchronously.
  */
-app.post("/", async (c) => {
-  // Get session token from header
-  const sessionToken = c.req.header("X-Session-Token");
-
-  if (!sessionToken) {
-    return c.json({ error: "Session token is required", code: "MISSING_TOKEN" }, 401);
+app.post("/", requireAuth, async (c) => {
+  const user = c.get("user") as { id: string };
+  if (!user?.id) {
+    return c.json({ error: "Authentication required", code: "UNAUTHENTICATED" }, 401);
   }
 
   // Parse request body
@@ -50,7 +49,7 @@ app.post("/", async (c) => {
   const { uploadId, promptVersion } = parsed.data;
 
   try {
-    // Verify upload exists and session token matches
+    // Verify upload exists and user owns it
     const upload = await db.query.uploads.findFirst({
       where: eq(uploads.id, uploadId),
     });
@@ -59,8 +58,8 @@ app.post("/", async (c) => {
       return c.json({ error: "Upload not found", code: "NOT_FOUND" }, 404);
     }
 
-    if (upload.sessionToken !== sessionToken) {
-      return c.json({ error: "Invalid session token", code: "INVALID_TOKEN" }, 401);
+    if (upload.userId !== user.id) {
+      return c.json({ error: "Upload not found", code: "NOT_FOUND" }, 404);
     }
 
     if (upload.status !== "pending") {

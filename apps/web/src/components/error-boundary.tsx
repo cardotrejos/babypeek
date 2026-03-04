@@ -1,5 +1,5 @@
 import * as Sentry from "@sentry/react";
-import type { ReactNode } from "react";
+import type { ReactElement, ReactNode } from "react";
 
 interface ErrorFallbackProps {
   error: Error;
@@ -43,7 +43,7 @@ function ErrorFallback({ error, resetError }: ErrorFallbackProps) {
 
 interface ErrorBoundaryProps {
   children: ReactNode;
-  fallback?: ReactNode;
+  fallback?: ReactElement;
 }
 
 /**
@@ -58,7 +58,12 @@ export function ErrorBoundary({ children, fallback }: ErrorBoundaryProps) {
   return (
     <Sentry.ErrorBoundary
       fallback={({ error, resetError }) =>
-        fallback || <ErrorFallback error={error} resetError={resetError} />
+        fallback || (
+          <ErrorFallback
+            error={error instanceof Error ? error : new Error(String(error))}
+            resetError={resetError}
+          />
+        )
       }
       onError={(error, componentStack) => {
         // Log to console in development
@@ -78,7 +83,7 @@ export function ErrorBoundary({ children, fallback }: ErrorBoundaryProps) {
  */
 export function withErrorBoundary<P extends object>(
   Component: React.ComponentType<P>,
-  fallback?: ReactNode,
+  fallback?: ReactElement,
 ) {
   return function WrappedComponent(props: P) {
     return (

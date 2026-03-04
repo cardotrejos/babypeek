@@ -1,10 +1,9 @@
 // =============================================================================
 // Session Storage Utilities
 // =============================================================================
-// Manages localStorage-based session tokens for upload tracking
+// Manages localStorage-based job tracking for session recovery
 // Story 5.7: Enhanced with TTL, result tracking, and recovery support
 
-export const SESSION_PREFIX = "babypeek-session-";
 export const CURRENT_JOB_KEY = "babypeek-current-job";
 export const JOB_DATA_PREFIX = "babypeek-job-";
 
@@ -16,7 +15,6 @@ export const SESSION_TTL_MS = 24 * 60 * 60 * 1000;
  */
 export interface JobData {
   jobId: string;
-  token: string;
   createdAt: number;
   resultId?: string;
   status?: "pending" | "processing" | "completed" | "failed";
@@ -24,36 +22,23 @@ export interface JobData {
 }
 
 /**
- * Store a session token for a specific job
- * Also updates the current job reference for session recovery
+ * Initialize job tracking data for session recovery.
+ * Authentication is handled by Better Auth cookies.
  */
-export function storeSession(jobId: string, token: string): void {
+export function initializeJobTracking(jobId: string): void {
   try {
-    localStorage.setItem(`${SESSION_PREFIX}${jobId}`, token);
     localStorage.setItem(CURRENT_JOB_KEY, jobId);
 
-    // Store enhanced job data with timestamp (Story 5.7: AC4)
+    // Store job metadata for recovery
     const jobData: JobData = {
       jobId,
-      token,
       createdAt: Date.now(),
       status: "pending",
     };
     localStorage.setItem(`${JOB_DATA_PREFIX}${jobId}`, JSON.stringify(jobData));
   } catch (error) {
     // Silent fail - localStorage may not be available (SSR, private browsing)
-    console.warn("Failed to store session:", error);
-  }
-}
-
-/**
- * Retrieve a session token for a specific job
- */
-export function getSession(jobId: string): string | null {
-  try {
-    return localStorage.getItem(`${SESSION_PREFIX}${jobId}`);
-  } catch {
-    return null;
+    console.warn("Failed to initialize job tracking:", error);
   }
 }
 
@@ -68,13 +53,9 @@ export function getCurrentJob(): string | null {
   }
 }
 
-/**
- * Clear a session token for a specific job
- * Also clears current job reference if it matches
- */
+/** Clear job tracking for a specific job */
 export function clearSession(jobId: string): void {
   try {
-    localStorage.removeItem(`${SESSION_PREFIX}${jobId}`);
     localStorage.removeItem(`${JOB_DATA_PREFIX}${jobId}`);
     const current = getCurrentJob();
     if (current === jobId) {
@@ -85,25 +66,8 @@ export function clearSession(jobId: string): void {
   }
 }
 
-/**
- * Check if a session exists for a job
- */
-export function hasSession(jobId: string): boolean {
-  return getSession(jobId) !== null;
-}
-
-/**
- * Get session token header value for API requests
- * Returns null if no session exists for the job
- */
-export function getSessionHeader(jobId: string): Record<string, string> | null {
-  const token = getSession(jobId);
-  if (!token) return null;
-  return { "X-Session-Token": token };
-}
-
 // =============================================================================
-// Enhanced Session Recovery (Story 5.7)
+// Session Recovery (Story 5.7)
 // =============================================================================
 
 /**
@@ -153,21 +117,6 @@ export function updateJobResult(jobId: string, resultId: string): void {
     if (data) {
       data.resultId = resultId;
       data.status = "completed";
-      localStorage.setItem(`${JOB_DATA_PREFIX}${jobId}`, JSON.stringify(data));
-    }
-  } catch {
-    // Silent fail
-  }
-}
-
-/**
- * Store selected pricing tier for a job
- */
-export function updateJobTier(jobId: string, tier: string): void {
-  try {
-    const data = getJobData(jobId);
-    if (data) {
-      data.selectedTier = tier;
       localStorage.setItem(`${JOB_DATA_PREFIX}${jobId}`, JSON.stringify(data));
     }
   } catch {
@@ -239,7 +188,6 @@ export function clearStaleSessions(): void {
           if (now - data.createdAt > SESSION_TTL_MS) {
             // Clear all related data for this job
             localStorage.removeItem(key);
-            localStorage.removeItem(`${SESSION_PREFIX}${data.jobId}`);
             // Clear current job if it matches
             if (getCurrentJob() === data.jobId) {
               localStorage.removeItem(CURRENT_JOB_KEY);

@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { getSession, getJobData } from "@/lib/session";
+import { getJobData } from "@/lib/session";
 // Note: clearSession will be used in Epic 6 after payment completes (Story 5.7: AC7)
 import { posthog, isPostHogConfigured } from "@/lib/posthog";
 import { trackFBViewContent } from "@/lib/facebook-pixel";
@@ -98,7 +98,6 @@ function ResultPage() {
       return null;
     }
   })();
-  const sessionToken = uploadId ? getSession(uploadId) : null;
 
   // Story 5.7: Track if this was a session recovery navigation
   useEffect(() => {
@@ -178,15 +177,13 @@ function ResultPage() {
   } = useQuery<StatusData>({
     queryKey: ["status", uploadId],
     queryFn: async () => {
-      if (!uploadId || !sessionToken) {
-        throw new Error("Session not found. Please start a new upload.");
+      if (!uploadId) {
+        throw new Error("Upload not found. Please start a new upload.");
       }
 
       const response = await fetch(`${API_BASE_URL}/api/status/${uploadId}`, {
-        headers: {
-          "Content-Type": "application/json",
-          "X-Session-Token": sessionToken,
-        },
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
       });
 
       if (!response.ok) {
@@ -212,7 +209,7 @@ function ResultPage() {
 
       return data;
     },
-    enabled: !!uploadId && !!sessionToken,
+    enabled: !!uploadId,
     retry: 1,
     // Keep polling while still processing (fast first result - remaining images generating)
     refetchInterval: (query) => {
@@ -227,19 +224,15 @@ function ResultPage() {
   const { data: downloadStatus } = useQuery({
     queryKey: ["download-status", uploadId],
     queryFn: async () => {
-      if (!sessionToken) return null;
-
       const response = await fetch(`${API_BASE_URL}/api/download/${uploadId}/status`, {
-        headers: {
-          "Content-Type": "application/json",
-          "X-Session-Token": sessionToken,
-        },
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
       });
 
       if (!response.ok) return null;
       return response.json();
     },
-    enabled: !!sessionToken && !!uploadId,
+    enabled: !!uploadId,
     staleTime: 60 * 1000, // 1 minute
     retry: false,
   });

@@ -39,7 +39,7 @@ async function runSharedHealthCheck(useRecentResult: boolean = false): Promise<b
     sharedHealthCheckState.lastFetchRef === fetch;
 
   if (hasFreshResult) {
-    return sharedHealthCheckState.lastResult;
+    return sharedHealthCheckState.lastResult ?? false;
   }
 
   const fetchRef = fetch;

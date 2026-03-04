@@ -6,7 +6,6 @@ import { DownloadButton } from "@/components/download";
 import { ShareButtons } from "@/components/share";
 import { DeleteDataButton } from "@/components/settings";
 import { toast } from "sonner";
-import { getSession } from "@/lib/session";
 import { API_BASE_URL } from "@/lib/api-config";
 
 interface RevealUIProps {
@@ -60,26 +59,20 @@ export function RevealUI({
   onStartOver,
   hasPurchasedProp,
 }: RevealUIProps) {
-  const sessionToken = getSession(uploadId);
-
   // Story 7.5 AC-2: Check if user has already purchased
   // Skip the query if hasPurchasedProp is already provided (e.g., from preview page)
   const { data: downloadStatus, isLoading: checkingPurchase } = useQuery({
     queryKey: ["download-status", uploadId],
     queryFn: async () => {
-      if (!sessionToken) return null;
-
       const response = await fetch(`${API_BASE_URL}/api/download/${uploadId}/status`, {
-        headers: {
-          "Content-Type": "application/json",
-          "X-Session-Token": sessionToken,
-        },
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
       });
 
       if (!response.ok) return null;
       return response.json();
     },
-    enabled: !!sessionToken && hasPurchasedProp === undefined,
+    enabled: hasPurchasedProp === undefined,
     staleTime: 60 * 1000, // 1 minute
     retry: false,
   });
@@ -106,10 +99,9 @@ export function RevealUI({
         >
           Loading...
         </Button>
-      ) : hasPurchased && sessionToken ? (
+      ) : hasPurchased ? (
         <DownloadButton
           uploadId={uploadId}
-          sessionToken={sessionToken}
           resultId={resultId}
           className="w-full bg-coral hover:bg-coral/90 text-white font-body text-lg py-6"
         />
@@ -185,13 +177,11 @@ export function RevealUI({
       )}
 
       {/* GDPR Data Deletion (Story 8.6 AC-1) */}
-      {sessionToken && (
-        <div className="pt-4 border-t border-gray-200">
-          <div className="flex justify-center">
-            <DeleteDataButton uploadId={uploadId} sessionToken={sessionToken} />
-          </div>
+      <div className="pt-4 border-t border-gray-200">
+        <div className="flex justify-center">
+          <DeleteDataButton uploadId={uploadId} />
         </div>
-      )}
+      </div>
     </div>
   );
 }

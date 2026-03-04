@@ -20,7 +20,7 @@ vi.mock("@/lib/posthog", () => ({
 
 // Import after mocks
 import { useSessionRecovery } from "./use-session-recovery";
-import { storeSession, updateJobStatus, updateJobResult, JOB_DATA_PREFIX } from "@/lib/session";
+import { initializeJobTracking, updateJobStatus, updateJobResult, JOB_DATA_PREFIX } from "@/lib/session";
 
 describe("useSessionRecovery", () => {
   const originalFetch = globalThis.fetch;
@@ -57,7 +57,7 @@ describe("useSessionRecovery", () => {
   });
 
   it("should show recovery prompt for pending job", async () => {
-    storeSession("job-123", "token-abc");
+    initializeJobTracking("job-123");
 
     const { result } = renderHook(() => useSessionRecovery());
 
@@ -71,7 +71,7 @@ describe("useSessionRecovery", () => {
   });
 
   it("should show recovery prompt for processing job", async () => {
-    storeSession("job-123", "token-abc");
+    initializeJobTracking("job-123");
     updateJobStatus("job-123", "processing");
 
     const { result } = renderHook(() => useSessionRecovery());
@@ -85,7 +85,7 @@ describe("useSessionRecovery", () => {
   });
 
   it("should redirect to result page for completed job", async () => {
-    storeSession("job-123", "token-abc");
+    initializeJobTracking("job-123");
     updateJobResult("job-123", "result-456");
 
     renderHook(() => useSessionRecovery());
@@ -99,7 +99,7 @@ describe("useSessionRecovery", () => {
   });
 
   it("should not check recovery on processing page", async () => {
-    storeSession("job-123", "token-abc");
+    initializeJobTracking("job-123");
     mockLocation.pathname = "/processing/job-123";
 
     const { result } = renderHook(() => useSessionRecovery());
@@ -112,7 +112,7 @@ describe("useSessionRecovery", () => {
   });
 
   it("should not check recovery on result page", async () => {
-    storeSession("job-123", "token-abc");
+    initializeJobTracking("job-123");
     mockLocation.pathname = "/result/result-456";
 
     const { result } = renderHook(() => useSessionRecovery());
@@ -125,7 +125,7 @@ describe("useSessionRecovery", () => {
   });
 
   it("resumeJob should navigate to processing page", async () => {
-    storeSession("job-123", "token-abc");
+    initializeJobTracking("job-123");
 
     const { result } = renderHook(() => useSessionRecovery());
 
@@ -145,7 +145,7 @@ describe("useSessionRecovery", () => {
   });
 
   it("startFresh should clear session and hide prompt", async () => {
-    storeSession("job-123", "token-abc");
+    initializeJobTracking("job-123");
 
     const { result } = renderHook(() => useSessionRecovery());
 
@@ -162,7 +162,7 @@ describe("useSessionRecovery", () => {
   });
 
   it("dismissPrompt should hide prompt without clearing session", async () => {
-    storeSession("job-123", "token-abc");
+    initializeJobTracking("job-123");
 
     const { result } = renderHook(() => useSessionRecovery());
 
@@ -180,7 +180,7 @@ describe("useSessionRecovery", () => {
   });
 
   it("does not re-show prompt after dismiss on route change", async () => {
-    storeSession("job-123", "token-abc");
+    initializeJobTracking("job-123");
 
     const { result, rerender } = renderHook(() => useSessionRecovery());
 
@@ -225,7 +225,7 @@ describe("useSessionRecovery", () => {
       get: () => visibilityState,
     });
 
-    storeSession("job-123", "token-abc");
+    initializeJobTracking("job-123");
 
     const { result } = renderHook(() => useSessionRecovery());
 

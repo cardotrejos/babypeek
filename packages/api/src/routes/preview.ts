@@ -5,18 +5,19 @@ import { db, uploads, results } from "@babypeek/db";
 import { R2Service, R2ServiceLive } from "../services/R2Service";
 import { PurchaseService, PurchaseServiceLive } from "../services/PurchaseService";
 import { StripeServiceLive } from "../services/StripeService";
+import { requireAuth } from "../middleware/auth";
 
 const app = new Hono();
 
 /**
  * GET /api/preview/:uploadId
  *
- * Public endpoint to get preview data for email links.
- * Returns watermarked previews for all 4 variants (no auth required).
+ * Authenticated endpoint to get preview data for email links.
+ * Returns watermarked previews for all 4 variants.
  * Users can view their portraits and purchase HD versions.
  *
- * This endpoint is used for email links where the user may not have
- * the session token in localStorage (different device/browser).
+ * This endpoint is used for email links where users may return from a
+ * different device/browser and rely on Better Auth cookies.
  *
  * Response:
  * - uploadId: string - The upload ID
@@ -25,11 +26,16 @@ const app = new Hono();
  * - results: Array of variant previews with watermarked URLs
  * - hasPurchased: boolean - Whether user has already purchased
  */
-app.get("/:uploadId", async (c) => {
+app.get("/:uploadId", requireAuth, async (c) => {
   const uploadId = c.req.param("uploadId");
+  const user = c.get("user") as { id: string };
 
   if (!uploadId) {
     return c.json({ error: "Upload ID required" }, 400);
+  }
+
+  if (!user?.id) {
+    return c.json({ error: "Authentication required" }, 401);
   }
 
   const program = Effect.gen(function* () {
@@ -44,6 +50,10 @@ app.get("/:uploadId", async (c) => {
     );
 
     if (!upload) {
+      return { error: "not_found" as const };
+    }
+
+    if (upload.userId !== user.id) {
       return { error: "not_found" as const };
     }
 

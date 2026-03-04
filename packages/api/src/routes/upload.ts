@@ -1,24 +1,23 @@
+import { createHash, createHmac, timingSafeEqual } from "crypto";
 import { Hono } from "hono";
 import { Effect, Layer } from "effect";
 import { createId } from "@paralleldrive/cuid2";
 import { z } from "zod";
+import { eq } from "drizzle-orm";
 
+import { db, user as authUsers } from "@babypeek/db";
 import { R2Service, R2ServiceLive } from "../services/R2Service";
 import { UploadService, UploadServiceLive } from "../services/UploadService";
 import { R2Error } from "../lib/errors";
-import { rateLimitMiddleware } from "../middleware/rate-limit";
+import { auth } from "../lib/auth";
+import { env } from "../lib/env";
+import { rateLimit } from "../middleware/rateLimit";
+import { canAccessUpload } from "./uploadAuth";
 
 // Combined layer for upload routes
 const UploadRoutesLive = Layer.merge(R2ServiceLive, UploadServiceLive);
 
 const app = new Hono();
-
-// =============================================================================
-// Rate Limiting Middleware
-// =============================================================================
-
-// Apply rate limiting to all upload routes
-app.use("*", rateLimitMiddleware());
 
 // =============================================================================
 // Request Schemas
@@ -31,6 +30,13 @@ const initiateUploadSchema = z.object({
     .refine((ct) => ct.startsWith("image/"), "Content type must be an image type"),
   email: z.string().min(1, "Email is required").email("Invalid email format"),
 });
+
+const updateEmailSchema = z.object({
+  email: z.string().min(1, "Email is required").email("Invalid email format"),
+});
+
+const CLEANUP_TOKEN_TTL_SECONDS = 15 * 60;
+const CLEANUP_TOKEN_SECRET = env.BETTER_AUTH_SECRET || "dev-secret-change-me-not-for-production";
 
 // =============================================================================
 // Helpers
@@ -46,6 +52,35 @@ const getExtensionFromContentType = (contentType: string): string => {
     "image/webp": "webp",
   };
   return typeMap[contentType.toLowerCase()] ?? "jpg";
+};
+
+const createCleanupToken = (uploadId: string, userId: string): string => {
+  const issuedAt = Math.floor(Date.now() / 1000).toString();
+  const payload = `${uploadId}:${userId}:${issuedAt}`;
+  const signature = createHmac("sha256", CLEANUP_TOKEN_SECRET).update(payload).digest("hex");
+  return `${issuedAt}.${signature}`;
+};
+
+const isValidCleanupToken = (token: string, uploadId: string, userId: string): boolean => {
+  const [issuedAtRaw, providedSignature] = token.split(".");
+  if (!issuedAtRaw || !providedSignature) return false;
+
+  const issuedAt = Number(issuedAtRaw);
+  if (!Number.isFinite(issuedAt)) return false;
+
+  const ageSeconds = Math.floor(Date.now() / 1000) - issuedAt;
+  if (ageSeconds < 0 || ageSeconds > CLEANUP_TOKEN_TTL_SECONDS) return false;
+
+  const payload = `${uploadId}:${userId}:${issuedAtRaw}`;
+  const expectedSignature = createHmac("sha256", CLEANUP_TOKEN_SECRET)
+    .update(payload)
+    .digest("hex");
+
+  const providedBuffer = Buffer.from(providedSignature, "utf8");
+  const expectedBuffer = Buffer.from(expectedSignature, "utf8");
+  if (providedBuffer.length !== expectedBuffer.length) return false;
+
+  return timingSafeEqual(providedBuffer, expectedBuffer);
 };
 
 /** Handle R2 errors with appropriate HTTP responses */
@@ -98,8 +133,30 @@ const handleR2Error = (error: R2Error) => {
  * - uploadId: string - Unique identifier for this upload (cuid2)
  * - key: string - R2 object key
  * - expiresAt: string - ISO timestamp when URL expires
+ * - cleanupToken: string - Short-lived token for unauthenticated cleanup calls
  */
-app.post("/", async (c) => {
+app.post(
+  "/",
+  rateLimit({
+    limit: 10,
+    windowMs: 60 * 60 * 1000,
+    keyGenerator: async (c) => {
+      const contentType = c.req.header("content-type") ?? "";
+      if (!contentType.includes("application/json")) return null;
+
+      const body = await c.req.raw.clone().json().catch(() => null);
+      const email =
+        body && typeof body === "object" && "email" in body
+          ? (body as { email?: unknown }).email
+          : null;
+
+      if (typeof email !== "string") return null;
+
+      const normalized = email.trim().toLowerCase();
+      return normalized ? `email:${normalized}` : null;
+    },
+  }),
+  async (c) => {
   // Parse and validate request body
   const body = await c.req.json().catch(() => ({}));
   const parsed = initiateUploadSchema.safeParse(body);
@@ -114,15 +171,13 @@ app.post("/", async (c) => {
     );
   }
 
-  const { contentType, email } = parsed.data;
+  const { contentType, email: rawEmail } = parsed.data;
+  const email = rawEmail.trim().toLowerCase();
 
   // Generate unique upload ID and R2 key
   const uploadId = createId();
   const extension = getExtensionFromContentType(contentType);
   const key = `uploads/${uploadId}/original.${extension}`;
-
-  // Generate session token for this upload
-  const sessionToken = crypto.randomUUID();
 
   const initiateUpload = Effect.fn("routes.upload.initiate")(function* () {
     const r2 = yield* R2Service;
@@ -131,12 +186,42 @@ app.post("/", async (c) => {
     // Generate presigned URL
     const presignedResult = yield* r2.generatePresignedUploadUrl(key, contentType);
 
+    // Ensure an auth user exists for this email so upload ownership can
+    // transition to authenticated userId checks after magic-link sign-in.
+    const authUser = yield* Effect.promise(async () => {
+      const existing = await db.query.user.findFirst({
+        where: eq(authUsers.email, email),
+      });
+
+      if (existing) return existing;
+
+      await db
+        .insert(authUsers)
+        .values({
+          id: `usr_${createHash("md5").update(email).digest("hex").slice(0, 24)}`,
+          name: email.split("@")[0] || "BabyPeek User",
+          email,
+          emailVerified: false,
+        })
+        .onConflictDoNothing();
+
+      const created = await db.query.user.findFirst({
+        where: eq(authUsers.email, email),
+      });
+
+      if (!created) {
+        throw new Error("Failed to create auth user");
+      }
+
+      return created;
+    });
+
     // Create database record with pending status
     // Pass uploadId to ensure DB ID matches R2 key
     const upload = yield* uploadService.create({
       id: uploadId,
+      userId: authUser.id,
       email,
-      sessionToken,
       originalUrl: key, // Store R2 key, not full URL
     });
 
@@ -160,13 +245,13 @@ app.post("/", async (c) => {
     return c.json({ error: "Failed to create upload record", code: "DB_ERROR" }, 500);
   }
 
-  // Return upload details including session token
+  // Return upload details (auth will happen through magic-link cookies)
   return c.json({
     uploadUrl: result.right.presignedResult.url,
     uploadId: result.right.upload.id,
     key,
     expiresAt: result.right.presignedResult.expiresAt.toISOString(),
-    sessionToken, // NEW: For authenticated access
+    cleanupToken: createCleanupToken(result.right.upload.id, result.right.upload.userId),
   });
 });
 
@@ -179,6 +264,10 @@ app.post("/", async (c) => {
  *
  * Confirm that an upload has completed successfully.
  * Verifies the file exists in R2 and updates the status.
+ * Authentication requirements:
+ * - Authenticated users can confirm their own uploads.
+ * - Unauthenticated users must provide a valid `X-Upload-Cleanup-Token`
+ *   for pending uploads created in the pre-auth flow.
  *
  * Path params:
  * - uploadId: string - The upload ID to confirm
@@ -188,8 +277,9 @@ app.post("/", async (c) => {
  * - jobId: string - Same as uploadId
  * - status: string - Current upload status
  */
-app.post("/:uploadId/confirm", async (c) => {
+app.post("/:uploadId/confirm", rateLimit({ limit: 20, windowMs: 60 * 60 * 1000 }), async (c) => {
   const uploadId = c.req.param("uploadId");
+  const cleanupToken = c.req.header("x-upload-cleanup-token");
 
   if (!uploadId) {
     return c.json({ error: "Upload ID is required", code: "INVALID_REQUEST" }, 400);
@@ -199,8 +289,31 @@ app.post("/:uploadId/confirm", async (c) => {
     const r2 = yield* R2Service;
     const uploadService = yield* UploadService;
 
-    // Get the upload record
+    // Get the upload record first so token/session checks can verify ownership.
     const upload = yield* uploadService.getById(uploadId);
+
+    const cookieHeader = c.req.header("cookie") ?? "";
+    const hasSessionCookie = cookieHeader.includes("better-auth.session_token");
+
+    const session = hasSessionCookie
+      ? yield* Effect.promise(() =>
+          auth.api.getSession({ headers: c.req.raw.headers }).catch(() => null),
+        )
+      : null;
+
+    const canConfirmUpload = canAccessUpload({
+      uploadUserId: upload.userId,
+      uploadStatus: upload.status,
+      sessionUserId: session?.user?.id,
+      cleanupToken,
+      isCleanupTokenValid:
+        typeof cleanupToken === "string" &&
+        isValidCleanupToken(cleanupToken, upload.id, upload.userId),
+    });
+
+    if (!canConfirmUpload) {
+      return yield* Effect.fail({ _tag: "UnauthorizedError" as const });
+    }
 
     // Verify the file exists in R2 using HEAD request
     const exists = yield* r2.headObject(upload.originalUrl);
@@ -234,6 +347,9 @@ app.post("/:uploadId/confirm", async (c) => {
 
   if (result._tag === "Left") {
     const error = result.left;
+    if ("_tag" in error && error._tag === "UnauthorizedError") {
+      return c.json({ error: "Authentication required", code: "UNAUTHENTICATED" }, 401);
+    }
     // Handle NotFoundError
     if ("_tag" in error && error._tag === "NotFoundError") {
       return c.json({ error: "Upload not found. Please try again.", code: "NOT_FOUND" }, 404);
@@ -267,6 +383,118 @@ app.post("/:uploadId/confirm", async (c) => {
 });
 
 // =============================================================================
+// PUT /api/upload/:uploadId/email - Update Email
+// =============================================================================
+
+/**
+ * PUT /api/upload/:uploadId/email
+ *
+ * Update the email and userId for an upload.
+ * Used in error recovery flow when user wants to use a different email.
+ * Requires a valid cleanup token (pre-auth flow).
+ *
+ * Path params:
+ * - uploadId: string - The upload ID to update
+ *
+ * Request body:
+ * - email: string - The new email address
+ *
+ * Response:
+ * - success: boolean
+ */
+app.put("/:uploadId/email", async (c) => {
+  const uploadId = c.req.param("uploadId");
+  const cleanupToken = c.req.header("x-upload-cleanup-token");
+
+  if (!uploadId) {
+    return c.json({ error: "Upload ID is required", code: "INVALID_REQUEST" }, 400);
+  }
+
+  const body = await c.req.json().catch(() => ({}));
+  const parsed = updateEmailSchema.safeParse(body);
+
+  if (!parsed.success) {
+    return c.json(
+      {
+        error: "Invalid request",
+        details: parsed.error.flatten().fieldErrors,
+      },
+      400,
+    );
+  }
+
+  const email = parsed.data.email.trim().toLowerCase();
+
+  const updateEmail = Effect.fn("routes.upload.updateEmail")(function* () {
+    const uploadService = yield* UploadService;
+
+    // Get the upload record first for token verification
+    const upload = yield* uploadService.getById(uploadId);
+
+    // Verify cleanup token
+    const canUpdate =
+      upload.status === "pending" &&
+      typeof cleanupToken === "string" &&
+      isValidCleanupToken(cleanupToken, upload.id, upload.userId);
+
+    if (!canUpdate) {
+      return yield* Effect.fail({ _tag: "UnauthorizedError" as const });
+    }
+
+    // Find or create auth user for the new email
+    const authUser = yield* Effect.promise(async () => {
+      const existing = await db.query.user.findFirst({
+        where: eq(authUsers.email, email),
+      });
+
+      if (existing) return existing;
+
+      await db
+        .insert(authUsers)
+        .values({
+          id: `usr_${createHash("md5").update(email).digest("hex").slice(0, 24)}`,
+          name: email.split("@")[0] || "BabyPeek User",
+          email,
+          emailVerified: false,
+        })
+        .onConflictDoNothing();
+
+      const created = await db.query.user.findFirst({
+        where: eq(authUsers.email, email),
+      });
+
+      if (!created) {
+        throw new Error("Failed to create auth user");
+      }
+
+      return created;
+    });
+
+    // Update the upload with new email and userId
+    yield* uploadService.updateEmail(uploadId, email, authUser.id);
+
+    return { success: true, cleanupToken: createCleanupToken(uploadId, authUser.id) };
+  });
+
+  const program = updateEmail().pipe(Effect.provide(UploadRoutesLive));
+
+  const result = await Effect.runPromise(Effect.either(program));
+
+  if (result._tag === "Left") {
+    const error = result.left;
+    if ("_tag" in error && error._tag === "UnauthorizedError") {
+      return c.json({ error: "Authentication required", code: "UNAUTHENTICATED" }, 401);
+    }
+    if ("_tag" in error && error._tag === "NotFoundError") {
+      return c.json({ error: "Upload not found", code: "NOT_FOUND" }, 404);
+    }
+    return c.json({ error: "Internal server error", code: "UNKNOWN" }, 500);
+  }
+
+  return c.json({ success: true, cleanupToken: result.right.cleanupToken });
+});
+
+// =============================================================================
 // DELETE /api/upload/:uploadId - Cleanup Partial Uploads
 // =============================================================================
 
@@ -274,29 +502,51 @@ app.post("/:uploadId/confirm", async (c) => {
  * DELETE /api/upload/:uploadId
  *
  * Clean up a partial/failed upload from R2 storage.
- * Requires session token for authorization.
+ * Authentication is optional:
+ * - Authenticated users can clean up their own uploads.
+ * - Unauthenticated users must provide a valid `X-Upload-Cleanup-Token`
+ *   to clean up pending uploads (pre-auth flow only).
  * Handles "not found" gracefully (idempotent).
  *
  * Path params:
  * - uploadId: string - The upload ID to clean up
- *
- * Headers:
- * - X-Session-Token: string - Session token for authorization
  *
  * Response:
  * - success: boolean
  */
 app.delete("/:uploadId", async (c) => {
   const uploadId = c.req.param("uploadId");
-  const sessionToken = c.req.header("X-Session-Token");
-
-  // Require session token
-  if (!sessionToken) {
-    return c.json({ error: "Session token is required", code: "MISSING_TOKEN" }, 401);
-  }
+  const cleanupToken = c.req.header("x-upload-cleanup-token");
 
   const cleanupUpload = Effect.gen(function* () {
+    const uploadService = yield* UploadService;
     const r2 = yield* R2Service;
+
+    // Resolve upload first so we can enforce ownership/status checks.
+    const upload = yield* uploadService.getById(uploadId);
+
+    const cookieHeader = c.req.header("cookie") ?? "";
+    const hasSessionCookie = cookieHeader.includes("better-auth.session_token");
+
+    const session = hasSessionCookie
+      ? yield* Effect.promise(() =>
+          auth.api.getSession({ headers: c.req.raw.headers }).catch(() => null),
+        )
+      : null;
+
+    const canCleanupUpload = canAccessUpload({
+      uploadUserId: upload.userId,
+      uploadStatus: upload.status,
+      sessionUserId: session?.user?.id,
+      cleanupToken,
+      isCleanupTokenValid:
+        typeof cleanupToken === "string" &&
+        isValidCleanupToken(cleanupToken, upload.id, upload.userId),
+    });
+
+    if (!canCleanupUpload) {
+      return yield* Effect.fail({ _tag: "UnauthorizedError" as const });
+    }
 
     // Delete all files with the upload prefix (uploads/{uploadId}/)
     // This cleans up original, processed, and any temporary files
@@ -309,13 +559,28 @@ app.delete("/:uploadId", async (c) => {
     return { success: true, deletedCount };
   });
 
-  // Run with R2 service layer
-  const program = cleanupUpload.pipe(Effect.provide(R2ServiceLive));
+  const program = cleanupUpload.pipe(Effect.provide(UploadRoutesLive));
 
   try {
     await Effect.runPromise(program);
     return c.json({ success: true });
   } catch (error: unknown) {
+    if (
+      error &&
+      typeof error === "object" &&
+      "_tag" in error &&
+      (error as { _tag?: string })._tag === "NotFoundError"
+    ) {
+      return c.json({ error: "Upload not found", code: "NOT_FOUND" }, 404);
+    }
+    if (
+      error &&
+      typeof error === "object" &&
+      "_tag" in error &&
+      (error as { _tag?: string })._tag === "UnauthorizedError"
+    ) {
+      return c.json({ error: "Authentication required", code: "UNAUTHENTICATED" }, 401);
+    }
     // Check for R2 config error
     if (
       error &&

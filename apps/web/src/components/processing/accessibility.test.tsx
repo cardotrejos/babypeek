@@ -6,8 +6,6 @@
  */
 import { render, cleanup } from "@testing-library/react";
 import { describe, it, expect, vi, beforeAll, afterAll, afterEach } from "vitest";
-import AxeBuilder from "@axe-core/react";
-import React from "react";
 import { ProcessingScreen } from "./ProcessingScreen";
 import { StageIndicator } from "./StageIndicator";
 import { BabyFacts } from "./BabyFacts";

@@ -29,6 +29,13 @@
       "when": 1766935825595,
       "tag": "0003_spotty_frank_castle",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1767362460000,
+      "tag": "0004_better_auth_magic_link",
+      "breakpoints": true
     }
   ]
 }

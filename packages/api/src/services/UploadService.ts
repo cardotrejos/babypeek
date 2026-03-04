@@ -46,8 +46,8 @@ function isValidStageTransition(currentStage: UploadStage | null, newStage: Uplo
 // Create upload parameters
 export interface CreateUploadParams {
   id: string; // Pre-generated ID to match R2 key
+  userId: string;
   email: string;
-  sessionToken: string;
   originalUrl: string;
 }
 
@@ -57,17 +57,17 @@ export class UploadService extends Context.Tag("UploadService")<
   {
     create: (params: CreateUploadParams) => Effect.Effect<Upload, never>;
     getById: (id: string) => Effect.Effect<Upload, NotFoundError>;
-    getBySessionToken: (token: string) => Effect.Effect<Upload, NotFoundError>;
+    getByUserId: (userId: string) => Effect.Effect<Upload[], never>;
     /**
-     * Get upload by ID with session token verification.
+     * Get upload by ID with user ownership verification.
      * Used for authenticated status polling.
      *
      * @param id - The upload ID
-     * @param sessionToken - Session token to verify ownership
-     * @returns The upload record if found and token matches
-     * @throws NotFoundError if upload doesn't exist or token doesn't match
+     * @param userId - Authenticated user ID to verify ownership
+     * @returns The upload record if found and user owns it
+     * @throws NotFoundError if upload doesn't exist or user doesn't own it
      */
-    getByIdWithAuth: (id: string, sessionToken: string) => Effect.Effect<Upload, NotFoundError>;
+    getByIdWithAuth: (id: string, userId: string) => Effect.Effect<Upload, NotFoundError>;
     updateStatus: (
       id: string,
       status: UploadStatus,
@@ -132,6 +132,21 @@ export class UploadService extends Context.Tag("UploadService")<
       uploadId: string,
       promptVersion: PromptVersion,
     ) => Effect.Effect<void, NotFoundError>;
+    /**
+     * Update the email and userId for an upload.
+     * Used in error recovery flow when user wants to use a different email.
+     *
+     * @param uploadId - The upload ID
+     * @param email - The new email address
+     * @param userId - The new user ID
+     * @returns The updated upload record
+     * @throws NotFoundError if upload doesn't exist
+     */
+    updateEmail: (
+      uploadId: string,
+      email: string,
+      userId: string,
+    ) => Effect.Effect<Upload, NotFoundError>;
   }
 >() {}
 
@@ -141,8 +156,8 @@ const create = Effect.fn("UploadService.create")(function* (params: CreateUpload
       .insert(uploads)
       .values({
         id: params.id, // Use pre-generated ID to match R2 key
+        userId: params.userId,
         email: params.email,
-        sessionToken: params.sessionToken,
         originalUrl: params.originalUrl,
         status: "pending",
         expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
@@ -165,25 +180,23 @@ const getById = Effect.fn("UploadService.getById")(function* (id: string) {
   return upload;
 });
 
-const getBySessionToken = Effect.fn("UploadService.getBySessionToken")(function* (token: string) {
-  const upload = yield* Effect.promise(async () => {
-    return db.query.uploads.findFirst({
-      where: eq(uploads.sessionToken, token),
+const getByUserId = Effect.fn("UploadService.getByUserId")(function* (userId: string) {
+  const userUploads = yield* Effect.promise(async () => {
+    return db.query.uploads.findMany({
+      where: eq(uploads.userId, userId),
+      orderBy: (uploads, { desc }) => [desc(uploads.createdAt)],
     });
   });
-  if (!upload) {
-    return yield* Effect.fail(new NotFoundError({ resource: "upload", id: token }));
-  }
-  return upload;
+  return userUploads;
 });
 
 const getByIdWithAuth = Effect.fn("UploadService.getByIdWithAuth")(function* (
   id: string,
-  sessionToken: string,
+  userId: string,
 ) {
   const upload = yield* Effect.promise(async () => {
     return db.query.uploads.findFirst({
-      where: and(eq(uploads.id, id), eq(uploads.sessionToken, sessionToken)),
+      where: and(eq(uploads.id, id), eq(uploads.userId, userId)),
     });
   });
   if (!upload) {
@@ -400,11 +413,33 @@ const updatePromptVersion = Effect.fn("UploadService.updatePromptVersion")(funct
   }
 });
 
+const updateEmail = Effect.fn("UploadService.updateEmail")(function* (
+  uploadId: string,
+  email: string,
+  userId: string,
+) {
+  const result = yield* Effect.promise(async () => {
+    return db
+      .update(uploads)
+      .set({
+        email,
+        userId,
+        updatedAt: new Date(),
+      })
+      .where(eq(uploads.id, uploadId))
+      .returning();
+  });
+  if (!result[0]) {
+    return yield* Effect.fail(new NotFoundError({ resource: "upload", id: uploadId }));
+  }
+  return result[0];
+});
+
 // Upload Service implementation
 export const UploadServiceLive = Layer.succeed(UploadService, {
   create,
   getById,
-  getBySessionToken,
+  getByUserId,
   getByIdWithAuth,
   updateStatus,
   updateResult,
@@ -412,4 +447,5 @@ export const UploadServiceLive = Layer.succeed(UploadService, {
   startProcessing,
   resetForRetry,
   updatePromptVersion,
+  updateEmail,
 });

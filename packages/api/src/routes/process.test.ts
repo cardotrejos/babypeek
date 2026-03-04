@@ -2,7 +2,6 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 import { Hono } from "hono";
 
 import processRoutes from "./process";
-import { clearRateLimitStore } from "../services/RateLimitService";
 
 // =============================================================================
 // Mocks
@@ -54,6 +53,19 @@ vi.mock("../services/PostHogService", () => ({
   },
 }));
 
+vi.mock("../middleware/auth", () => ({
+  requireAuth: async (c: { req: { header: (name: string) => string | undefined }; set: (k: string, v: unknown) => void; json: (body: unknown, status: number) => Response }, next: () => Promise<void>) => {
+    const cookieHeader = c.req.header("cookie") ?? "";
+    if (!cookieHeader.includes("better-auth.session_token=")) {
+      return c.json({ error: "Authentication required", code: "UNAUTHENTICATED" }, 401);
+    }
+
+    c.set("user", { id: "test-user-id" });
+    c.set("session", { id: "test-session-id", userId: "test-user-id" });
+    await next();
+  },
+}));
+
 // =============================================================================
 // Test Setup
 // =============================================================================
@@ -79,7 +91,6 @@ describe("Process Routes - Request Validation", () => {
   let app: Hono;
 
   beforeEach(() => {
-    clearRateLimitStore();
     app = createTestApp();
     vi.clearAllMocks();
   });
@@ -94,8 +105,8 @@ describe("Process Routes - Request Validation", () => {
 
       expect(res.status).toBe(401);
       const body = (await res.json()) as ErrorResponse;
-      expect(body.error).toBe("Session token is required");
-      expect(body.code).toBe("MISSING_TOKEN");
+      expect(body.error).toBe("Authentication required");
+      expect(body.code).toBe("UNAUTHENTICATED");
     });
 
     it("should return 400 for missing uploadId", async () => {
@@ -103,7 +114,7 @@ describe("Process Routes - Request Validation", () => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "X-Session-Token": "valid-session-token",
+          cookie: "better-auth.session_token=valid-session",
         },
         body: JSON.stringify({}),
       });
@@ -119,7 +130,7 @@ describe("Process Routes - Request Validation", () => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "X-Session-Token": "valid-session-token",
+          cookie: "better-auth.session_token=valid-session",
         },
         body: JSON.stringify({ uploadId: "" }),
       });
@@ -134,7 +145,7 @@ describe("Process Routes - Request Validation", () => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "X-Session-Token": "valid-session-token",
+          cookie: "better-auth.session_token=valid-session",
         },
         body: "{ invalid json",
       });
@@ -147,7 +158,7 @@ describe("Process Routes - Request Validation", () => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "X-Session-Token": "valid-session-token",
+          cookie: "better-auth.session_token=valid-session",
         },
         body: "",
       });
@@ -188,14 +199,14 @@ describe("Process Routes - Response Format Documentation", () => {
   describe("Error codes", () => {
     it("documents all possible error codes", () => {
       const errorCodes = [
-        "MISSING_TOKEN",
+        "UNAUTHENTICATED",
         "INVALID_TOKEN",
         "NOT_FOUND",
         "ALREADY_PROCESSING",
         "WORKFLOW_ERROR",
       ];
 
-      expect(errorCodes).toContain("MISSING_TOKEN");
+      expect(errorCodes).toContain("UNAUTHENTICATED");
       expect(errorCodes).toContain("INVALID_TOKEN");
       expect(errorCodes).toContain("NOT_FOUND");
       expect(errorCodes).toContain("ALREADY_PROCESSING");

@@ -16,11 +16,6 @@ vi.mock("@/lib/api-config", () => ({
   API_BASE_URL: "http://localhost:3000",
 }));
 
-// Mock session module
-vi.mock("@/lib/session", () => ({
-  getSession: vi.fn(() => "mock-session-token"),
-}));
-
 describe("CheckoutButton", () => {
   const defaultProps = {
     uploadId: "test-upload-123",
@@ -76,7 +71,7 @@ describe("CheckoutButton", () => {
       });
     });
 
-    it("should call API with correct parameters including session token", async () => {
+    it("should call API with cookie-auth credentials", async () => {
       mockFetch.mockResolvedValue({
         ok: true,
         json: () => Promise.resolve({ checkoutUrl: "https://stripe.com/checkout" }),
@@ -92,9 +87,9 @@ describe("CheckoutButton", () => {
           "http://localhost:3000/api/checkout",
           expect.objectContaining({
             method: "POST",
+            credentials: "include",
             headers: {
               "Content-Type": "application/json",
-              "X-Session-Token": "mock-session-token",
             },
             body: JSON.stringify({
               uploadId: "test-upload-123",
@@ -103,22 +98,6 @@ describe("CheckoutButton", () => {
             }),
           }),
         );
-      });
-    });
-
-    it("should call onCheckoutError when session is missing", async () => {
-      // Mock missing session
-      const { getSession } = await import("@/lib/session");
-      vi.mocked(getSession).mockReturnValueOnce(null);
-
-      const onCheckoutError = vi.fn();
-      render(<CheckoutButton {...defaultProps} onCheckoutError={onCheckoutError} />);
-
-      const button = screen.getByTestId("checkout-button");
-      fireEvent.click(button);
-
-      await waitFor(() => {
-        expect(onCheckoutError).toHaveBeenCalledWith("Session expired. Please start a new upload.");
       });
     });
 

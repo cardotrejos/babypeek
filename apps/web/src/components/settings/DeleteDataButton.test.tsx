@@ -41,7 +41,6 @@ import { clearSession } from "@/lib/session";
 describe("DeleteDataButton", () => {
   const defaultProps = {
     uploadId: "test-upload-123",
-    sessionToken: "test-session-token-456",
   };
 
   // Mock fetch
@@ -128,7 +127,7 @@ describe("DeleteDataButton", () => {
   });
 
   describe("AC-2: API call", () => {
-    it("should call DELETE /api/data/:token when confirmed", async () => {
+    it("should call DELETE /api/data/:uploadId when confirmed", async () => {
       mockFetch.mockResolvedValue({
         ok: true,
         json: () => Promise.resolve({ success: true, message: "Your data has been deleted" }),
@@ -145,8 +144,8 @@ describe("DeleteDataButton", () => {
 
       await waitFor(() => {
         expect(mockFetch).toHaveBeenCalledWith(
-          "http://localhost:3000/api/data/test-session-token-456",
-          { method: "DELETE" },
+          "http://localhost:3000/api/data/test-upload-123",
+          { method: "DELETE", credentials: "include" },
         );
       });
     });

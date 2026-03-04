@@ -5,10 +5,10 @@ import * as Sentry from "@sentry/react";
 import { useAnalytics } from "@/hooks/use-analytics";
 import { useOnlineStatus } from "@/hooks/use-online-status";
 import { API_BASE_URL } from "@/lib/api-config";
-import { storeSession } from "@/lib/session";
 import { categorizeError } from "@/lib/upload-errors";
 import { getAnalyticsContext } from "@/lib/analytics-context";
 import { startUploadAttempt } from "@/lib/upload-session";
+import { initializeJobTracking, clearSession } from "@/lib/session";
 
 // =============================================================================
 // Constants
@@ -43,7 +43,7 @@ export interface UploadState {
 export interface UploadResult {
   uploadId: string;
   key: string;
-  sessionToken: string;
+  cleanupToken: string;
 }
 
 export interface UseUploadResult {
@@ -60,7 +60,7 @@ interface PresignedUrlResponse {
   uploadId: string;
   key: string;
   expiresAt: string;
-  sessionToken: string;
+  cleanupToken: string;
 }
 
 interface ConfirmUploadResponse {
@@ -132,6 +132,7 @@ export function useUpload(): UseUploadResult {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ contentType, email }),
+        credentials: "include",
         signal,
       });
 
@@ -160,12 +161,18 @@ export function useUpload(): UseUploadResult {
    * Confirm upload completion with the server
    */
   const confirmUpload = useCallback(
-    async (uploadId: string, signal: AbortSignal): Promise<ConfirmUploadResponse> => {
+    async (
+      uploadId: string,
+      cleanupToken: string,
+      signal: AbortSignal,
+    ): Promise<ConfirmUploadResponse> => {
       const response = await fetch(`${API_BASE_URL}/api/upload/${uploadId}/confirm`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "X-Upload-Cleanup-Token": cleanupToken,
         },
+        credentials: "include",
         signal,
       });
 
@@ -186,14 +193,15 @@ export function useUpload(): UseUploadResult {
    * Fire-and-forget - doesn't block or report errors to UI.
    */
   const cleanupUpload = useCallback(
-    async (uploadId: string, sessionToken: string) => {
+    async (uploadId: string, cleanupToken: string) => {
       try {
         // Fire and forget - don't await or block on this
         fetch(`${API_BASE_URL}/api/upload/${uploadId}`, {
           method: "DELETE",
           headers: {
-            "X-Session-Token": sessionToken,
+            "X-Upload-Cleanup-Token": cleanupToken,
           },
+          credentials: "include",
         }).catch(() => {
           // Silent fail - cleanup is best-effort
         });
@@ -326,6 +334,8 @@ export function useUpload(): UseUploadResult {
         uploadEnd: 0,
       };
 
+      let uploadIdForCleanup: string | null = null;
+
       try {
         // Track upload started with enriched context
         trackEvent("upload_started", {
@@ -350,8 +360,13 @@ export function useUpload(): UseUploadResult {
         const presignedData = await requestPresignedUrl(file.type, email, abortController.signal);
         timings.presignEnd = performance.now();
 
+        // Initialize job tracking for session recovery
+        initializeJobTracking(presignedData.uploadId);
+        uploadIdForCleanup = presignedData.uploadId;
+
         // Check if cancelled
         if (abortController.signal.aborted) {
+          clearSession(presignedData.uploadId);
           return null;
         }
 
@@ -376,23 +391,23 @@ export function useUpload(): UseUploadResult {
         } catch (uploadError) {
           timings.uploadEnd = performance.now();
           // Clean up partial upload on R2 failure (fire and forget)
-          cleanupUpload(presignedData.uploadId, presignedData.sessionToken);
+          cleanupUpload(presignedData.uploadId, presignedData.cleanupToken);
+          clearSession(presignedData.uploadId);
           throw uploadError;
         }
 
         // Check if cancelled before confirmation
         if (abortController.signal.aborted) {
+          clearSession(presignedData.uploadId);
           return null;
         }
 
         // Phase 3: Confirm upload with server
-        await confirmUpload(presignedData.uploadId, abortController.signal);
-
-        // Phase 4: Store session in localStorage
-        storeSession(presignedData.uploadId, presignedData.sessionToken);
-
-        // Track session creation
-        trackEvent("session_created", { upload_id: presignedData.uploadId });
+        await confirmUpload(
+          presignedData.uploadId,
+          presignedData.cleanupToken,
+          abortController.signal,
+        );
 
         // Upload complete - calculate all timings
         const endTime = performance.now();
@@ -436,7 +451,7 @@ export function useUpload(): UseUploadResult {
         return {
           uploadId: presignedData.uploadId,
           key: presignedData.key,
-          sessionToken: presignedData.sessionToken,
+          cleanupToken: presignedData.cleanupToken,
         };
       } catch (error) {
         // Handle cancellation separately (no error toast)
@@ -446,6 +461,11 @@ export function useUpload(): UseUploadResult {
         ) {
           // Use ref for accurate progress at cancellation time
           trackEvent("upload_cancelled", { progressPercent: progressRef.current });
+
+          // Clean up job tracking for cancelled upload
+          if (uploadIdForCleanup) {
+            clearSession(uploadIdForCleanup);
+          }
 
           progressRef.current = 0;
           setState(initialState);
@@ -469,6 +489,11 @@ export function useUpload(): UseUploadResult {
           });
 
           toast.error(userMessage, { duration: TOAST_ERROR_DURATION });
+
+          // Clean up job tracking for failed upload
+          if (uploadIdForCleanup) {
+            clearSession(uploadIdForCleanup);
+          }
 
           setState((prev) => ({
             status: "error",
@@ -519,6 +544,11 @@ export function useUpload(): UseUploadResult {
         const userMessage =
           categorizedError.userMessage || getErrorMessage(categorizedError.message);
         toast.error(userMessage, { duration: TOAST_ERROR_DURATION });
+
+        // Clean up job tracking for failed upload
+        if (uploadIdForCleanup) {
+          clearSession(uploadIdForCleanup);
+        }
 
         setState((prev) => ({
           status: "error",

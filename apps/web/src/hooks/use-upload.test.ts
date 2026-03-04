@@ -34,12 +34,6 @@ vi.mock("sonner", () => ({
   },
 }));
 
-// Mock session storage
-const mockStoreSession = vi.fn();
-vi.mock("@/lib/session", () => ({
-  storeSession: (...args: unknown[]) => mockStoreSession(...args),
-}));
-
 // Mock analytics context
 vi.mock("@/lib/analytics-context", () => ({
   getAnalyticsContext: () => ({
@@ -85,7 +79,7 @@ const mockPresignedResponse = {
   uploadId: "test-upload-id",
   key: "uploads/test-upload-id/original.jpg",
   expiresAt: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
-  sessionToken: "test-session-token-uuid",
+  cleanupToken: "cleanup-token",
 };
 
 const mockConfirmResponse = {
@@ -380,10 +374,10 @@ describe("useUpload", () => {
   });
 
   // =============================================================================
-  // Session Token Tests (Story 3.6)
+  // Upload Confirmation Tests
   // =============================================================================
 
-  it("should store session token after successful upload and confirmation", async () => {
+  it("should complete upload and return upload metadata after confirmation", async () => {
     // Mock fetch for both presigned URL and confirm requests
     globalThis.fetch = vi
       .fn()
@@ -417,58 +411,18 @@ describe("useUpload", () => {
 
     const { result } = renderHook(() => useUpload());
     const file = createMockFile("test.jpg", "image/jpeg");
+    let uploadResult: Awaited<ReturnType<typeof result.current.startUpload>>;
 
-    await act(async () => {
-      await result.current.startUpload(file, "test@example.com");
-    });
-
-    expect(result.current.state.status).toBe("complete");
-    expect(mockStoreSession).toHaveBeenCalledWith("test-upload-id", "test-session-token-uuid");
-  });
-
-  it("should return sessionToken in upload result", async () => {
-    globalThis.fetch = vi
-      .fn()
-      .mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve(mockPresignedResponse),
-      })
-      .mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve(mockConfirmResponse),
-      });
-
-    class MockXHR {
-      upload = { onprogress: null };
-      onload: any = null;
-      onerror = null;
-      onabort = null;
-      ontimeout = null;
-      timeout = 0;
-      status = 200;
-      open = vi.fn();
-      setRequestHeader = vi.fn();
-      send = vi.fn().mockImplementation(function (this: any) {
-        setTimeout(() => {
-          if (this.onload) this.onload();
-        }, 10);
-      });
-      abort = vi.fn();
-    }
-    globalThis.XMLHttpRequest = MockXHR as any;
-
-    const { result } = renderHook(() => useUpload());
-    const file = createMockFile("test.jpg", "image/jpeg");
-
-    let uploadResult: any;
     await act(async () => {
       uploadResult = await result.current.startUpload(file, "test@example.com");
     });
 
+    expect(result.current.state.status).toBe("complete");
+
     expect(uploadResult).toEqual({
       uploadId: "test-upload-id",
       key: "uploads/test-upload-id/original.jpg",
-      sessionToken: "test-session-token-uuid",
+      cleanupToken: "cleanup-token",
     });
   });
 
@@ -515,7 +469,12 @@ describe("useUpload", () => {
     expect(globalThis.fetch).toHaveBeenNthCalledWith(
       2,
       expect.stringContaining("/api/upload/test-upload-id/confirm"),
-      expect.objectContaining({ method: "POST" }),
+      expect.objectContaining({
+        method: "POST",
+        headers: expect.objectContaining({
+          "X-Upload-Cleanup-Token": "cleanup-token",
+        }),
+      }),
     );
   });
 

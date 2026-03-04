@@ -8,14 +8,6 @@ import { useStatus, getStageLabel, getStageEmoji } from "./use-status";
 // Mocks
 // =============================================================================
 
-// Mock session module
-vi.mock("@/lib/session", () => ({
-  getSession: vi.fn((jobId: string) => {
-    if (jobId === "no-session-job") return null;
-    return `session-token-for-${jobId}`;
-  }),
-}));
-
 // Mock analytics
 vi.mock("@/hooks/use-analytics", () => ({
   useAnalytics: () => ({
@@ -84,17 +76,44 @@ describe("useStatus hook", () => {
       expect(mockFetch).not.toHaveBeenCalled();
     });
 
-    it("does not fetch when session token is missing", () => {
-      renderHook(() => useStatus("no-session-job"), {
+    it("does not fetch when explicitly disabled", () => {
+      renderHook(() => useStatus("disabled-job", { enabled: false }), {
         wrapper: createWrapper(),
       });
 
       expect(mockFetch).not.toHaveBeenCalled();
     });
+
+    it("fetches when jobId is present (cookie auth)", async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () =>
+          Promise.resolve({
+            success: true,
+            status: "pending",
+            stage: "validating",
+            progress: 10,
+            resultId: null,
+            errorMessage: null,
+            updatedAt: "2024-12-21T10:30:00Z",
+          }),
+      });
+
+      renderHook(() => useStatus("no-session-job"), {
+        wrapper: createWrapper(),
+      });
+
+      await waitFor(() => {
+        expect(mockFetch).toHaveBeenCalledWith(
+          "http://localhost:3000/api/status/no-session-job",
+          { credentials: "include" },
+        );
+      });
+    });
   });
 
   describe("fetching status", () => {
-    it("fetches status when jobId and session are present", async () => {
+    it("fetches status when jobId is present", async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
         json: () =>
@@ -119,11 +138,7 @@ describe("useStatus hook", () => {
 
       expect(mockFetch).toHaveBeenCalledWith(
         "http://localhost:3000/api/status/test-job-id",
-        expect.objectContaining({
-          headers: {
-            "X-Session-Token": "session-token-for-test-job-id",
-          },
-        }),
+        { credentials: "include" },
       );
     });
 
@@ -234,9 +249,7 @@ describe("useStatus hook", () => {
 
       expect(mockFetch).toHaveBeenCalledWith(
         "http://localhost:3000/api/status/test-job-id",
-        expect.objectContaining({
-          headers: { "X-Session-Token": "session-token-for-test-job-id" },
-        }),
+        { credentials: "include" },
       );
     });
 

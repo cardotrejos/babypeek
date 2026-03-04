@@ -3,7 +3,6 @@ import { useCallback, useEffect, useRef } from "react";
 
 import { useAnalytics } from "@/hooks/use-analytics";
 import { API_BASE_URL } from "@/lib/api-config";
-import { getSession } from "@/lib/session";
 
 // =============================================================================
 // Types
@@ -73,6 +72,14 @@ export interface UseStatusResult {
   updatedAt: Date | null;
 }
 
+export interface UseStatusOptions {
+  /**
+   * Optional external gate for polling.
+   * Useful when auth/session readiness must be confirmed before querying.
+   */
+  enabled?: boolean;
+}
+
 // =============================================================================
 // Constants
 // =============================================================================
@@ -115,10 +122,9 @@ const POLL_SAMPLE_RATE = 10;
  * <p>Stage: {stage}</p>
  * ```
  */
-export function useStatus(jobId: string | null): UseStatusResult {
-  // Get session token from localStorage
-  const sessionToken = jobId ? getSession(jobId) : null;
+export function useStatus(jobId: string | null, options?: UseStatusOptions): UseStatusResult {
   const { trackEvent } = useAnalytics();
+  const isEnabled = Boolean(jobId) && (options?.enabled ?? true);
 
   // Track when polling started for duration calculation
   const pollingStartTimeRef = useRef<number | null>(null);
@@ -133,14 +139,12 @@ export function useStatus(jobId: string | null): UseStatusResult {
   const { data, isLoading, error, isFetching, refetch } = useQuery<StatusApiResponse>({
     queryKey: ["status", jobId],
     queryFn: async (): Promise<StatusApiResponse> => {
-      if (!jobId || !sessionToken) {
-        throw new Error("Missing job ID or session");
+      if (!jobId) {
+        throw new Error("Missing job ID");
       }
 
       const response = await fetch(`${API_BASE_URL}/api/status/${jobId}`, {
-        headers: {
-          "X-Session-Token": sessionToken,
-        },
+        credentials: "include",
       });
 
       if (!response.ok) {
@@ -153,8 +157,7 @@ export function useStatus(jobId: string | null): UseStatusResult {
       return response.json();
     },
 
-    // Only enable when we have both jobId and sessionToken
-    enabled: Boolean(jobId) && Boolean(sessionToken),
+    enabled: isEnabled,
 
     // Poll every 2.5 seconds until complete or failed
     refetchInterval: (query) => {

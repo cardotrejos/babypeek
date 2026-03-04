@@ -2,7 +2,6 @@ import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { posthog, isPostHogConfigured } from "@/lib/posthog";
 import { API_BASE_URL } from "@/lib/api-config";
-import { getSession } from "@/lib/session";
 
 /**
  * Preference reason options with user-friendly labels
@@ -63,14 +62,12 @@ export function PreferenceFeedback({
     setError(null);
 
     try {
-      const sessionToken = getSession(uploadId);
-
       const response = await fetch(`${API_BASE_URL}/api/preferences`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          ...(sessionToken && { "X-Session-Token": sessionToken }),
         },
+        credentials: "include",
         body: JSON.stringify({
           uploadId,
           selectedResultId,
@@ -121,15 +118,13 @@ export function PreferenceFeedback({
     setIsSubmitting(true);
 
     try {
-      const sessionToken = getSession(uploadId);
-
       // Save preference without reason
       await fetch(`${API_BASE_URL}/api/preferences`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          ...(sessionToken && { "X-Session-Token": sessionToken }),
         },
+        credentials: "include",
         body: JSON.stringify({
           uploadId,
           selectedResultId,

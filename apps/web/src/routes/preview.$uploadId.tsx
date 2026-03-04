@@ -15,13 +15,13 @@ import { getPaymentErrorMessage } from "@/lib/payment-errors";
 import { ExpiredResult } from "@/components/states";
 
 /**
- * Public Preview Page
+ * Authenticated Preview Page
  *
- * This page is accessible without a session token, designed for email links.
+ * This page is loaded after magic-link authentication.
  * Shows all 4 watermarked portrait variants with purchase option.
  *
  * Key differences from /result/:resultId:
- * - No session token required (public access via uploadId)
+ * - Requires Better Auth session (cookie)
  * - Uses /api/preview/:uploadId endpoint
  * - Same UI/UX as result page
  */
@@ -96,7 +96,7 @@ function PreviewPage() {
     window.history.replaceState({}, "", `/preview/${uploadId}`);
   }, [cancelled, paymentError, uploadId, retryCount]);
 
-  // Fetch preview data via public endpoint (no auth required)
+  // Fetch preview data (requires authenticated session)
   const {
     data: previewData,
     isLoading,
@@ -104,9 +104,14 @@ function PreviewPage() {
   } = useQuery<PreviewData>({
     queryKey: ["preview", uploadId],
     queryFn: async () => {
-      const response = await fetch(`${API_BASE_URL}/api/preview/${uploadId}`);
+      const response = await fetch(`${API_BASE_URL}/api/preview/${uploadId}`, {
+        credentials: "include",
+      });
 
       if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error("Please open your magic link email to continue.");
+        }
         if (response.status === 404) {
           throw new Error("Portrait not found");
         }

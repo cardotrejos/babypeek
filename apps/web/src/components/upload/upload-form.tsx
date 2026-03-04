@@ -1,5 +1,6 @@
 import { useCallback, useState } from "react";
 import { ArrowRightIcon } from "lucide-react";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { EmailInput } from "@/components/upload/email-input";
@@ -23,7 +24,7 @@ export interface UploadFormProps {
   /** Called when form is submitted with valid email and file (simple mode) */
   onSubmit?: (data: UploadFormData) => void;
   /** Called when upload completes successfully (with upload enabled) */
-  onUploadComplete?: (result: UploadResult & { email: string }) => void;
+  onUploadComplete?: (result: UploadResult & { email: string }) => void | Promise<void>;
   /** Whether to enable built-in upload functionality */
   enableUpload?: boolean;
   /** Whether the form is disabled (e.g., during upload) */
@@ -101,7 +102,12 @@ export function UploadForm({
       if (enableUpload) {
         const result = await startUpload(selectedFile, email);
         if (result && onUploadComplete) {
-          onUploadComplete({ ...result, email });
+          try {
+            await onUploadComplete({ ...result, email });
+          } catch (error) {
+            console.error("Error in onUploadComplete callback:", error);
+            // Error already handled by onUploadComplete callback
+          }
         }
       } else {
         // Otherwise, just call onSubmit

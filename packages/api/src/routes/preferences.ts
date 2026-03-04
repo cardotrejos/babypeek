@@ -10,6 +10,7 @@ import {
   preferenceReasonValues,
   type PreferenceReason,
 } from "@babypeek/db";
+import { requireAuth } from "../middleware/auth";
 
 const app = new Hono();
 
@@ -24,7 +25,7 @@ const app = new Hono();
  * This data is used to improve prompt quality over time.
  *
  * Headers:
- * - X-Session-Token: string - Session token for authorization
+ * - Authentication cookie required via Better Auth
  *
  * Body:
  * {
@@ -41,16 +42,15 @@ const app = new Hono();
  *
  * Error responses:
  * - 400: Invalid request body
- * - 401: Invalid or missing session token
+ * - 401: Missing or invalid authentication session
  * - 404: Upload or result not found
  */
-app.post("/", async (c) => {
-  const sessionToken = c.req.header("X-Session-Token");
+app.post("/", requireAuth, async (c) => {
+  const user = c.get("user") as { id: string };
 
-  // Require session token
-  if (!sessionToken) {
+  if (!user?.id) {
     return c.json(
-      { success: false, error: { code: "UNAUTHORIZED", message: "Session token required" } },
+      { success: false, error: { code: "UNAUTHENTICATED", message: "Authentication required" } },
       401,
     );
   }
@@ -97,10 +97,10 @@ app.post("/", async (c) => {
   }
 
   const savePreference = Effect.gen(function* () {
-    // Verify upload exists and session token matches
+    // Verify upload exists and user owns it
     const upload = yield* Effect.promise(() =>
       db.query.uploads.findFirst({
-        where: and(eq(uploads.id, uploadId), eq(uploads.sessionToken, sessionToken)),
+        where: and(eq(uploads.id, uploadId), eq(uploads.userId, user.id)),
       }),
     );
 
