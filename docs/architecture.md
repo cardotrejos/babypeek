@@ -52,12 +52,9 @@ babypeek/
 
 ```
 User uploads ultrasound
-  → POST /api/upload-auth       (signed upload URL)
+  → POST /api/storage/upload-url  (signed upload URL)
   → Upload direct to R2
-  → POST /api/process-workflow  (trigger generation)
-  → Async workflow (FAL.ai → R2 output storage)
-  → GET /api/status/:jobId      (poll until complete)
-  → GET /api/download/:jobId    (retrieve results)
+  → POST /api/process             (trigger generation)
 ```
 
 ## External Services
