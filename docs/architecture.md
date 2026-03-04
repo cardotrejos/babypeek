@@ -79,7 +79,7 @@ Ultrasound images are sensitive. Key constraints:
 ## Deployment
 
 - Frontend + backend deployed to Vercel (monorepo)
-- Database: Coolify-managed PostgreSQL on Hetzner (`178.156.151.70`)
+- Database: Coolify-managed PostgreSQL on Hetzner (see team infra notes for host)
 - R2 bucket: Cloudflare (region: auto)
 
 ## Development
