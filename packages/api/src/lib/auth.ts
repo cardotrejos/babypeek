@@ -34,6 +34,17 @@ export const auth = betterAuth({
     return env.BETTER_AUTH_URL;
   })(),
   trustedOrigins: [env.WEB_URL || env.CORS_ORIGIN || "http://localhost:3001"],
+  advanced: {
+    crossSubDomainCookies: {
+      enabled: true,
+      domain: ".babypeek.io", // scopes cookie to all subdomains
+    },
+    defaultCookieAttributes: {
+      sameSite: "none",
+      secure: true,
+      partitioned: true,
+    },
+  },
   emailAndPassword: {
     enabled: false,
   },

@@ -5,6 +5,9 @@ import { API_BASE_URL } from "@/lib/api-config";
 
 export const authClient = createAuthClient({
   baseURL: API_BASE_URL,
+  fetchOptions: {
+    credentials: "include",
+  },
   plugins: [magicLinkClient()],
 });
 
