@@ -7,25 +7,24 @@
  *
  * Stages:
  * 1. validating - Validate input and prepare for processing
- * 2. generating - Call Gemini Imagen 3 API (Story 4.2)
+ * 2. generating - Call fal.ai API (Story 4.2)
  * 3. storing - Store result in R2 (Story 4.4)
  * 4. watermarking - Apply watermark (Story 5.2)
  * 5. complete - Finalize and update status
  *
  * @see https://useworkflow.dev/docs
- * @see Story 4.2 - Gemini Imagen 3 Integration
+ * @see Story 4.2 - fal.ai Integration
  */
 
 import { Effect } from "effect";
 import type { ProcessImageStage } from "../lib/workflow";
-import { GeminiService, type GeneratedImage } from "../services/GeminiService";
+import { FalService } from "../services/FalService";
 import { R2Service } from "../services/R2Service";
 import { PostHogService } from "../services/PostHogService";
 import { ResultService, type CreatedResult } from "../services/ResultService";
 import { UploadService, type UploadStage } from "../services/UploadService";
 import { AppServicesLive } from "../services/index";
 import { getPrompt, type PromptVersion } from "../prompts/baby-portrait";
-import type { GeminiError } from "../lib/errors";
 
 // =============================================================================
 // Workflow Types
@@ -54,7 +53,7 @@ export interface ProcessImageOutput {
  */
 interface GenerateResult {
   success: boolean;
-  imageData?: GeneratedImage;
+  imageData?: { data: Buffer; mimeType: string };
   error?: string;
   durationMs?: number;
 }
@@ -71,7 +70,7 @@ async function runWithServices<A, E>(
   effect: Effect.Effect<
     A,
     E,
-    GeminiService | R2Service | PostHogService | ResultService | UploadService
+    FalService | R2Service | PostHogService | ResultService | UploadService
   >,
 ): Promise<{ success: true; data: A } | { success: false; error: E }> {
   const program = effect.pipe(Effect.provide(AppServicesLive));
@@ -211,7 +210,7 @@ async function fetchOriginalImage(
 }
 
 /**
- * Generate the AI-enhanced image using Gemini Imagen 3.
+ * Generate the AI-enhanced image using fal.ai.
  * This is the core AI processing step (Story 4.2).
  */
 async function generateImage(
@@ -228,7 +227,7 @@ async function generateImage(
   const startTime = Date.now();
 
   // Track start event
-  await trackEvent("gemini_call_started", uploadId, {
+  await trackEvent("fal_call_started", uploadId, {
     upload_id: uploadId,
     prompt_version: promptVersion,
   });
@@ -236,10 +235,29 @@ async function generateImage(
   // Get the prompt template
   const prompt = getPrompt(promptVersion);
 
-  // Call GeminiService to generate the image
+  // Call FalService to generate the image URL
   const effect = Effect.gen(function* () {
-    const gemini = yield* GeminiService;
-    return yield* gemini.generateImageFromUrl(imageUrl, prompt);
+    const fal = yield* FalService;
+    const falResult = yield* fal.generateImageFromUrl(imageUrl, prompt, "fal-ai/nano-banana-pro");
+
+    const response = yield* Effect.tryPromise({
+      try: async () => {
+        const res = await fetch(falResult.url);
+        if (!res.ok) {
+          throw new Error(
+            `Failed to fetch generated fal image: ${res.status} ${res.statusText}`,
+          );
+        }
+        return Buffer.from(await res.arrayBuffer());
+      },
+      catch: (error) => (error instanceof Error ? error : new Error(String(error))),
+    });
+
+    return {
+      data: response,
+      mimeType: falResult.mimeType,
+      falResult,
+    };
   });
 
   const result = await runWithServices(effect);
@@ -247,28 +265,32 @@ async function generateImage(
 
   if (result.success) {
     // Track success event
-    await trackEvent("gemini_call_completed", uploadId, {
+    await trackEvent("fal_call_completed", uploadId, {
       upload_id: uploadId,
       duration_ms: durationMs,
       prompt_version: promptVersion,
       image_size_bytes: result.data.data.length,
+      fal_url: result.data.falResult.url,
     });
 
     console.log(`[workflow:generate] Successfully generated image in ${durationMs}ms`);
     return {
       success: true,
-      imageData: result.data,
+      imageData: {
+        data: result.data.data,
+        mimeType: result.data.mimeType,
+      },
       durationMs,
     };
   }
 
   // Handle error
-  const geminiError = result.error as GeminiError;
-  const errorType = geminiError?.cause || "UNKNOWN";
-  const errorMessage = geminiError?.message || String(result.error);
+  const error = result.error as { cause?: string; message?: string };
+  const errorType = error?.cause || "UNKNOWN";
+  const errorMessage = error?.message || String(result.error);
 
   // Track failure event
-  await trackEvent("gemini_call_failed", uploadId, {
+  await trackEvent("fal_call_failed", uploadId, {
     upload_id: uploadId,
     error_type: errorType,
     error_message: errorMessage,
@@ -304,7 +326,9 @@ interface StoreResultOutput {
  */
 async function storeResult(
   uploadId: string,
-  imageData: GeneratedImage | undefined,
+  imageData: { data: Buffer; mimeType: string } | undefined,
+  promptVersion: PromptVersion,
+  generationTimeMs: number,
 ): Promise<StoreResultOutput> {
   "use step";
 
@@ -327,6 +351,9 @@ async function storeResult(
       uploadId,
       fullImageBuffer: imageData.data,
       mimeType: imageData.mimeType,
+      promptVersion,
+      variantIndex: 1,
+      generationTimeMs,
     });
   });
 
@@ -475,7 +502,7 @@ export async function processImageWorkflow(input: ProcessImageInput): Promise<Pr
     };
   }
 
-  // Stage 2: Generate image using Gemini (30-70%)
+  // Stage 2: Generate image using fal.ai (30-70%)
   await updateStage(uploadId, "generating", 30);
 
   // Save which prompt version we're using for this generation
@@ -498,7 +525,12 @@ export async function processImageWorkflow(input: ProcessImageInput): Promise<Pr
 
   // Stage 3: Store result in R2 (80%)
   await updateStage(uploadId, "storing", 80);
-  const storage = await storeResult(uploadId, generation.imageData);
+  const storage = await storeResult(
+    uploadId,
+    generation.imageData,
+    promptVersion,
+    generation.durationMs ?? 0,
+  );
   if (!storage.resultKey) {
     await updateStage(uploadId, "failed", 80);
     await finalizeProcessing(uploadId, false);

@@ -4,7 +4,7 @@
  * A clean workflow implementation using only Workflow DevKit primitives.
  * All Node.js operations are isolated in step functions.
  *
- * Uses Nano Banana Pro (gemini-3-pro-image-preview) with in-utero style prompts.
+ * Uses Nano Banana Pro (fal-ai/nano-banana-pro) with in-utero style prompts.
  */
 
 import { db, uploads, results, purchases } from "@babypeek/db";
@@ -12,10 +12,10 @@ import { eq } from "drizzle-orm";
 import { createId } from "@paralleldrive/cuid2";
 import { S3Client, PutObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from "@google/generative-ai";
+import { config, subscribe } from "@fal-ai/serverless-client";
 import { Jimp, intToRGBA, rgbaToInt } from "jimp";
 import { Resend } from "resend";
-import { GEMINI_MODEL, PROMPTS, type PromptVersion } from "./config";
+import { FAL_MODEL, PROMPTS, type PromptVersion } from "./config";
 
 // All prompt variants to generate
 const PROMPT_VARIANTS: PromptVersion[] = ["v3", "v3-json", "v4", "v4-json"];
@@ -49,11 +49,27 @@ function getEnv() {
     R2_ACCESS_KEY_ID: process.env.R2_ACCESS_KEY_ID!,
     R2_SECRET_ACCESS_KEY: process.env.R2_SECRET_ACCESS_KEY!,
     R2_BUCKET_NAME: process.env.R2_BUCKET_NAME!,
-    GEMINI_API_KEY: process.env.GEMINI_API_KEY!,
+    FAL_KEY: process.env.FAL_KEY!,
     RESEND_API_KEY: process.env.RESEND_API_KEY,
     FROM_EMAIL: process.env.FROM_EMAIL || "hello@babypeek.io",
     APP_URL: process.env.APP_URL || "https://babypeek.io",
   };
+}
+
+let isFalConfigured = false;
+
+function ensureFalConfig() {
+  if (isFalConfigured) {
+    return;
+  }
+
+  const { FAL_KEY } = getEnv();
+  if (!FAL_KEY) {
+    throw new Error("FAL_KEY is required");
+  }
+
+  config({ credentials: FAL_KEY });
+  isFalConfigured = true;
 }
 
 function getR2Client() {
@@ -321,120 +337,61 @@ async function getOriginalImageUrl(uploadId: string): Promise<string | null> {
   }
 }
 
-async function generateWithGemini(
+async function generateWithFal(
   imageUrl: string,
   prompt: string,
 ): Promise<{ data: string; mimeType: string } | null> {
   "use step";
   // NOTE: Returns base64 string instead of Buffer for workflow serialization
 
-  const env = getEnv();
+  ensureFalConfig();
 
-  console.log(`[workflow] Fetching image from URL...`);
-
-  // Fetch the image
-  const response = await fetch(imageUrl);
-  if (!response.ok) {
-    console.error("[workflow] Failed to fetch image:", response.status);
-    return null;
-  }
-
-  const imageBuffer = Buffer.from(await response.arrayBuffer());
-  const base64Image = imageBuffer.toString("base64");
-  const imageMimeType = response.headers.get("content-type") || "image/jpeg";
-
-  console.log(
-    `[workflow] Image fetched, size: ${imageBuffer.length} bytes, type: ${imageMimeType}`,
-  );
-  console.log(`[workflow] Using model: ${GEMINI_MODEL}`);
+  console.log(`[workflow] Using model: ${FAL_MODEL}`);
   console.log(`[workflow] Prompt length: ${prompt.length} chars`);
 
-  // Initialize Gemini
-  const ai = new GoogleGenerativeAI(env.GEMINI_API_KEY);
-
-  // Get model with image generation capabilities (Nano Banana Pro style)
-  const model = ai.getGenerativeModel({
-    model: GEMINI_MODEL,
-    safetySettings: [
-      {
-        category: HarmCategory.HARM_CATEGORY_HARASSMENT,
-        threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
-      },
-      {
-        category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,
-        threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
-      },
-      {
-        category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
-        threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
-      },
-      {
-        category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
-        threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
-      },
-    ],
-    generationConfig: {
-      // Enable image output - required for native image generation
-      // @ts-expect-error - responseModalities not in SDK types yet but supported by API
-      responseModalities: ["text", "image"],
-    },
-  });
-
   try {
-    console.log(`[workflow] Calling Gemini API...`);
+    console.log(`[workflow] Calling fal.ai API...`);
 
-    const result = await model.generateContent([
-      prompt,
-      {
-        inlineData: {
-          mimeType: imageMimeType,
-          data: base64Image,
-        },
+    const response = await subscribe(FAL_MODEL, {
+      input: {
+        prompt,
+        image_url: imageUrl,
       },
-    ]);
+      logs: false,
+    });
 
-    const generatedContent = result.response;
+    const payload =
+      typeof response === "object" && response !== null && "data" in response
+        ? ((response as { data?: { images?: Array<{ url?: string; content_type?: string }> } })
+            .data ?? {})
+        : (response as { images?: Array<{ url?: string; content_type?: string }> });
 
-    // Check for safety blocks
-    if (generatedContent.promptFeedback?.blockReason) {
-      console.error("[workflow] Content blocked:", generatedContent.promptFeedback.blockReason);
+    const image = payload.images?.[0];
+    if (!image?.url) {
+      console.error("[workflow] No image URL returned from fal.ai");
       return null;
     }
 
-    // Extract generated image from response
-    const candidates = generatedContent.candidates;
-    if (candidates && candidates.length > 0) {
-      const parts = candidates[0]?.content?.parts;
-      if (parts) {
-        for (const part of parts) {
-          if ("inlineData" in part && part.inlineData?.data) {
-            const outputMimeType = part.inlineData.mimeType ?? "image/png";
-            // Return base64 string directly - Buffer doesn't serialize across workflow steps
-            const outputData = part.inlineData.data;
-            console.log(
-              `[workflow] Successfully generated image, base64 length: ${outputData.length}, type: ${outputMimeType}`,
-            );
-            return {
-              data: outputData,
-              mimeType: outputMimeType,
-            };
-          }
-        }
-      }
+    const imageResponse = await fetch(image.url);
+    if (!imageResponse.ok) {
+      console.error("[workflow] Failed to fetch fal result image:", imageResponse.status);
+      return null;
     }
 
-    // Log text response if no image
-    let textResponse = "";
-    try {
-      textResponse = generatedContent.text();
-    } catch {
-      // No text available
-    }
+    const outputBuffer = Buffer.from(await imageResponse.arrayBuffer());
+    const outputMimeType = image.content_type || "image/jpeg";
+    const outputData = outputBuffer.toString("base64");
 
-    console.error("[workflow] No image in Gemini response. Text:", textResponse.substring(0, 200));
-    return null;
+    console.log(
+      `[workflow] Successfully generated image, base64 length: ${outputData.length}, type: ${outputMimeType}`,
+    );
+
+    return {
+      data: outputData,
+      mimeType: outputMimeType,
+    };
   } catch (error) {
-    console.error("[workflow] Gemini error:", error);
+    console.error("[workflow] fal.ai error:", error);
     return null;
   }
 }
@@ -728,7 +685,7 @@ export async function processImageWorkflowSimple(
       const prompt = PROMPTS[variant];
       const startTime = Date.now();
 
-      const generatedImage = await generateWithGemini(imageUrl, prompt);
+      const generatedImage = await generateWithFal(imageUrl, prompt);
 
       if (!generatedImage) {
         console.error(`[workflow] Failed to generate variant ${variantIndex}, skipping`);

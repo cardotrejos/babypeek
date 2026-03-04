@@ -21,7 +21,7 @@ export const uploadStageValues = [
 export type UploadStage = (typeof uploadStageValues)[number];
 
 // Prompt version enum values (for tracking which prompt was used)
-export const promptVersionValues = ["v3", "v3-json", "v4", "v4-json"] as const;
+export const promptVersionValues = ["v1", "v2", "v3", "v4", "v3-json", "v4-json"] as const;
 export type PromptVersion = (typeof promptVersionValues)[number];
 
 // Purchase status enum values

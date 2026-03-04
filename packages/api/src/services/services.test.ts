@@ -1,10 +1,10 @@
 import { describe, it, expect, vi } from "vitest";
 import { Effect } from "effect";
-import { GeminiService, GeminiServiceLive, GeminiServiceErrorMock } from "./GeminiService";
+import { FalService, FalServiceLive } from "./FalService";
 import { StripeService, StripeServiceLive } from "./StripeService";
 import { ResendService, ResendServiceLive } from "./ResendService";
 import { PostHogServiceMock } from "./PostHogService";
-import { GeminiError, PaymentError, EmailError } from "../lib/errors";
+import { PaymentError, EmailError } from "../lib/errors";
 
 // Mock env module
 vi.mock("../lib/env", () => ({
@@ -12,7 +12,7 @@ vi.mock("../lib/env", () => ({
     STRIPE_SECRET_KEY: undefined,
     STRIPE_WEBHOOK_SECRET: undefined,
     RESEND_API_KEY: undefined,
-    GEMINI_API_KEY: undefined,
+    FAL_KEY: undefined,
     APP_URL: "http://localhost:3001",
     PRODUCT_PRICE_CENTS: 999,
     FROM_EMAIL: "test@example.com",
@@ -20,44 +20,23 @@ vi.mock("../lib/env", () => ({
   },
   isStripeConfigured: () => false,
   isResendConfigured: () => false,
-  isGeminiConfigured: () => false,
+  isFalConfigured: () => false,
 }));
 
 describe("Effect Services", () => {
-  describe("GeminiService", () => {
+  describe("FalService", () => {
     it("has correct service tag", () => {
-      expect(GeminiService.key).toBe("GeminiService");
+      expect(FalService.key).toBe("FalService");
     });
 
-    it("provides generateImage method via GeminiServiceLive", async () => {
+    it("provides generateImageFromUrl method via FalServiceLive", async () => {
       const program = Effect.gen(function* () {
-        const service = yield* GeminiService;
-        return typeof service.generateImage;
-      }).pipe(Effect.provide(GeminiServiceLive), Effect.provide(PostHogServiceMock));
+        const service = yield* FalService;
+        return typeof service.generateImageFromUrl;
+      }).pipe(Effect.provide(FalServiceLive), Effect.provide(PostHogServiceMock));
 
       const result = await Effect.runPromise(program);
       expect(result).toBe("function");
-    });
-
-    it("generateImage returns GeminiError on failure", async () => {
-      // Use the error mock to test error handling without actual API calls
-      const errorLayer = GeminiServiceErrorMock("API_ERROR", "Test API error");
-      const testBuffer = Buffer.from([0xff, 0xd8, 0xff, 0xe0]); // JPEG magic bytes
-
-      const program = Effect.gen(function* () {
-        const service = yield* GeminiService;
-        return yield* service.generateImage(testBuffer, "test prompt");
-      }).pipe(Effect.provide(errorLayer), Effect.provide(PostHogServiceMock));
-
-      // The program should fail with a GeminiError
-      // Effect wraps errors in FiberFailure, so we need to use Effect.either
-      const result = await Effect.runPromise(Effect.either(program));
-      expect(result._tag).toBe("Left");
-      if (result._tag === "Left") {
-        expect(result.left).toBeInstanceOf(GeminiError);
-        expect(result.left.cause).toBe("API_ERROR");
-        expect(result.left.message).toBe("Test API error");
-      }
     });
   });
 
@@ -222,18 +201,18 @@ describe("Effect Services", () => {
 
       // Check that we can access each service through the composed layer
       const program = Effect.gen(function* () {
-        const gemini = yield* GeminiService;
+        const fal = yield* FalService;
         const stripe = yield* StripeService;
         const resend = yield* ResendService;
         return {
-          hasGemini: !!gemini.generateImage,
+          hasFal: !!fal.generateImageFromUrl,
           hasStripe: !!stripe.createCheckoutSession,
           hasResend: !!resend.sendResultEmail,
         };
       }).pipe(Effect.provide(AppServicesLive));
 
       const result = await Effect.runPromise(program);
-      expect(result.hasGemini).toBe(true);
+      expect(result.hasFal).toBe(true);
       expect(result.hasStripe).toBe(true);
       expect(result.hasResend).toBe(true);
     });

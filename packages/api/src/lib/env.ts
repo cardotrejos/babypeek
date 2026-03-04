@@ -22,8 +22,9 @@ const envSchema = z.object({
   R2_PUBLIC_URL: z.string().url("R2_PUBLIC_URL must be a valid URL").optional(),
 
   // ─────────────────────────────────────────────────────────────────────────────
-  // Gemini AI (Optional in dev, required in production)
+  // fal.ai (Optional in dev, required in production)
   // ─────────────────────────────────────────────────────────────────────────────
+  FAL_KEY: z.string().min(1, "FAL_KEY cannot be empty").optional(),
   GEMINI_API_KEY: z.string().min(1, "GEMINI_API_KEY cannot be empty").optional(),
 
   // ─────────────────────────────────────────────────────────────────────────────
@@ -150,6 +151,7 @@ export const env = parsed.success
       R2_SECRET_ACCESS_KEY: undefined,
       R2_BUCKET_NAME: undefined,
       R2_PUBLIC_URL: undefined,
+      FAL_KEY: undefined,
       GEMINI_API_KEY: undefined,
       STRIPE_SECRET_KEY: undefined,
       STRIPE_WEBHOOK_SECRET: undefined,
@@ -210,9 +212,9 @@ export const isResendConfigured = () => {
   return !!env.RESEND_API_KEY;
 };
 
-/** Check if Gemini AI is configured */
-export const isGeminiConfigured = () => {
-  return !!env.GEMINI_API_KEY;
+/** Check if fal.ai is configured */
+export const isFalConfigured = () => {
+  return !!env.FAL_KEY;
 };
 
 // =============================================================================
@@ -246,7 +248,7 @@ export const checkProductionConfig = () => {
   if (!isR2Configured()) missing.push("R2 Storage");
   if (!isStripeConfigured()) missing.push("Stripe Payments");
   if (!isResendConfigured()) missing.push("Resend Email");
-  if (!isGeminiConfigured()) missing.push("Gemini AI");
+  if (!isFalConfigured()) missing.push("fal.ai");
   if (!isBetterAuthConfigured()) missing.push("Better Auth Secret/URL");
 
   if (env.NODE_ENV === "production" && missing.length > 0) {
@@ -269,7 +271,7 @@ export const logEnvStatus = () => {
       r2Storage: isR2Configured(),
       stripe: isStripeConfigured(),
       resend: isResendConfigured(),
-      gemini: isGeminiConfigured(),
+      fal: isFalConfigured(),
       posthog: isPostHogConfigured(),
       sentry: isSentryConfigured(),
     },
@@ -293,7 +295,7 @@ export const getEnvStatus = () => ({
   r2: isR2Configured(),
   stripe: isStripeConfigured(),
   resend: isResendConfigured(),
-  gemini: isGeminiConfigured(),
+  fal: isFalConfigured(),
   posthog: isPostHogConfigured(),
   sentry: isSentryConfigured(),
 });

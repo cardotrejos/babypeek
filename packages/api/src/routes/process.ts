@@ -4,7 +4,7 @@ import { z } from "zod";
 
 import { UploadService } from "../services/UploadService";
 import { PostHogService } from "../services/PostHogService";
-import { GeminiService } from "../services/GeminiService";
+import { FalService } from "../services/FalService";
 import { R2Service } from "../services/R2Service";
 import { ResultService, type CreatedResult } from "../services/ResultService";
 import { AppServicesLive } from "../services";
@@ -14,7 +14,6 @@ import {
   AlreadyProcessingError,
   ProcessingError,
 } from "../lib/errors";
-import { getPrompt, type PromptVersion } from "../prompts/baby-portrait";
 import { captureEffectError } from "../lib/sentry-effect";
 import { requireAuth } from "../middleware/auth";
 
@@ -22,8 +21,33 @@ import { requireAuth } from "../middleware/auth";
 // Increased to 180s for generating 4 images
 const PROCESSING_TIMEOUT_MS = 180_000;
 
-// Prompt variants to generate (4 different styles)
-const PROMPT_VARIANTS: PromptVersion[] = ["v3", "v3-json", "v4", "v4-json"];
+// 4 generation variants: 2x nano-banana-pro + 2x nano-banana-2, each with a distinct prompt
+const PROMPT_MODEL_VARIANTS = [
+  {
+    model: "fal-ai/nano-banana-pro",
+    promptVersion: "v1" as const,
+    prompt:
+      "Transform this 4D ultrasound image into a photorealistic newborn baby portrait. Generate a beautiful photograph with soft golden hour lighting, warm skin tones, delicate features, and a peaceful expression. Style: professional newborn photography, bokeh background, warm tones.",
+  },
+  {
+    model: "fal-ai/nano-banana-pro",
+    promptVersion: "v2" as const,
+    prompt:
+      "Convert this ultrasound scan into a lifelike newborn baby photo. Generate a studio-quality portrait with clean white background, soft diffused lighting, perfect skin detail, and a serene sleeping pose. Style: high-end baby portrait photography, crisp and clean.",
+  },
+  {
+    model: "fal-ai/nano-banana-2",
+    promptVersion: "v3" as const,
+    prompt:
+      "From this 4D ultrasound, generate a realistic newborn baby portrait photo. Use natural window light, soft shadows, warm blanket setting, tiny hands visible. Style: lifestyle newborn photography, authentic and tender.",
+  },
+  {
+    model: "fal-ai/nano-banana-2",
+    promptVersion: "v4" as const,
+    prompt:
+      "Create a photorealistic baby portrait from this ultrasound image. Generate a dreamy portrait with soft pastel tones, gentle lighting, angelic features, peaceful sleeping expression. Style: fine art newborn photography, ethereal and soft.",
+  },
+] as const;
 
 const app = new Hono();
 
@@ -43,7 +67,7 @@ const processRequestSchema = z.object({
 /**
  * POST /api/process
  *
- * Process the uploaded image using Gemini AI.
+ * Process the uploaded image using fal.ai.
  * This endpoint processes the image synchronously (within Vercel's function timeout).
  *
  * Flow:
@@ -51,7 +75,7 @@ const processRequestSchema = z.object({
  * 2. Verifies the upload exists and is in "pending" status
  * 3. Updates status to "processing"
  * 4. Fetches original image from R2
- * 5. Calls Gemini to generate the image
+ * 5. Calls fal.ai to generate the image
  * 6. Stores result in R2
  * 7. Updates status to "complete"
  *
@@ -100,12 +124,12 @@ app.post("/", requireAuth, async (c) => {
   const processImageCore = Effect.gen(function* () {
     const uploadService = yield* UploadService;
     const posthog = yield* PostHogService;
-    const gemini = yield* GeminiService;
+    const fal = yield* FalService;
     const r2 = yield* R2Service;
     const resultService = yield* ResultService;
 
     // Get upload and verify ownership (single query)
-    const upload = yield* uploadService.getByIdWithAuth(uploadId, user.id);
+    yield* uploadService.getByIdWithAuth(uploadId, user.id);
 
     // Track overall processing start time
     const processingStartTime = Date.now();
@@ -145,15 +169,16 @@ app.post("/", requireAuth, async (c) => {
     // Update stage: generating
     yield* uploadService.updateStage(uploadId, "generating", 20);
 
-    // Generate 4 different images with different prompt variants
+    // Generate 4 images: 2x nano-banana-pro + 2x nano-banana-2
     const createdResults: CreatedResult[] = [];
-    const totalVariants = PROMPT_VARIANTS.length;
+    const totalVariants = PROMPT_MODEL_VARIANTS.length;
     const generationStartTime = Date.now();
 
     for (let i = 0; i < totalVariants; i++) {
-      const promptVersion = PROMPT_VARIANTS[i] as PromptVersion;
+      const variant = PROMPT_MODEL_VARIANTS[i]!;
+      const promptVersion = variant.promptVersion;
       const variantIndex = i + 1;
-      const prompt = getPrompt(promptVersion);
+      const prompt = variant.prompt;
 
       // Update progress (20-80% range for generation)
       const progress = 20 + Math.floor((i / totalVariants) * 60);
@@ -161,18 +186,37 @@ app.post("/", requireAuth, async (c) => {
 
       const variantStartTime = Date.now();
 
-      // Generate image with this prompt variant
-      const generatedImage = yield* gemini.generateImageFromUrl(imageUrl, prompt);
+      // Generate image with this model + prompt variant
+      const falResult = yield* fal.generateImageFromUrl(imageUrl, prompt, variant.model);
+
+      const generatedImage = yield* Effect.tryPromise({
+        try: async () => {
+          const response = await fetch(falResult.url);
+          if (!response.ok) {
+            throw new Error(
+              `Failed to fetch generated fal image: ${response.status} ${response.statusText}`,
+            );
+          }
+
+          const buffer = Buffer.from(await response.arrayBuffer());
+          return {
+            data: buffer,
+            mimeType: falResult.mimeType,
+          };
+        },
+        catch: (error) => (error instanceof Error ? error : new Error(String(error))),
+      });
 
       const variantDurationMs = Date.now() - variantStartTime;
 
-      // Track individual Gemini call
-      yield* posthog.capture("gemini_call_completed", user.id, {
+      // Track individual fal call
+      yield* posthog.capture("fal_call_completed", user.id, {
         upload_id: uploadId,
         variant_index: variantIndex,
         prompt_version: promptVersion,
         duration_ms: variantDurationMs,
         image_size_bytes: generatedImage.data.length,
+        fal_url: falResult.url,
       });
 
       // Store result in R2
