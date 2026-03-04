@@ -55,6 +55,20 @@ describe("useOnlineStatus", () => {
   });
 
   describe("Initial State", () => {
+    it("uses a simple health-check request without custom headers", async () => {
+      const fetchMock = vi.fn().mockResolvedValue(mockHealthCheckSuccess());
+      global.fetch = fetchMock;
+
+      renderHook(() => useOnlineStatus());
+      await flushMicrotasks();
+
+      const requestInit = fetchMock.mock.calls[0]?.[1] as RequestInit | undefined;
+
+      expect(requestInit?.method).toBe("GET");
+      expect(requestInit?.cache).toBe("no-store");
+      expect(requestInit?.headers).toBeUndefined();
+    });
+
     it("uses health check fallback when navigator reports online but connectivity fails", async () => {
       setNavigatorOnline(true);
       global.fetch = vi.fn().mockRejectedValue(new Error("network down"));

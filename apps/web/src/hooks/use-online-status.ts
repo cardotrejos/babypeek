@@ -56,9 +56,6 @@ async function runSharedHealthCheck(useRecentResult: boolean = false): Promise<b
       const response = await fetchRef(HEALTH_CHECK_URL, {
         method: "GET",
         cache: "no-store",
-        headers: {
-          "Cache-Control": "no-cache",
-        },
         signal: controller.signal,
       });
 
