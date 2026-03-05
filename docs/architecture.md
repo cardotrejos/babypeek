@@ -66,7 +66,7 @@ User uploads ultrasound
 | **PostgreSQL** | Persistent data (Coolify-managed, Hetzner) |
 | **Better Auth** | Authentication (sessions, OAuth) |
 | **Polar** | Payment processing / checkout |
-| **Sentry** | Error tracking (org: `ac-tech-labz`) |
+| **Sentry** | Error tracking |
 
 ## Privacy Architecture
 
