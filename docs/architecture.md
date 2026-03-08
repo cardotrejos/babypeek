@@ -55,6 +55,8 @@ User uploads ultrasound
   → POST /api/storage/upload-url  (signed upload URL)
   → Upload direct to R2
   → POST /api/process             (trigger generation)
+  → GET  /api/status/:id          (poll until complete)
+  → GET  /api/download/:id        (retrieve generated portrait)
 ```
 
 ## External Services
