@@ -4,7 +4,7 @@
 
 ## Overview
 
-BabyPeek is a Turborepo monorepo built on the Better-T-Stack (React + TanStack Router, Hono, Drizzle, PostgreSQL, Bun).
+BabyPeek is a Turborepo monorepo built with a TanStack Router SPA frontend (React + Vite), a Hono API server, Drizzle ORM, PostgreSQL, and Bun.
 
 ## Monorepo Structure
 
@@ -16,16 +16,16 @@ babypeek/
 ├── packages/
 │   ├── api/          # Business logic: routes, workflows, middleware
 │   ├── db/           # Database schema & queries (Drizzle + PostgreSQL)
-│   └── config/       # Shared TypeScript base configuration
+│   └── config/       # Shared TypeScript base config (`tsconfig.base.json`)
 ```
 
 ## App Layers
 
 ### `apps/web` — Frontend
-- React + TanStack Router (SPA, file-based routing)
+- React + TanStack Router SPA (client-side rendering via `createRoot`)
+- Built with Vite
 - TailwindCSS + shadcn/ui
 - Calls `apps/server` API over HTTP
-- Client-side rendering; all components render on the client
 - Auth via Better Auth (cookie-based session)
 
 ### `apps/server` — API Entry Point
@@ -48,16 +48,20 @@ babypeek/
 - Schema: auth (Better Auth tables), custom tables
 - `bun run db:push` to apply schema changes
 
+### `packages/config` — Shared Config
+- Shared TypeScript configuration only (`tsconfig.base.json`)
+
 ## Request Flow
 
 ```
 User uploads ultrasound
-  → POST /api/storage/upload-url       (signed upload URL)
+  → POST /api/storage/upload-url        (signed upload URL)
   → Upload direct to R2
-  → POST /api/upload/:id/confirm       (verify upload exists, register in DB)
-  → POST /api/process                  (trigger AI generation)
-  → GET  /api/status/:id               (poll until complete)
-  → GET  /api/download/:id             (retrieve generated portrait)
+  → POST /api/upload/:uploadId/confirm  (confirm upload completed)
+  → POST /api/process                    (trigger generation)
+  → Async workflow (FAL.ai → R2 output storage)
+  → GET /api/status/:id                  (polling for progress/completion)
+  → GET /api/download/:id                (retrieve results)
 ```
 
 ## External Services
@@ -66,12 +70,12 @@ User uploads ultrasound
 |---------|---------|
 | **Cloudflare R2** | All file storage (input ultrasounds + generated portraits) |
 | **FAL.ai** | AI image generation model |
-| **PostgreSQL** | Persistent data (Coolify-managed, Hetzner) |
+| **PostgreSQL** | Persistent data (Coolify-managed PostgreSQL on Hetzner) |
 | **Better Auth** | Authentication (sessions, OAuth) |
 | **Stripe** | Payment processing / checkout |
-| **Resend** | Transactional email |
-| **PostHog** | Product analytics |
-| **Facebook Conversions API** | Conversion tracking |
+| **Resend** | Transactional email delivery |
+| **PostHog** | Product analytics and event tracking |
+| **Meta Conversions API** | Conversion tracking for ad attribution |
 | **Sentry** | Error tracking |
 
 ## Privacy Architecture
@@ -84,9 +88,9 @@ Ultrasound images are sensitive. Key constraints:
 
 ## Deployment
 
-- **Frontend** (`apps/web`) — Vercel (Vite SPA) at `babypeek.io`
-- **Backend** (`apps/server`) — Vercel (Hono) at `api.babypeek.io`; two independent Vercel projects
-- Database: Coolify-managed PostgreSQL on Hetzner (see team infra notes for host)
+- Frontend (`babypeek.io`) and backend (`api.babypeek.io`) are two independent Vercel projects deployed separately
+- Frontend proxy: `apps/web/vercel.json` rewrites `/api/*` to `https://api.babypeek.io/api/:path*`
+- Database: Coolify-managed PostgreSQL on Hetzner (see team infra notes)
 - R2 bucket: Cloudflare (region: auto)
 - Cleanup cron: `/api/cron/cleanup` runs nightly at 03:00 UTC (Vercel Cron)
 
