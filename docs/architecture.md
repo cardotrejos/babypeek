@@ -65,8 +65,11 @@ User uploads ultrasound
 | **FAL.ai** | AI image generation model |
 | **PostgreSQL** | Persistent data (Coolify-managed, Hetzner) |
 | **Better Auth** | Authentication (sessions, OAuth) |
-| **Polar** | Payment processing / checkout |
-| **Sentry** | Error tracking (org: `ac-tech-labz`) |
+| **Stripe** | Payment processing / checkout |
+| **Resend** | Transactional email |
+| **PostHog** | Product analytics |
+| **Facebook Conversions API** | Conversion tracking |
+| **Sentry** | Error tracking |
 
 ## Privacy Architecture
 
