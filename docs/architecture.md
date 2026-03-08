@@ -32,7 +32,7 @@ babypeek/
 - Hono HTTP server
 - Mounts all route handlers from `@babypeek/api`
 - Middleware: Sentry error tracking, CORS, logger
-- Routes: auth, health, upload, process, status, retry, checkout, webhooks, share, download, data, cleanup, preferences, preview
+- Routes: auth, health, storage, upload, process, status, retry, checkout, webhook, share, download, data, cron/cleanup, preferences, preview
 
 ### `packages/api` — Business Logic
 - All route handlers (Hono)
