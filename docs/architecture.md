@@ -84,9 +84,11 @@ Ultrasound images are sensitive. Key constraints:
 
 ## Deployment
 
-- Frontend + backend deployed to Vercel (monorepo)
+- **Frontend** (`apps/web`) — Vercel (Vite SPA) at `babypeek.io`
+- **Backend** (`apps/server`) — Vercel (Hono) at `api.babypeek.io`; two independent Vercel projects
 - Database: Coolify-managed PostgreSQL on Hetzner (see team infra notes for host)
 - R2 bucket: Cloudflare (region: auto)
+- Cleanup cron: `/api/cron/cleanup` runs nightly at 03:00 UTC (Vercel Cron)
 
 ## Development
 
