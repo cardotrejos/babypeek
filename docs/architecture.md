@@ -4,28 +4,28 @@
 
 ## Overview
 
-BabyPeek is a Turborepo monorepo built on the Better-T-Stack (React + TanStack Start, Hono, Drizzle, PostgreSQL, Bun).
+BabyPeek is a Turborepo monorepo built on the Better-T-Stack (React + TanStack Router, Hono, Drizzle, PostgreSQL, Bun).
 
 ## Monorepo Structure
 
 ```
 babypeek/
 ├── apps/
-│   ├── web/          # Frontend (React + TanStack Start, port 3001)
+│   ├── web/          # Frontend (React + TanStack Router SPA, port 3001)
 │   └── server/       # HTTP API server entry point (Hono, port 3000)
 ├── packages/
 │   ├── api/          # Business logic: routes, workflows, middleware
 │   ├── db/           # Database schema & queries (Drizzle + PostgreSQL)
-│   └── config/       # Shared env var validation
+│   └── config/       # Shared TypeScript base configuration
 ```
 
 ## App Layers
 
 ### `apps/web` — Frontend
-- React + TanStack Start (SSR)
+- React + TanStack Router (SPA, file-based routing)
 - TailwindCSS + shadcn/ui
 - Calls `apps/server` API over HTTP
-- Server components by default; `"use client"` only for interactivity
+- Client-side rendering; all components render on the client
 - Auth via Better Auth (cookie-based session)
 
 ### `apps/server` — API Entry Point
