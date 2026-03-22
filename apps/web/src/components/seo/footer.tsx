@@ -44,8 +44,8 @@ export function SiteFooter({ className }: SiteFooterProps) {
                 {link.label}
               </Link>
             ))}
-            <a
-              href="/privacy"
+            <Link
+              to="/privacy"
               className={cn(
                 "text-sm text-warm-gray/70 hover:text-coral",
                 "transition-colors duration-300",
@@ -53,7 +53,7 @@ export function SiteFooter({ className }: SiteFooterProps) {
               )}
             >
               Privacy
-            </a>
+            </Link>
           </nav>
 
           {/* Copyright */}

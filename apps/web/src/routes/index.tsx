@@ -11,7 +11,7 @@ import {
 } from "@/components/landing";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { PRICE_DISPLAY, PRICING_TIERS } from "@/lib/pricing";
+import { PRICE_DISPLAY } from "@/lib/pricing";
 import { SiteFooter } from "@/components/seo/footer";
 import { Upload, Sparkles, Download } from "lucide-react";
 
