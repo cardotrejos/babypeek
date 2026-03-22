@@ -30,10 +30,6 @@ function RootDocument() {
 
   return (
     <>
-      <Helmet>
-        <link rel="canonical" href="https://babypeek.io/" />
-      </Helmet>
-
       {/* Organization JSON-LD schema — included on all pages */}
       <Helmet>
         <script type="application/ld+json">

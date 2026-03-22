@@ -461,9 +461,6 @@ function ProcessingPage() {
         <Helmet>
           <meta name="robots" content="noindex, nofollow" />
         </Helmet>
-        <Helmet>
-          <meta name="robots" content="noindex, nofollow" />
-        </Helmet>
         <div className="size-12 animate-spin rounded-full border-4 border-coral border-t-transparent" />
       </div>
     );
@@ -473,9 +470,6 @@ function ProcessingPage() {
   if (showPromptSelector && state === "idle" && !devManualStart) {
     return (
       <>
-      <Helmet>
-        <meta name="robots" content="noindex, nofollow" />
-      </Helmet>
         <Helmet>
           <meta name="robots" content="noindex, nofollow" />
         </Helmet>
@@ -541,9 +535,6 @@ function ProcessingPage() {
   ) {
     return (
       <>
-      <Helmet>
-        <meta name="robots" content="noindex, nofollow" />
-      </Helmet>
         <Helmet>
           <meta name="robots" content="noindex, nofollow" />
         </Helmet>
@@ -573,9 +564,6 @@ function ProcessingPage() {
   // Non-processing states (complete, retrying, timeout, error)
   return (
       <>
-      <Helmet>
-        <meta name="robots" content="noindex, nofollow" />
-      </Helmet>
         <Helmet>
           <meta name="robots" content="noindex, nofollow" />
         </Helmet>
