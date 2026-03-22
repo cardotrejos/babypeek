@@ -134,7 +134,13 @@ export function AIBabyGeneratorsPage() {
         <main id="main-content" className="px-4 sm:px-6 sm:max-w-[640px] sm:mx-auto pt-8 pb-12">
           {/* Breadcrumb */}
           <nav className="text-sm text-warm-gray mb-6">
-            <Link to="/" className="hover:text-coral transition-colors">Home</Link>
+            <Link to="/" className="hover:text-coral transition-colors">
+              Home
+            </Link>
+            <span className="mx-2">/</span>
+            <Link to="/compare" className="hover:text-coral transition-colors">
+              Compare
+            </Link>
             <span className="mx-2">/</span>
             <span className="text-charcoal">AI Baby Generators 2026</span>
           </nav>
@@ -144,8 +150,8 @@ export function AIBabyGeneratorsPage() {
             AI Baby Generators 2026: Complete Comparison
           </h1>
           <p className="text-warm-gray text-lg mb-8">
-            Four types of tools promise to show you what your baby will look like. Here's how they differ,
-            how accurate they are, and which one actually uses your real baby's features.
+            Four types of tools promise to show you what your baby will look like. Here's how they
+            differ, how accurate they are, and which one actually uses your real baby's features.
           </p>
 
           {/* Category icons */}
@@ -166,7 +172,9 @@ export function AIBabyGeneratorsPage() {
                 )}
               >
                 <Icon className={cn("w-6 h-6", highlight ? "text-coral" : "text-warm-gray")} />
-                <span className={cn("text-xs font-medium", highlight ? "text-coral" : "text-warm-gray")}>
+                <span
+                  className={cn("text-xs font-medium", highlight ? "text-coral" : "text-warm-gray")}
+                >
                   {label}
                 </span>
               </div>
@@ -192,18 +200,18 @@ export function AIBabyGeneratorsPage() {
                     <tr key={category} className={i % 2 === 0 ? "bg-white/40" : ""}>
                       <td className="px-3 py-3">
                         <div className="font-medium text-charcoal text-xs">{category}</div>
-                        <div className="text-warm-gray text-xs mt-0.5">
-                          {tools.join(", ")}
-                        </div>
+                        <div className="text-warm-gray text-xs mt-0.5">{tools.join(", ")}</div>
                       </td>
                       <td className="px-3 py-3 text-warm-gray text-xs">{input}</td>
                       <td className="px-3 py-3">
-                        <span className={cn(
-                          "text-xs font-medium px-2 py-0.5 rounded-full",
-                          accuracy === "High — uses real fetal features"
-                            ? "bg-coral-light text-coral"
-                            : "bg-charcoal/5 text-warm-gray",
-                        )}>
+                        <span
+                          className={cn(
+                            "text-xs font-medium px-2 py-0.5 rounded-full",
+                            accuracy === "High — uses real fetal features"
+                              ? "bg-coral-light text-coral"
+                              : "bg-charcoal/5 text-warm-gray",
+                          )}
+                        >
                           {accuracy}
                         </span>
                       </td>
@@ -220,16 +228,19 @@ export function AIBabyGeneratorsPage() {
           <div className="rounded-2xl bg-coral-light border-2 border-coral p-6 mb-10">
             <div className="flex items-center gap-2 mb-3">
               <Image className="w-5 h-5 text-coral" />
-              <span className="text-xs font-semibold text-coral uppercase tracking-wide">The Only Ultrasound-Based Tool</span>
+              <span className="text-xs font-semibold text-coral uppercase tracking-wide">
+                The Only Ultrasound-Based Tool
+              </span>
             </div>
             <h2 className="font-display text-xl text-charcoal mb-2">
               Why BabyPeek is Fundamentally Different
             </h2>
             <p className="text-sm text-warm-gray leading-relaxed mb-4">
-              Every other AI baby generator works with <strong className="text-charcoal">proxies</strong> — parent
-              faces, text descriptions, or generic models. BabyPeek starts with an actual image of your baby,
-              captured in your 4D ultrasound. The AI analyzes your baby's real features — not estimates of what
-              those features might be based on parental genetics.
+              Every other AI baby generator works with{" "}
+              <strong className="text-charcoal">proxies</strong> — parent faces, text descriptions,
+              or generic models. BabyPeek starts with an actual image of your baby, captured in your
+              4D ultrasound. The AI analyzes your baby's real features — not estimates of what those
+              features might be based on parental genetics.
             </p>
             <p className="text-sm text-warm-gray">
               If you've had a 4D ultrasound, this is the only tool that uses it.
@@ -268,7 +279,12 @@ export function AIBabyGeneratorsPage() {
                       : "bg-white/40 border border-charcoal/10",
                   )}
                 >
-                  <h3 className={cn("font-display text-base mb-1", highlight ? "text-coral" : "text-charcoal")}>
+                  <h3
+                    className={cn(
+                      "font-display text-base mb-1",
+                      highlight ? "text-coral" : "text-charcoal",
+                    )}
+                  >
                     {title}
                   </h3>
                   <p className="text-sm text-warm-gray">{desc}</p>
@@ -282,10 +298,15 @@ export function AIBabyGeneratorsPage() {
             <h2 className="font-display text-2xl text-charcoal mb-6">Frequently Asked Questions</h2>
             <div className="space-y-4">
               {faqs.map(({ question, answer }) => (
-                <details key={question} className="group rounded-xl border border-charcoal/10 bg-white/60 overflow-hidden">
+                <details
+                  key={question}
+                  className="group rounded-xl border border-charcoal/10 bg-white/60 overflow-hidden"
+                >
                   <summary className="px-4 py-4 cursor-pointer text-sm font-medium text-charcoal hover:text-coral list-none flex items-center justify-between">
                     {question}
-                    <span className="shrink-0 ml-2 text-coral group-open:rotate-180 transition-transform">▾</span>
+                    <span className="shrink-0 ml-2 text-coral group-open:rotate-180 transition-transform">
+                      ▾
+                    </span>
                   </summary>
                   <div className="px-4 pb-4 text-sm text-warm-gray leading-relaxed border-t border-charcoal/5 pt-3">
                     {answer}
@@ -310,7 +331,8 @@ export function AIBabyGeneratorsPage() {
               <Link to="/">Try BabyPeek Free →</Link>
             </Button>
             <p className="mt-3 text-sm text-warm-gray">
-              The only AI that uses your <strong className="text-charcoal">actual ultrasound</strong> →
+              The only AI that uses your{" "}
+              <strong className="text-charcoal">actual ultrasound</strong> →
             </p>
           </div>
         </main>
