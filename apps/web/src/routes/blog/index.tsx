@@ -16,6 +16,7 @@ const categoryColors: Record<BlogPostMeta["category"], string> = {
   "Ultrasound Guide": "bg-coral-light text-coral",
   "AI Technology": "bg-blue-100 text-blue-600",
   "For Clinics": "bg-emerald-100 text-emerald-700",
+  Inspiration: "bg-purple-100 text-purple-700",
 };
 
 export function BlogIndexPage() {
