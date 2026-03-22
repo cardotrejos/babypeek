@@ -31,8 +31,6 @@ const integrationOptions = [
   },
 ];
 
-const pricingPlans = [];
-
 const revenueTable = [
   { scans: 5, price: 15, monthly: 1500, annual: 18000 },
   { scans: 10, price: 15, monthly: 3000, annual: 36000 },
