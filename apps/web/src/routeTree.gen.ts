@@ -486,13 +486,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BlogIndexRouteImport
       parentRoute: typeof BlogRouteRoute
     }
-    '/compare/': {
-      id: '/compare/'
-      path: '/'
-      fullPath: '/compare/'
-      preLoaderRoute: typeof CompareIndexRouteImport
-      parentRoute: typeof CompareRouteRoute
-    }
     '/share/$shareId': {
       id: '/share/$shareId'
       path: '/share/$shareId'
