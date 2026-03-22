@@ -2,6 +2,12 @@ import "@testing-library/jest-dom/vitest";
 import { cleanup } from "@testing-library/react";
 import { afterEach, vi } from "vitest";
 
+// Mock react-helmet-async so components using <Helmet> don't crash without a provider
+vi.mock("react-helmet-async", () => ({
+  Helmet: ({ children }: { children?: unknown }) => null,
+  HelmetProvider: ({ children }: { children: unknown }) => children,
+}));
+
 // Setup localStorage mock (jsdom's implementation may be incomplete)
 const localStorageMock = (() => {
   let store: Record<string, string> = {};
