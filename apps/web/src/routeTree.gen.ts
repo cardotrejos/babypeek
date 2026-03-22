@@ -18,6 +18,7 @@ import { Route as CompareRouteRouteImport } from './routes/compare/route'
 import { Route as BlogRouteRouteImport } from './routes/blog/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ForClinicsIndexRouteImport } from './routes/for-clinics/index'
+import { Route as CompareIndexRouteImport } from './routes/compare/index'
 import { Route as BlogIndexRouteImport } from './routes/blog/index'
 import { Route as ShareShareIdRouteImport } from './routes/share.$shareId'
 import { Route as ResultResultIdRouteImport } from './routes/result.$resultId'
@@ -30,6 +31,14 @@ import { Route as DownloadUploadIdRouteImport } from './routes/download.$uploadI
 import { Route as CompareBabypeekVsSeebabyRouteImport } from './routes/compare/babypeek-vs-seebaby'
 import { Route as CompareAiBabyGenerators2026RouteImport } from './routes/compare/ai-baby-generators-2026'
 import { Route as BlogWhatWillMyBabyLookLikeRouteImport } from './routes/blog/what-will-my-baby-look-like'
+import { Route as BlogSeebabyVsBabypeekRouteImport } from './routes/blog/seebaby-vs-babypeek'
+import { Route as BlogPregnancyAnnouncementIdeasRouteImport } from './routes/blog/pregnancy-announcement-ideas'
+import { Route as BlogHowAiBabyPortraitTechnologyWorksRouteImport } from './routes/blog/how-ai-baby-portrait-technology-works'
+import { Route as BlogBestTimeFor4dUltrasoundRouteImport } from './routes/blog/best-time-for-4d-ultrasound'
+import { Route as BlogAiChangingKeepsakeUltrasoundRouteImport } from './routes/blog/ai-changing-keepsake-ultrasound'
+import { Route as BlogAiBabyFacePredictionCompleteGuideRouteImport } from './routes/blog/ai-baby-face-prediction-complete-guide'
+import { Route as BlogAddOnServicesUltrasoundClinicRouteImport } from './routes/blog/add-on-services-ultrasound-clinic'
+import { Route as Blog3dVs4dVsHdUltrasoundRouteImport } from './routes/blog/3d-vs-4d-vs-hd-ultrasound'
 
 const PricingRoute = PricingRouteImport.update({
   id: '/pricing',
@@ -75,6 +84,11 @@ const ForClinicsIndexRoute = ForClinicsIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => ForClinicsRouteRoute,
+} as any)
+const CompareIndexRoute = CompareIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => CompareRouteRoute,
 } as any)
 const BlogIndexRoute = BlogIndexRouteImport.update({
   id: '/',
@@ -139,6 +153,53 @@ const BlogWhatWillMyBabyLookLikeRoute =
     path: '/what-will-my-baby-look-like',
     getParentRoute: () => BlogRouteRoute,
   } as any)
+const BlogSeebabyVsBabypeekRoute = BlogSeebabyVsBabypeekRouteImport.update({
+  id: '/seebaby-vs-babypeek',
+  path: '/seebaby-vs-babypeek',
+  getParentRoute: () => BlogRouteRoute,
+} as any)
+const BlogPregnancyAnnouncementIdeasRoute =
+  BlogPregnancyAnnouncementIdeasRouteImport.update({
+    id: '/pregnancy-announcement-ideas',
+    path: '/pregnancy-announcement-ideas',
+    getParentRoute: () => BlogRouteRoute,
+  } as any)
+const BlogHowAiBabyPortraitTechnologyWorksRoute =
+  BlogHowAiBabyPortraitTechnologyWorksRouteImport.update({
+    id: '/how-ai-baby-portrait-technology-works',
+    path: '/how-ai-baby-portrait-technology-works',
+    getParentRoute: () => BlogRouteRoute,
+  } as any)
+const BlogBestTimeFor4dUltrasoundRoute =
+  BlogBestTimeFor4dUltrasoundRouteImport.update({
+    id: '/best-time-for-4d-ultrasound',
+    path: '/best-time-for-4d-ultrasound',
+    getParentRoute: () => BlogRouteRoute,
+  } as any)
+const BlogAiChangingKeepsakeUltrasoundRoute =
+  BlogAiChangingKeepsakeUltrasoundRouteImport.update({
+    id: '/ai-changing-keepsake-ultrasound',
+    path: '/ai-changing-keepsake-ultrasound',
+    getParentRoute: () => BlogRouteRoute,
+  } as any)
+const BlogAiBabyFacePredictionCompleteGuideRoute =
+  BlogAiBabyFacePredictionCompleteGuideRouteImport.update({
+    id: '/ai-baby-face-prediction-complete-guide',
+    path: '/ai-baby-face-prediction-complete-guide',
+    getParentRoute: () => BlogRouteRoute,
+  } as any)
+const BlogAddOnServicesUltrasoundClinicRoute =
+  BlogAddOnServicesUltrasoundClinicRouteImport.update({
+    id: '/add-on-services-ultrasound-clinic',
+    path: '/add-on-services-ultrasound-clinic',
+    getParentRoute: () => BlogRouteRoute,
+  } as any)
+const Blog3dVs4dVsHdUltrasoundRoute =
+  Blog3dVs4dVsHdUltrasoundRouteImport.update({
+    id: '/3d-vs-4d-vs-hd-ultrasound',
+    path: '/3d-vs-4d-vs-hd-ultrasound',
+    getParentRoute: () => BlogRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -149,6 +210,14 @@ export interface FileRoutesByFullPath {
   '/faq': typeof FaqRoute
   '/how-it-works': typeof HowItWorksRoute
   '/pricing': typeof PricingRoute
+  '/blog/3d-vs-4d-vs-hd-ultrasound': typeof Blog3dVs4dVsHdUltrasoundRoute
+  '/blog/add-on-services-ultrasound-clinic': typeof BlogAddOnServicesUltrasoundClinicRoute
+  '/blog/ai-baby-face-prediction-complete-guide': typeof BlogAiBabyFacePredictionCompleteGuideRoute
+  '/blog/ai-changing-keepsake-ultrasound': typeof BlogAiChangingKeepsakeUltrasoundRoute
+  '/blog/best-time-for-4d-ultrasound': typeof BlogBestTimeFor4dUltrasoundRoute
+  '/blog/how-ai-baby-portrait-technology-works': typeof BlogHowAiBabyPortraitTechnologyWorksRoute
+  '/blog/pregnancy-announcement-ideas': typeof BlogPregnancyAnnouncementIdeasRoute
+  '/blog/seebaby-vs-babypeek': typeof BlogSeebabyVsBabypeekRoute
   '/blog/what-will-my-baby-look-like': typeof BlogWhatWillMyBabyLookLikeRoute
   '/compare/ai-baby-generators-2026': typeof CompareAiBabyGenerators2026Route
   '/compare/babypeek-vs-seebaby': typeof CompareBabypeekVsSeebabyRoute
@@ -161,15 +230,23 @@ export interface FileRoutesByFullPath {
   '/result/$resultId': typeof ResultResultIdRoute
   '/share/$shareId': typeof ShareShareIdRoute
   '/blog/': typeof BlogIndexRoute
+  '/compare/': typeof CompareIndexRoute
   '/for-clinics/': typeof ForClinicsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/compare': typeof CompareRouteRouteWithChildren
   '/checkout-success': typeof CheckoutSuccessRoute
   '/faq': typeof FaqRoute
   '/how-it-works': typeof HowItWorksRoute
   '/pricing': typeof PricingRoute
+  '/blog/3d-vs-4d-vs-hd-ultrasound': typeof Blog3dVs4dVsHdUltrasoundRoute
+  '/blog/add-on-services-ultrasound-clinic': typeof BlogAddOnServicesUltrasoundClinicRoute
+  '/blog/ai-baby-face-prediction-complete-guide': typeof BlogAiBabyFacePredictionCompleteGuideRoute
+  '/blog/ai-changing-keepsake-ultrasound': typeof BlogAiChangingKeepsakeUltrasoundRoute
+  '/blog/best-time-for-4d-ultrasound': typeof BlogBestTimeFor4dUltrasoundRoute
+  '/blog/how-ai-baby-portrait-technology-works': typeof BlogHowAiBabyPortraitTechnologyWorksRoute
+  '/blog/pregnancy-announcement-ideas': typeof BlogPregnancyAnnouncementIdeasRoute
+  '/blog/seebaby-vs-babypeek': typeof BlogSeebabyVsBabypeekRoute
   '/blog/what-will-my-baby-look-like': typeof BlogWhatWillMyBabyLookLikeRoute
   '/compare/ai-baby-generators-2026': typeof CompareAiBabyGenerators2026Route
   '/compare/babypeek-vs-seebaby': typeof CompareBabypeekVsSeebabyRoute
@@ -182,6 +259,7 @@ export interface FileRoutesByTo {
   '/result/$resultId': typeof ResultResultIdRoute
   '/share/$shareId': typeof ShareShareIdRoute
   '/blog': typeof BlogIndexRoute
+  '/compare': typeof CompareIndexRoute
   '/for-clinics': typeof ForClinicsIndexRoute
 }
 export interface FileRoutesById {
@@ -194,6 +272,14 @@ export interface FileRoutesById {
   '/faq': typeof FaqRoute
   '/how-it-works': typeof HowItWorksRoute
   '/pricing': typeof PricingRoute
+  '/blog/3d-vs-4d-vs-hd-ultrasound': typeof Blog3dVs4dVsHdUltrasoundRoute
+  '/blog/add-on-services-ultrasound-clinic': typeof BlogAddOnServicesUltrasoundClinicRoute
+  '/blog/ai-baby-face-prediction-complete-guide': typeof BlogAiBabyFacePredictionCompleteGuideRoute
+  '/blog/ai-changing-keepsake-ultrasound': typeof BlogAiChangingKeepsakeUltrasoundRoute
+  '/blog/best-time-for-4d-ultrasound': typeof BlogBestTimeFor4dUltrasoundRoute
+  '/blog/how-ai-baby-portrait-technology-works': typeof BlogHowAiBabyPortraitTechnologyWorksRoute
+  '/blog/pregnancy-announcement-ideas': typeof BlogPregnancyAnnouncementIdeasRoute
+  '/blog/seebaby-vs-babypeek': typeof BlogSeebabyVsBabypeekRoute
   '/blog/what-will-my-baby-look-like': typeof BlogWhatWillMyBabyLookLikeRoute
   '/compare/ai-baby-generators-2026': typeof CompareAiBabyGenerators2026Route
   '/compare/babypeek-vs-seebaby': typeof CompareBabypeekVsSeebabyRoute
@@ -206,6 +292,7 @@ export interface FileRoutesById {
   '/result/$resultId': typeof ResultResultIdRoute
   '/share/$shareId': typeof ShareShareIdRoute
   '/blog/': typeof BlogIndexRoute
+  '/compare/': typeof CompareIndexRoute
   '/for-clinics/': typeof ForClinicsIndexRoute
 }
 export interface FileRouteTypes {
@@ -219,6 +306,14 @@ export interface FileRouteTypes {
     | '/faq'
     | '/how-it-works'
     | '/pricing'
+    | '/blog/3d-vs-4d-vs-hd-ultrasound'
+    | '/blog/add-on-services-ultrasound-clinic'
+    | '/blog/ai-baby-face-prediction-complete-guide'
+    | '/blog/ai-changing-keepsake-ultrasound'
+    | '/blog/best-time-for-4d-ultrasound'
+    | '/blog/how-ai-baby-portrait-technology-works'
+    | '/blog/pregnancy-announcement-ideas'
+    | '/blog/seebaby-vs-babypeek'
     | '/blog/what-will-my-baby-look-like'
     | '/compare/ai-baby-generators-2026'
     | '/compare/babypeek-vs-seebaby'
@@ -231,15 +326,23 @@ export interface FileRouteTypes {
     | '/result/$resultId'
     | '/share/$shareId'
     | '/blog/'
+    | '/compare/'
     | '/for-clinics/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/compare'
     | '/checkout-success'
     | '/faq'
     | '/how-it-works'
     | '/pricing'
+    | '/blog/3d-vs-4d-vs-hd-ultrasound'
+    | '/blog/add-on-services-ultrasound-clinic'
+    | '/blog/ai-baby-face-prediction-complete-guide'
+    | '/blog/ai-changing-keepsake-ultrasound'
+    | '/blog/best-time-for-4d-ultrasound'
+    | '/blog/how-ai-baby-portrait-technology-works'
+    | '/blog/pregnancy-announcement-ideas'
+    | '/blog/seebaby-vs-babypeek'
     | '/blog/what-will-my-baby-look-like'
     | '/compare/ai-baby-generators-2026'
     | '/compare/babypeek-vs-seebaby'
@@ -252,6 +355,7 @@ export interface FileRouteTypes {
     | '/result/$resultId'
     | '/share/$shareId'
     | '/blog'
+    | '/compare'
     | '/for-clinics'
   id:
     | '__root__'
@@ -263,6 +367,14 @@ export interface FileRouteTypes {
     | '/faq'
     | '/how-it-works'
     | '/pricing'
+    | '/blog/3d-vs-4d-vs-hd-ultrasound'
+    | '/blog/add-on-services-ultrasound-clinic'
+    | '/blog/ai-baby-face-prediction-complete-guide'
+    | '/blog/ai-changing-keepsake-ultrasound'
+    | '/blog/best-time-for-4d-ultrasound'
+    | '/blog/how-ai-baby-portrait-technology-works'
+    | '/blog/pregnancy-announcement-ideas'
+    | '/blog/seebaby-vs-babypeek'
     | '/blog/what-will-my-baby-look-like'
     | '/compare/ai-baby-generators-2026'
     | '/compare/babypeek-vs-seebaby'
@@ -275,6 +387,7 @@ export interface FileRouteTypes {
     | '/result/$resultId'
     | '/share/$shareId'
     | '/blog/'
+    | '/compare/'
     | '/for-clinics/'
   fileRoutesById: FileRoutesById
 }
@@ -358,6 +471,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/for-clinics/'
       preLoaderRoute: typeof ForClinicsIndexRouteImport
       parentRoute: typeof ForClinicsRouteRoute
+    }
+    '/compare/': {
+      id: '/compare/'
+      path: '/'
+      fullPath: '/compare/'
+      preLoaderRoute: typeof CompareIndexRouteImport
+      parentRoute: typeof CompareRouteRoute
     }
     '/blog/': {
       id: '/blog/'
@@ -443,15 +563,90 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BlogWhatWillMyBabyLookLikeRouteImport
       parentRoute: typeof BlogRouteRoute
     }
+    '/blog/seebaby-vs-babypeek': {
+      id: '/blog/seebaby-vs-babypeek'
+      path: '/seebaby-vs-babypeek'
+      fullPath: '/blog/seebaby-vs-babypeek'
+      preLoaderRoute: typeof BlogSeebabyVsBabypeekRouteImport
+      parentRoute: typeof BlogRouteRoute
+    }
+    '/blog/pregnancy-announcement-ideas': {
+      id: '/blog/pregnancy-announcement-ideas'
+      path: '/pregnancy-announcement-ideas'
+      fullPath: '/blog/pregnancy-announcement-ideas'
+      preLoaderRoute: typeof BlogPregnancyAnnouncementIdeasRouteImport
+      parentRoute: typeof BlogRouteRoute
+    }
+    '/blog/how-ai-baby-portrait-technology-works': {
+      id: '/blog/how-ai-baby-portrait-technology-works'
+      path: '/how-ai-baby-portrait-technology-works'
+      fullPath: '/blog/how-ai-baby-portrait-technology-works'
+      preLoaderRoute: typeof BlogHowAiBabyPortraitTechnologyWorksRouteImport
+      parentRoute: typeof BlogRouteRoute
+    }
+    '/blog/best-time-for-4d-ultrasound': {
+      id: '/blog/best-time-for-4d-ultrasound'
+      path: '/best-time-for-4d-ultrasound'
+      fullPath: '/blog/best-time-for-4d-ultrasound'
+      preLoaderRoute: typeof BlogBestTimeFor4dUltrasoundRouteImport
+      parentRoute: typeof BlogRouteRoute
+    }
+    '/blog/ai-changing-keepsake-ultrasound': {
+      id: '/blog/ai-changing-keepsake-ultrasound'
+      path: '/ai-changing-keepsake-ultrasound'
+      fullPath: '/blog/ai-changing-keepsake-ultrasound'
+      preLoaderRoute: typeof BlogAiChangingKeepsakeUltrasoundRouteImport
+      parentRoute: typeof BlogRouteRoute
+    }
+    '/blog/ai-baby-face-prediction-complete-guide': {
+      id: '/blog/ai-baby-face-prediction-complete-guide'
+      path: '/ai-baby-face-prediction-complete-guide'
+      fullPath: '/blog/ai-baby-face-prediction-complete-guide'
+      preLoaderRoute: typeof BlogAiBabyFacePredictionCompleteGuideRouteImport
+      parentRoute: typeof BlogRouteRoute
+    }
+    '/blog/add-on-services-ultrasound-clinic': {
+      id: '/blog/add-on-services-ultrasound-clinic'
+      path: '/add-on-services-ultrasound-clinic'
+      fullPath: '/blog/add-on-services-ultrasound-clinic'
+      preLoaderRoute: typeof BlogAddOnServicesUltrasoundClinicRouteImport
+      parentRoute: typeof BlogRouteRoute
+    }
+    '/blog/3d-vs-4d-vs-hd-ultrasound': {
+      id: '/blog/3d-vs-4d-vs-hd-ultrasound'
+      path: '/3d-vs-4d-vs-hd-ultrasound'
+      fullPath: '/blog/3d-vs-4d-vs-hd-ultrasound'
+      preLoaderRoute: typeof Blog3dVs4dVsHdUltrasoundRouteImport
+      parentRoute: typeof BlogRouteRoute
+    }
   }
 }
 
 interface BlogRouteRouteChildren {
+  Blog3dVs4dVsHdUltrasoundRoute: typeof Blog3dVs4dVsHdUltrasoundRoute
+  BlogAddOnServicesUltrasoundClinicRoute: typeof BlogAddOnServicesUltrasoundClinicRoute
+  BlogAiBabyFacePredictionCompleteGuideRoute: typeof BlogAiBabyFacePredictionCompleteGuideRoute
+  BlogAiChangingKeepsakeUltrasoundRoute: typeof BlogAiChangingKeepsakeUltrasoundRoute
+  BlogBestTimeFor4dUltrasoundRoute: typeof BlogBestTimeFor4dUltrasoundRoute
+  BlogHowAiBabyPortraitTechnologyWorksRoute: typeof BlogHowAiBabyPortraitTechnologyWorksRoute
+  BlogPregnancyAnnouncementIdeasRoute: typeof BlogPregnancyAnnouncementIdeasRoute
+  BlogSeebabyVsBabypeekRoute: typeof BlogSeebabyVsBabypeekRoute
   BlogWhatWillMyBabyLookLikeRoute: typeof BlogWhatWillMyBabyLookLikeRoute
   BlogIndexRoute: typeof BlogIndexRoute
 }
 
 const BlogRouteRouteChildren: BlogRouteRouteChildren = {
+  Blog3dVs4dVsHdUltrasoundRoute: Blog3dVs4dVsHdUltrasoundRoute,
+  BlogAddOnServicesUltrasoundClinicRoute:
+    BlogAddOnServicesUltrasoundClinicRoute,
+  BlogAiBabyFacePredictionCompleteGuideRoute:
+    BlogAiBabyFacePredictionCompleteGuideRoute,
+  BlogAiChangingKeepsakeUltrasoundRoute: BlogAiChangingKeepsakeUltrasoundRoute,
+  BlogBestTimeFor4dUltrasoundRoute: BlogBestTimeFor4dUltrasoundRoute,
+  BlogHowAiBabyPortraitTechnologyWorksRoute:
+    BlogHowAiBabyPortraitTechnologyWorksRoute,
+  BlogPregnancyAnnouncementIdeasRoute: BlogPregnancyAnnouncementIdeasRoute,
+  BlogSeebabyVsBabypeekRoute: BlogSeebabyVsBabypeekRoute,
   BlogWhatWillMyBabyLookLikeRoute: BlogWhatWillMyBabyLookLikeRoute,
   BlogIndexRoute: BlogIndexRoute,
 }
@@ -463,11 +658,13 @@ const BlogRouteRouteWithChildren = BlogRouteRoute._addFileChildren(
 interface CompareRouteRouteChildren {
   CompareAiBabyGenerators2026Route: typeof CompareAiBabyGenerators2026Route
   CompareBabypeekVsSeebabyRoute: typeof CompareBabypeekVsSeebabyRoute
+  CompareIndexRoute: typeof CompareIndexRoute
 }
 
 const CompareRouteRouteChildren: CompareRouteRouteChildren = {
   CompareAiBabyGenerators2026Route: CompareAiBabyGenerators2026Route,
   CompareBabypeekVsSeebabyRoute: CompareBabypeekVsSeebabyRoute,
+  CompareIndexRoute: CompareIndexRoute,
 }
 
 const CompareRouteRouteWithChildren = CompareRouteRoute._addFileChildren(
