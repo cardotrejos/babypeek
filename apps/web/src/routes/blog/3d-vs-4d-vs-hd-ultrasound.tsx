@@ -5,6 +5,7 @@ import { Calendar, User, Clock, ArrowRight } from "lucide-react";
 import { SiteFooter } from "@/components/seo/footer";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { formatDate } from "@/lib/date-utils";
 
 export const Route = createFileRoute("/blog/3d-vs-4d-vs-hd-ultrasound")({
   component: ThreeDVFourDVHDUltrasoundPage,
@@ -24,14 +25,6 @@ const articleSchema = {
   url: "https://babypeek.io/blog/3d-vs-4d-vs-hd-ultrasound",
   mainEntityOfPage: { "@type": "WebPage", "@id": "https://babypeek.io/blog/3d-vs-4d-vs-hd-ultrasound" },
 };
-
-function formatDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-}
 
 const postMeta = {
   title: "3D vs 4D vs HD Ultrasound: What's the Difference?",

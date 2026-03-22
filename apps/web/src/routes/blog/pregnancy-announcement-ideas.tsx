@@ -5,6 +5,7 @@ import { Calendar, User, Clock, ArrowRight } from "lucide-react";
 import { SiteFooter } from "@/components/seo/footer";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { formatDate } from "@/lib/date-utils";
 
 export const Route = createFileRoute("/blog/pregnancy-announcement-ideas")({
   component: PregnancyAnnouncementIdeasPage,
@@ -24,14 +25,6 @@ const articleSchema = {
   url: "https://babypeek.io/blog/pregnancy-announcement-ideas",
   mainEntityOfPage: { "@type": "WebPage", "@id": "https://babypeek.io/blog/pregnancy-announcement-ideas" },
 };
-
-function formatDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-}
 
 const postMeta = {
   title: "10 Creative Pregnancy Announcement Ideas Using Your Baby's AI Portrait",

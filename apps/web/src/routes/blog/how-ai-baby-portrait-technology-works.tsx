@@ -5,6 +5,7 @@ import { Calendar, User, Clock, ArrowRight } from "lucide-react";
 import { SiteFooter } from "@/components/seo/footer";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { formatDate } from "@/lib/date-utils";
 
 export const Route = createFileRoute("/blog/how-ai-baby-portrait-technology-works")({
   component: HowAIBabyPortraitTechnologyWorksPage,
@@ -24,14 +25,6 @@ const articleSchema = {
   url: "https://babypeek.io/blog/how-ai-baby-portrait-technology-works",
   mainEntityOfPage: { "@type": "WebPage", "@id": "https://babypeek.io/blog/how-ai-baby-portrait-technology-works" },
 };
-
-function formatDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-}
 
 const postMeta = {
   title: "How AI Baby Portrait Technology Works (2026 Guide)",
