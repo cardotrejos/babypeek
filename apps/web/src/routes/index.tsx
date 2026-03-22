@@ -16,6 +16,11 @@ import { SiteFooter } from "@/components/seo/footer";
 import { Upload, Sparkles, Download } from "lucide-react";
 
 import { MobileStickyCTA, TrustBadges } from "@/components/experiments";
+import {
+  LANDING_META_DESCRIPTION,
+  LANDING_OG_DESCRIPTION,
+  LANDING_SOFTWARE_APP_SCHEMA,
+} from "./marketing-pricing";
 
 export const Route = createFileRoute("/")({
   component: LandingPage,
@@ -29,47 +34,6 @@ function LandingPage() {
     }
   };
 
-  const softwareAppSchema = {
-    "@context": "https://schema.org",
-    "@type": "SoftwareApplication",
-    "name": "BabyPeek",
-    "applicationCategory": "MultimediaApplication",
-    "operatingSystem": "Web",
-    "url": "https://babypeek.io",
-    "description":
-      "Upload your 4D ultrasound and get a realistic AI portrait of your baby's face in approximately 60 seconds.",
-    "offers": [
-      {
-        "@type": "Offer",
-        "name": "Free Preview",
-        "price": "0",
-        "priceCurrency": "USD",
-        "description": "Free low-resolution baby portrait preview",
-      },
-      {
-        "@type": "Offer",
-        "name": "Basic",
-        "price": "9.99",
-        "priceCurrency": "USD",
-        "description": "1 HD portrait — one-time purchase",
-      },
-      {
-        "@type": "Offer",
-        "name": "Plus",
-        "price": "14.99",
-        "priceCurrency": "USD",
-        "description": "All 4 HD portraits + email delivery — one-time purchase",
-      },
-      {
-        "@type": "Offer",
-        "name": "Pro",
-        "price": "24.99",
-        "priceCurrency": "USD",
-        "description": "All 4 HD portraits + print-ready resolution + priority processing — one-time purchase",
-      },
-    ],
-  };
-
   return (
     <>
       <Helmet>
@@ -78,7 +42,7 @@ function LandingPage() {
         </title>
         <meta
           name="description"
-          content={`Upload your 4D ultrasound and get a realistic AI portrait of your baby in ~60 seconds. Free preview, HD from $9.99. Private & secure.`}
+          content={LANDING_META_DESCRIPTION}
         />
         <link rel="canonical" href="https://babypeek.io/" />
         <meta
@@ -87,7 +51,7 @@ function LandingPage() {
         />
         <meta
           property="og:description"
-          content={`Upload your 4D ultrasound and get a realistic AI portrait of your baby in ~60 seconds. Free preview, HD from $9.99.`}
+          content={LANDING_OG_DESCRIPTION}
         />
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://babypeek.io/" />
@@ -95,7 +59,7 @@ function LandingPage() {
 
       <Helmet>
         <script type="application/ld+json">
-          {JSON.stringify(softwareAppSchema)}
+          {JSON.stringify(LANDING_SOFTWARE_APP_SCHEMA)}
         </script>
       </Helmet>
 

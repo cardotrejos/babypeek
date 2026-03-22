@@ -5,7 +5,11 @@ import { Upload, Sparkles, Share2, CheckCircle2, XCircle } from "lucide-react";
 import { SiteFooter } from "@/components/seo/footer";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-
+import {
+  HOW_IT_WORKS_HD_TIP,
+  HOW_IT_WORKS_ROUTE_STEP_DESCRIPTION,
+  HOW_IT_WORKS_SCHEMA_STEP_TEXT,
+} from "./marketing-pricing";
 
 export const Route = createFileRoute("/how-it-works")({
   component: HowItWorksPage,
@@ -33,7 +37,7 @@ const howToSchema = {
     {
       "@type": "HowToStep",
       name: "Download and Share",
-      text: "View your free preview. Upgrade to HD (from $9.99) to download and share the high-resolution portrait.",
+      text: HOW_IT_WORKS_SCHEMA_STEP_TEXT,
       position: 3,
     },
   ],
@@ -66,11 +70,10 @@ const steps = [
     icon: Share2,
     step: "3",
     title: "Preview, Upgrade, and Share",
-    description:
-      "Get an instant free preview of your baby's portrait. Upgrade to HD (from $9.99) for the full high-resolution download. Send to family and friends with a unique shareable link.",
+    description: HOW_IT_WORKS_ROUTE_STEP_DESCRIPTION,
     tips: [
       "Free: get an instant preview",
-      "HD (from $9.99): full high-resolution download",
+      HOW_IT_WORKS_HD_TIP,
       "Share: unique link for family and friends",
     ],
   },

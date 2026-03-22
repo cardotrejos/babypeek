@@ -5,6 +5,7 @@ import { SiteFooter } from "@/components/seo/footer";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { FAQ_PRICING_ANSWER } from "./marketing-pricing";
 
 export const Route = createFileRoute("/faq")({
   component: FaqPage,
@@ -13,8 +14,7 @@ export const Route = createFileRoute("/faq")({
 const faqs = [
   {
     question: "How much does BabyPeek cost?",
-    answer:
-      "BabyPeek has three plans: Basic at $9.99 (1 HD portrait), Plus at $14.99 (all 4 HD portraits + email delivery), and Pro at $24.99 (all 4 portraits + print-ready resolution + priority processing). Every plan is a one-time purchase — no subscription. You can preview your portrait for free before deciding.",
+    answer: FAQ_PRICING_ANSWER,
   },
   {
     question: "How accurate is BabyPeek's AI baby prediction?",

@@ -4,53 +4,19 @@ import { CheckCircle2 } from "lucide-react";
 
 import { SiteFooter } from "@/components/seo/footer";
 import { Button } from "@/components/ui/button";
+import { PRICING_TIERS } from "@/lib/pricing";
 import { cn } from "@/lib/utils";
-
+import {
+  PRICING_COMPARISON_STARTING_PRICE,
+  PRICING_PAGE_DESCRIPTION,
+  PRICING_PAGE_OG_DESCRIPTION,
+  PRICING_PAGE_TITLE,
+  PRICING_PRODUCT_SCHEMA,
+} from "./marketing-pricing";
 
 export const Route = createFileRoute("/pricing")({
   component: PricingPage,
 });
-
-const productSchema = {
-  "@context": "https://schema.org",
-  "@type": "Product",
-  name: "BabyPeek AI Baby Portrait",
-  description: "High-definition AI baby portrait generated from your 4D ultrasound image.",
-  offers: [
-    {
-      "@type": "Offer",
-      name: "Free Preview",
-      price: "0",
-      priceCurrency: "USD",
-      description: "Free low-resolution baby portrait preview",
-    },
-    {
-      "@type": "Offer",
-      name: "Basic",
-      price: "9.99",
-      priceCurrency: "USD",
-      description: "1 HD portrait — one-time purchase",
-    },
-    {
-      "@type": "Offer",
-      name: "Plus",
-      price: "14.99",
-      priceCurrency: "USD",
-      description: "All 4 HD portraits + email delivery — one-time purchase",
-    },
-    {
-      "@type": "Offer",
-      name: "Pro",
-      price: "24.99",
-      priceCurrency: "USD",
-      description: "All 4 HD portraits + print-ready resolution + priority processing — one-time purchase",
-    },
-  ],
-  brand: {
-    "@type": "Brand",
-    name: "BabyPeek",
-  },
-};
 
 const freeFeatures = [
   "Upload your 4D ultrasound",
@@ -59,32 +25,10 @@ const freeFeatures = [
   "No account needed",
 ];
 
-const basicFeatures = [
-  "1 HD portrait (your pick)",
-  "No watermarks",
-  "Instant download",
-];
-
-const plusFeatures = [
-  "All 4 HD portraits",
-  "No watermarks",
-  "Instant download",
-  "Email delivery",
-];
-
-const proFeatures = [
-  "All 4 HD portraits",
-  "No watermarks",
-  "Instant download",
-  "Email delivery",
-  "Print-ready resolution (300 DPI)",
-  "Priority processing",
-];
-
 const comparisonRows = [
   {
     feature: "Starting price",
-    babypeek: "From $9.99",
+    babypeek: PRICING_COMPARISON_STARTING_PRICE,
     traditional: "$50–$200",
     otherAi: "$15–$30",
   },
@@ -121,26 +65,30 @@ const comparisonRows = [
 ];
 
 export function PricingPage() {
+  const basicTier = PRICING_TIERS.basic;
+  const plusTier = PRICING_TIERS.plus;
+  const proTier = PRICING_TIERS.pro;
+
   return (
     <>
       <Helmet>
-        <title>BabyPeek Pricing - Free Preview, HD From $9.99</title>
+        <title>{PRICING_PAGE_TITLE}</title>
         <meta
           name="description"
-          content="Get your baby's AI portrait free in preview quality. Upgrade to HD from $9.99. Basic, Plus, and Pro plans available. No subscription. No hidden fees."
+          content={PRICING_PAGE_DESCRIPTION}
         />
         <link rel="canonical" href="https://babypeek.io/pricing" />
-        <meta property="og:title" content="BabyPeek Pricing - Free Preview, HD From $9.99" />
+        <meta property="og:title" content={PRICING_PAGE_TITLE} />
         <meta
           property="og:description"
-          content="Get your baby's AI portrait free in preview quality. Upgrade to HD from $9.99. No subscription."
+          content={PRICING_PAGE_OG_DESCRIPTION}
         />
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://babypeek.io/pricing" />
       </Helmet>
 
       <Helmet>
-        <script type="application/ld+json">{JSON.stringify(productSchema)}</script>
+        <script type="application/ld+json">{JSON.stringify(PRICING_PRODUCT_SCHEMA)}</script>
       </Helmet>
 
       <div className="min-h-screen bg-cream">
@@ -209,16 +157,16 @@ export function PricingPage() {
             <div className="rounded-2xl border border-charcoal/10 bg-white/80 backdrop-blur-sm p-6 shadow-sm">
               <div className="flex items-baseline justify-between gap-4 mb-4">
                 <div>
-                  <h2 className="font-display text-xl text-charcoal">Basic</h2>
+                  <h2 className="font-display text-xl text-charcoal">{basicTier.name}</h2>
                   <p className="text-sm text-warm-gray mt-1">One-time purchase. No subscription.</p>
                 </div>
                 <div className="text-right">
-                  <div className="font-display text-3xl text-charcoal">$9.99</div>
+                  <div className="font-display text-3xl text-charcoal">{basicTier.priceDisplay}</div>
                   <div className="text-xs text-warm-gray">one-time</div>
                 </div>
               </div>
               <ul className="space-y-2 mb-6">
-                {basicFeatures.map((f) => (
+                {basicTier.features.map((f) => (
                   <li key={f} className="flex items-center gap-2 text-sm text-warm-gray">
                     <CheckCircle2 className="w-4 h-4 text-coral shrink-0" />
                     {f}
@@ -247,16 +195,16 @@ export function PricingPage() {
               </div>
               <div className="flex items-baseline justify-between gap-4 mb-4">
                 <div>
-                  <h2 className="font-display text-xl text-charcoal">Plus</h2>
+                  <h2 className="font-display text-xl text-charcoal">{plusTier.name}</h2>
                   <p className="text-sm text-warm-gray mt-1">One-time purchase. No subscription.</p>
                 </div>
                 <div className="text-right">
-                  <div className="font-display text-3xl text-charcoal">$14.99</div>
+                  <div className="font-display text-3xl text-charcoal">{plusTier.priceDisplay}</div>
                   <div className="text-xs text-warm-gray">one-time</div>
                 </div>
               </div>
               <ul className="space-y-2 mb-6">
-                {plusFeatures.map((f) => (
+                {plusTier.features.map((f) => (
                   <li key={f} className="flex items-center gap-2 text-sm text-warm-gray">
                     <CheckCircle2 className="w-4 h-4 text-coral shrink-0" />
                     {f}
@@ -280,16 +228,16 @@ export function PricingPage() {
             <div className="rounded-2xl border border-charcoal/10 bg-white/80 backdrop-blur-sm p-6 shadow-sm">
               <div className="flex items-baseline justify-between gap-4 mb-4">
                 <div>
-                  <h2 className="font-display text-xl text-charcoal">Pro</h2>
+                  <h2 className="font-display text-xl text-charcoal">{proTier.name}</h2>
                   <p className="text-sm text-warm-gray mt-1">One-time purchase. No subscription.</p>
                 </div>
                 <div className="text-right">
-                  <div className="font-display text-3xl text-charcoal">$24.99</div>
+                  <div className="font-display text-3xl text-charcoal">{proTier.priceDisplay}</div>
                   <div className="text-xs text-warm-gray">one-time</div>
                 </div>
               </div>
               <ul className="space-y-2 mb-6">
-                {proFeatures.map((f) => (
+                {proTier.features.map((f) => (
                   <li key={f} className="flex items-center gap-2 text-sm text-warm-gray">
                     <CheckCircle2 className="w-4 h-4 text-coral shrink-0" />
                     {f}
