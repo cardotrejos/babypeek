@@ -11,7 +11,7 @@ import {
 } from "@/components/landing";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { PRICE_DISPLAY } from "@/lib/pricing";
+import { PRICE_DISPLAY, PRICING_TIERS } from "@/lib/pricing";
 
 // 🧪 A/B Testing Experiments
 import { MobileStickyCTA, TrustBadges } from "@/components/experiments";
@@ -48,7 +48,7 @@ function LandingPage() {
       {
         "@type": "Offer",
         "name": "HD Portrait",
-        "price": "9.99",
+        "price": (PRICING_TIERS.basic.priceCents / 100).toFixed(2),
         "priceCurrency": "USD",
         "description": "High-definition baby portrait download",
       },
@@ -61,13 +61,13 @@ function LandingPage() {
         <title>BabyPeek - See Your Baby's Face Before Birth | AI Ultrasound Portrait</title>
         <meta
           name="description"
-          content="Upload your 4D ultrasound and get a realistic AI portrait of your baby in ~60 seconds. Free preview, HD $9.99. Private & secure."
+          content={`Upload your 4D ultrasound and get a realistic AI portrait of your baby in ~60 seconds. Free preview, HD ${PRICE_DISPLAY}. Private & secure.`}
         />
         <link rel="canonical" href="https://babypeek.io/" />
         <meta property="og:title" content="BabyPeek - See Your Baby's Face Before Birth" />
         <meta
           property="og:description"
-          content="Upload your 4D ultrasound and get a realistic AI portrait of your baby in ~60 seconds. Free preview, HD $9.99."
+          content={`Upload your 4D ultrasound and get a realistic AI portrait of your baby in ~60 seconds. Free preview, HD ${PRICE_DISPLAY}.`}
         />
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://babypeek.io/" />
