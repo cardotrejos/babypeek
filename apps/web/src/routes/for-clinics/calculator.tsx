@@ -230,7 +230,7 @@ export function CalculatorPage() {
                   { label: "Per day", revenue: paidPortraitsPerDay * pricePerPortrait, profit: paidPortraitsPerDay * revenuePerPortrait },
                   { label: "Per week", revenue: weeklyRevenue, profit: weeklyRevenue - (paidPortraitsPerDay * daysPerWeek * 3) },
                   { label: "Per month", revenue: monthlyRevenue, profit: monthlyRevenue - (paidPortraitsPerDay * daysPerWeek * 4 * 3) },
-                  { label: "Per year", revenue: annualRevenue, profit: annualRevenue - (paidPortraitsPerDay * daysPerWeek * 52 * 3) },
+                  { label: "Per year", revenue: annualRevenue, profit: annualRevenue - (paidPortraitsPerDay * daysPerWeek * 48 * 3) },
                 ].map(({ label, revenue, profit }) => (
                   <tr key={label} className="border-t border-charcoal/10">
                     <td className="px-4 py-3 text-charcoal font-medium">{label}</td>
