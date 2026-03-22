@@ -12,30 +12,16 @@ interface FaqSectionProps {
   className?: string;
 }
 
-/**
- * FaqSection Component
- * Displays expandable FAQ items with accordion behavior.
- *
- * Features:
- * - Single item open at a time (type="single")
- * - Keyboard accessible (Tab, Enter/Space)
- * - Screen reader compatible (aria-expanded)
- * - Warm, conversational copy tone
- * - Responsive layout
- *
- * @see Story 2.5 - FAQ Accordion
- */
-
 const faqItems = [
   {
     question: "How accurate is BabyPeek?",
     answer:
-      "BabyPeek creates a realistic AI interpretation based on what’s visible in your 4D ultrasound. Results vary by image quality and how clearly the face is shown. It’s meant as a fun preview—not a medical or genetic prediction.",
+      "BabyPeek creates a realistic AI interpretation based on what's visible in your 4D ultrasound. Results vary by image quality and how clearly the face is shown. It's meant as a fun preview—not a medical or genetic prediction.",
   },
   {
     question: "How does BabyPeek work?",
     answer:
-      "Upload a clear 4D ultrasound image, and our AI transforms it into a realistic baby portrait. You’ll see a free preview first, then you can share it or upgrade to the HD download.",
+      "Upload a clear 4D ultrasound image, and our AI transforms it into a realistic baby portrait. You'll see a free preview first, then you can share it or upgrade to the HD download.",
   },
   {
     question: "What kind of ultrasound works best?",
@@ -50,7 +36,7 @@ const faqItems = [
   {
     question: "Why can't the AI predict skin color or hair?",
     answer:
-      "Ultrasound images only show shapes and structures - they don't contain color information. The AI focuses on transforming the facial features you can see in the ultrasound into a realistic portrait, but it cannot determine genetic traits like skin tone, eye color, or hair color.",
+      "Ultrasound images only show shapes and structures — they don't contain color information. The AI focuses on transforming the facial features you can see in the ultrasound into a realistic portrait, but it cannot determine genetic traits like skin tone, eye color, or hair color.",
   },
   {
     question: "What if my ultrasound quality is low?",
@@ -59,7 +45,7 @@ const faqItems = [
   },
   {
     question: "How much does it cost?",
-    answer: `You can preview your baby's portrait for free. The HD download is ${PRICE_DISPLAY} (one-time purchase, no subscription). We also offer gifting so family can purchase it for you.`,
+    answer: `You can preview your baby's portrait for free. The HD download starts at ${PRICE_DISPLAY} (one-time purchase, no subscription). We also offer gifting so family can purchase it for you.`,
   },
   {
     question: "Is my data private?",
@@ -75,30 +61,40 @@ const faqItems = [
 
 export function FaqSection({ id, className }: FaqSectionProps) {
   return (
-    <section id={id} className={cn("py-12", className)}>
-      <h2 className="font-display text-2xl text-charcoal text-center mb-8">
-        Questions? We've got answers
-      </h2>
+    <section id={id} className={cn("py-20 sm:py-28", className)}>
+      <div className="max-w-2xl mx-auto px-5 sm:px-8">
+        <p className="text-center text-xs font-medium tracking-[0.2em] uppercase text-coral mb-4">
+          FAQ
+        </p>
+        <h2 className="font-display text-3xl sm:text-4xl text-charcoal text-center mb-12 font-medium">
+          Questions? We've got answers
+        </h2>
 
-      <Accordion className="w-full">
-        {faqItems.map((item, index) => (
-          <AccordionItem key={index} value={index}>
-            <AccordionTrigger
-              className={cn(
-                "text-left text-base font-semibold text-charcoal",
-                "hover:text-coral hover:no-underline",
-                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-coral focus-visible:ring-offset-2",
-                "min-h-[48px] py-4",
-              )}
+        <Accordion className="w-full">
+          {faqItems.map((item, index) => (
+            <AccordionItem
+              key={index}
+              value={index}
+              className="border-b border-charcoal/[0.06] last:border-b-0"
             >
-              {item.question}
-            </AccordionTrigger>
-            <AccordionContent className="text-warm-gray text-sm leading-relaxed pb-4">
-              {item.answer}
-            </AccordionContent>
-          </AccordionItem>
-        ))}
-      </Accordion>
+              <AccordionTrigger
+                className={cn(
+                  "text-left text-base font-medium text-charcoal",
+                  "hover:text-coral hover:no-underline",
+                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-coral focus-visible:ring-offset-2",
+                  "min-h-[48px] py-5",
+                  "transition-colors duration-300",
+                )}
+              >
+                {item.question}
+              </AccordionTrigger>
+              <AccordionContent className="text-warm-gray text-[15px] leading-relaxed pb-5">
+                {item.answer}
+              </AccordionContent>
+            </AccordionItem>
+          ))}
+        </Accordion>
+      </div>
     </section>
   );
 }

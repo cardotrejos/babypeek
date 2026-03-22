@@ -16,7 +16,7 @@ const comparisonData = [
     tools: ["BabyPeek"],
     input: "4D / HD / 3D ultrasound image",
     accuracy: "High — uses real fetal features",
-    price: "Free preview / $9.99 HD",
+    price: "Free preview / from $9.99",
     speed: "~60 seconds",
     note: "Only tool in this category",
   },

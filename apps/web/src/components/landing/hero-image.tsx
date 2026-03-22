@@ -4,40 +4,55 @@ interface HeroImageProps {
   className?: string;
 }
 
-/**
- * HeroImage Component
- * Displays a before/after comparison for the landing page hero section.
- *
- * Uses real example images from 4D ultrasounds.
- * Optimized for LCP with eager loading and high fetch priority.
- *
- * @see Story 2.2 - Hero Section with Value Proposition
- */
 export function HeroImage({ className }: HeroImageProps) {
   return (
-    <div className={cn("relative aspect-video rounded-xl overflow-hidden", "shadow-lg", className)}>
-      {/* Main "After" image - the result */}
-      <img
-        src="/images/examples/result-1.jpeg"
-        alt="AI-generated photorealistic baby portrait from 4D ultrasound"
-        className="w-full h-full object-cover"
-        loading="eager"
-        fetchPriority="high"
+    <div className={cn("relative", className)}>
+      {/* Decorative blob behind the image */}
+      <div
+        className="absolute -inset-4 sm:-inset-8 bg-rose/40 animate-blob opacity-60 blur-2xl"
+        aria-hidden="true"
       />
 
-      {/* Before image in corner for comparison */}
-      <div className="absolute bottom-4 left-4 w-20 h-20 sm:w-24 sm:h-24 rounded-lg overflow-hidden shadow-md border-2 border-white">
-        <img
-          src="/images/examples/4d-ultra.jpeg"
-          alt="Original 4D ultrasound image"
-          className="w-full h-full object-cover"
-          loading="eager"
-        />
-      </div>
+      <div className="relative grid grid-cols-[1fr_auto_1fr] items-center gap-3 sm:gap-5">
+        {/* Before: Ultrasound */}
+        <div className="relative aspect-[3/4] rounded-2xl overflow-hidden shadow-xl ring-1 ring-charcoal/5">
+          <img
+            src="/images/examples/4d-ultra.jpeg"
+            alt="Original 4D ultrasound image"
+            className="w-full h-full object-cover"
+            loading="eager"
+            fetchPriority="high"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-charcoal/30 to-transparent" />
+          <span className="absolute bottom-3 left-3 px-3 py-1 bg-white/90 backdrop-blur-sm text-charcoal text-xs font-medium rounded-full">
+            4D Ultrasound
+          </span>
+        </div>
 
-      {/* Label */}
-      <div className="absolute bottom-4 right-4 px-3 py-1.5 bg-coral/90 rounded-lg shadow-md">
-        <span className="text-white font-body text-xs font-medium">Before → After</span>
+        {/* Arrow connector */}
+        <div className="flex flex-col items-center gap-2 animate-float">
+          <svg width="32" height="32" viewBox="0 0 32 32" fill="none" className="text-coral" aria-hidden="true">
+            <path d="M6 16h16m0 0l-6-6m6 6l-6 6" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+          <span className="text-[10px] font-medium text-warm-gray tracking-widest uppercase">
+            AI
+          </span>
+        </div>
+
+        {/* After: Baby Portrait */}
+        <div className="relative aspect-[3/4] rounded-2xl overflow-hidden shadow-2xl ring-1 ring-coral/10">
+          <img
+            src="/images/examples/result-1.jpeg"
+            alt="AI-generated realistic baby portrait from 4D ultrasound"
+            className="w-full h-full object-cover"
+            loading="eager"
+            fetchPriority="high"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-charcoal/20 to-transparent" />
+          <span className="absolute bottom-3 left-3 px-3 py-1 bg-coral/90 backdrop-blur-sm text-white text-xs font-medium rounded-full">
+            Baby Portrait
+          </span>
+        </div>
       </div>
     </div>
   );

@@ -4,39 +4,19 @@ import { CheckCircle2 } from "lucide-react";
 
 import { SiteFooter } from "@/components/seo/footer";
 import { Button } from "@/components/ui/button";
+import { PRICING_TIERS } from "@/lib/pricing";
 import { cn } from "@/lib/utils";
-import { PRICE_DISPLAY, PRICE_CENTS } from "@/lib/pricing";
+import {
+  PRICING_COMPARISON_STARTING_PRICE,
+  PRICING_PAGE_DESCRIPTION,
+  PRICING_PAGE_OG_DESCRIPTION,
+  PRICING_PAGE_TITLE,
+  PRICING_PRODUCT_SCHEMA,
+} from "./marketing-pricing";
 
 export const Route = createFileRoute("/pricing")({
   component: PricingPage,
 });
-
-const productSchema = {
-  "@context": "https://schema.org",
-  "@type": "Product",
-  name: "BabyPeek HD Portrait",
-  description: "High-definition AI baby portrait generated from your 4D ultrasound image.",
-  offers: [
-    {
-      "@type": "Offer",
-      name: "Free Preview",
-      price: "0",
-      priceCurrency: "USD",
-      description: "Free low-resolution baby portrait preview",
-    },
-    {
-      "@type": "Offer",
-      name: "HD Portrait",
-      price: (PRICE_CENTS / 100).toFixed(2),
-      priceCurrency: "USD",
-      description: "High-definition baby portrait download — one-time purchase",
-    },
-  ],
-  brand: {
-    "@type": "Brand",
-    name: "BabyPeek",
-  },
-};
 
 const freeFeatures = [
   "Upload your 4D ultrasound",
@@ -45,17 +25,10 @@ const freeFeatures = [
   "No account needed",
 ];
 
-const hdFeatures = [
-  "Full high-resolution download",
-  "Print-ready quality (300 DPI)",
-  "Shareable link for family",
-  "Unlimited re-downloads",
-];
-
 const comparisonRows = [
   {
     feature: "Starting price",
-    babypeek: "Free",
+    babypeek: PRICING_COMPARISON_STARTING_PRICE,
     traditional: "$50–$200",
     otherAi: "$15–$30",
   },
@@ -92,26 +65,30 @@ const comparisonRows = [
 ];
 
 export function PricingPage() {
+  const basicTier = PRICING_TIERS.basic;
+  const plusTier = PRICING_TIERS.plus;
+  const proTier = PRICING_TIERS.pro;
+
   return (
     <>
       <Helmet>
-        <title>{`BabyPeek Pricing - Free Preview, HD From ${PRICE_DISPLAY}`}</title>
+        <title>{PRICING_PAGE_TITLE}</title>
         <meta
           name="description"
-          content={`Get your baby's AI portrait free in preview quality. Upgrade to HD for ${PRICE_DISPLAY}. No subscription. See pricing options.`}
+          content={PRICING_PAGE_DESCRIPTION}
         />
         <link rel="canonical" href="https://babypeek.io/pricing" />
-        <meta property="og:title" content={`BabyPeek Pricing - Free Preview, HD From ${PRICE_DISPLAY}`} />
+        <meta property="og:title" content={PRICING_PAGE_TITLE} />
         <meta
           property="og:description"
-          content={`Get your baby's AI portrait free in preview quality. Upgrade to HD for ${PRICE_DISPLAY}. No subscription.`}
+          content={PRICING_PAGE_OG_DESCRIPTION}
         />
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://babypeek.io/pricing" />
       </Helmet>
 
       <Helmet>
-        <script type="application/ld+json">{JSON.stringify(productSchema)}</script>
+        <script type="application/ld+json">{JSON.stringify(PRICING_PRODUCT_SCHEMA)}</script>
       </Helmet>
 
       <div className="min-h-screen bg-cream">
@@ -141,24 +118,57 @@ export function PricingPage() {
             Start free. Upgrade only if you love it.
           </p>
 
+          {/* Free preview header */}
+          <div className="rounded-2xl border border-charcoal/10 bg-white/70 backdrop-blur-sm p-6 shadow-sm mb-4">
+            <div className="flex items-baseline justify-between gap-4 mb-4">
+              <div>
+                <h2 className="font-display text-xl text-charcoal">Free Preview</h2>
+                <p className="text-sm text-warm-gray mt-1">No commitment. No credit card.</p>
+              </div>
+              <div className="text-right">
+                <div className="font-display text-3xl text-charcoal">$0</div>
+                <div className="text-xs text-warm-gray">forever</div>
+              </div>
+            </div>
+            <ul className="space-y-2 mb-6">
+              {freeFeatures.map((f) => (
+                <li key={f} className="flex items-center gap-2 text-sm text-warm-gray">
+                  <CheckCircle2 className="w-4 h-4 text-success shrink-0" />
+                  {f}
+                </li>
+              ))}
+            </ul>
+            <Button
+              asChild
+              className={cn(
+                "w-full text-lg font-semibold",
+                "bg-coral hover:bg-coral-hover text-white",
+                "shadow-md hover:shadow-lg",
+                "transition-all duration-200",
+              )}
+            >
+              <Link to="/">Upload & Preview Free →</Link>
+            </Button>
+          </div>
+
           {/* Pricing cards */}
           <div className="space-y-4">
-            {/* Free preview card */}
-            <div className="rounded-2xl border border-charcoal/10 bg-white/70 backdrop-blur-sm p-6 shadow-sm">
+            {/* Basic */}
+            <div className="rounded-2xl border border-charcoal/10 bg-white/80 backdrop-blur-sm p-6 shadow-sm">
               <div className="flex items-baseline justify-between gap-4 mb-4">
                 <div>
-                  <h2 className="font-display text-xl text-charcoal">Free Preview</h2>
-                  <p className="text-sm text-warm-gray mt-1">No commitment. No credit card.</p>
+                  <h2 className="font-display text-xl text-charcoal">{basicTier.name}</h2>
+                  <p className="text-sm text-warm-gray mt-1">One-time purchase. No subscription.</p>
                 </div>
                 <div className="text-right">
-                  <div className="font-display text-3xl text-charcoal">$0</div>
-                  <div className="text-xs text-warm-gray">forever</div>
+                  <div className="font-display text-3xl text-charcoal">{basicTier.priceDisplay}</div>
+                  <div className="text-xs text-warm-gray">one-time</div>
                 </div>
               </div>
               <ul className="space-y-2 mb-6">
-                {freeFeatures.map((f) => (
+                {basicTier.features.map((f) => (
                   <li key={f} className="flex items-center gap-2 text-sm text-warm-gray">
-                    <CheckCircle2 className="w-4 h-4 text-success shrink-0" />
+                    <CheckCircle2 className="w-4 h-4 text-coral shrink-0" />
                     {f}
                   </li>
                 ))}
@@ -167,16 +177,16 @@ export function PricingPage() {
                 asChild
                 className={cn(
                   "w-full text-lg font-semibold",
-                  "bg-coral hover:bg-coral-hover text-white",
+                  "bg-charcoal hover:bg-charcoal/80 text-white",
                   "shadow-md hover:shadow-lg",
                   "transition-all duration-200",
                 )}
               >
-                <Link to="/">Upload & Preview Free →</Link>
+                <Link to="/">Get Your Free Preview →</Link>
               </Button>
             </div>
 
-            {/* HD Portrait card */}
+            {/* Plus — Most Popular */}
             <div className="rounded-2xl border-2 border-coral bg-white/80 backdrop-blur-sm p-6 shadow-md relative">
               <div className="absolute -top-3 left-6">
                 <span className="bg-coral text-white text-xs font-semibold px-3 py-1 rounded-full">
@@ -185,16 +195,16 @@ export function PricingPage() {
               </div>
               <div className="flex items-baseline justify-between gap-4 mb-4">
                 <div>
-                  <h2 className="font-display text-xl text-charcoal">HD Portrait</h2>
+                  <h2 className="font-display text-xl text-charcoal">{plusTier.name}</h2>
                   <p className="text-sm text-warm-gray mt-1">One-time purchase. No subscription.</p>
                 </div>
                 <div className="text-right">
-                  <div className="font-display text-3xl text-charcoal">{PRICE_DISPLAY}</div>
+                  <div className="font-display text-3xl text-charcoal">{plusTier.priceDisplay}</div>
                   <div className="text-xs text-warm-gray">one-time</div>
                 </div>
               </div>
               <ul className="space-y-2 mb-6">
-                {hdFeatures.map((f) => (
+                {plusTier.features.map((f) => (
                   <li key={f} className="flex items-center gap-2 text-sm text-warm-gray">
                     <CheckCircle2 className="w-4 h-4 text-coral shrink-0" />
                     {f}
@@ -212,9 +222,39 @@ export function PricingPage() {
               >
                 <Link to="/">Get Your Free Preview →</Link>
               </Button>
-              <p className="mt-3 text-center text-xs text-warm-gray">
-                Upgrade to HD after you see your free preview
-              </p>
+            </div>
+
+            {/* Pro */}
+            <div className="rounded-2xl border border-charcoal/10 bg-white/80 backdrop-blur-sm p-6 shadow-sm">
+              <div className="flex items-baseline justify-between gap-4 mb-4">
+                <div>
+                  <h2 className="font-display text-xl text-charcoal">{proTier.name}</h2>
+                  <p className="text-sm text-warm-gray mt-1">One-time purchase. No subscription.</p>
+                </div>
+                <div className="text-right">
+                  <div className="font-display text-3xl text-charcoal">{proTier.priceDisplay}</div>
+                  <div className="text-xs text-warm-gray">one-time</div>
+                </div>
+              </div>
+              <ul className="space-y-2 mb-6">
+                {proTier.features.map((f) => (
+                  <li key={f} className="flex items-center gap-2 text-sm text-warm-gray">
+                    <CheckCircle2 className="w-4 h-4 text-coral shrink-0" />
+                    {f}
+                  </li>
+                ))}
+              </ul>
+              <Button
+                asChild
+                className={cn(
+                  "w-full text-lg font-semibold",
+                  "bg-charcoal hover:bg-charcoal/80 text-white",
+                  "shadow-md hover:shadow-lg",
+                  "transition-all duration-200",
+                )}
+              >
+                <Link to="/">Get Your Free Preview →</Link>
+              </Button>
             </div>
           </div>
 
@@ -296,6 +336,9 @@ export function PricingPage() {
             </Button>
             <p className="mt-3 text-sm text-warm-gray">
               No credit card. No account required. Just upload and go.
+            </p>
+            <p className="mt-2 text-xs text-warm-gray">
+              No subscriptions. No hidden fees. Secure checkout via Stripe.
             </p>
           </div>
 

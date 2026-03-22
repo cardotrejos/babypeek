@@ -31,31 +31,6 @@ const integrationOptions = [
   },
 ];
 
-const pricingPlans = [
-  {
-    name: "Starter",
-    price: "$5",
-    per: "per portrait",
-    includes: ["Web upload", "Email delivery", "BabyPeek branding"],
-    cta: "Start Free Pilot",
-  },
-  {
-    name: "Professional",
-    price: "$3",
-    per: "per portrait",
-    includes: ["API access", "Custom delivery", "Your branding"],
-    cta: "Start Free Pilot",
-    popular: true,
-  },
-  {
-    name: "Enterprise",
-    price: "Custom",
-    per: "volume pricing",
-    includes: ["White-label", "Volume discounts", "Dedicated support"],
-    cta: "Schedule a Call",
-  },
-];
-
 const revenueTable = [
   { scans: 5, price: 15, monthly: 1500, annual: 18000 },
   { scans: 10, price: 15, monthly: 3000, annual: 36000 },
@@ -330,61 +305,48 @@ export function ForClinicsPage() {
             </div>
           </section>
 
-          {/* Clinic Pricing */}
+          {/* Contact Us */}
           <section className="mb-12">
             <h2 className="font-display text-2xl text-charcoal mb-6">
-              Pricing for Clinics
+              Let's Build a Plan for Your Clinic
             </h2>
-            <div className="space-y-3">
-              {pricingPlans.map(({ name, price, per, includes, cta, popular }) => (
-                <div
-                  key={name}
+            <div className="rounded-2xl border-2 border-coral bg-white/80 p-6">
+              <p className="text-charcoal text-base leading-relaxed mb-4">
+                Interested in offering AI baby portraits at your clinic?
+              </p>
+              <p className="text-charcoal text-base leading-relaxed mb-6">
+                Get in touch and we'll build a custom plan for your practice.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <Button
+                  asChild
                   className={cn(
-                    "rounded-2xl border p-5",
-                    popular
-                      ? "border-2 border-coral bg-white/80"
-                      : "border-charcoal/10 bg-white/70",
+                    "flex-1 text-lg font-semibold",
+                    "bg-coral hover:bg-coral-hover text-white",
+                    "shadow-lg hover:shadow-xl",
+                    "transition-all duration-200",
                   )}
                 >
-                  {popular && (
-                    <span className="inline-block bg-coral text-white text-xs font-semibold px-2 py-0.5 rounded-full mb-2">
-                      Most Popular
-                    </span>
+                  <a href="mailto:clinics@babypeek.io">
+                    Contact Us
+                  </a>
+                </Button>
+                <Button
+                  asChild
+                  variant="outline"
+                  className={cn(
+                    "flex-1 text-lg font-semibold border-charcoal/20",
+                    "hover:bg-charcoal/5 text-charcoal",
+                    "transition-all duration-200",
                   )}
-                  <div className="flex items-baseline gap-2 mb-3">
-                    <span className="font-display text-2xl text-charcoal">{price}</span>
-                    <span className="text-warm-gray text-sm">{per}</span>
-                  </div>
-                  <ul className="space-y-1 mb-4">
-                    {includes.map((f) => (
-                      <li key={f} className="flex items-center gap-2 text-sm text-warm-gray">
-                        <CheckCircle2 className="w-4 h-4 text-coral shrink-0" />
-                        {f}
-                      </li>
-                    ))}
-                  </ul>
-                  <Button
-                    asChild
-                    size="sm"
-                    className={cn(
-                      "w-full font-semibold",
-                      popular
-                        ? "bg-coral hover:bg-coral-hover text-white"
-                        : "bg-charcoal hover:bg-charcoal/80 text-white",
-                    )}
-                  >
-                    {name === "Enterprise" ? (
-                      <a href="mailto:clinics@babypeek.io">{cta}</a>
-                    ) : (
-                      <Link to="/">{cta} →</Link>
-                    )}
-                  </Button>
-                </div>
-              ))}
+                >
+                  <a href="mailto:clinics@babypeek.io?subject=Schedule a Call">
+                    <Phone className="w-4 h-4 mr-2 inline" />
+                    Schedule a Call
+                  </a>
+                </Button>
+              </div>
             </div>
-            <p className="text-center text-sm text-warm-gray mt-4">
-              All plans include a <strong className="text-charcoal">free 30-day pilot with 20 portraits</strong>.
-            </p>
           </section>
 
           {/* Security summary */}

@@ -48,7 +48,7 @@ function SliderInput({
         className="w-full accent-coral h-2 rounded-full cursor-pointer"
         style={
           {
-            background: `linear-gradient(to right, #e8927c ${pct}%, #f5d6ce ${pct}%)`,
+            background: `linear-gradient(to right, var(--coral) ${pct}%, var(--rose) ${pct}%)`,
           } as React.CSSProperties
         }
       />
@@ -77,7 +77,6 @@ export function CalculatorPage() {
   const monthlyRevenue = weeklyRevenue * 4;
   const annualRevenue = weeklyRevenue * 52;
   const equivalentNewScans = (monthlyRevenue / pricePerPortrait).toFixed(0);
-  const revenuePerPortrait = pricePerPortrait - 3; // Professional plan $3/portrait
 
   return (
     <>
@@ -137,17 +136,11 @@ export function CalculatorPage() {
             <p className="text-white/80 text-sm mb-4">
               ${annualRevenue.toLocaleString("en-US", { maximumFractionDigits: 0 })} per year
             </p>
-            <div className="grid grid-cols-2 gap-3 mt-4 pt-4 border-t border-white/20">
-              <div>
-                <p className="text-white/70 text-xs mb-0.5">Per scan revenue</p>
-                <p className="font-display text-xl font-bold">
-                  ${(paidPortraitsPerDay * pricePerPortrait).toFixed(0)}/day
-                </p>
-              </div>
-              <div>
-                <p className="text-white/70 text-xs mb-0.5">Net per portrait*</p>
-                <p className="font-display text-xl font-bold">${revenuePerPortrait}/portrait</p>
-              </div>
+            <div className="mt-4 pt-4 border-t border-white/20">
+              <p className="text-white/70 text-xs mb-0.5">Per scan revenue</p>
+              <p className="font-display text-xl font-bold">
+                ${(paidPortraitsPerDay * pricePerPortrait).toFixed(0)}/day
+              </p>
             </div>
           </div>
 
@@ -211,7 +204,7 @@ export function CalculatorPage() {
 
             {/* Assumptions */}
             <p className="text-xs text-warm-gray mt-2">
-              * Assumes Professional plan ($3/portrait to BabyPeek). Based on 4 weeks/month.
+              * Contact us for volume pricing details. Based on 4 weeks/month.
             </p>
           </div>
 
@@ -222,23 +215,19 @@ export function CalculatorPage() {
                 <tr className="bg-coral-light">
                   <th className="text-left px-4 py-3 font-semibold text-charcoal">Period</th>
                   <th className="text-right px-4 py-3 font-semibold text-charcoal">Revenue</th>
-                  <th className="text-right px-4 py-3 font-semibold text-charcoal">Net Profit</th>
                 </tr>
               </thead>
               <tbody>
                 {[
-                  { label: "Per day", revenue: paidPortraitsPerDay * pricePerPortrait, profit: paidPortraitsPerDay * revenuePerPortrait },
-                  { label: "Per week", revenue: weeklyRevenue, profit: weeklyRevenue - (paidPortraitsPerDay * daysPerWeek * 3) },
-                  { label: "Per month", revenue: monthlyRevenue, profit: monthlyRevenue - (paidPortraitsPerDay * daysPerWeek * 4 * 3) },
-                  { label: "Per year", revenue: annualRevenue, profit: annualRevenue - (paidPortraitsPerDay * daysPerWeek * 52 * 3) },
-                ].map(({ label, revenue, profit }) => (
+                  { label: "Per day", revenue: paidPortraitsPerDay * pricePerPortrait },
+                  { label: "Per week", revenue: weeklyRevenue },
+                  { label: "Per month", revenue: monthlyRevenue },
+                  { label: "Per year", revenue: annualRevenue },
+                ].map(({ label, revenue }) => (
                   <tr key={label} className="border-t border-charcoal/10">
                     <td className="px-4 py-3 text-charcoal font-medium">{label}</td>
-                    <td className="px-4 py-3 text-right text-charcoal">
+                    <td className="px-4 py-3 text-right text-charcoal font-semibold">
                       ${revenue.toLocaleString("en-US", { maximumFractionDigits: 0 })}
-                    </td>
-                    <td className="px-4 py-3 text-right font-semibold text-coral">
-                      ${profit.toLocaleString("en-US", { maximumFractionDigits: 0 })}
                     </td>
                   </tr>
                 ))}

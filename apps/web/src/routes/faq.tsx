@@ -5,12 +5,17 @@ import { SiteFooter } from "@/components/seo/footer";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { FAQ_PRICING_ANSWER } from "./marketing-pricing";
 
 export const Route = createFileRoute("/faq")({
   component: FaqPage,
 });
 
 const faqs = [
+  {
+    question: "How much does BabyPeek cost?",
+    answer: FAQ_PRICING_ANSWER,
+  },
   {
     question: "How accurate is BabyPeek's AI baby prediction?",
     answer:
