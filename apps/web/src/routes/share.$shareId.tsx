@@ -1,4 +1,5 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
+import { Helmet } from "react-helmet-async";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
@@ -88,6 +89,9 @@ function SharePage() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-cream flex items-center justify-center p-4">
+        <Helmet>
+          <meta name="robots" content="noindex, nofollow" />
+        </Helmet>
         <div className="text-center space-y-4">
           <div className="size-12 animate-spin rounded-full border-4 border-coral border-t-transparent mx-auto" />
           <p className="font-body text-warm-gray">Loading portrait...</p>
@@ -103,6 +107,9 @@ function SharePage() {
 
   return (
     <div className="min-h-screen bg-cream">
+      <Helmet>
+        <meta name="robots" content="noindex, nofollow" />
+      </Helmet>
       <div className="max-w-md mx-auto px-4 py-8 space-y-6">
         {/* Header - AC-2: Contextual messaging */}
         <div className="text-center space-y-2">

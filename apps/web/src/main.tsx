@@ -1,6 +1,7 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { RouterProvider } from "@tanstack/react-router";
+import { HelmetProvider } from "react-helmet-async";
 import { getRouter } from "@/router";
 import { PostHogProvider, posthog } from "@/lib/posthog";
 import { ErrorBoundary } from "@/components/error-boundary";
@@ -168,9 +169,11 @@ function bootApp() {
     createRoot(rootElement).render(
       <StrictMode>
         <ErrorBoundary>
-          <PostHogProvider>
-            <RouterProvider router={router} />
-          </PostHogProvider>
+          <HelmetProvider>
+            <PostHogProvider>
+              <RouterProvider router={router} />
+            </PostHogProvider>
+          </HelmetProvider>
         </ErrorBoundary>
       </StrictMode>,
     );

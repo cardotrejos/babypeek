@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { Helmet } from "react-helmet-async";
 import {
   LandingLayout,
   HeroImage,
@@ -8,20 +9,12 @@ import {
   FaqSection,
   UploadSection,
 } from "@/components/landing";
-import { StructuredData } from "@/components/seo/structured-data";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { PRICE_DISPLAY } from "@/lib/pricing";
+import { PRICE_DISPLAY, PRICING_TIERS } from "@/lib/pricing";
 
 // 🧪 A/B Testing Experiments
 import { MobileStickyCTA, TrustBadges } from "@/components/experiments";
-
-// SEO constants - meta tags are in index.html for SPA
-const SEO = {
-  siteUrl: "https://babypeek.io/",
-  description:
-    "See your baby's face before birth. Upload a 4D ultrasound and get an AI-generated baby portrait in about 60 seconds. Free preview, private & secure.",
-} as const;
 
 export const Route = createFileRoute("/")({
   component: LandingPage,
@@ -36,14 +29,62 @@ function LandingPage() {
     }
   };
 
+  const softwareAppSchema = {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "BabyPeek",
+    "applicationCategory": "MultimediaApplication",
+    "operatingSystem": "Web",
+    "url": "https://babypeek.io",
+    "description": "Upload your 4D ultrasound and get a realistic AI portrait of your baby's face in approximately 60 seconds.",
+    "offers": [
+      {
+        "@type": "Offer",
+        "name": "Free Preview",
+        "price": "0",
+        "priceCurrency": "USD",
+        "description": "Free low-resolution baby portrait preview",
+      },
+      {
+        "@type": "Offer",
+        "name": "HD Portrait",
+        "price": (PRICING_TIERS.basic.priceCents / 100).toFixed(2),
+        "priceCurrency": "USD",
+        "description": "High-definition baby portrait download",
+      },
+    ],
+  };
+
   return (
+    <>
+      <Helmet>
+        <title>BabyPeek - See Your Baby's Face Before Birth | AI Ultrasound Portrait</title>
+        <meta
+          name="description"
+          content={`Upload your 4D ultrasound and get a realistic AI portrait of your baby in ~60 seconds. Free preview, HD ${PRICE_DISPLAY}. Private & secure.`}
+        />
+        <link rel="canonical" href="https://babypeek.io/" />
+        <meta property="og:title" content="BabyPeek - See Your Baby's Face Before Birth" />
+        <meta
+          property="og:description"
+          content={`Upload your 4D ultrasound and get a realistic AI portrait of your baby in ~60 seconds. Free preview, HD ${PRICE_DISPLAY}.`}
+        />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://babypeek.io/" />
+      </Helmet>
+
+      {/* SoftwareApplication JSON-LD schema for homepage */}
+      <Helmet>
+        <script type="application/ld+json">
+          {JSON.stringify(softwareAppSchema)}
+        </script>
+      </Helmet>
+
     <LandingLayout
       onCtaClick={handleCtaClick}
       ctaText="Try it free"
       ctaSubtext={`Free preview • HD download ${PRICE_DISPLAY}`}
     >
-      {/* JSON-LD Structured Data for SEO (AC2) */}
-      <StructuredData siteUrl={SEO.siteUrl} siteName="BabyPeek" description={SEO.description} />
       {/* Hero Section - Story 2.2 Implementation */}
       <section id="hero" className="min-h-[60vh] flex flex-col justify-center py-8">
         {/* Headline - AC1 */}
@@ -122,5 +163,6 @@ function LandingPage() {
       {/* 🧪 Mobile Sticky CTA Experiment - Always visible on mobile */}
       <MobileStickyCTA />
     </LandingLayout>
+    </>
   );
 }

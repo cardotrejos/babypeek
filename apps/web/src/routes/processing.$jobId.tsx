@@ -1,4 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { Helmet } from "react-helmet-async";
 import { useState, useEffect, useCallback, useRef } from "react";
 import { z } from "zod";
 import { updateJobStatus, updateJobResult } from "@/lib/session";
@@ -457,6 +458,9 @@ function ProcessingPage() {
   if (isAuthLoading && state === "idle") {
     return (
       <div className="min-h-screen bg-cream flex items-center justify-center">
+        <Helmet>
+          <meta name="robots" content="noindex, nofollow" />
+        </Helmet>
         <div className="size-12 animate-spin rounded-full border-4 border-coral border-t-transparent" />
       </div>
     );
@@ -465,6 +469,10 @@ function ProcessingPage() {
   // Show prompt selector when ?prompts=true is in URL
   if (showPromptSelector && state === "idle" && !devManualStart) {
     return (
+      <>
+        <Helmet>
+          <meta name="robots" content="noindex, nofollow" />
+        </Helmet>
       <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-cream">
         <div className="max-w-md w-full text-center space-y-6">
           <h1 className="font-display text-2xl text-charcoal">Dev Mode: Select Prompt</h1>
@@ -514,6 +522,7 @@ function ProcessingPage() {
           <p className="text-xs text-warm-gray/70">Job ID: {jobId}</p>
         </div>
       </div>
+      </>
     );
   }
 
@@ -526,6 +535,9 @@ function ProcessingPage() {
   ) {
     return (
       <>
+        <Helmet>
+          <meta name="robots" content="noindex, nofollow" />
+        </Helmet>
         <ProcessingScreen
           stage={stage}
           progress={state === "idle" || state === "starting" ? 0 : progress}
@@ -551,6 +563,10 @@ function ProcessingPage() {
 
   // Non-processing states (complete, retrying, timeout, error)
   return (
+      <>
+        <Helmet>
+          <meta name="robots" content="noindex, nofollow" />
+        </Helmet>
     <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-cream">
       <div className="max-w-md w-full text-center space-y-6">
         {/* Complete state */}
@@ -704,6 +720,7 @@ function ProcessingPage() {
         )}
       </div>
     </div>
+      </>
   );
 }
 

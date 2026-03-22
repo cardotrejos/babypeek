@@ -1,4 +1,5 @@
 import { useNavigate } from "@tanstack/react-router";
+import { Helmet } from "react-helmet-async";
 import { useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { posthog, isPostHogConfigured } from "@/lib/posthog";
@@ -42,6 +43,9 @@ export function ExpiredResult({ resultId, source }: ExpiredResultProps) {
 
   return (
     <div className="min-h-screen bg-cream flex items-center justify-center p-4">
+      <Helmet>
+        <meta name="robots" content="noindex, nofollow" />
+      </Helmet>
       <div className="max-w-md w-full text-center space-y-6">
         {/* Warm visual */}
         <div className="flex justify-center">
