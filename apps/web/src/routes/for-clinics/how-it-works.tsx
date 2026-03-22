@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Helmet } from "react-helmet-async";
-import { CheckCircle2, Upload, Zap, Globe, Code, Palette } from "lucide-react";
+import { Upload, Zap, Globe, Code, Palette } from "lucide-react";
 
 import { SiteFooter } from "@/components/seo/footer";
 import { Button } from "@/components/ui/button";

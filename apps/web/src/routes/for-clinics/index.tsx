@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Helmet } from "react-helmet-async";
-import { CheckCircle2, XCircle, ArrowRight, Phone } from "lucide-react";
+import { CheckCircle2, Phone } from "lucide-react";
 
 import { SiteFooter } from "@/components/seo/footer";
 import { Button } from "@/components/ui/button";
@@ -276,6 +276,13 @@ export function ForClinicsPage() {
                 Try the interactive calculator →
               </Link>
             </div>
+            <p className="text-xs text-warm-gray mt-2">
+              * Assumes 100% adoption rate. Use our{" "}
+              <Link to="/for-clinics/calculator" className="underline hover:text-coral">
+                calculator
+              </Link>{" "}
+              for custom projections.
+            </p>
           </section>
 
           {/* Why Clinics Choose */}

@@ -13,11 +13,16 @@ import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as HowItWorksRouteImport } from './routes/how-it-works'
 import { Route as FaqRouteImport } from './routes/faq'
 import { Route as CheckoutSuccessRouteImport } from './routes/checkout-success'
+import { Route as ForClinicsRouteRouteImport } from './routes/for-clinics/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ForClinicsIndexRouteImport } from './routes/for-clinics/index'
 import { Route as ShareShareIdRouteImport } from './routes/share.$shareId'
 import { Route as ResultResultIdRouteImport } from './routes/result.$resultId'
 import { Route as ProcessingJobIdRouteImport } from './routes/processing.$jobId'
 import { Route as PreviewUploadIdRouteImport } from './routes/preview.$uploadId'
+import { Route as ForClinicsSecurityRouteImport } from './routes/for-clinics/security'
+import { Route as ForClinicsHowItWorksRouteImport } from './routes/for-clinics/how-it-works'
+import { Route as ForClinicsCalculatorRouteImport } from './routes/for-clinics/calculator'
 import { Route as DownloadUploadIdRouteImport } from './routes/download.$uploadId'
 
 const PricingRoute = PricingRouteImport.update({
@@ -40,10 +45,20 @@ const CheckoutSuccessRoute = CheckoutSuccessRouteImport.update({
   path: '/checkout-success',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ForClinicsRouteRoute = ForClinicsRouteRouteImport.update({
+  id: '/for-clinics',
+  path: '/for-clinics',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const ForClinicsIndexRoute = ForClinicsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => ForClinicsRouteRoute,
 } as any)
 const ShareShareIdRoute = ShareShareIdRouteImport.update({
   id: '/share/$shareId',
@@ -65,6 +80,21 @@ const PreviewUploadIdRoute = PreviewUploadIdRouteImport.update({
   path: '/preview/$uploadId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ForClinicsSecurityRoute = ForClinicsSecurityRouteImport.update({
+  id: '/security',
+  path: '/security',
+  getParentRoute: () => ForClinicsRouteRoute,
+} as any)
+const ForClinicsHowItWorksRoute = ForClinicsHowItWorksRouteImport.update({
+  id: '/how-it-works',
+  path: '/how-it-works',
+  getParentRoute: () => ForClinicsRouteRoute,
+} as any)
+const ForClinicsCalculatorRoute = ForClinicsCalculatorRouteImport.update({
+  id: '/calculator',
+  path: '/calculator',
+  getParentRoute: () => ForClinicsRouteRoute,
+} as any)
 const DownloadUploadIdRoute = DownloadUploadIdRouteImport.update({
   id: '/download/$uploadId',
   path: '/download/$uploadId',
@@ -73,15 +103,20 @@ const DownloadUploadIdRoute = DownloadUploadIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/for-clinics': typeof ForClinicsRouteRouteWithChildren
   '/checkout-success': typeof CheckoutSuccessRoute
   '/faq': typeof FaqRoute
   '/how-it-works': typeof HowItWorksRoute
   '/pricing': typeof PricingRoute
   '/download/$uploadId': typeof DownloadUploadIdRoute
+  '/for-clinics/calculator': typeof ForClinicsCalculatorRoute
+  '/for-clinics/how-it-works': typeof ForClinicsHowItWorksRoute
+  '/for-clinics/security': typeof ForClinicsSecurityRoute
   '/preview/$uploadId': typeof PreviewUploadIdRoute
   '/processing/$jobId': typeof ProcessingJobIdRoute
   '/result/$resultId': typeof ResultResultIdRoute
   '/share/$shareId': typeof ShareShareIdRoute
+  '/for-clinics/': typeof ForClinicsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -90,37 +125,51 @@ export interface FileRoutesByTo {
   '/how-it-works': typeof HowItWorksRoute
   '/pricing': typeof PricingRoute
   '/download/$uploadId': typeof DownloadUploadIdRoute
+  '/for-clinics/calculator': typeof ForClinicsCalculatorRoute
+  '/for-clinics/how-it-works': typeof ForClinicsHowItWorksRoute
+  '/for-clinics/security': typeof ForClinicsSecurityRoute
   '/preview/$uploadId': typeof PreviewUploadIdRoute
   '/processing/$jobId': typeof ProcessingJobIdRoute
   '/result/$resultId': typeof ResultResultIdRoute
   '/share/$shareId': typeof ShareShareIdRoute
+  '/for-clinics': typeof ForClinicsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/for-clinics': typeof ForClinicsRouteRouteWithChildren
   '/checkout-success': typeof CheckoutSuccessRoute
   '/faq': typeof FaqRoute
   '/how-it-works': typeof HowItWorksRoute
   '/pricing': typeof PricingRoute
   '/download/$uploadId': typeof DownloadUploadIdRoute
+  '/for-clinics/calculator': typeof ForClinicsCalculatorRoute
+  '/for-clinics/how-it-works': typeof ForClinicsHowItWorksRoute
+  '/for-clinics/security': typeof ForClinicsSecurityRoute
   '/preview/$uploadId': typeof PreviewUploadIdRoute
   '/processing/$jobId': typeof ProcessingJobIdRoute
   '/result/$resultId': typeof ResultResultIdRoute
   '/share/$shareId': typeof ShareShareIdRoute
+  '/for-clinics/': typeof ForClinicsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/for-clinics'
     | '/checkout-success'
     | '/faq'
     | '/how-it-works'
     | '/pricing'
     | '/download/$uploadId'
+    | '/for-clinics/calculator'
+    | '/for-clinics/how-it-works'
+    | '/for-clinics/security'
     | '/preview/$uploadId'
     | '/processing/$jobId'
     | '/result/$resultId'
     | '/share/$shareId'
+    | '/for-clinics/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -129,26 +178,36 @@ export interface FileRouteTypes {
     | '/how-it-works'
     | '/pricing'
     | '/download/$uploadId'
+    | '/for-clinics/calculator'
+    | '/for-clinics/how-it-works'
+    | '/for-clinics/security'
     | '/preview/$uploadId'
     | '/processing/$jobId'
     | '/result/$resultId'
     | '/share/$shareId'
+    | '/for-clinics'
   id:
     | '__root__'
     | '/'
+    | '/for-clinics'
     | '/checkout-success'
     | '/faq'
     | '/how-it-works'
     | '/pricing'
     | '/download/$uploadId'
+    | '/for-clinics/calculator'
+    | '/for-clinics/how-it-works'
+    | '/for-clinics/security'
     | '/preview/$uploadId'
     | '/processing/$jobId'
     | '/result/$resultId'
     | '/share/$shareId'
+    | '/for-clinics/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ForClinicsRouteRoute: typeof ForClinicsRouteRouteWithChildren
   CheckoutSuccessRoute: typeof CheckoutSuccessRoute
   FaqRoute: typeof FaqRoute
   HowItWorksRoute: typeof HowItWorksRoute
@@ -190,12 +249,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CheckoutSuccessRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/for-clinics': {
+      id: '/for-clinics'
+      path: '/for-clinics'
+      fullPath: '/for-clinics'
+      preLoaderRoute: typeof ForClinicsRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/for-clinics/': {
+      id: '/for-clinics/'
+      path: '/'
+      fullPath: '/for-clinics/'
+      preLoaderRoute: typeof ForClinicsIndexRouteImport
+      parentRoute: typeof ForClinicsRouteRoute
     }
     '/share/$shareId': {
       id: '/share/$shareId'
@@ -225,6 +298,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PreviewUploadIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/for-clinics/security': {
+      id: '/for-clinics/security'
+      path: '/security'
+      fullPath: '/for-clinics/security'
+      preLoaderRoute: typeof ForClinicsSecurityRouteImport
+      parentRoute: typeof ForClinicsRouteRoute
+    }
+    '/for-clinics/how-it-works': {
+      id: '/for-clinics/how-it-works'
+      path: '/how-it-works'
+      fullPath: '/for-clinics/how-it-works'
+      preLoaderRoute: typeof ForClinicsHowItWorksRouteImport
+      parentRoute: typeof ForClinicsRouteRoute
+    }
+    '/for-clinics/calculator': {
+      id: '/for-clinics/calculator'
+      path: '/calculator'
+      fullPath: '/for-clinics/calculator'
+      preLoaderRoute: typeof ForClinicsCalculatorRouteImport
+      parentRoute: typeof ForClinicsRouteRoute
+    }
     '/download/$uploadId': {
       id: '/download/$uploadId'
       path: '/download/$uploadId'
@@ -235,8 +329,27 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface ForClinicsRouteRouteChildren {
+  ForClinicsCalculatorRoute: typeof ForClinicsCalculatorRoute
+  ForClinicsHowItWorksRoute: typeof ForClinicsHowItWorksRoute
+  ForClinicsSecurityRoute: typeof ForClinicsSecurityRoute
+  ForClinicsIndexRoute: typeof ForClinicsIndexRoute
+}
+
+const ForClinicsRouteRouteChildren: ForClinicsRouteRouteChildren = {
+  ForClinicsCalculatorRoute: ForClinicsCalculatorRoute,
+  ForClinicsHowItWorksRoute: ForClinicsHowItWorksRoute,
+  ForClinicsSecurityRoute: ForClinicsSecurityRoute,
+  ForClinicsIndexRoute: ForClinicsIndexRoute,
+}
+
+const ForClinicsRouteRouteWithChildren = ForClinicsRouteRoute._addFileChildren(
+  ForClinicsRouteRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ForClinicsRouteRoute: ForClinicsRouteRouteWithChildren,
   CheckoutSuccessRoute: CheckoutSuccessRoute,
   FaqRoute: FaqRoute,
   HowItWorksRoute: HowItWorksRoute,

@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Helmet } from "react-helmet-async";
 import { useState } from "react";
-import { DollarSign, TrendingUp, Calendar, Zap } from "lucide-react";
+import { Calendar, Zap } from "lucide-react";
 
 import { SiteFooter } from "@/components/seo/footer";
 import { Button } from "@/components/ui/button";
@@ -75,7 +75,7 @@ export function CalculatorPage() {
   const paidPortraitsPerDay = scansPerDay * (adoptionRate / 100);
   const weeklyRevenue = paidPortraitsPerDay * daysPerWeek * pricePerPortrait;
   const monthlyRevenue = weeklyRevenue * 4;
-  const annualRevenue = monthlyRevenue * 12;
+  const annualRevenue = weeklyRevenue * 52;
   const equivalentNewScans = (monthlyRevenue / pricePerPortrait).toFixed(0);
   const revenuePerPortrait = pricePerPortrait - 3; // Professional plan $3/portrait
 

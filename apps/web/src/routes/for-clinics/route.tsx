@@ -1,3 +1,9 @@
-import { Outlet } from "@tanstack/react-router";
+import { createFileRoute, Outlet } from "@tanstack/react-router";
 
-export const Route = () => <Outlet />;
+export const Route = createFileRoute("/for-clinics")({
+  component: ForClinicsLayout,
+});
+
+function ForClinicsLayout() {
+  return <Outlet />;
+}
