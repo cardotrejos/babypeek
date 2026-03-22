@@ -118,7 +118,7 @@ export function BlogIndexPage() {
             <div>
               <h2 className="font-display text-xl text-charcoal mb-4">All Articles</h2>
               <div className="space-y-4">
-                {blogPosts.map((post) => (
+                {blogPosts.filter((p) => !p.featured).map((post) => (
                   <Link
                     key={post.slug}
                     to={`/blog/${post.slug}`}
