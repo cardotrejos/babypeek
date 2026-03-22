@@ -5,6 +5,7 @@ import { Calendar, User, Clock, ArrowRight } from "lucide-react";
 import { SiteFooter } from "@/components/seo/footer";
 import { blogPosts, type BlogPostMeta } from "@/content/blog";
 import { cn } from "@/lib/utils";
+import { formatDate } from "@/lib/date-utils";
 
 export const Route = createFileRoute("/blog/")({
   component: BlogIndexPage,
@@ -16,14 +17,6 @@ const categoryColors: Record<BlogPostMeta["category"], string> = {
   "AI Technology": "bg-blue-100 text-blue-600",
   "For Clinics": "bg-emerald-100 text-emerald-700",
 };
-
-function formatDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-}
 
 export function BlogIndexPage() {
   return (
@@ -58,7 +51,9 @@ export function BlogIndexPage() {
         <main id="main-content" className="px-4 sm:px-6 sm:max-w-[640px] sm:mx-auto pt-8 pb-12">
           {/* Breadcrumb */}
           <nav className="text-sm text-warm-gray mb-6">
-            <Link to="/" className="hover:text-coral transition-colors">Home</Link>
+            <Link to="/" className="hover:text-coral transition-colors">
+              Home
+            </Link>
             <span className="mx-2">/</span>
             <span className="text-charcoal">Blog</span>
           </nav>
@@ -74,45 +69,48 @@ export function BlogIndexPage() {
           </div>
 
           {/* Featured post */}
-          {blogPosts.filter((p) => p.featured).map((post) => (
-            <Link
-              key={post.slug}
-              to="/blog/$slug"
-              params={{ slug: post.slug }}
-              className="group block rounded-2xl bg-coral-light border-2 border-coral p-6 mb-6 hover:shadow-lg transition-shadow"
-            >
-              <div className="flex items-center gap-2 mb-3">
-                <span className={cn(
-                  "text-xs font-semibold px-2.5 py-1 rounded-full",
-                  categoryColors[post.category],
-                )}>
-                  {post.category}
-                </span>
-                <span className="text-xs text-warm-gray font-medium">Featured</span>
-              </div>
-              <h2 className="font-display text-xl text-charcoal mb-2 group-hover:text-coral transition-colors">
-                {post.title}
-              </h2>
-              <p className="text-sm text-warm-gray mb-4 line-clamp-2">{post.excerpt}</p>
-              <div className="flex items-center gap-4 text-xs text-warm-gray">
-                <span className="flex items-center gap-1">
-                  <User className="w-3.5 h-3.5" />
-                  {post.author}
-                </span>
-                <span className="flex items-center gap-1">
-                  <Calendar className="w-3.5 h-3.5" />
-                  {formatDate(post.date)}
-                </span>
-                <span className="flex items-center gap-1">
-                  <Clock className="w-3.5 h-3.5" />
-                  {post.readTime}
-                </span>
-              </div>
-              <div className="mt-3 text-coral text-sm font-medium flex items-center gap-1">
-                Read article <ArrowRight className="w-3.5 h-3.5" />
-              </div>
-            </Link>
-          ))}
+          {blogPosts
+            .filter((p) => p.featured)
+            .map((post) => (
+              <Link
+                key={post.slug}
+                to={`/blog/${post.slug}`}
+                className="group block rounded-2xl bg-coral-light border-2 border-coral p-6 mb-6 hover:shadow-lg transition-shadow"
+              >
+                <div className="flex items-center gap-2 mb-3">
+                  <span
+                    className={cn(
+                      "text-xs font-semibold px-2.5 py-1 rounded-full",
+                      categoryColors[post.category],
+                    )}
+                  >
+                    {post.category}
+                  </span>
+                  <span className="text-xs text-warm-gray font-medium">Featured</span>
+                </div>
+                <h2 className="font-display text-xl text-charcoal mb-2 group-hover:text-coral transition-colors">
+                  {post.title}
+                </h2>
+                <p className="text-sm text-warm-gray mb-4 line-clamp-2">{post.excerpt}</p>
+                <div className="flex items-center gap-4 text-xs text-warm-gray">
+                  <span className="flex items-center gap-1">
+                    <User className="w-3.5 h-3.5" />
+                    {post.author}
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <Calendar className="w-3.5 h-3.5" />
+                    {formatDate(post.date)}
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <Clock className="w-3.5 h-3.5" />
+                    {post.readTime}
+                  </span>
+                </div>
+                <div className="mt-3 text-coral text-sm font-medium flex items-center gap-1">
+                  Read article <ArrowRight className="w-3.5 h-3.5" />
+                </div>
+              </Link>
+            ))}
 
           {/* All posts */}
           {blogPosts.length > 0 && (
@@ -122,15 +120,16 @@ export function BlogIndexPage() {
                 {blogPosts.map((post) => (
                   <Link
                     key={post.slug}
-                    to="/blog/$slug"
-                    params={{ slug: post.slug }}
+                    to={`/blog/${post.slug}`}
                     className="group block rounded-xl border border-charcoal/10 bg-white/60 p-5 hover:border-coral/30 hover:shadow-md transition-all"
                   >
                     <div className="flex items-center gap-2 mb-2">
-                      <span className={cn(
-                        "text-xs font-semibold px-2 py-0.5 rounded-full",
-                        categoryColors[post.category],
-                      )}>
+                      <span
+                        className={cn(
+                          "text-xs font-semibold px-2 py-0.5 rounded-full",
+                          categoryColors[post.category],
+                        )}
+                      >
                         {post.category}
                       </span>
                     </div>
@@ -166,7 +165,9 @@ export function BlogIndexPage() {
 
           {/* Newsletter / CTA */}
           <div className="mt-12 rounded-2xl bg-coral-light border border-coral p-6 text-center">
-            <h2 className="font-display text-lg text-charcoal mb-2">Want to see your baby's face?</h2>
+            <h2 className="font-display text-lg text-charcoal mb-2">
+              Want to see your baby's face?
+            </h2>
             <p className="text-sm text-warm-gray mb-4">
               Upload your 4D ultrasound and get a free AI portrait preview in 60 seconds.
             </p>

@@ -105,9 +105,13 @@ export function BabypeekVsSeebabyPage() {
         <main id="main-content" className="px-4 sm:px-6 sm:max-w-[640px] sm:mx-auto pt-8 pb-12">
           {/* Breadcrumb */}
           <nav className="text-sm text-warm-gray mb-6">
-            <Link to="/" className="hover:text-coral transition-colors">Home</Link>
+            <Link to="/" className="hover:text-coral transition-colors">
+              Home
+            </Link>
             <span className="mx-2">/</span>
-            <Link to="/compare/ai-baby-generators-2026" className="hover:text-coral transition-colors">Compare</Link>
+            <Link to="/compare" className="hover:text-coral transition-colors">
+              Compare
+            </Link>
             <span className="mx-2">/</span>
             <span className="text-charcoal">SeeBaby vs BabyPeek</span>
           </nav>
@@ -120,36 +124,68 @@ export function BabypeekVsSeebabyPage() {
             </h1>
           </div>
           <p className="text-warm-gray text-lg mb-8">
-            Both tools generate AI baby portraits from ultrasound images — but they take very different approaches.
-            Here's the honest comparison.
+            Both tools generate AI baby portraits from ultrasound images — but they take very
+            different approaches. Here's the honest comparison.
           </p>
 
           {/* Summary cards */}
           <div className="grid sm:grid-cols-2 gap-4 mb-10">
             <div className="rounded-2xl border-2 border-coral bg-coral-light p-6">
-              <div className="text-xs font-semibold text-coral uppercase tracking-wide mb-2">BabyPeek</div>
-              <h2 className="font-display text-xl text-charcoal mb-2">Best for clinics that want AI portraits — nothing more</h2>
+              <div className="text-xs font-semibold text-coral uppercase tracking-wide mb-2">
+                BabyPeek
+              </div>
+              <h2 className="font-display text-xl text-charcoal mb-2">
+                Best for clinics that want AI portraits — nothing more
+              </h2>
               <p className="text-sm text-warm-gray mb-4">
-                A focused, best-in-class portrait tool. Plugs into your existing workflow. Live in 5 minutes.
+                A focused, best-in-class portrait tool. Plugs into your existing workflow. Live in 5
+                minutes.
               </p>
               <ul className="space-y-1.5 text-sm text-charcoal">
-                <li className="flex items-start gap-2"><CheckCircle2 className="w-4 h-4 text-coral mt-0.5 shrink-0" /> No workflow change</li>
-                <li className="flex items-start gap-2"><CheckCircle2 className="w-4 h-4 text-coral mt-0.5 shrink-0" /> Portrait quality focused</li>
-                <li className="flex items-start gap-2"><CheckCircle2 className="w-4 h-4 text-coral mt-0.5 shrink-0" /> Works with existing software</li>
-                <li className="flex items-start gap-2"><CheckCircle2 className="w-4 h-4 text-coral mt-0.5 shrink-0" /> Setup in 5 minutes</li>
+                <li className="flex items-start gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-coral mt-0.5 shrink-0" /> No workflow change
+                </li>
+                <li className="flex items-start gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-coral mt-0.5 shrink-0" /> Portrait quality
+                  focused
+                </li>
+                <li className="flex items-start gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-coral mt-0.5 shrink-0" /> Works with
+                  existing software
+                </li>
+                <li className="flex items-start gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-coral mt-0.5 shrink-0" /> Setup in 5 minutes
+                </li>
               </ul>
             </div>
             <div className="rounded-2xl border border-charcoal/10 bg-white/60 p-6">
-              <div className="text-xs font-semibold text-warm-gray uppercase tracking-wide mb-2">SeeBaby</div>
-              <h2 className="font-display text-xl text-charcoal mb-2">Best for clinics that want a full platform</h2>
+              <div className="text-xs font-semibold text-warm-gray uppercase tracking-wide mb-2">
+                SeeBaby
+              </div>
+              <h2 className="font-display text-xl text-charcoal mb-2">
+                Best for clinics that want a full platform
+              </h2>
               <p className="text-sm text-warm-gray mb-4">
-                Scheduling, forms, payments, and AI portraits all in one. Great if you're starting fresh or willing to migrate.
+                Scheduling, forms, payments, and AI portraits all in one. Great if you're starting
+                fresh or willing to migrate.
               </p>
               <ul className="space-y-1.5 text-sm text-charcoal">
-                <li className="flex items-start gap-2"><CheckCircle2 className="w-4 h-4 text-warm-gray mt-0.5 shrink-0" /> Full clinic management</li>
-                <li className="flex items-start gap-2"><CheckCircle2 className="w-4 h-4 text-warm-gray mt-0.5 shrink-0" /> Built-in payments</li>
-                <li className="flex items-start gap-2"><CheckCircle2 className="w-4 h-4 text-warm-gray mt-0.5 shrink-0" /> Patient forms included</li>
-                <li className="flex items-start gap-2"><XCircle className="w-4 h-4 text-warm-gray mt-0.5 shrink-0" /> Requires platform switch</li>
+                <li className="flex items-start gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-warm-gray mt-0.5 shrink-0" /> Full clinic
+                  management
+                </li>
+                <li className="flex items-start gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-warm-gray mt-0.5 shrink-0" /> Built-in
+                  payments
+                </li>
+                <li className="flex items-start gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-warm-gray mt-0.5 shrink-0" /> Patient forms
+                  included
+                </li>
+                <li className="flex items-start gap-2">
+                  <XCircle className="w-4 h-4 text-warm-gray mt-0.5 shrink-0" /> Requires platform
+                  switch
+                </li>
               </ul>
             </div>
           </div>
@@ -163,7 +199,9 @@ export function BabypeekVsSeebabyPage() {
                   <tr className="bg-coral-light">
                     <th className="text-left px-4 py-3 font-semibold text-charcoal">Feature</th>
                     <th className="text-center px-4 py-3 font-semibold text-coral">BabyPeek</th>
-                    <th className="text-center px-4 py-3 font-semibold text-charcoal/60">SeeBaby</th>
+                    <th className="text-center px-4 py-3 font-semibold text-charcoal/60">
+                      SeeBaby
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -171,14 +209,18 @@ export function BabypeekVsSeebabyPage() {
                     <tr key={feature} className={i % 2 === 0 ? "bg-white/40" : ""}>
                       <td className="px-4 py-3 text-charcoal font-medium">{feature}</td>
                       <td className="px-4 py-3 text-center">
-                        {babypeek
-                          ? <CheckCircle2 className="w-5 h-5 text-coral mx-auto" />
-                          : <XCircle className="w-5 h-5 text-charcoal/30 mx-auto" />}
+                        {babypeek ? (
+                          <CheckCircle2 className="w-5 h-5 text-coral mx-auto" />
+                        ) : (
+                          <XCircle className="w-5 h-5 text-charcoal/30 mx-auto" />
+                        )}
                       </td>
                       <td className="px-4 py-3 text-center">
-                        {seebaby
-                          ? <CheckCircle2 className="w-5 h-5 text-charcoal/50 mx-auto" />
-                          : <XCircle className="w-5 h-5 text-charcoal/20 mx-auto" />}
+                        {seebaby ? (
+                          <CheckCircle2 className="w-5 h-5 text-charcoal/50 mx-auto" />
+                        ) : (
+                          <XCircle className="w-5 h-5 text-charcoal/20 mx-auto" />
+                        )}
                       </td>
                     </tr>
                   ))}
@@ -229,11 +271,15 @@ export function BabypeekVsSeebabyPage() {
           <div className="rounded-2xl bg-white/60 border border-charcoal/10 p-6 mb-12">
             <h2 className="font-display text-xl text-charcoal mb-3">The Honest Verdict</h2>
             <p className="text-sm text-warm-gray leading-relaxed">
-              If you already have a scheduling system, an EMR, or a patient management tool you like, BabyPeek is
-              the better choice — it adds the AI portrait layer without forcing you to migrate everything else. If
-              you're starting a new clinic and want one platform to handle everything, SeeBaby is worth evaluating.
-              The key question is: <strong className="text-charcoal">do you want AI baby portraits, or do you want
-              a full clinic management system that includes AI portraits?</strong> Those are different needs.
+              If you already have a scheduling system, an EMR, or a patient management tool you
+              like, BabyPeek is the better choice — it adds the AI portrait layer without forcing
+              you to migrate everything else. If you're starting a new clinic and want one platform
+              to handle everything, SeeBaby is worth evaluating. The key question is:{" "}
+              <strong className="text-charcoal">
+                do you want AI baby portraits, or do you want a full clinic management system that
+                includes AI portraits?
+              </strong>{" "}
+              Those are different needs.
             </p>
           </div>
 
@@ -242,10 +288,15 @@ export function BabypeekVsSeebabyPage() {
             <h2 className="font-display text-2xl text-charcoal mb-6">Frequently Asked Questions</h2>
             <div className="space-y-4">
               {faqs.map(({ question, answer }) => (
-                <details key={question} className="group rounded-xl border border-charcoal/10 bg-white/60 overflow-hidden">
+                <details
+                  key={question}
+                  className="group rounded-xl border border-charcoal/10 bg-white/60 overflow-hidden"
+                >
                   <summary className="px-4 py-4 cursor-pointer text-sm font-medium text-charcoal hover:text-coral list-none flex items-center justify-between">
                     {question}
-                    <span className="shrink-0 ml-2 text-coral group-open:rotate-180 transition-transform">▾</span>
+                    <span className="shrink-0 ml-2 text-coral group-open:rotate-180 transition-transform">
+                      ▾
+                    </span>
                   </summary>
                   <div className="px-4 pb-4 text-sm text-warm-gray leading-relaxed border-t border-charcoal/5 pt-3">
                     {answer}
