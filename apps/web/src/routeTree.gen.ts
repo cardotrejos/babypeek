@@ -14,8 +14,12 @@ import { Route as HowItWorksRouteImport } from './routes/how-it-works'
 import { Route as FaqRouteImport } from './routes/faq'
 import { Route as CheckoutSuccessRouteImport } from './routes/checkout-success'
 import { Route as ForClinicsRouteRouteImport } from './routes/for-clinics/route'
+import { Route as CompareRouteRouteImport } from './routes/compare/route'
+import { Route as BlogRouteRouteImport } from './routes/blog/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ForClinicsIndexRouteImport } from './routes/for-clinics/index'
+import { Route as CompareIndexRouteImport } from './routes/compare/index'
+import { Route as BlogIndexRouteImport } from './routes/blog/index'
 import { Route as ShareShareIdRouteImport } from './routes/share.$shareId'
 import { Route as ResultResultIdRouteImport } from './routes/result.$resultId'
 import { Route as ProcessingJobIdRouteImport } from './routes/processing.$jobId'
@@ -24,6 +28,9 @@ import { Route as ForClinicsSecurityRouteImport } from './routes/for-clinics/sec
 import { Route as ForClinicsHowItWorksRouteImport } from './routes/for-clinics/how-it-works'
 import { Route as ForClinicsCalculatorRouteImport } from './routes/for-clinics/calculator'
 import { Route as DownloadUploadIdRouteImport } from './routes/download.$uploadId'
+import { Route as CompareBabypeekVsSeebabyRouteImport } from './routes/compare/babypeek-vs-seebaby'
+import { Route as CompareAiBabyGenerators2026RouteImport } from './routes/compare/ai-baby-generators-2026'
+import { Route as BlogWhatWillMyBabyLookLikeRouteImport } from './routes/blog/what-will-my-baby-look-like'
 
 const PricingRoute = PricingRouteImport.update({
   id: '/pricing',
@@ -50,6 +57,16 @@ const ForClinicsRouteRoute = ForClinicsRouteRouteImport.update({
   path: '/for-clinics',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CompareRouteRoute = CompareRouteRouteImport.update({
+  id: '/compare',
+  path: '/compare',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BlogRouteRoute = BlogRouteRouteImport.update({
+  id: '/blog',
+  path: '/blog',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -59,6 +76,16 @@ const ForClinicsIndexRoute = ForClinicsIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => ForClinicsRouteRoute,
+} as any)
+const CompareIndexRoute = CompareIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => CompareRouteRoute,
+} as any)
+const BlogIndexRoute = BlogIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => BlogRouteRoute,
 } as any)
 const ShareShareIdRoute = ShareShareIdRouteImport.update({
   id: '/share/$shareId',
@@ -100,14 +127,37 @@ const DownloadUploadIdRoute = DownloadUploadIdRouteImport.update({
   path: '/download/$uploadId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CompareBabypeekVsSeebabyRoute =
+  CompareBabypeekVsSeebabyRouteImport.update({
+    id: '/babypeek-vs-seebaby',
+    path: '/babypeek-vs-seebaby',
+    getParentRoute: () => CompareRouteRoute,
+  } as any)
+const CompareAiBabyGenerators2026Route =
+  CompareAiBabyGenerators2026RouteImport.update({
+    id: '/ai-baby-generators-2026',
+    path: '/ai-baby-generators-2026',
+    getParentRoute: () => CompareRouteRoute,
+  } as any)
+const BlogWhatWillMyBabyLookLikeRoute =
+  BlogWhatWillMyBabyLookLikeRouteImport.update({
+    id: '/what-will-my-baby-look-like',
+    path: '/what-will-my-baby-look-like',
+    getParentRoute: () => BlogRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/blog': typeof BlogRouteRouteWithChildren
+  '/compare': typeof CompareRouteRouteWithChildren
   '/for-clinics': typeof ForClinicsRouteRouteWithChildren
   '/checkout-success': typeof CheckoutSuccessRoute
   '/faq': typeof FaqRoute
   '/how-it-works': typeof HowItWorksRoute
   '/pricing': typeof PricingRoute
+  '/blog/what-will-my-baby-look-like': typeof BlogWhatWillMyBabyLookLikeRoute
+  '/compare/ai-baby-generators-2026': typeof CompareAiBabyGenerators2026Route
+  '/compare/babypeek-vs-seebaby': typeof CompareBabypeekVsSeebabyRoute
   '/download/$uploadId': typeof DownloadUploadIdRoute
   '/for-clinics/calculator': typeof ForClinicsCalculatorRoute
   '/for-clinics/how-it-works': typeof ForClinicsHowItWorksRoute
@@ -116,14 +166,20 @@ export interface FileRoutesByFullPath {
   '/processing/$jobId': typeof ProcessingJobIdRoute
   '/result/$resultId': typeof ResultResultIdRoute
   '/share/$shareId': typeof ShareShareIdRoute
+  '/blog/': typeof BlogIndexRoute
+  '/compare/': typeof CompareIndexRoute
   '/for-clinics/': typeof ForClinicsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/compare': typeof CompareRouteRouteWithChildren
   '/checkout-success': typeof CheckoutSuccessRoute
   '/faq': typeof FaqRoute
   '/how-it-works': typeof HowItWorksRoute
   '/pricing': typeof PricingRoute
+  '/blog/what-will-my-baby-look-like': typeof BlogWhatWillMyBabyLookLikeRoute
+  '/compare/ai-baby-generators-2026': typeof CompareAiBabyGenerators2026Route
+  '/compare/babypeek-vs-seebaby': typeof CompareBabypeekVsSeebabyRoute
   '/download/$uploadId': typeof DownloadUploadIdRoute
   '/for-clinics/calculator': typeof ForClinicsCalculatorRoute
   '/for-clinics/how-it-works': typeof ForClinicsHowItWorksRoute
@@ -132,16 +188,23 @@ export interface FileRoutesByTo {
   '/processing/$jobId': typeof ProcessingJobIdRoute
   '/result/$resultId': typeof ResultResultIdRoute
   '/share/$shareId': typeof ShareShareIdRoute
+  '/blog': typeof BlogIndexRoute
+  '/compare': typeof CompareIndexRoute
   '/for-clinics': typeof ForClinicsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/blog': typeof BlogRouteRouteWithChildren
+  '/compare': typeof CompareRouteRouteWithChildren
   '/for-clinics': typeof ForClinicsRouteRouteWithChildren
   '/checkout-success': typeof CheckoutSuccessRoute
   '/faq': typeof FaqRoute
   '/how-it-works': typeof HowItWorksRoute
   '/pricing': typeof PricingRoute
+  '/blog/what-will-my-baby-look-like': typeof BlogWhatWillMyBabyLookLikeRoute
+  '/compare/ai-baby-generators-2026': typeof CompareAiBabyGenerators2026Route
+  '/compare/babypeek-vs-seebaby': typeof CompareBabypeekVsSeebabyRoute
   '/download/$uploadId': typeof DownloadUploadIdRoute
   '/for-clinics/calculator': typeof ForClinicsCalculatorRoute
   '/for-clinics/how-it-works': typeof ForClinicsHowItWorksRoute
@@ -150,17 +213,24 @@ export interface FileRoutesById {
   '/processing/$jobId': typeof ProcessingJobIdRoute
   '/result/$resultId': typeof ResultResultIdRoute
   '/share/$shareId': typeof ShareShareIdRoute
+  '/blog/': typeof BlogIndexRoute
+  '/compare/': typeof CompareIndexRoute
   '/for-clinics/': typeof ForClinicsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/blog'
+    | '/compare'
     | '/for-clinics'
     | '/checkout-success'
     | '/faq'
     | '/how-it-works'
     | '/pricing'
+    | '/blog/what-will-my-baby-look-like'
+    | '/compare/ai-baby-generators-2026'
+    | '/compare/babypeek-vs-seebaby'
     | '/download/$uploadId'
     | '/for-clinics/calculator'
     | '/for-clinics/how-it-works'
@@ -169,14 +239,20 @@ export interface FileRouteTypes {
     | '/processing/$jobId'
     | '/result/$resultId'
     | '/share/$shareId'
+    | '/blog/'
+    | '/compare/'
     | '/for-clinics/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/compare'
     | '/checkout-success'
     | '/faq'
     | '/how-it-works'
     | '/pricing'
+    | '/blog/what-will-my-baby-look-like'
+    | '/compare/ai-baby-generators-2026'
+    | '/compare/babypeek-vs-seebaby'
     | '/download/$uploadId'
     | '/for-clinics/calculator'
     | '/for-clinics/how-it-works'
@@ -185,15 +261,21 @@ export interface FileRouteTypes {
     | '/processing/$jobId'
     | '/result/$resultId'
     | '/share/$shareId'
+    | '/blog'
     | '/for-clinics'
   id:
     | '__root__'
     | '/'
+    | '/blog'
+    | '/compare'
     | '/for-clinics'
     | '/checkout-success'
     | '/faq'
     | '/how-it-works'
     | '/pricing'
+    | '/blog/what-will-my-baby-look-like'
+    | '/compare/ai-baby-generators-2026'
+    | '/compare/babypeek-vs-seebaby'
     | '/download/$uploadId'
     | '/for-clinics/calculator'
     | '/for-clinics/how-it-works'
@@ -202,11 +284,15 @@ export interface FileRouteTypes {
     | '/processing/$jobId'
     | '/result/$resultId'
     | '/share/$shareId'
+    | '/blog/'
+    | '/compare/'
     | '/for-clinics/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  BlogRouteRoute: typeof BlogRouteRouteWithChildren
+  CompareRouteRoute: typeof CompareRouteRouteWithChildren
   ForClinicsRouteRoute: typeof ForClinicsRouteRouteWithChildren
   CheckoutSuccessRoute: typeof CheckoutSuccessRoute
   FaqRoute: typeof FaqRoute
@@ -256,6 +342,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ForClinicsRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/compare': {
+      id: '/compare'
+      path: '/compare'
+      fullPath: '/compare'
+      preLoaderRoute: typeof CompareRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/blog': {
+      id: '/blog'
+      path: '/blog'
+      fullPath: '/blog'
+      preLoaderRoute: typeof BlogRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -269,6 +369,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/for-clinics/'
       preLoaderRoute: typeof ForClinicsIndexRouteImport
       parentRoute: typeof ForClinicsRouteRoute
+    }
+    '/blog/': {
+      id: '/blog/'
+      path: '/'
+      fullPath: '/blog/'
+      preLoaderRoute: typeof BlogIndexRouteImport
+      parentRoute: typeof BlogRouteRoute
+    }
+    '/compare/': {
+      id: '/compare/'
+      path: '/'
+      fullPath: '/compare/'
+      preLoaderRoute: typeof CompareIndexRouteImport
+      parentRoute: typeof CompareRouteRoute
     }
     '/share/$shareId': {
       id: '/share/$shareId'
@@ -326,8 +440,59 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DownloadUploadIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/compare/babypeek-vs-seebaby': {
+      id: '/compare/babypeek-vs-seebaby'
+      path: '/babypeek-vs-seebaby'
+      fullPath: '/compare/babypeek-vs-seebaby'
+      preLoaderRoute: typeof CompareBabypeekVsSeebabyRouteImport
+      parentRoute: typeof CompareRouteRoute
+    }
+    '/compare/ai-baby-generators-2026': {
+      id: '/compare/ai-baby-generators-2026'
+      path: '/ai-baby-generators-2026'
+      fullPath: '/compare/ai-baby-generators-2026'
+      preLoaderRoute: typeof CompareAiBabyGenerators2026RouteImport
+      parentRoute: typeof CompareRouteRoute
+    }
+    '/blog/what-will-my-baby-look-like': {
+      id: '/blog/what-will-my-baby-look-like'
+      path: '/what-will-my-baby-look-like'
+      fullPath: '/blog/what-will-my-baby-look-like'
+      preLoaderRoute: typeof BlogWhatWillMyBabyLookLikeRouteImport
+      parentRoute: typeof BlogRouteRoute
+    }
   }
 }
+
+interface BlogRouteRouteChildren {
+  BlogWhatWillMyBabyLookLikeRoute: typeof BlogWhatWillMyBabyLookLikeRoute
+  BlogIndexRoute: typeof BlogIndexRoute
+}
+
+const BlogRouteRouteChildren: BlogRouteRouteChildren = {
+  BlogWhatWillMyBabyLookLikeRoute: BlogWhatWillMyBabyLookLikeRoute,
+  BlogIndexRoute: BlogIndexRoute,
+}
+
+const BlogRouteRouteWithChildren = BlogRouteRoute._addFileChildren(
+  BlogRouteRouteChildren,
+)
+
+interface CompareRouteRouteChildren {
+  CompareAiBabyGenerators2026Route: typeof CompareAiBabyGenerators2026Route
+  CompareBabypeekVsSeebabyRoute: typeof CompareBabypeekVsSeebabyRoute
+  CompareIndexRoute: typeof CompareIndexRoute
+}
+
+const CompareRouteRouteChildren: CompareRouteRouteChildren = {
+  CompareAiBabyGenerators2026Route: CompareAiBabyGenerators2026Route,
+  CompareBabypeekVsSeebabyRoute: CompareBabypeekVsSeebabyRoute,
+  CompareIndexRoute: CompareIndexRoute,
+}
+
+const CompareRouteRouteWithChildren = CompareRouteRoute._addFileChildren(
+  CompareRouteRouteChildren,
+)
 
 interface ForClinicsRouteRouteChildren {
   ForClinicsCalculatorRoute: typeof ForClinicsCalculatorRoute
@@ -349,6 +514,8 @@ const ForClinicsRouteRouteWithChildren = ForClinicsRouteRoute._addFileChildren(
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  BlogRouteRoute: BlogRouteRouteWithChildren,
+  CompareRouteRoute: CompareRouteRouteWithChildren,
   ForClinicsRouteRoute: ForClinicsRouteRouteWithChildren,
   CheckoutSuccessRoute: CheckoutSuccessRoute,
   FaqRoute: FaqRoute,

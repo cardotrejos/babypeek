@@ -40,6 +40,12 @@ export function SiteFooter({ className }: SiteFooterProps) {
           For Clinics
         </Link>
         <Link
+          to="/blog"
+          className="text-warm-gray hover:text-coral transition-colors"
+        >
+          Blog
+        </Link>
+        <Link
           to="/privacy"
           className="text-warm-gray hover:text-coral transition-colors"
         >
