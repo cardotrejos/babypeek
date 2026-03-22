@@ -12,7 +12,7 @@ test.describe("Landing Page", () => {
     // Check for main headline
     const headline = page.getByRole("heading", { level: 1 });
     await expect(headline).toBeVisible();
-    await expect(headline).toHaveText(/see your future baby before they arrive/i);
+    await expect(headline).toHaveText(/Meet your baby.*before they arrive/i);
   });
 
   test("has CTA button", async ({ page }) => {
@@ -41,11 +41,11 @@ test.describe("Landing Page", () => {
   test("CTA button has accessible touch target", async ({ page }) => {
     await page.goto("/");
 
-    // Check the hero CTA button meets touch target requirements
-    const ctaButton = page.getByRole("button", { name: /try it free/i }).first();
+    // Target the hero CTA button specifically (has aria-label distinguishing it from header button)
+    const ctaButton = page.getByRole("button", { name: /try it free - upload your ultrasound/i });
     await expect(ctaButton).toBeVisible();
 
-    // Check minimum touch target size (48px per WCAG)
+    // Check minimum touch target size (48px per WCAG; hero button has touch-target-lg = 56px min)
     const box = await ctaButton.boundingBox();
     expect(box).not.toBeNull();
     if (box) {
