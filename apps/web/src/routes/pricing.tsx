@@ -3,6 +3,7 @@ import { Helmet } from "react-helmet-async";
 import { CheckCircle2 } from "lucide-react";
 
 import { SiteFooter } from "@/components/seo/footer";
+import { SeoPageLayout } from "@/components/seo/page-layout";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { PRICE_DISPLAY, PRICE_CENTS } from "@/lib/pricing";
@@ -47,7 +48,7 @@ const freeFeatures = [
 
 const hdFeatures = [
   "Full high-resolution download",
-  "Print-ready quality (300 DPI)",
+  "No watermarks",
   "Shareable link for family",
   "Unlimited re-downloads",
 ];
@@ -114,25 +115,8 @@ export function PricingPage() {
         <script type="application/ld+json">{JSON.stringify(productSchema)}</script>
       </Helmet>
 
-      <div className="min-h-screen bg-cream">
-        {/* Minimal header */}
-        <header className="p-4 sm:p-6 safe-top">
-          <div className="sm:max-w-[560px] sm:mx-auto flex items-center gap-2">
-            <Link to="/" className="flex items-center gap-2">
-              <img src="/logo.svg" alt="BabyPeek" className="h-8 w-8" />
-              <span className="font-display text-xl text-charcoal font-semibold">BabyPeek</span>
-            </Link>
-          </div>
-        </header>
-
-        <main id="main-content" className="px-4 sm:px-6 sm:max-w-[560px] sm:mx-auto pt-8 pb-12">
-          {/* Breadcrumb */}
-          <nav className="text-sm text-warm-gray mb-6">
-            <Link to="/" className="hover:text-coral transition-colors">Home</Link>
-            <span className="mx-2">/</span>
-            <span className="text-charcoal">Pricing</span>
-          </nav>
-
+      <SeoPageLayout breadcrumbLabel="Pricing">
+        <div>
           {/* H1 */}
           <h1 className="font-display text-3xl sm:text-4xl text-charcoal leading-tight mb-3">
             Simple Pricing, No Surprises
@@ -308,10 +292,10 @@ export function PricingPage() {
               Read FAQ →
             </Link>
           </div>
-        </main>
+        </div>
 
         <SiteFooter />
-      </div>
+      </SeoPageLayout>
     </>
   );
 }

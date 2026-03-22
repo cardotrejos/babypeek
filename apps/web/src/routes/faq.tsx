@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { Helmet } from "react-helmet-async";
 
 import { SiteFooter } from "@/components/seo/footer";
+import { SeoPageLayout } from "@/components/seo/page-layout";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -99,25 +100,8 @@ export function FaqPage() {
         <script type="application/ld+json">{JSON.stringify(faqSchema)}</script>
       </Helmet>
 
-      <div className="min-h-screen bg-cream">
-        {/* Minimal header */}
-        <header className="p-4 sm:p-6 safe-top">
-          <div className="sm:max-w-[560px] sm:mx-auto flex items-center gap-2">
-            <Link to="/" className="flex items-center gap-2">
-              <img src="/logo.svg" alt="BabyPeek" className="h-8 w-8" />
-              <span className="font-display text-xl text-charcoal font-semibold">BabyPeek</span>
-            </Link>
-          </div>
-        </header>
-
-        <main id="main-content" className="px-4 sm:px-6 sm:max-w-[560px] sm:mx-auto pt-8 pb-12">
-          {/* Breadcrumb */}
-          <nav className="text-sm text-warm-gray mb-6">
-            <Link to="/" className="hover:text-coral transition-colors">Home</Link>
-            <span className="mx-2">/</span>
-            <span className="text-charcoal">FAQ</span>
-          </nav>
-
+      <SeoPageLayout breadcrumbLabel="FAQ">
+        <div>
           {/* H1 */}
           <h1 className="font-display text-3xl sm:text-4xl text-charcoal leading-tight mb-3">
             Frequently Asked Questions
@@ -176,10 +160,10 @@ export function FaqPage() {
               See pricing →
             </Link>
           </div>
-        </main>
+        </div>
 
         <SiteFooter />
-      </div>
+      </SeoPageLayout>
     </>
   );
 }
