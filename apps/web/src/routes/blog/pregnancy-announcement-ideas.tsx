@@ -5,40 +5,37 @@ import { Calendar, User, Clock, ArrowRight } from "lucide-react";
 import { SiteFooter } from "@/components/seo/footer";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { getPostBySlug } from "@/content/blog";
+import { formatDate } from "@/lib/date-utils";
 
 export const Route = createFileRoute("/blog/pregnancy-announcement-ideas")({
   component: PregnancyAnnouncementIdeasPage,
 });
 
+const postMeta = getPostBySlug("pregnancy-announcement-ideas")!;
+
 const articleSchema = {
   "@context": "https://schema.org",
   "@type": "Article",
-  headline: "10 Creative Pregnancy Announcement Ideas Using Your Baby's AI Portrait",
-  description:
-    "Skip the generic pregnancy announcement. Use your AI baby portrait to create something parents and grandparents will actually remember.",
-  author: { "@type": "Organization", name: "BabyPeek Team" },
-  publisher: { "@type": "Organization", name: "BabyPeek", url: "https://babypeek.io" },
-  datePublished: "2026-04-01",
-  dateModified: "2026-04-01",
+  headline: postMeta.title,
+  description: postMeta.excerpt,
+  author: {
+    "@type": "Organization",
+    name: postMeta.author,
+  },
+  publisher: {
+    "@type": "Organization",
+    name: "BabyPeek",
+    url: "https://babypeek.io",
+  },
+  datePublished: postMeta.date,
+  dateModified: postMeta.date,
   image: "https://babypeek.io/logo.png",
   url: "https://babypeek.io/blog/pregnancy-announcement-ideas",
-  mainEntityOfPage: { "@type": "WebPage", "@id": "https://babypeek.io/blog/pregnancy-announcement-ideas" },
-};
-
-function formatDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-}
-
-const postMeta = {
-  title: "10 Creative Pregnancy Announcement Ideas Using Your Baby's AI Portrait",
-  date: "2026-04-01",
-  author: "BabyPeek Team",
-  category: "Inspiration",
-  readTime: "7 min read",
+  mainEntityOfPage: {
+    "@type": "WebPage",
+    "@id": "https://babypeek.io/blog/pregnancy-announcement-ideas",
+  },
 };
 
 export function PregnancyAnnouncementIdeasPage() {

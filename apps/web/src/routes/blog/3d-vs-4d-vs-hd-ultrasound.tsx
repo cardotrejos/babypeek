@@ -5,40 +5,37 @@ import { Calendar, User, Clock, ArrowRight } from "lucide-react";
 import { SiteFooter } from "@/components/seo/footer";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { getPostBySlug } from "@/content/blog";
+import { formatDate } from "@/lib/date-utils";
 
 export const Route = createFileRoute("/blog/3d-vs-4d-vs-hd-ultrasound")({
   component: ThreeDVFourDVHDUltrasoundPage,
 });
 
+const postMeta = getPostBySlug("3d-vs-4d-vs-hd-ultrasound")!;
+
 const articleSchema = {
   "@context": "https://schema.org",
   "@type": "Article",
-  headline: "3D vs 4D vs HD Ultrasound: What's the Difference?",
-  description:
-    "Confused by 3D, 4D, and HD ultrasound? Here's a clear breakdown of what each technology delivers and which one works best with BabyPeek.",
-  author: { "@type": "Organization", name: "BabyPeek Team" },
-  publisher: { "@type": "Organization", name: "BabyPeek", url: "https://babypeek.io" },
-  datePublished: "2026-03-25",
-  dateModified: "2026-03-25",
+  headline: postMeta.title,
+  description: postMeta.excerpt,
+  author: {
+    "@type": "Organization",
+    name: postMeta.author,
+  },
+  publisher: {
+    "@type": "Organization",
+    name: "BabyPeek",
+    url: "https://babypeek.io",
+  },
+  datePublished: postMeta.date,
+  dateModified: postMeta.date,
   image: "https://babypeek.io/logo.png",
   url: "https://babypeek.io/blog/3d-vs-4d-vs-hd-ultrasound",
-  mainEntityOfPage: { "@type": "WebPage", "@id": "https://babypeek.io/blog/3d-vs-4d-vs-hd-ultrasound" },
-};
-
-function formatDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-}
-
-const postMeta = {
-  title: "3D vs 4D vs HD Ultrasound: What's the Difference?",
-  date: "2026-03-25",
-  author: "BabyPeek Team",
-  category: "Ultrasound Guide",
-  readTime: "6 min read",
+  mainEntityOfPage: {
+    "@type": "WebPage",
+    "@id": "https://babypeek.io/blog/3d-vs-4d-vs-hd-ultrasound",
+  },
 };
 
 export function ThreeDVFourDVHDUltrasoundPage() {

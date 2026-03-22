@@ -5,40 +5,37 @@ import { Calendar, User, Clock, ArrowRight } from "lucide-react";
 import { SiteFooter } from "@/components/seo/footer";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { getPostBySlug } from "@/content/blog";
+import { formatDate } from "@/lib/date-utils";
 
 export const Route = createFileRoute("/blog/how-ai-baby-portrait-technology-works")({
   component: HowAIBabyPortraitTechnologyWorksPage,
 });
 
+const postMeta = getPostBySlug("how-ai-baby-portrait-technology-works")!;
+
 const articleSchema = {
   "@context": "https://schema.org",
   "@type": "Article",
-  headline: "How AI Baby Portrait Technology Works (2026 Guide)",
-  description:
-    "Curious how AI predicts what your unborn baby will look like? This guide explains the technology behind AI baby portraits — clearly and without hype.",
-  author: { "@type": "Organization", name: "BabyPeek Team" },
-  publisher: { "@type": "Organization", name: "BabyPeek", url: "https://babypeek.io" },
-  datePublished: "2026-03-29",
-  dateModified: "2026-03-29",
+  headline: postMeta.title,
+  description: postMeta.excerpt,
+  author: {
+    "@type": "Organization",
+    name: postMeta.author,
+  },
+  publisher: {
+    "@type": "Organization",
+    name: "BabyPeek",
+    url: "https://babypeek.io",
+  },
+  datePublished: postMeta.date,
+  dateModified: postMeta.date,
   image: "https://babypeek.io/logo.png",
   url: "https://babypeek.io/blog/how-ai-baby-portrait-technology-works",
-  mainEntityOfPage: { "@type": "WebPage", "@id": "https://babypeek.io/blog/how-ai-baby-portrait-technology-works" },
-};
-
-function formatDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-}
-
-const postMeta = {
-  title: "How AI Baby Portrait Technology Works (2026 Guide)",
-  date: "2026-03-29",
-  author: "BabyPeek Team",
-  category: "AI Technology",
-  readTime: "10 min read",
+  mainEntityOfPage: {
+    "@type": "WebPage",
+    "@id": "https://babypeek.io/blog/how-ai-baby-portrait-technology-works",
+  },
 };
 
 export function HowAIBabyPortraitTechnologyWorksPage() {

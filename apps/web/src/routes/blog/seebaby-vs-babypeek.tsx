@@ -5,40 +5,37 @@ import { Calendar, User, Clock, ArrowRight } from "lucide-react";
 import { SiteFooter } from "@/components/seo/footer";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { getPostBySlug } from "@/content/blog";
+import { formatDate } from "@/lib/date-utils";
 
 export const Route = createFileRoute("/blog/seebaby-vs-babypeek")({
   component: SeeBabyVsBabyPeekPage,
 });
 
+const postMeta = getPostBySlug("seebaby-vs-babypeek")!;
+
 const articleSchema = {
   "@context": "https://schema.org",
   "@type": "Article",
-  headline: "SeeBaby vs BabyPeek: Choosing the Right AI for Your Ultrasound Clinic",
-  description:
-    "SeeBaby vs BabyPeek: honest comparison of two AI tools for ultrasound clinics. Different goals, different tools — here's how to pick the right one.",
-  author: { "@type": "Organization", name: "BabyPeek Team" },
-  publisher: { "@type": "Organization", name: "BabyPeek", url: "https://babypeek.io" },
-  datePublished: "2026-04-12",
-  dateModified: "2026-04-12",
+  headline: postMeta.title,
+  description: postMeta.excerpt,
+  author: {
+    "@type": "Organization",
+    name: postMeta.author,
+  },
+  publisher: {
+    "@type": "Organization",
+    name: "BabyPeek",
+    url: "https://babypeek.io",
+  },
+  datePublished: postMeta.date,
+  dateModified: postMeta.date,
   image: "https://babypeek.io/logo.png",
   url: "https://babypeek.io/blog/seebaby-vs-babypeek",
-  mainEntityOfPage: { "@type": "WebPage", "@id": "https://babypeek.io/blog/seebaby-vs-babypeek" },
-};
-
-function formatDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-}
-
-const postMeta = {
-  title: "SeeBaby vs BabyPeek: Choosing the Right AI for Your Ultrasound Clinic",
-  date: "2026-04-12",
-  author: "BabyPeek Team",
-  category: "For Clinics",
-  readTime: "6 min read",
+  mainEntityOfPage: {
+    "@type": "WebPage",
+    "@id": "https://babypeek.io/blog/seebaby-vs-babypeek",
+  },
 };
 
 export function SeeBabyVsBabyPeekPage() {

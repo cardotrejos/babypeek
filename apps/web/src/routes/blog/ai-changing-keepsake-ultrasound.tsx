@@ -5,40 +5,37 @@ import { Calendar, User, Clock, ArrowRight } from "lucide-react";
 import { SiteFooter } from "@/components/seo/footer";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { getPostBySlug } from "@/content/blog";
+import { formatDate } from "@/lib/date-utils";
 
 export const Route = createFileRoute("/blog/ai-changing-keepsake-ultrasound")({
   component: AIChangingKeepsakeUltrasoundPage,
 });
 
+const postMeta = getPostBySlug("ai-changing-keepsake-ultrasound")!;
+
 const articleSchema = {
   "@context": "https://schema.org",
   "@type": "Article",
-  headline: "How AI Is Changing the Keepsake Ultrasound Industry in 2026",
-  description:
-    "Keepsake ultrasound studios face a pivotal moment. AI baby portraits are shifting client expectations — here's what the industry looks like now.",
-  author: { "@type": "Organization", name: "BabyPeek Team" },
-  publisher: { "@type": "Organization", name: "BabyPeek", url: "https://babypeek.io" },
-  datePublished: "2026-04-08",
-  dateModified: "2026-04-08",
+  headline: postMeta.title,
+  description: postMeta.excerpt,
+  author: {
+    "@type": "Organization",
+    name: postMeta.author,
+  },
+  publisher: {
+    "@type": "Organization",
+    name: "BabyPeek",
+    url: "https://babypeek.io",
+  },
+  datePublished: postMeta.date,
+  dateModified: postMeta.date,
   image: "https://babypeek.io/logo.png",
   url: "https://babypeek.io/blog/ai-changing-keepsake-ultrasound",
-  mainEntityOfPage: { "@type": "WebPage", "@id": "https://babypeek.io/blog/ai-changing-keepsake-ultrasound" },
-};
-
-function formatDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-}
-
-const postMeta = {
-  title: "How AI Is Changing the Keepsake Ultrasound Industry in 2026",
-  date: "2026-04-08",
-  author: "BabyPeek Team",
-  category: "For Clinics",
-  readTime: "7 min read",
+  mainEntityOfPage: {
+    "@type": "WebPage",
+    "@id": "https://babypeek.io/blog/ai-changing-keepsake-ultrasound",
+  },
 };
 
 export function AIChangingKeepsakeUltrasoundPage() {

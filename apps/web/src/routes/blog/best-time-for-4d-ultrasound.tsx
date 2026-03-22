@@ -5,40 +5,37 @@ import { Calendar, User, Clock, ArrowRight } from "lucide-react";
 import { SiteFooter } from "@/components/seo/footer";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { getPostBySlug } from "@/content/blog";
+import { formatDate } from "@/lib/date-utils";
 
 export const Route = createFileRoute("/blog/best-time-for-4d-ultrasound")({
   component: BestTimeFor4DUtrasoundPage,
 });
 
+const postMeta = getPostBySlug("best-time-for-4d-ultrasound")!;
+
 const articleSchema = {
   "@context": "https://schema.org",
   "@type": "Article",
-  headline: "Best Time for a 4D Ultrasound: Week-by-Week Guide",
-  description:
-    "Not sure when to book your 4D ultrasound? This week-by-week guide covers weeks 20–36 and helps you pick the perfect time to see your baby's face.",
-  author: { "@type": "Organization", name: "BabyPeek Team" },
-  publisher: { "@type": "Organization", name: "BabyPeek", url: "https://babypeek.io" },
-  datePublished: "2026-03-22",
-  dateModified: "2026-03-22",
+  headline: postMeta.title,
+  description: postMeta.excerpt,
+  author: {
+    "@type": "Organization",
+    name: postMeta.author,
+  },
+  publisher: {
+    "@type": "Organization",
+    name: "BabyPeek",
+    url: "https://babypeek.io",
+  },
+  datePublished: postMeta.date,
+  dateModified: postMeta.date,
   image: "https://babypeek.io/logo.png",
   url: "https://babypeek.io/blog/best-time-for-4d-ultrasound",
-  mainEntityOfPage: { "@type": "WebPage", "@id": "https://babypeek.io/blog/best-time-for-4d-ultrasound" },
-};
-
-function formatDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-}
-
-const postMeta = {
-  title: "Best Time for a 4D Ultrasound: Week-by-Week Guide",
-  date: "2026-03-22",
-  author: "BabyPeek Team",
-  category: "Ultrasound Guide",
-  readTime: "7 min read",
+  mainEntityOfPage: {
+    "@type": "WebPage",
+    "@id": "https://babypeek.io/blog/best-time-for-4d-ultrasound",
+  },
 };
 
 export function BestTimeFor4DUtrasoundPage() {

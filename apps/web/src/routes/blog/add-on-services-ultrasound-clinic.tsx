@@ -5,40 +5,37 @@ import { Calendar, User, Clock, ArrowRight } from "lucide-react";
 import { SiteFooter } from "@/components/seo/footer";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { getPostBySlug } from "@/content/blog";
+import { formatDate } from "@/lib/date-utils";
 
 export const Route = createFileRoute("/blog/add-on-services-ultrasound-clinic")({
   component: AddOnServicesUltrasoundClinicPage,
 });
 
+const postMeta = getPostBySlug("add-on-services-ultrasound-clinic")!;
+
 const articleSchema = {
   "@context": "https://schema.org",
   "@type": "Article",
-  headline: "7 Add-On Services That Increase Revenue Per Ultrasound Visit",
-  description:
-    "Ultrasound clinics leaving money on the table: here's how add-on services — led by AI baby portraits — can meaningfully increase revenue per client visit.",
-  author: { "@type": "Organization", name: "BabyPeek Team" },
-  publisher: { "@type": "Organization", name: "BabyPeek", url: "https://babypeek.io" },
-  datePublished: "2026-04-05",
-  dateModified: "2026-04-05",
+  headline: postMeta.title,
+  description: postMeta.excerpt,
+  author: {
+    "@type": "Organization",
+    name: postMeta.author,
+  },
+  publisher: {
+    "@type": "Organization",
+    name: "BabyPeek",
+    url: "https://babypeek.io",
+  },
+  datePublished: postMeta.date,
+  dateModified: postMeta.date,
   image: "https://babypeek.io/logo.png",
   url: "https://babypeek.io/blog/add-on-services-ultrasound-clinic",
-  mainEntityOfPage: { "@type": "WebPage", "@id": "https://babypeek.io/blog/add-on-services-ultrasound-clinic" },
-};
-
-function formatDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-}
-
-const postMeta = {
-  title: "7 Add-On Services That Increase Revenue Per Ultrasound Visit",
-  date: "2026-04-05",
-  author: "BabyPeek Team",
-  category: "For Clinics",
-  readTime: "8 min read",
+  mainEntityOfPage: {
+    "@type": "WebPage",
+    "@id": "https://babypeek.io/blog/add-on-services-ultrasound-clinic",
+  },
 };
 
 export function AddOnServicesUltrasoundClinicPage() {
