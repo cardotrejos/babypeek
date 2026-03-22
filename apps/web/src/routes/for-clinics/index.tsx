@@ -96,7 +96,10 @@ export function ForClinicsPage() {
           content="Add AI baby portraits to your ultrasound services. New revenue stream, zero workflow change. Free pilot available."
         />
         <link rel="canonical" href="https://babypeek.io/for-clinics" />
-        <meta property="og:title" content="BabyPeek for Clinics - AI Baby Portraits for Ultrasound Studios" />
+        <meta
+          property="og:title"
+          content="BabyPeek for Clinics - AI Baby Portraits for Ultrasound Studios"
+        />
         <meta
           property="og:description"
           content="Add AI baby portraits to your ultrasound services. New revenue stream, zero workflow change. Free pilot available."
@@ -119,7 +122,9 @@ export function ForClinicsPage() {
         <main id="main-content" className="px-4 sm:px-6 sm:max-w-[560px] sm:mx-auto pt-8 pb-12">
           {/* Breadcrumb */}
           <nav className="text-sm text-warm-gray mb-6">
-            <Link to="/" className="hover:text-coral transition-colors">Home</Link>
+            <Link to="/" className="hover:text-coral transition-colors">
+              Home
+            </Link>
             <span className="mx-2">/</span>
             <span className="text-charcoal">For Clinics</span>
           </nav>
@@ -135,9 +140,9 @@ export function ForClinicsPage() {
           {/* Value prop */}
           <div className="rounded-2xl bg-coral-light border border-rose p-6 mb-8">
             <p className="text-charcoal text-base leading-relaxed">
-              Your patients already come to you for the magic of seeing their baby. Now give them something
-              they'll share with everyone — a photorealistic AI portrait of their baby's face, generated
-              from your 4D ultrasound images in 60 seconds.
+              Your patients already come to you for the magic of seeing their baby. Now give them
+              something they'll share with everyone — a photorealistic AI portrait of their baby's
+              face, generated from your 4D ultrasound images in 60 seconds.
             </p>
             <p className="text-charcoal text-base leading-relaxed mt-3 font-semibold">
               No new software to learn. No workflow changes. Just upload and deliver.
@@ -155,9 +160,7 @@ export function ForClinicsPage() {
                 "transition-all duration-200",
               )}
             >
-              <Link to="/for-clinics/calculator">
-                Calculate Revenue →
-              </Link>
+              <Link to="/for-clinics/calculator">Calculate Revenue →</Link>
             </Button>
             <Button
               asChild
@@ -240,9 +243,7 @@ export function ForClinicsPage() {
 
           {/* Revenue Table */}
           <section className="mb-12">
-            <h2 className="font-display text-2xl text-charcoal mb-1">
-              Revenue Calculator
-            </h2>
+            <h2 className="font-display text-2xl text-charcoal mb-1">Revenue Calculator</h2>
             <p className="text-warm-gray text-sm mb-4">
               See how much BabyPeek can add to your bottom line.
             </p>
@@ -251,9 +252,15 @@ export function ForClinicsPage() {
                 <thead>
                   <tr className="bg-coral-light">
                     <th className="text-left px-4 py-3 font-semibold text-charcoal">Scans/Day</th>
-                    <th className="text-center px-4 py-3 font-semibold text-charcoal">Price/Portrait</th>
-                    <th className="text-center px-4 py-3 font-semibold text-charcoal">Monthly Revenue</th>
-                    <th className="text-center px-4 py-3 font-semibold text-charcoal">Annual Revenue</th>
+                    <th className="text-center px-4 py-3 font-semibold text-charcoal">
+                      Price/Portrait
+                    </th>
+                    <th className="text-center px-4 py-3 font-semibold text-charcoal">
+                      Monthly Revenue
+                    </th>
+                    <th className="text-center px-4 py-3 font-semibold text-charcoal">
+                      Annual Revenue
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -261,8 +268,12 @@ export function ForClinicsPage() {
                     <tr key={scans} className="border-t border-charcoal/10">
                       <td className="px-4 py-3 text-charcoal font-medium">{scans}</td>
                       <td className="px-4 py-3 text-center text-charcoal">${price}</td>
-                      <td className="px-4 py-3 text-center font-semibold text-coral">${monthly.toLocaleString()}</td>
-                      <td className="px-4 py-3 text-center font-semibold text-coral">${annual.toLocaleString()}</td>
+                      <td className="px-4 py-3 text-center font-semibold text-coral">
+                        ${monthly.toLocaleString()}
+                      </td>
+                      <td className="px-4 py-3 text-center font-semibold text-coral">
+                        ${annual.toLocaleString()}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -305,16 +316,16 @@ export function ForClinicsPage() {
 
           {/* Integration Options */}
           <section className="mb-12">
-            <h2 className="font-display text-2xl text-charcoal mb-6">
-              Integration Options
-            </h2>
+            <h2 className="font-display text-2xl text-charcoal mb-6">Integration Options</h2>
             <div className="rounded-xl border border-charcoal/10 overflow-hidden">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="bg-coral-light">
                     <th className="text-left px-4 py-3 font-semibold text-charcoal">Option</th>
                     <th className="text-left px-4 py-3 font-semibold text-charcoal">Best For</th>
-                    <th className="text-center px-4 py-3 font-semibold text-charcoal">Setup Time</th>
+                    <th className="text-center px-4 py-3 font-semibold text-charcoal">
+                      Setup Time
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -332,9 +343,7 @@ export function ForClinicsPage() {
 
           {/* Clinic Pricing */}
           <section className="mb-12">
-            <h2 className="font-display text-2xl text-charcoal mb-6">
-              Pricing for Clinics
-            </h2>
+            <h2 className="font-display text-2xl text-charcoal mb-6">Pricing for Clinics</h2>
             <div className="space-y-3">
               {pricingPlans.map(({ name, price, per, includes, cta, popular }) => (
                 <div
@@ -351,6 +360,7 @@ export function ForClinicsPage() {
                       Most Popular
                     </span>
                   )}
+                  <h3 className="font-display text-xl text-charcoal mb-2">{name}</h3>
                   <div className="flex items-baseline gap-2 mb-3">
                     <span className="font-display text-2xl text-charcoal">{price}</span>
                     <span className="text-warm-gray text-sm">{per}</span>
@@ -383,15 +393,14 @@ export function ForClinicsPage() {
               ))}
             </div>
             <p className="text-center text-sm text-warm-gray mt-4">
-              All plans include a <strong className="text-charcoal">free 30-day pilot with 20 portraits</strong>.
+              All plans include a{" "}
+              <strong className="text-charcoal">free 30-day pilot with 20 portraits</strong>.
             </p>
           </section>
 
           {/* Security summary */}
           <section className="mb-10 p-6 rounded-2xl bg-coral-light border border-rose">
-            <h2 className="font-display text-xl text-charcoal mb-3">
-              Security & Patient Privacy
-            </h2>
+            <h2 className="font-display text-xl text-charcoal mb-3">Security & Patient Privacy</h2>
             <ul className="space-y-2 text-sm text-warm-gray">
               <li className="flex items-start gap-2">
                 <CheckCircle2 className="w-4 h-4 text-coral shrink-0 mt-0.5" />
@@ -420,12 +429,11 @@ export function ForClinicsPage() {
 
           {/* Final CTA */}
           <section className="text-center mb-8">
-            <h2 className="font-display text-2xl text-charcoal mb-2">
-              Ready to Get Started?
-            </h2>
+            <h2 className="font-display text-2xl text-charcoal mb-2">Ready to Get Started?</h2>
             <p className="text-warm-gray text-sm mb-6">
               Start your free 30-day pilot with 20 complimentary portraits.
-              <br />No credit card. No contract.
+              <br />
+              No credit card. No contract.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <Button

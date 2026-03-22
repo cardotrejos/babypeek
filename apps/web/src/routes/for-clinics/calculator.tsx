@@ -75,7 +75,7 @@ export function CalculatorPage() {
   const paidPortraitsPerDay = scansPerDay * (adoptionRate / 100);
   const weeklyRevenue = paidPortraitsPerDay * daysPerWeek * pricePerPortrait;
   const monthlyRevenue = weeklyRevenue * 4;
-  const annualRevenue = weeklyRevenue * 52;
+  const annualRevenue = monthlyRevenue * 12;
   const equivalentNewScans = (monthlyRevenue / pricePerPortrait).toFixed(0);
   const revenuePerPortrait = pricePerPortrait - 3; // Professional plan $3/portrait
 
@@ -111,9 +111,13 @@ export function CalculatorPage() {
         <main id="main-content" className="px-4 sm:px-6 sm:max-w-[560px] sm:mx-auto pt-8 pb-12">
           {/* Breadcrumb */}
           <nav className="text-sm text-warm-gray mb-6">
-            <Link to="/" className="hover:text-coral transition-colors">Home</Link>
+            <Link to="/" className="hover:text-coral transition-colors">
+              Home
+            </Link>
             <span className="mx-2">/</span>
-            <Link to="/for-clinics" className="hover:text-coral transition-colors">For Clinics</Link>
+            <Link to="/for-clinics" className="hover:text-coral transition-colors">
+              For Clinics
+            </Link>
             <span className="mx-2">/</span>
             <span className="text-charcoal">Revenue Calculator</span>
           </nav>
@@ -157,22 +161,19 @@ export function CalculatorPage() {
             <div>
               <p className="text-charcoal text-sm font-semibold">
                 That's like adding{" "}
-                <span className="font-display text-coral text-xl">
-                  {equivalentNewScans}
-                </span>{" "}
-                new scans per month
+                <span className="font-display text-coral text-xl">{equivalentNewScans}</span> new
+                scans per month
               </p>
               <p className="text-warm-gray text-xs mt-1">
-                Pure profit add-on — no extra equipment, no extra staff time beyond 10 seconds of upload.
+                Pure profit add-on — no extra equipment, no extra staff time beyond 10 seconds of
+                upload.
               </p>
             </div>
           </div>
 
           {/* Calculator inputs */}
           <div className="rounded-2xl border border-charcoal/10 bg-white/70 p-6 mb-8 shadow-sm">
-            <h2 className="font-display text-xl text-charcoal mb-1">
-              Adjust Your Numbers
-            </h2>
+            <h2 className="font-display text-xl text-charcoal mb-1">Adjust Your Numbers</h2>
             <p className="text-warm-gray text-sm mb-4">
               Move the sliders to match your clinic's typical week.
             </p>
@@ -227,10 +228,26 @@ export function CalculatorPage() {
               </thead>
               <tbody>
                 {[
-                  { label: "Per day", revenue: paidPortraitsPerDay * pricePerPortrait, profit: paidPortraitsPerDay * revenuePerPortrait },
-                  { label: "Per week", revenue: weeklyRevenue, profit: weeklyRevenue - (paidPortraitsPerDay * daysPerWeek * 3) },
-                  { label: "Per month", revenue: monthlyRevenue, profit: monthlyRevenue - (paidPortraitsPerDay * daysPerWeek * 4 * 3) },
-                  { label: "Per year", revenue: annualRevenue, profit: annualRevenue - (paidPortraitsPerDay * daysPerWeek * 52 * 3) },
+                  {
+                    label: "Per day",
+                    revenue: paidPortraitsPerDay * pricePerPortrait,
+                    profit: paidPortraitsPerDay * revenuePerPortrait,
+                  },
+                  {
+                    label: "Per week",
+                    revenue: weeklyRevenue,
+                    profit: weeklyRevenue - paidPortraitsPerDay * daysPerWeek * 3,
+                  },
+                  {
+                    label: "Per month",
+                    revenue: monthlyRevenue,
+                    profit: monthlyRevenue - paidPortraitsPerDay * daysPerWeek * 4 * 3,
+                  },
+                  {
+                    label: "Per year",
+                    revenue: annualRevenue,
+                    profit: annualRevenue - paidPortraitsPerDay * daysPerWeek * 52 * 3,
+                  },
                 ].map(({ label, revenue, profit }) => (
                   <tr key={label} className="border-t border-charcoal/10">
                     <td className="px-4 py-3 text-charcoal font-medium">{label}</td>
