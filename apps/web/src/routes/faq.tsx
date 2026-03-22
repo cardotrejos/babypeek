@@ -10,93 +10,6 @@ export const Route = createFileRoute("/faq")({
   component: FaqPage,
 });
 
-const faqSchema = {
-  "@context": "https://schema.org",
-  "@type": "FAQPage",
-  mainEntity: [
-    {
-      "@type": "Question",
-      name: "How accurate is BabyPeek's AI baby prediction?",
-      acceptedAnswer: {
-        "@type": "Answer",
-        text: "BabyPeek creates an artistic prediction based on your baby's visible ultrasound features. It uses AI trained on thousands of ultrasound-to-baby photo pairs. Many parents report a strong resemblance after birth, but results are predictions, not medical diagnoses.",
-      },
-    },
-    {
-      "@type": "Question",
-      name: "What type of ultrasound image do I need?",
-      acceptedAnswer: {
-        "@type": "Answer",
-        text: "BabyPeek works best with 4D or HD (5D) ultrasound images where the baby's face is clearly visible. 3D ultrasounds also work. Standard 2D ultrasound images are not supported. Best results come from scans done between 26-32 weeks.",
-      },
-    },
-    {
-      "@type": "Question",
-      name: "Is my ultrasound image kept private?",
-      acceptedAnswer: {
-        "@type": "Answer",
-        text: "Yes. Your ultrasound image is processed by our AI and then automatically deleted from our servers. We do not store, share, or use your images for any purpose other than generating your portrait. See our privacy policy for details.",
-      },
-    },
-    {
-      "@type": "Question",
-      name: "How long does it take to get my baby's portrait?",
-      acceptedAnswer: {
-        "@type": "Answer",
-        text: "About 60 seconds from upload to preview. The full HD download is available immediately after purchase.",
-      },
-    },
-    {
-      "@type": "Question",
-      name: "Can I get a refund if I'm not satisfied?",
-      acceptedAnswer: {
-        "@type": "Answer",
-        text: "Yes. If you're unhappy with your HD portrait, contact us within 7 days for a full refund. No questions asked.",
-      },
-    },
-    {
-      "@type": "Question",
-      name: "When is the best time during pregnancy to use BabyPeek?",
-      acceptedAnswer: {
-        "@type": "Answer",
-        text: "The best results come from 4D ultrasounds taken between 26-32 weeks of pregnancy, when your baby's facial features are most developed and visible.",
-      },
-    },
-    {
-      "@type": "Question",
-      name: "Does BabyPeek work with twin pregnancies?",
-      acceptedAnswer: {
-        "@type": "Answer",
-        text: "Yes, as long as each baby's face is clearly visible in a separate ultrasound image. Upload one image per baby.",
-      },
-    },
-    {
-      "@type": "Question",
-      name: "Can I share my baby's portrait with family?",
-      acceptedAnswer: {
-        "@type": "Answer",
-        text: "Yes! Every portrait comes with a unique shareable link. You can share via text, email, social media, or print it.",
-      },
-    },
-    {
-      "@type": "Question",
-      name: "How is BabyPeek different from other AI baby generators?",
-      acceptedAnswer: {
-        "@type": "Answer",
-        text: "Most AI baby generators predict what a baby will look like based on parent photos. BabyPeek uses your actual 4D ultrasound — your real baby's features — to create a portrait of the baby you're actually carrying.",
-      },
-    },
-    {
-      "@type": "Question",
-      name: "Is this a medical tool?",
-      acceptedAnswer: {
-        "@type": "Answer",
-        text: "No. BabyPeek is an entertainment and keepsake service. It is not a medical device and should not be used for diagnostic purposes.",
-      },
-    },
-  ],
-};
-
 const faqs = [
   {
     question: "How accurate is BabyPeek's AI baby prediction?",
@@ -149,6 +62,19 @@ const faqs = [
       "No. BabyPeek is an entertainment and keepsake service. It is not a medical device and should not be used for diagnostic purposes.",
   },
 ];
+
+const faqSchema = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map(({ question, answer }) => ({
+    "@type": "Question",
+    name: question,
+    acceptedAnswer: {
+      "@type": "Answer",
+      text: answer,
+    },
+  })),
+};
 
 export function FaqPage() {
   return (

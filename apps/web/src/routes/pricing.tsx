@@ -5,6 +5,7 @@ import { CheckCircle2 } from "lucide-react";
 import { SiteFooter } from "@/components/seo/footer";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { PRICE_DISPLAY, PRICE_CENTS } from "@/lib/pricing";
 
 export const Route = createFileRoute("/pricing")({
   component: PricingPage,
@@ -26,7 +27,7 @@ const productSchema = {
     {
       "@type": "Offer",
       name: "HD Portrait",
-      price: "9.99",
+      price: (PRICE_CENTS / 100).toFixed(2),
       priceCurrency: "USD",
       description: "High-definition baby portrait download — one-time purchase",
     },
@@ -94,16 +95,16 @@ export function PricingPage() {
   return (
     <>
       <Helmet>
-        <title>BabyPeek Pricing - Free Preview, HD From $9.99</title>
+        <title>{`BabyPeek Pricing - Free Preview, HD From ${PRICE_DISPLAY}`}</title>
         <meta
           name="description"
-          content="Get your baby's AI portrait free in preview quality. Upgrade to HD for $9.99. No subscription. See pricing options."
+          content={`Get your baby's AI portrait free in preview quality. Upgrade to HD for ${PRICE_DISPLAY}. No subscription. See pricing options.`}
         />
         <link rel="canonical" href="https://babypeek.io/pricing" />
-        <meta property="og:title" content="BabyPeek Pricing - Free Preview, HD From $9.99" />
+        <meta property="og:title" content={`BabyPeek Pricing - Free Preview, HD From ${PRICE_DISPLAY}`} />
         <meta
           property="og:description"
-          content="Get your baby's AI portrait free in preview quality. Upgrade to HD for $9.99. No subscription."
+          content={`Get your baby's AI portrait free in preview quality. Upgrade to HD for ${PRICE_DISPLAY}. No subscription.`}
         />
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://babypeek.io/pricing" />
@@ -188,7 +189,7 @@ export function PricingPage() {
                   <p className="text-sm text-warm-gray mt-1">One-time purchase. No subscription.</p>
                 </div>
                 <div className="text-right">
-                  <div className="font-display text-3xl text-charcoal">$9.99</div>
+                  <div className="font-display text-3xl text-charcoal">{PRICE_DISPLAY}</div>
                   <div className="text-xs text-warm-gray">one-time</div>
                 </div>
               </div>
@@ -250,7 +251,17 @@ export function PricingPage() {
                           babypeek
                         )}
                       </td>
-                      <td className="px-3 py-3 text-center text-warm-gray">{traditional}</td>
+                      <td className="px-3 py-3 text-center text-warm-gray">
+                        {typeof traditional === "boolean" ? (
+                          traditional ? (
+                            <CheckCircle2 className="w-4 h-4 text-success mx-auto" />
+                          ) : (
+                            <span>—</span>
+                          )
+                        ) : (
+                          traditional
+                        )}
+                      </td>
                       <td className="px-3 py-3 text-center text-warm-gray">
                         {typeof otherAi === "boolean" ? (
                           otherAi ? (
