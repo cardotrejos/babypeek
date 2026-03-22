@@ -18,6 +18,7 @@ import { Route as CompareRouteRouteImport } from './routes/compare/route'
 import { Route as BlogRouteRouteImport } from './routes/blog/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ForClinicsIndexRouteImport } from './routes/for-clinics/index'
+import { Route as CompareIndexRouteImport } from './routes/compare/index'
 import { Route as BlogIndexRouteImport } from './routes/blog/index'
 import { Route as ShareShareIdRouteImport } from './routes/share.$shareId'
 import { Route as ResultResultIdRouteImport } from './routes/result.$resultId'
@@ -75,6 +76,11 @@ const ForClinicsIndexRoute = ForClinicsIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => ForClinicsRouteRoute,
+} as any)
+const CompareIndexRoute = CompareIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => CompareRouteRoute,
 } as any)
 const BlogIndexRoute = BlogIndexRouteImport.update({
   id: '/',
@@ -161,6 +167,7 @@ export interface FileRoutesByFullPath {
   '/result/$resultId': typeof ResultResultIdRoute
   '/share/$shareId': typeof ShareShareIdRoute
   '/blog/': typeof BlogIndexRoute
+  '/compare/': typeof CompareIndexRoute
   '/for-clinics/': typeof ForClinicsIndexRoute
 }
 export interface FileRoutesByTo {
@@ -182,6 +189,7 @@ export interface FileRoutesByTo {
   '/result/$resultId': typeof ResultResultIdRoute
   '/share/$shareId': typeof ShareShareIdRoute
   '/blog': typeof BlogIndexRoute
+  '/compare': typeof CompareIndexRoute
   '/for-clinics': typeof ForClinicsIndexRoute
 }
 export interface FileRoutesById {
@@ -206,6 +214,7 @@ export interface FileRoutesById {
   '/result/$resultId': typeof ResultResultIdRoute
   '/share/$shareId': typeof ShareShareIdRoute
   '/blog/': typeof BlogIndexRoute
+  '/compare/': typeof CompareIndexRoute
   '/for-clinics/': typeof ForClinicsIndexRoute
 }
 export interface FileRouteTypes {
@@ -231,6 +240,7 @@ export interface FileRouteTypes {
     | '/result/$resultId'
     | '/share/$shareId'
     | '/blog/'
+    | '/compare/'
     | '/for-clinics/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -275,6 +285,7 @@ export interface FileRouteTypes {
     | '/result/$resultId'
     | '/share/$shareId'
     | '/blog/'
+    | '/compare/'
     | '/for-clinics/'
   fileRoutesById: FileRoutesById
 }
@@ -365,6 +376,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/blog/'
       preLoaderRoute: typeof BlogIndexRouteImport
       parentRoute: typeof BlogRouteRoute
+    }
+    '/compare/': {
+      id: '/compare/'
+      path: '/'
+      fullPath: '/compare/'
+      preLoaderRoute: typeof CompareIndexRouteImport
+      parentRoute: typeof CompareRouteRoute
     }
     '/share/$shareId': {
       id: '/share/$shareId'
@@ -463,11 +481,13 @@ const BlogRouteRouteWithChildren = BlogRouteRoute._addFileChildren(
 interface CompareRouteRouteChildren {
   CompareAiBabyGenerators2026Route: typeof CompareAiBabyGenerators2026Route
   CompareBabypeekVsSeebabyRoute: typeof CompareBabypeekVsSeebabyRoute
+  CompareIndexRoute: typeof CompareIndexRoute
 }
 
 const CompareRouteRouteChildren: CompareRouteRouteChildren = {
   CompareAiBabyGenerators2026Route: CompareAiBabyGenerators2026Route,
   CompareBabypeekVsSeebabyRoute: CompareBabypeekVsSeebabyRoute,
+  CompareIndexRoute: CompareIndexRoute,
 }
 
 const CompareRouteRouteWithChildren = CompareRouteRoute._addFileChildren(
