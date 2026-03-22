@@ -5,7 +5,7 @@ import { Upload, Sparkles, Share2, CheckCircle2, XCircle } from "lucide-react";
 import { SiteFooter } from "@/components/seo/footer";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { PRICE_DISPLAY, PRICE_CENTS } from "@/lib/pricing";
+
 
 export const Route = createFileRoute("/how-it-works")({
   component: HowItWorksPage,
@@ -33,7 +33,7 @@ const howToSchema = {
     {
       "@type": "HowToStep",
       name: "Download and Share",
-      text: `View your free preview. Upgrade to HD (${PRICE_DISPLAY}) to download and share the high-resolution portrait.`,
+      text: "View your free preview. Upgrade to HD (from $9.99) to download and share the high-resolution portrait.",
       position: 3,
     },
   ],
@@ -67,10 +67,10 @@ const steps = [
     step: "3",
     title: "Preview, Upgrade, and Share",
     description:
-      `Get an instant free preview of your baby's portrait. Upgrade to HD (${PRICE_DISPLAY}) for the full high-resolution download. Send to family and friends with a unique shareable link.`,
+      "Get an instant free preview of your baby's portrait. Upgrade to HD (from $9.99) for the full high-resolution download. Send to family and friends with a unique shareable link.",
     tips: [
       "Free: get an instant preview",
-      `HD (${PRICE_DISPLAY}): full high-resolution download`,
+      "HD (from $9.99): full high-resolution download",
       "Share: unique link for family and friends",
     ],
   },

@@ -48,10 +48,24 @@ function LandingPage() {
       },
       {
         "@type": "Offer",
-        "name": "HD Portrait",
-        "price": (PRICING_TIERS.basic.priceCents / 100).toFixed(2),
+        "name": "Basic",
+        "price": "9.99",
         "priceCurrency": "USD",
-        "description": "High-definition baby portrait download",
+        "description": "1 HD portrait — one-time purchase",
+      },
+      {
+        "@type": "Offer",
+        "name": "Plus",
+        "price": "14.99",
+        "priceCurrency": "USD",
+        "description": "All 4 HD portraits + email delivery — one-time purchase",
+      },
+      {
+        "@type": "Offer",
+        "name": "Pro",
+        "price": "24.99",
+        "priceCurrency": "USD",
+        "description": "All 4 HD portraits + print-ready resolution + priority processing — one-time purchase",
       },
     ],
   };
@@ -64,7 +78,7 @@ function LandingPage() {
         </title>
         <meta
           name="description"
-          content={`Upload your 4D ultrasound and get a realistic AI portrait of your baby in ~60 seconds. Free preview, HD ${PRICE_DISPLAY}. Private & secure.`}
+          content={`Upload your 4D ultrasound and get a realistic AI portrait of your baby in ~60 seconds. Free preview, HD from $9.99. Private & secure.`}
         />
         <link rel="canonical" href="https://babypeek.io/" />
         <meta
@@ -73,7 +87,7 @@ function LandingPage() {
         />
         <meta
           property="og:description"
-          content={`Upload your 4D ultrasound and get a realistic AI portrait of your baby in ~60 seconds. Free preview, HD ${PRICE_DISPLAY}.`}
+          content={`Upload your 4D ultrasound and get a realistic AI portrait of your baby in ~60 seconds. Free preview, HD from $9.99.`}
         />
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://babypeek.io/" />

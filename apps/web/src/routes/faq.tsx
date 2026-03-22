@@ -12,6 +12,11 @@ export const Route = createFileRoute("/faq")({
 
 const faqs = [
   {
+    question: "How much does BabyPeek cost?",
+    answer:
+      "BabyPeek has three plans: Basic at $9.99 (1 HD portrait), Plus at $14.99 (all 4 HD portraits + email delivery), and Pro at $24.99 (all 4 portraits + print-ready resolution + priority processing). Every plan is a one-time purchase — no subscription. You can preview your portrait for free before deciding.",
+  },
+  {
     question: "How accurate is BabyPeek's AI baby prediction?",
     answer:
       "BabyPeek creates an artistic prediction based on your baby's visible ultrasound features. It uses AI trained on thousands of ultrasound-to-baby photo pairs. Many parents report a strong resemblance after birth, but results are predictions, not medical diagnoses.",
