@@ -5,6 +5,7 @@ import { Calendar, User, Clock, ArrowRight } from "lucide-react";
 import { SiteFooter } from "@/components/seo/footer";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { formatDate } from "@/lib/date-utils";
 
 export const Route = createFileRoute("/blog/add-on-services-ultrasound-clinic")({
   component: AddOnServicesUltrasoundClinicPage,
@@ -24,14 +25,6 @@ const articleSchema = {
   url: "https://babypeek.io/blog/add-on-services-ultrasound-clinic",
   mainEntityOfPage: { "@type": "WebPage", "@id": "https://babypeek.io/blog/add-on-services-ultrasound-clinic" },
 };
-
-function formatDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-}
 
 const postMeta = {
   title: "7 Add-On Services That Increase Revenue Per Ultrasound Visit",

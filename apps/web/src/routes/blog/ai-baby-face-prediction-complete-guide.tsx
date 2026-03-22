@@ -5,6 +5,7 @@ import { Calendar, User, Clock, ArrowRight } from "lucide-react";
 import { SiteFooter } from "@/components/seo/footer";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { formatDate } from "@/lib/date-utils";
 
 export const Route = createFileRoute("/blog/ai-baby-face-prediction-complete-guide")({
   component: AIBabyFacePredictionCompleteGuidePage,
@@ -24,14 +25,6 @@ const articleSchema = {
   url: "https://babypeek.io/blog/ai-baby-face-prediction-complete-guide",
   mainEntityOfPage: { "@type": "WebPage", "@id": "https://babypeek.io/blog/ai-baby-face-prediction-complete-guide" },
 };
-
-function formatDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-}
 
 const postMeta = {
   title: "AI Baby Face Prediction: The Complete Guide (2026)",

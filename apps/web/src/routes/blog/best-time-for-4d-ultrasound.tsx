@@ -5,6 +5,7 @@ import { Calendar, User, Clock, ArrowRight } from "lucide-react";
 import { SiteFooter } from "@/components/seo/footer";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { formatDate } from "@/lib/date-utils";
 
 export const Route = createFileRoute("/blog/best-time-for-4d-ultrasound")({
   component: BestTimeFor4DUtrasoundPage,
@@ -24,14 +25,6 @@ const articleSchema = {
   url: "https://babypeek.io/blog/best-time-for-4d-ultrasound",
   mainEntityOfPage: { "@type": "WebPage", "@id": "https://babypeek.io/blog/best-time-for-4d-ultrasound" },
 };
-
-function formatDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-}
 
 const postMeta = {
   title: "Best Time for a 4D Ultrasound: Week-by-Week Guide",
