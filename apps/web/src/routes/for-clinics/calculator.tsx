@@ -48,7 +48,7 @@ function SliderInput({
         className="w-full accent-coral h-2 rounded-full cursor-pointer"
         style={
           {
-            background: `linear-gradient(to right, #e8927c ${pct}%, #f5d6ce ${pct}%)`,
+            background: `linear-gradient(to right, var(--coral) ${pct}%, var(--rose) ${pct}%)`,
           } as React.CSSProperties
         }
       />
