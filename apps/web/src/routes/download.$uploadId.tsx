@@ -1,4 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { Helmet } from "react-helmet-async";
 import { useQuery } from "@tanstack/react-query";
 import { DownloadButton, DownloadExpired } from "@/components/download";
 import { API_BASE_URL } from "@/lib/api-config";
@@ -70,6 +71,9 @@ function DownloadPage() {
   if (isLoading || isAuthLoading) {
     return (
       <div className="min-h-screen bg-cream flex items-center justify-center">
+        <Helmet>
+          <meta name="robots" content="noindex, nofollow" />
+        </Helmet>
         <div className="size-12 animate-spin rounded-full border-4 border-coral border-t-transparent" />
       </div>
     );
@@ -79,6 +83,9 @@ function DownloadPage() {
   if (!authSession?.user) {
     return (
       <div className="min-h-screen bg-cream flex items-center justify-center p-4">
+        <Helmet>
+          <meta name="robots" content="noindex, nofollow" />
+        </Helmet>
         <div className="max-w-md text-center space-y-4">
           <div className="flex justify-center">
             <div className="size-16 rounded-full bg-warm-gray/10 flex items-center justify-center">
@@ -114,6 +121,9 @@ function DownloadPage() {
 
     return (
       <div className="min-h-screen bg-cream flex items-center justify-center p-4">
+        <Helmet>
+          <meta name="robots" content="noindex, nofollow" />
+        </Helmet>
         <div className="max-w-md text-center space-y-4">
           <div className="flex justify-center">
             <div className="size-16 rounded-full bg-warm-gray/10 flex items-center justify-center">
@@ -136,6 +146,9 @@ function DownloadPage() {
   // AC-1, AC-2: Download available
   return (
     <div className="min-h-screen bg-cream flex items-center justify-center p-4">
+      <Helmet>
+        <meta name="robots" content="noindex, nofollow" />
+      </Helmet>
       <div className="max-w-md w-full text-center space-y-6">
         {/* Header */}
         <div className="space-y-2">

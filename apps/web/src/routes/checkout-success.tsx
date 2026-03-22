@@ -1,4 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { Helmet } from "react-helmet-async";
 import { useEffect, useCallback, useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { DownloadButton } from "@/components/download";
@@ -99,6 +100,9 @@ function CheckoutSuccessPage() {
 
   return (
     <div className="min-h-screen bg-cream flex items-center justify-center p-4">
+      <Helmet>
+        <meta name="robots" content="noindex, nofollow" />
+      </Helmet>
       <div className="max-w-md w-full text-center space-y-6">
         {/* Success icon */}
         <div className="flex justify-center">

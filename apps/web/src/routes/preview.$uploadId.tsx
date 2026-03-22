@@ -1,4 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { Helmet } from "react-helmet-async";
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -210,6 +211,9 @@ function PreviewPage() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-cream flex flex-col items-center justify-start p-4 pt-8">
+        <Helmet>
+          <meta name="robots" content="noindex, nofollow" />
+        </Helmet>
         <div className="w-full max-w-md mx-auto space-y-6">
           <div className="text-center">
             <h1 className="font-display text-2xl text-charcoal mb-2">Your Baby Portraits</h1>
@@ -236,6 +240,9 @@ function PreviewPage() {
     // Query error state
     return (
       <div className="min-h-screen bg-cream flex items-center justify-center p-4">
+        <Helmet>
+          <meta name="robots" content="noindex, nofollow" />
+        </Helmet>
         <div className="max-w-md w-full text-center space-y-6">
           <div className="flex justify-center">
             <div className="size-16 rounded-full bg-red-100 flex items-center justify-center">
@@ -279,6 +286,9 @@ function PreviewPage() {
   if (!previewUrl) {
     return (
       <div className="min-h-screen bg-cream flex items-center justify-center p-4">
+        <Helmet>
+          <meta name="robots" content="noindex, nofollow" />
+        </Helmet>
         <div className="max-w-md w-full text-center space-y-6">
           <div className="flex justify-center">
             <div className="size-16 rounded-full bg-red-100 flex items-center justify-center">
@@ -319,6 +329,9 @@ function PreviewPage() {
 
   return (
     <div className="min-h-screen bg-cream flex flex-col items-center justify-start p-4 pt-8">
+      <Helmet>
+        <meta name="robots" content="noindex, nofollow" />
+      </Helmet>
       <div className="w-full max-w-md mx-auto space-y-6">
         {/* Header */}
         <div className="text-center">
