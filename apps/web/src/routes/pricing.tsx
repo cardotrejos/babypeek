@@ -5,7 +5,7 @@ import { CheckCircle2 } from "lucide-react";
 import { SiteFooter } from "@/components/seo/footer";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-
+import { PRICING_TIERS } from "@/lib/pricing";
 
 export const Route = createFileRoute("/pricing")({
   component: PricingPage,
@@ -27,21 +27,21 @@ const productSchema = {
     {
       "@type": "Offer",
       name: "Basic",
-      price: "9.99",
+      price: (PRICING_TIERS.basic.priceCents / 100).toFixed(2),
       priceCurrency: "USD",
       description: "1 HD portrait — one-time purchase",
     },
     {
       "@type": "Offer",
       name: "Plus",
-      price: "14.99",
+      price: (PRICING_TIERS.plus.priceCents / 100).toFixed(2),
       priceCurrency: "USD",
       description: "All 4 HD portraits + email delivery — one-time purchase",
     },
     {
       "@type": "Offer",
       name: "Pro",
-      price: "24.99",
+      price: (PRICING_TIERS.pro.priceCents / 100).toFixed(2),
       priceCurrency: "USD",
       description: "All 4 HD portraits + print-ready resolution + priority processing — one-time purchase",
     },
@@ -84,7 +84,7 @@ const proFeatures = [
 const comparisonRows = [
   {
     feature: "Starting price",
-    babypeek: "From $9.99",
+    babypeek: `From ${PRICING_TIERS.basic.priceDisplay}`,
     traditional: "$50–$200",
     otherAi: "$15–$30",
   },
@@ -124,16 +124,16 @@ export function PricingPage() {
   return (
     <>
       <Helmet>
-        <title>BabyPeek Pricing - Free Preview, HD From $9.99</title>
+        <title>BabyPeek Pricing - Free Preview, HD From {PRICING_TIERS.basic.priceDisplay}</title>
         <meta
           name="description"
-          content="Get your baby's AI portrait free in preview quality. Upgrade to HD from $9.99. Basic, Plus, and Pro plans available. No subscription. No hidden fees."
+          content={`Get your baby's AI portrait free in preview quality. Upgrade to HD from ${PRICING_TIERS.basic.priceDisplay}. Basic, Plus, and Pro plans available. No subscription. No hidden fees.`}
         />
         <link rel="canonical" href="https://babypeek.io/pricing" />
-        <meta property="og:title" content="BabyPeek Pricing - Free Preview, HD From $9.99" />
+        <meta property="og:title" content={`BabyPeek Pricing - Free Preview, HD From ${PRICING_TIERS.basic.priceDisplay}`} />
         <meta
           property="og:description"
-          content="Get your baby's AI portrait free in preview quality. Upgrade to HD from $9.99. No subscription."
+          content={`Get your baby's AI portrait free in preview quality. Upgrade to HD from ${PRICING_TIERS.basic.priceDisplay}. No subscription.`}
         />
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://babypeek.io/pricing" />
@@ -213,7 +213,7 @@ export function PricingPage() {
                   <p className="text-sm text-warm-gray mt-1">One-time purchase. No subscription.</p>
                 </div>
                 <div className="text-right">
-                  <div className="font-display text-3xl text-charcoal">$9.99</div>
+                  <div className="font-display text-3xl text-charcoal">{PRICING_TIERS.basic.priceDisplay}</div>
                   <div className="text-xs text-warm-gray">one-time</div>
                 </div>
               </div>
@@ -251,7 +251,7 @@ export function PricingPage() {
                   <p className="text-sm text-warm-gray mt-1">One-time purchase. No subscription.</p>
                 </div>
                 <div className="text-right">
-                  <div className="font-display text-3xl text-charcoal">$14.99</div>
+                  <div className="font-display text-3xl text-charcoal">{PRICING_TIERS.plus.priceDisplay}</div>
                   <div className="text-xs text-warm-gray">one-time</div>
                 </div>
               </div>
@@ -284,7 +284,7 @@ export function PricingPage() {
                   <p className="text-sm text-warm-gray mt-1">One-time purchase. No subscription.</p>
                 </div>
                 <div className="text-right">
-                  <div className="font-display text-3xl text-charcoal">$24.99</div>
+                  <div className="font-display text-3xl text-charcoal">{PRICING_TIERS.pro.priceDisplay}</div>
                   <div className="text-xs text-warm-gray">one-time</div>
                 </div>
               </div>

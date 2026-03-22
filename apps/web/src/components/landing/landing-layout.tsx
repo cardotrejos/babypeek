@@ -5,9 +5,6 @@ import { LandingHeader } from "./landing-header";
 interface LandingLayoutProps {
   children: React.ReactNode;
   className?: string;
-  showCta?: boolean;
-  ctaText?: string;
-  ctaSubtext?: string;
   onCtaClick?: () => void;
 }
 
