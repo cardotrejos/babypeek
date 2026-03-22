@@ -9,6 +9,9 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as PricingRouteImport } from './routes/pricing'
+import { Route as HowItWorksRouteImport } from './routes/how-it-works'
+import { Route as FaqRouteImport } from './routes/faq'
 import { Route as CheckoutSuccessRouteImport } from './routes/checkout-success'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ShareShareIdRouteImport } from './routes/share.$shareId'
@@ -17,6 +20,21 @@ import { Route as ProcessingJobIdRouteImport } from './routes/processing.$jobId'
 import { Route as PreviewUploadIdRouteImport } from './routes/preview.$uploadId'
 import { Route as DownloadUploadIdRouteImport } from './routes/download.$uploadId'
 
+const PricingRoute = PricingRouteImport.update({
+  id: '/pricing',
+  path: '/pricing',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HowItWorksRoute = HowItWorksRouteImport.update({
+  id: '/how-it-works',
+  path: '/how-it-works',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FaqRoute = FaqRouteImport.update({
+  id: '/faq',
+  path: '/faq',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CheckoutSuccessRoute = CheckoutSuccessRouteImport.update({
   id: '/checkout-success',
   path: '/checkout-success',
@@ -56,6 +74,9 @@ const DownloadUploadIdRoute = DownloadUploadIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/checkout-success': typeof CheckoutSuccessRoute
+  '/faq': typeof FaqRoute
+  '/how-it-works': typeof HowItWorksRoute
+  '/pricing': typeof PricingRoute
   '/download/$uploadId': typeof DownloadUploadIdRoute
   '/preview/$uploadId': typeof PreviewUploadIdRoute
   '/processing/$jobId': typeof ProcessingJobIdRoute
@@ -65,6 +86,9 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/checkout-success': typeof CheckoutSuccessRoute
+  '/faq': typeof FaqRoute
+  '/how-it-works': typeof HowItWorksRoute
+  '/pricing': typeof PricingRoute
   '/download/$uploadId': typeof DownloadUploadIdRoute
   '/preview/$uploadId': typeof PreviewUploadIdRoute
   '/processing/$jobId': typeof ProcessingJobIdRoute
@@ -75,6 +99,9 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/checkout-success': typeof CheckoutSuccessRoute
+  '/faq': typeof FaqRoute
+  '/how-it-works': typeof HowItWorksRoute
+  '/pricing': typeof PricingRoute
   '/download/$uploadId': typeof DownloadUploadIdRoute
   '/preview/$uploadId': typeof PreviewUploadIdRoute
   '/processing/$jobId': typeof ProcessingJobIdRoute
@@ -86,6 +113,9 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/checkout-success'
+    | '/faq'
+    | '/how-it-works'
+    | '/pricing'
     | '/download/$uploadId'
     | '/preview/$uploadId'
     | '/processing/$jobId'
@@ -95,6 +125,9 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/checkout-success'
+    | '/faq'
+    | '/how-it-works'
+    | '/pricing'
     | '/download/$uploadId'
     | '/preview/$uploadId'
     | '/processing/$jobId'
@@ -104,6 +137,9 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/checkout-success'
+    | '/faq'
+    | '/how-it-works'
+    | '/pricing'
     | '/download/$uploadId'
     | '/preview/$uploadId'
     | '/processing/$jobId'
@@ -114,6 +150,9 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   CheckoutSuccessRoute: typeof CheckoutSuccessRoute
+  FaqRoute: typeof FaqRoute
+  HowItWorksRoute: typeof HowItWorksRoute
+  PricingRoute: typeof PricingRoute
   DownloadUploadIdRoute: typeof DownloadUploadIdRoute
   PreviewUploadIdRoute: typeof PreviewUploadIdRoute
   ProcessingJobIdRoute: typeof ProcessingJobIdRoute
@@ -123,6 +162,27 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/pricing': {
+      id: '/pricing'
+      path: '/pricing'
+      fullPath: '/pricing'
+      preLoaderRoute: typeof PricingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/how-it-works': {
+      id: '/how-it-works'
+      path: '/how-it-works'
+      fullPath: '/how-it-works'
+      preLoaderRoute: typeof HowItWorksRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/faq': {
+      id: '/faq'
+      path: '/faq'
+      fullPath: '/faq'
+      preLoaderRoute: typeof FaqRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/checkout-success': {
       id: '/checkout-success'
       path: '/checkout-success'
@@ -178,6 +238,9 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CheckoutSuccessRoute: CheckoutSuccessRoute,
+  FaqRoute: FaqRoute,
+  HowItWorksRoute: HowItWorksRoute,
+  PricingRoute: PricingRoute,
   DownloadUploadIdRoute: DownloadUploadIdRoute,
   PreviewUploadIdRoute: PreviewUploadIdRoute,
   ProcessingJobIdRoute: ProcessingJobIdRoute,

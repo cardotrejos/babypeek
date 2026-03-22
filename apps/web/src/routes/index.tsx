@@ -12,6 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { PRICE_DISPLAY, PRICING_TIERS } from "@/lib/pricing";
+import { SiteFooter } from "@/components/seo/footer";
 
 // 🧪 A/B Testing Experiments
 import { MobileStickyCTA, TrustBadges } from "@/components/experiments";
@@ -154,11 +155,7 @@ function LandingPage() {
       <FaqSection id="faq" />
 
       {/* Footer */}
-      <footer className="py-8 text-center">
-        <p className="text-warm-gray text-sm font-body">
-          © {new Date().getFullYear()} BabyPeek. Made with love for expecting parents.
-        </p>
-      </footer>
+      <SiteFooter />
 
       {/* 🧪 Mobile Sticky CTA Experiment - Always visible on mobile */}
       <MobileStickyCTA />
