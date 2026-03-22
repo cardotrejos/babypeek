@@ -29,7 +29,3 @@ export const blogPosts: BlogPostMeta[] = [
 export function getPostBySlug(slug: string): BlogPostMeta | undefined {
   return blogPosts.find((p) => p.slug === slug);
 }
-
-export function getPostsByCategory(category: BlogPostMeta["category"]): BlogPostMeta[] {
-  return blogPosts.filter((p) => p.category === category);
-}
