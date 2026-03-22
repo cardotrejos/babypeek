@@ -34,6 +34,12 @@ export function SiteFooter({ className }: SiteFooterProps) {
           FAQ
         </Link>
         <Link
+          to="/for-clinics"
+          className="text-warm-gray hover:text-coral transition-colors"
+        >
+          For Clinics
+        </Link>
+        <Link
           to="/privacy"
           className="text-warm-gray hover:text-coral transition-colors"
         >
