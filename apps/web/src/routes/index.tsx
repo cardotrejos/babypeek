@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { Helmet } from "react-helmet-async";
 import {
@@ -7,8 +8,11 @@ import {
   TrustSignals,
   PricingSection,
   FaqSection,
-  UploadSection,
 } from "@/components/landing";
+import {
+  LazyUploadSection,
+  preloadUploadSection,
+} from "@/components/landing/lazy-upload-section";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { PRICE_DISPLAY } from "@/lib/pricing";
@@ -27,11 +31,12 @@ export const Route = createFileRoute("/")({
 });
 
 function LandingPage() {
-  const handleCtaClick = () => {
-    const uploadSection = document.getElementById("upload");
-    if (uploadSection) {
-      uploadSection.scrollIntoView({ behavior: "smooth" });
-    }
+  const [uploadCtaPrimed, setUploadCtaPrimed] = useState(false);
+
+  const handleCtaClick = async () => {
+    await preloadUploadSection().catch(() => {});
+    setUploadCtaPrimed(true);
+    document.getElementById("upload")?.scrollIntoView({ behavior: "smooth" });
   };
 
   return (
@@ -88,22 +93,22 @@ function LandingPage() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
               {/* Copy */}
               <div className="order-2 lg:order-1">
-                <p className="animate-fade-up text-xs font-medium tracking-[0.2em] uppercase text-coral mb-5">
+                <p className="text-xs font-medium tracking-[0.2em] uppercase text-coral mb-5">
                   AI-powered baby portraits
                 </p>
 
-                <h1 className="animate-fade-up stagger-1 font-display text-4xl sm:text-5xl lg:text-6xl text-charcoal leading-[1.1] font-medium">
+                <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl text-charcoal leading-[1.1] font-medium">
                   Meet your baby
                   <br />
                   <span className="italic text-coral">before</span> they arrive
                 </h1>
 
-                <p className="animate-fade-up stagger-2 font-body text-warm-gray mt-6 text-lg sm:text-xl max-w-md leading-relaxed font-light">
+                <p className="font-body text-warm-gray mt-6 text-lg sm:text-xl max-w-md leading-relaxed font-light">
                   Upload a clear 4D ultrasound. Our AI creates a realistic
                   portrait of your baby's face in about a minute.
                 </p>
 
-                <div className="animate-fade-up stagger-3 flex flex-col sm:flex-row items-start gap-4 mt-8">
+                <div className="flex flex-col sm:flex-row items-start gap-4 mt-8">
                   <Button
                     onClick={handleCtaClick}
                     aria-label="Try it free - Upload your ultrasound"
@@ -128,7 +133,7 @@ function LandingPage() {
                 </div>
 
                 {/* Social proof nudge */}
-                <div className="animate-fade-up stagger-4 mt-10 flex items-center gap-3">
+                <div className="mt-10 flex items-center gap-3">
                   <div className="flex -space-x-2">
                     {[1, 2, 3, 4].map((i) => (
                       <div
@@ -149,7 +154,7 @@ function LandingPage() {
               </div>
 
               {/* Hero Image */}
-              <div className="order-1 lg:order-2 animate-scale-in stagger-2">
+              <div className="order-1 lg:order-2">
                 <HeroImage />
               </div>
             </div>
@@ -157,14 +162,14 @@ function LandingPage() {
         </section>
 
         {/* ─── TRUST BADGES (A/B experiment) ─── */}
-        <section className="relative bg-blush/50">
+        <section className="relative bg-blush/50 cv-btf-sm">
           <div className="max-w-4xl mx-auto px-5 sm:px-8">
             <TrustBadges />
           </div>
         </section>
 
         {/* ─── HOW IT WORKS ─── */}
-        <section className="py-20 sm:py-28 bg-white/40">
+        <section className="py-20 sm:py-28 bg-white/40 cv-btf-md">
           <div className="max-w-4xl mx-auto px-5 sm:px-8">
             <p className="text-center text-xs font-medium tracking-[0.2em] uppercase text-coral mb-4">
               How it works
@@ -236,12 +241,12 @@ function LandingPage() {
             aria-hidden="true"
           />
           <div className="relative max-w-lg mx-auto px-5 sm:px-8">
-            <UploadSection id="upload" />
+            <LazyUploadSection id="upload" ctaPreloaded={uploadCtaPrimed} />
           </div>
         </section>
 
         {/* ─── GALLERY ─── */}
-        <section id="gallery" className="py-20 sm:py-28 bg-white/40">
+        <section id="gallery" className="py-20 sm:py-28 bg-white/40 cv-btf-xl">
           <div className="max-w-4xl mx-auto px-5 sm:px-8">
             <p className="text-center text-xs font-medium tracking-[0.2em] uppercase text-coral mb-4">
               Real results
@@ -257,18 +262,18 @@ function LandingPage() {
         </section>
 
         {/* ─── TRUST SIGNALS ─── */}
-        <TrustSignals id="trust" />
+        <TrustSignals id="trust" className="cv-btf-md" />
 
         {/* ─── PRICING ─── */}
-        <section className="bg-white/40">
+        <section className="bg-white/40 cv-btf-lg">
           <PricingSection id="pricing" />
         </section>
 
         {/* ─── FAQ ─── */}
-        <FaqSection id="faq" />
+        <FaqSection id="faq" className="cv-btf-xl" />
 
         {/* ─── FINAL CTA ─── */}
-        <section className="py-20 sm:py-28 relative overflow-hidden">
+        <section className="py-20 sm:py-28 relative overflow-hidden cv-btf-md">
           <div
             className="absolute inset-0 bg-gradient-to-br from-charcoal to-charcoal-soft"
             aria-hidden="true"
@@ -306,7 +311,7 @@ function LandingPage() {
         </section>
 
         {/* ─── FOOTER ─── */}
-        <SiteFooter />
+        <SiteFooter className="cv-btf-sm" />
 
         {/* ─── MOBILE STICKY CTA (A/B experiment) ─── */}
         <MobileStickyCTA />

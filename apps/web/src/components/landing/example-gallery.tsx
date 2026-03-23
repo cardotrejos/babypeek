@@ -39,7 +39,6 @@ export function ExampleGallery({ className }: ExampleGalleryProps) {
             before={example.before}
             after={example.after}
             label={example.label}
-            loading={index < 2 ? "eager" : "lazy"}
             index={index}
           />
         ))}
@@ -55,11 +54,10 @@ interface GalleryCardProps {
   before: string;
   after: string;
   label: string;
-  loading?: "eager" | "lazy";
   index: number;
 }
 
-function GalleryCard({ before, after, label, loading = "lazy", index }: GalleryCardProps) {
+function GalleryCard({ before, after, label, index }: GalleryCardProps) {
   return (
     <div
       className={cn(
@@ -79,7 +77,8 @@ function GalleryCard({ before, after, label, loading = "lazy", index }: GalleryC
             src={before}
             alt={`${label}: Original 4D ultrasound`}
             className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-            loading={loading}
+            loading="lazy"
+            decoding="async"
             width={200}
             height={267}
           />
@@ -95,7 +94,8 @@ function GalleryCard({ before, after, label, loading = "lazy", index }: GalleryC
             src={after}
             alt={`${label}: AI-generated baby portrait`}
             className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-            loading={loading}
+            loading="lazy"
+            decoding="async"
             width={200}
             height={267}
           />

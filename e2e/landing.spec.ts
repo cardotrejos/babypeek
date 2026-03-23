@@ -53,4 +53,51 @@ test.describe("Landing Page", () => {
       expect(box.height).toBeGreaterThanOrEqual(48);
     }
   });
+
+  test("gallery images use lazy load and async decode", async ({ page }) => {
+    await page.goto("/");
+    const imgs = page.locator("#gallery img");
+    const count = await imgs.count();
+    expect(count).toBeGreaterThan(0);
+    for (let i = 0; i < count; i++) {
+      await expect(imgs.nth(i)).toHaveAttribute("loading", "lazy");
+      await expect(imgs.nth(i)).toHaveAttribute("decoding", "async");
+    }
+  });
+
+  test("hero CTA reveals working upload section after lazy load", async ({ page }) => {
+    await page.goto("/");
+    const heroCta = page.getByRole("button", { name: /try it free - upload your ultrasound/i });
+    await heroCta.click();
+    const uploadRoot = page.locator("#upload");
+    await expect(uploadRoot).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: /^upload your ultrasound$/i }),
+    ).toBeVisible({ timeout: 15_000 });
+    await expect(
+      uploadRoot.getByRole("button", { name: /upload your 4d ultrasound image/i }),
+    ).toBeVisible({
+      timeout: 15_000,
+    });
+    await expect(uploadRoot.getByLabel(/email address/i)).toBeVisible({
+      timeout: 15_000,
+    });
+  });
+
+  test("upload chunk loads when the user scrolls to the upload section", async ({ page }) => {
+    await page.goto("/");
+    const uploadRoot = page.locator("#upload");
+    await uploadRoot.scrollIntoViewIfNeeded();
+    await expect(
+      page.getByRole("heading", { name: /^upload your ultrasound$/i }),
+    ).toBeVisible({ timeout: 15_000 });
+    await expect(
+      uploadRoot.getByRole("button", { name: /upload your 4d ultrasound image/i }),
+    ).toBeVisible({
+      timeout: 15_000,
+    });
+    await expect(uploadRoot.getByLabel(/email address/i)).toBeVisible({
+      timeout: 15_000,
+    });
+  });
 });

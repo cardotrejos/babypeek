@@ -30,4 +30,15 @@ export default defineConfig({
   server: {
     port: 3001,
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          // Keep stable vendor splits for heavy observability deps pulled in by the entry graph.
+          if (id.includes("/node_modules/posthog-js/")) return "posthog";
+          if (id.includes("/node_modules/@sentry/")) return "sentry";
+        },
+      },
+    },
+  },
 });

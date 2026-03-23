@@ -1,13 +1,11 @@
 import type { QueryClient } from "@tanstack/react-query";
 
-import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { Outlet, createRootRouteWithContext } from "@tanstack/react-router";
-import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 import { Helmet } from "react-helmet-async";
 
+import { AppDevtools } from "@/components/devtools";
+import { GlobalOverlays } from "@/components/global-overlays";
 import { Toaster } from "@/components/ui/sonner";
-import { SessionRecoveryPrompt } from "@/components/session-recovery-prompt";
-import { OfflineBanner } from "@/components/offline-banner";
 
 export interface RouterAppContext {
   queryClient: QueryClient;
@@ -44,13 +42,11 @@ function RootDocument() {
       >
         Skip to main content
       </a>
-      <OfflineBanner />
+      {/* Story 5.7: session recovery (deferred via GlobalOverlays) */}
+      <GlobalOverlays />
       <Outlet />
-      {/* Story 5.7: Session recovery prompt for mobile users */}
-      <SessionRecoveryPrompt />
       <Toaster richColors />
-      <TanStackRouterDevtools position="bottom-left" />
-      <ReactQueryDevtools position="bottom" buttonPosition="bottom-right" />
+      <AppDevtools />
     </>
   );
 }

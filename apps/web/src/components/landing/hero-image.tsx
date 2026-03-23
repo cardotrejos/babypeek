@@ -9,7 +9,7 @@ export function HeroImage({ className }: HeroImageProps) {
     <div className={cn("relative", className)}>
       {/* Decorative blob behind the image */}
       <div
-        className="absolute -inset-4 sm:-inset-8 bg-rose/40 animate-blob opacity-60 blur-2xl"
+        className="absolute -inset-4 sm:-inset-8 bg-rose/40 animate-blob max-sm:animate-none opacity-60 blur-2xl"
         aria-hidden="true"
       />
 
@@ -20,8 +20,11 @@ export function HeroImage({ className }: HeroImageProps) {
             src="/images/examples/4d-ultra.jpeg"
             alt="Original 4D ultrasound image"
             className="w-full h-full object-cover"
-            loading="eager"
-            fetchPriority="high"
+            width={600}
+            height={800}
+            decoding="async"
+            loading="lazy"
+            fetchPriority="low"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-charcoal/30 to-transparent" />
           <span className="absolute bottom-3 left-3 px-3 py-1 bg-white/90 backdrop-blur-sm text-charcoal text-xs font-medium rounded-full">
@@ -30,7 +33,7 @@ export function HeroImage({ className }: HeroImageProps) {
         </div>
 
         {/* Arrow connector */}
-        <div className="flex flex-col items-center gap-2 animate-float">
+        <div className="flex flex-col items-center gap-2 animate-float max-sm:animate-none">
           <svg width="32" height="32" viewBox="0 0 32 32" fill="none" className="text-coral" aria-hidden="true">
             <path d="M6 16h16m0 0l-6-6m6 6l-6 6" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
@@ -45,6 +48,9 @@ export function HeroImage({ className }: HeroImageProps) {
             src="/images/examples/result-1.jpeg"
             alt="AI-generated realistic baby portrait from 4D ultrasound"
             className="w-full h-full object-cover"
+            width={600}
+            height={800}
+            decoding="async"
             loading="eager"
             fetchPriority="high"
           />

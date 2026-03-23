@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import { posthog } from "@/lib/posthog";
 import { cn } from "@/lib/utils";
 import { useExperiment } from "@/hooks/use-experiment";
+import { scheduleIdleTask } from "@/lib/browser-idle";
 
 type StickyCTAVariant =
   | "sticky_free_preview"
@@ -18,30 +19,57 @@ function isStickyCTAVariant(variant: string): variant is StickyCTAVariant {
   );
 }
 
-/**
- * Mobile Sticky CTA - A/B Experiment
- *
- * Shows a large, sticky upload button at the bottom of the screen on mobile devices.
- * Variant rendering is controlled by PostHog feature flag `sticky_cta_test`.
- *
- * Variants:
- * - control: no sticky CTA (returns null)
- * - sticky_free_preview: "Start FREE Preview" + subtitle
- * - sticky_with_arrow: bouncing arrow animation
- * - sticky_with_countdown: countdown timer ("15 minutes of free previews left")
- *
- * Experiment: sticky_cta_test
- * Expected lift: 2-4x upload conversion
- */
+const ACTIVATION_IDLE_TIMEOUT_MS = 4000;
+
 export function MobileStickyCTA() {
+  const [activated, setActivated] = useState(false);
+
+  useEffect(() => {
+    if (activated) return;
+
+    const activate = () => {
+      setActivated(true);
+    };
+
+    const cancelIdle = scheduleIdleTask(activate, {
+      afterPaint: true,
+      timeoutMs: ACTIVATION_IDLE_TIMEOUT_MS,
+    });
+
+    const opts: AddEventListenerOptions = { capture: true, passive: true };
+    window.addEventListener("pointerdown", activate, opts);
+    window.addEventListener("touchstart", activate, opts);
+    window.addEventListener("keydown", activate, opts);
+
+    return () => {
+      cancelIdle();
+      window.removeEventListener("pointerdown", activate, opts);
+      window.removeEventListener("touchstart", activate, opts);
+      window.removeEventListener("keydown", activate, opts);
+    };
+  }, [activated]);
+
+  if (!activated) return null;
+
+  return <MobileStickyCTAActive />;
+}
+
+function MobileStickyCTAActive() {
   const { variant, isLoading } = useExperiment("sticky_cta_test");
   const [isMobile, setIsMobile] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
   const [isLoadingTimedOut, setIsLoadingTimedOut] = useState(false);
+  const [committedVariant, setCommittedVariant] = useState<StickyCTAVariant | null>(null);
   const [countdown, setCountdown] = useState(15 * 60);
   const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const resolvedVariant = isLoading && isLoadingTimedOut ? FALLBACK_VARIANT : variant;
-  const effectiveVariant = isStickyCTAVariant(resolvedVariant) ? resolvedVariant : null;
+  const hasTrackedShownRef = useRef(false);
+  const candidateVariant =
+    !isLoading && isStickyCTAVariant(variant)
+      ? variant
+      : isLoadingTimedOut
+        ? FALLBACK_VARIANT
+        : null;
+  const effectiveVariant = committedVariant;
 
   useEffect(() => {
     if (!isLoading) {
@@ -56,7 +84,11 @@ export function MobileStickyCTA() {
     return () => window.clearTimeout(timeoutId);
   }, [isLoading]);
 
-  // Mobile detection
+  useEffect(() => {
+    if (committedVariant || !candidateVariant) return;
+    setCommittedVariant(candidateVariant);
+  }, [candidateVariant, committedVariant]);
+
   useEffect(() => {
     const checkMobile = () => {
       const mobile =
@@ -67,18 +99,20 @@ export function MobileStickyCTA() {
     checkMobile();
     window.addEventListener("resize", checkMobile);
 
-    if (isMobile && effectiveVariant) {
-      posthog?.capture("sticky_cta_shown", {
-        device: "mobile",
-        viewport_width: window.innerWidth,
-        variant: effectiveVariant,
-      });
-    }
-
     return () => window.removeEventListener("resize", checkMobile);
+  }, []);
+
+  useEffect(() => {
+    if (!isMobile || !effectiveVariant || hasTrackedShownRef.current) return;
+
+    hasTrackedShownRef.current = true;
+    posthog?.capture("sticky_cta_shown", {
+      device: "mobile",
+      viewport_width: window.innerWidth,
+      variant: effectiveVariant,
+    });
   }, [effectiveVariant, isMobile]);
 
-  // Hide sticky CTA when upload section is visible or upload starts
   useEffect(() => {
     const handleUploadStarted = () => {
       setIsVisible(false);
@@ -90,6 +124,9 @@ export function MobileStickyCTA() {
     const uploadSection = document.getElementById("upload");
     if (!uploadSection)
       return () => window.removeEventListener("babypeek:upload_started", handleUploadStarted);
+    if (typeof IntersectionObserver === "undefined") {
+      return () => window.removeEventListener("babypeek:upload_started", handleUploadStarted);
+    }
 
     const observer = new IntersectionObserver(
       ([entry]) => {
@@ -109,7 +146,6 @@ export function MobileStickyCTA() {
     };
   }, []);
 
-  // Countdown timer (only for sticky_with_countdown variant)
   useEffect(() => {
     if (effectiveVariant !== "sticky_with_countdown") return;
 
@@ -128,7 +164,6 @@ export function MobileStickyCTA() {
     };
   }, [effectiveVariant]);
 
-  // Early returns AFTER all hooks
   if (!effectiveVariant) return null;
   if (!isMobile) return null;
   if (!isVisible) return null;
@@ -154,7 +189,6 @@ export function MobileStickyCTA() {
 
   return (
     <>
-      {/* Bounce animation for arrow variant */}
       {effectiveVariant === "sticky_with_arrow" && (
         <style>{`
           @keyframes cta-bounce {
@@ -164,7 +198,6 @@ export function MobileStickyCTA() {
         `}</style>
       )}
 
-      {/* Fixed CTA at bottom of screen */}
       <div
         className={cn(
           "fixed bottom-0 left-0 right-0 z-50",
@@ -175,6 +208,8 @@ export function MobileStickyCTA() {
         )}
       >
         <button
+          type="button"
+          aria-label="Start free preview by uploading your ultrasound"
           onClick={handleClick}
           className={cn(
             "w-full h-16",
@@ -234,7 +269,6 @@ export function MobileStickyCTA() {
         )}
       </div>
 
-      {/* Spacer to prevent content from being hidden behind sticky CTA */}
       <div className="h-28 md:hidden" aria-hidden="true" />
     </>
   );

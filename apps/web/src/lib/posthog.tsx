@@ -2,12 +2,37 @@ import posthog from "posthog-js";
 import { PostHogProvider as PHProvider } from "posthog-js/react";
 import { useEffect, type ReactNode } from "react";
 
-// PostHog configuration
 const POSTHOG_KEY = import.meta.env.VITE_POSTHOG_KEY;
 const POSTHOG_HOST = import.meta.env.VITE_POSTHOG_HOST || "https://app.posthog.com";
+const POSTHOG_AUTOCAPTURE = import.meta.env.VITE_POSTHOG_AUTOCAPTURE;
+const POSTHOG_SESSION_RECORDING = import.meta.env.VITE_POSTHOG_SESSION_RECORDING;
 
-// Initialize PostHog only once
+function isEnabled(raw: string | undefined): boolean {
+  return raw === "true" || raw === "1";
+}
+
 let isInitialized = false;
+
+export function getPostHogInitOptions() {
+  const autocaptureOn = isEnabled(POSTHOG_AUTOCAPTURE);
+  const sessionRecordingOn = isEnabled(POSTHOG_SESSION_RECORDING);
+
+  return {
+    api_host: POSTHOG_HOST,
+    capture_pageview: true,
+    capture_pageleave: autocaptureOn,
+    autocapture: autocaptureOn,
+    persistence: "localStorage" as const,
+    respect_dnt: true,
+    disable_session_recording: !sessionRecordingOn,
+    session_recording: sessionRecordingOn
+      ? {
+          maskAllInputs: true,
+          recordCrossOriginIframes: false,
+        }
+      : undefined,
+  };
+}
 
 function initPostHog() {
   if (isInitialized || typeof window === "undefined" || !POSTHOG_KEY) {
@@ -16,27 +41,10 @@ function initPostHog() {
 
   try {
     posthog.init(POSTHOG_KEY, {
-      api_host: POSTHOG_HOST,
-      capture_pageview: true,
-      capture_pageleave: true,
-      autocapture: true,
-      persistence: "localStorage",
-      // Respect Do Not Track
-      respect_dnt: true,
-
-      // 🎥 SESSION RECORDINGS - See exactly where users drop off!
-      disable_session_recording: false,
-      session_recording: {
-        // Privacy: mask all form inputs (emails, etc.)
-        maskAllInputs: true,
-        // Record console logs for debugging
-        recordCrossOriginIframes: false,
-      },
-
-      // Disable in development if no key
+      ...getPostHogInitOptions(),
       loaded: () => {
         if (import.meta.env.DEV) {
-          console.log("📊 PostHog initialized with session recordings");
+          console.log("📊 PostHog initialized");
         }
       },
     });
@@ -58,7 +66,6 @@ export function PostHogProvider({ children }: PostHogProviderProps) {
     initPostHog();
   }, []);
 
-  // If no PostHog key, just render children without provider
   if (!POSTHOG_KEY) {
     if (import.meta.env.DEV) {
       console.log("📊 PostHog not configured (VITE_POSTHOG_KEY missing)");
@@ -69,8 +76,6 @@ export function PostHogProvider({ children }: PostHogProviderProps) {
   return <PHProvider client={posthog}>{children}</PHProvider>;
 }
 
-// Export posthog instance for direct access if needed
 export { posthog };
 
-// Check if PostHog is configured
 export const isPostHogConfigured = () => !!POSTHOG_KEY;
