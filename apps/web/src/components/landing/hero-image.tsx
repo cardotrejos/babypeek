@@ -23,8 +23,7 @@ export function HeroImage({ className }: HeroImageProps) {
             width={600}
             height={800}
             decoding="async"
-            loading="lazy"
-            fetchPriority="low"
+            loading="eager"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-charcoal/30 to-transparent" />
           <span className="absolute bottom-3 left-3 px-3 py-1 bg-white/90 backdrop-blur-sm text-charcoal text-xs font-medium rounded-full">

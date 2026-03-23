@@ -415,7 +415,6 @@ export function trackFBPageView(): void {
   }
 
   if (!isValidPixelId(PIXEL_ID) || typeof window === "undefined") {
-    trackFBEvent("PageView");
     return;
   }
 
