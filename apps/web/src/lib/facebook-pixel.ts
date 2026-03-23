@@ -2,7 +2,7 @@
  * Facebook Pixel Client-Side Tracking
  *
  * This module provides type-safe Facebook Pixel event tracking.
- * The pixel base code is loaded in index.html for optimal performance.
+ * The pixel script is loaded on demand via ensureFBPixelLoaded / initFBPixel.
  *
  * Standard Events tracked:
  * - PageView: Automatic on every page load
@@ -89,11 +89,185 @@ interface EventParams {
 
 const PIXEL_ID = import.meta.env.VITE_FACEBOOK_PIXEL_ID as string | undefined;
 
+const FB_SCRIPT_SRC = "https://connect.facebook.net/en_US/fbevents.js";
+const FB_SCRIPT_LOAD_TIMEOUT_MS = 5000;
+
+let pixelScriptLoadPromise: Promise<boolean> | null = null;
+let pixelInitPromise: Promise<boolean> | null = null;
+let pixelInitialized = false;
+let hasPendingRouteChangePageView = false;
+
+function isValidPixelId(id: string | undefined): id is string {
+  return !!id && !id.startsWith("VITE_");
+}
+
+function installFbqStub(): void {
+  if (typeof window === "undefined") return;
+  const w = window as Window & { fbq?: FacebookPixel; _fbq?: FacebookPixel };
+  if (w.fbq) return;
+
+  const fbqFn = function (this: unknown, ...args: unknown[]) {
+    const self = fbqFn as FacebookPixel;
+    if (self.callMethod) {
+      self.callMethod.apply(self, args as never[]);
+    } else {
+      self.queue!.push(args);
+    }
+  } as FacebookPixel;
+
+  if (!w._fbq) w._fbq = fbqFn;
+  fbqFn.push = fbqFn;
+  fbqFn.loaded = true;
+  fbqFn.version = "2.0";
+  fbqFn.queue = [];
+  w.fbq = fbqFn;
+}
+
+function findPixelScript(): HTMLScriptElement | null {
+  return document.querySelector('script[data-babypeek-fb-pixel="1"]');
+}
+
+function resetPixelLoaderState(script?: HTMLScriptElement | null): void {
+  pixelScriptLoadPromise = null;
+  if (script?.dataset.babypeekFbPixel === "1") {
+    script.remove();
+  }
+}
+
+function flushPendingRouteChangePageView(): void {
+  if (!window.fbq || !hasPendingRouteChangePageView) {
+    hasPendingRouteChangePageView = false;
+    return;
+  }
+
+  hasPendingRouteChangePageView = false;
+  window.fbq("track", "PageView");
+}
+
+function waitForPixelScript(script: HTMLScriptElement): Promise<boolean> {
+  return new Promise((resolve) => {
+    let settled = false;
+
+    const finish = (loaded: boolean) => {
+      if (settled) return;
+      settled = true;
+
+      window.clearTimeout(timeoutId);
+      script.removeEventListener("load", onLoad);
+      script.removeEventListener("error", onError);
+
+      if (loaded) {
+        script.dataset.babypeekFbPixelLoaded = "1";
+      } else {
+        resetPixelLoaderState(script);
+      }
+
+      resolve(loaded);
+    };
+
+    const onLoad = () => finish(true);
+    const onError = () => finish(false);
+    const timeoutId = window.setTimeout(() => finish(false), FB_SCRIPT_LOAD_TIMEOUT_MS);
+
+    script.addEventListener("load", onLoad, { once: true });
+    script.addEventListener("error", onError, { once: true });
+  });
+}
+
+/**
+ * Loads the Facebook Pixel base script once. Resolves false if no pixel ID or load fails.
+ */
+export function ensureFBPixelLoaded(): Promise<boolean> {
+  if (typeof window === "undefined" || typeof document === "undefined") {
+    return Promise.resolve(false);
+  }
+  if (!isValidPixelId(PIXEL_ID)) {
+    return Promise.resolve(false);
+  }
+  if (pixelScriptLoadPromise) {
+    return pixelScriptLoadPromise;
+  }
+
+  installFbqStub();
+
+  const existing = findPixelScript();
+  if (existing?.dataset.babypeekFbPixelLoaded === "1") {
+    pixelScriptLoadPromise = Promise.resolve(true);
+    return pixelScriptLoadPromise;
+  }
+
+  if (existing) {
+    pixelScriptLoadPromise = waitForPixelScript(existing);
+    return pixelScriptLoadPromise;
+  }
+
+  const first = document.getElementsByTagName("script")[0];
+  const parent = first?.parentNode;
+  if (!parent) {
+    return Promise.resolve(false);
+  }
+
+  const script = document.createElement("script");
+  script.async = true;
+  script.src = FB_SCRIPT_SRC;
+  script.dataset.babypeekFbPixel = "1";
+  parent.insertBefore(script, first);
+
+  pixelScriptLoadPromise = waitForPixelScript(script);
+
+  return pixelScriptLoadPromise;
+}
+
+/**
+ * Initializes the pixel (loads script if needed), runs fbq init, and tracks the first PageView.
+ */
+export function initFBPixel(): Promise<boolean> {
+  if (typeof window === "undefined") {
+    return Promise.resolve(false);
+  }
+  if (!isValidPixelId(PIXEL_ID)) {
+    return Promise.resolve(false);
+  }
+  if (pixelInitialized) {
+    return Promise.resolve(true);
+  }
+  if (pixelInitPromise) {
+    return pixelInitPromise;
+  }
+
+  pixelInitPromise = (async () => {
+    const loaded = await ensureFBPixelLoaded();
+    if (!loaded || !window.fbq) {
+      pixelInitPromise = null;
+      return false;
+    }
+
+    try {
+      window.fbq("init", PIXEL_ID);
+      window.fbq("track", "PageView");
+      pixelInitialized = true;
+      flushPendingRouteChangePageView();
+      return true;
+    } catch (error) {
+      pixelInitPromise = null;
+      console.error("[FB Pixel] init failed:", error);
+      return false;
+    }
+  })();
+
+  return pixelInitPromise;
+}
+
 /**
  * Check if Facebook Pixel is configured and available
  */
 export function isFBPixelConfigured(): boolean {
-  return !!PIXEL_ID && typeof window !== "undefined" && !!window.fbq;
+  return (
+    isValidPixelId(PIXEL_ID) &&
+    typeof window !== "undefined" &&
+    !!window.fbq &&
+    pixelInitialized
+  );
 }
 
 /**
@@ -235,7 +409,17 @@ export function trackFBLead(params: { uploadId?: string; source?: string }): voi
  * Usually automatic, but useful for SPAs
  */
 export function trackFBPageView(): void {
-  trackFBEvent("PageView");
+  if (isFBPixelConfigured()) {
+    trackFBEvent("PageView");
+    return;
+  }
+
+  if (!isValidPixelId(PIXEL_ID) || typeof window === "undefined") {
+    return;
+  }
+
+  hasPendingRouteChangePageView = true;
+  void initFBPixel();
 }
 
 // =============================================================================

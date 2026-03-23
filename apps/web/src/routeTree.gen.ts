@@ -44,22 +44,24 @@ const PricingRoute = PricingRouteImport.update({
   id: '/pricing',
   path: '/pricing',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() => import('./routes/pricing.lazy').then((d) => d.Route))
 const HowItWorksRoute = HowItWorksRouteImport.update({
   id: '/how-it-works',
   path: '/how-it-works',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() => import('./routes/how-it-works.lazy').then((d) => d.Route))
 const FaqRoute = FaqRouteImport.update({
   id: '/faq',
   path: '/faq',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() => import('./routes/faq.lazy').then((d) => d.Route))
 const CheckoutSuccessRoute = CheckoutSuccessRouteImport.update({
   id: '/checkout-success',
   path: '/checkout-success',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() =>
+  import('./routes/checkout-success.lazy').then((d) => d.Route),
+)
 const ForClinicsRouteRoute = ForClinicsRouteRouteImport.update({
   id: '/for-clinics',
   path: '/for-clinics',
@@ -84,122 +86,178 @@ const ForClinicsIndexRoute = ForClinicsIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => ForClinicsRouteRoute,
-} as any)
+} as any).lazy(() =>
+  import('./routes/for-clinics/index.lazy').then((d) => d.Route),
+)
 const CompareIndexRoute = CompareIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => CompareRouteRoute,
-} as any)
+} as any).lazy(() => import('./routes/compare/index.lazy').then((d) => d.Route))
 const BlogIndexRoute = BlogIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => BlogRouteRoute,
-} as any)
+} as any).lazy(() => import('./routes/blog/index.lazy').then((d) => d.Route))
 const ShareShareIdRoute = ShareShareIdRouteImport.update({
   id: '/share/$shareId',
   path: '/share/$shareId',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() =>
+  import('./routes/share.$shareId.lazy').then((d) => d.Route),
+)
 const ResultResultIdRoute = ResultResultIdRouteImport.update({
   id: '/result/$resultId',
   path: '/result/$resultId',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() =>
+  import('./routes/result.$resultId.lazy').then((d) => d.Route),
+)
 const ProcessingJobIdRoute = ProcessingJobIdRouteImport.update({
   id: '/processing/$jobId',
   path: '/processing/$jobId',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() =>
+  import('./routes/processing.$jobId.lazy').then((d) => d.Route),
+)
 const PreviewUploadIdRoute = PreviewUploadIdRouteImport.update({
   id: '/preview/$uploadId',
   path: '/preview/$uploadId',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() =>
+  import('./routes/preview.$uploadId.lazy').then((d) => d.Route),
+)
 const ForClinicsSecurityRoute = ForClinicsSecurityRouteImport.update({
   id: '/security',
   path: '/security',
   getParentRoute: () => ForClinicsRouteRoute,
-} as any)
+} as any).lazy(() =>
+  import('./routes/for-clinics/security.lazy').then((d) => d.Route),
+)
 const ForClinicsHowItWorksRoute = ForClinicsHowItWorksRouteImport.update({
   id: '/how-it-works',
   path: '/how-it-works',
   getParentRoute: () => ForClinicsRouteRoute,
-} as any)
+} as any).lazy(() =>
+  import('./routes/for-clinics/how-it-works.lazy').then((d) => d.Route),
+)
 const ForClinicsCalculatorRoute = ForClinicsCalculatorRouteImport.update({
   id: '/calculator',
   path: '/calculator',
   getParentRoute: () => ForClinicsRouteRoute,
-} as any)
+} as any).lazy(() =>
+  import('./routes/for-clinics/calculator.lazy').then((d) => d.Route),
+)
 const DownloadUploadIdRoute = DownloadUploadIdRouteImport.update({
   id: '/download/$uploadId',
   path: '/download/$uploadId',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() =>
+  import('./routes/download.$uploadId.lazy').then((d) => d.Route),
+)
 const CompareBabypeekVsSeebabyRoute =
   CompareBabypeekVsSeebabyRouteImport.update({
     id: '/babypeek-vs-seebaby',
     path: '/babypeek-vs-seebaby',
     getParentRoute: () => CompareRouteRoute,
-  } as any)
+  } as any).lazy(() =>
+    import('./routes/compare/babypeek-vs-seebaby.lazy').then((d) => d.Route),
+  )
 const CompareAiBabyGenerators2026Route =
   CompareAiBabyGenerators2026RouteImport.update({
     id: '/ai-baby-generators-2026',
     path: '/ai-baby-generators-2026',
     getParentRoute: () => CompareRouteRoute,
-  } as any)
+  } as any).lazy(() =>
+    import('./routes/compare/ai-baby-generators-2026.lazy').then(
+      (d) => d.Route,
+    ),
+  )
 const BlogWhatWillMyBabyLookLikeRoute =
   BlogWhatWillMyBabyLookLikeRouteImport.update({
     id: '/what-will-my-baby-look-like',
     path: '/what-will-my-baby-look-like',
     getParentRoute: () => BlogRouteRoute,
-  } as any)
+  } as any).lazy(() =>
+    import('./routes/blog/what-will-my-baby-look-like.lazy').then(
+      (d) => d.Route,
+    ),
+  )
 const BlogSeebabyVsBabypeekRoute = BlogSeebabyVsBabypeekRouteImport.update({
   id: '/seebaby-vs-babypeek',
   path: '/seebaby-vs-babypeek',
   getParentRoute: () => BlogRouteRoute,
-} as any)
+} as any).lazy(() =>
+  import('./routes/blog/seebaby-vs-babypeek.lazy').then((d) => d.Route),
+)
 const BlogPregnancyAnnouncementIdeasRoute =
   BlogPregnancyAnnouncementIdeasRouteImport.update({
     id: '/pregnancy-announcement-ideas',
     path: '/pregnancy-announcement-ideas',
     getParentRoute: () => BlogRouteRoute,
-  } as any)
+  } as any).lazy(() =>
+    import('./routes/blog/pregnancy-announcement-ideas.lazy').then(
+      (d) => d.Route,
+    ),
+  )
 const BlogHowAiBabyPortraitTechnologyWorksRoute =
   BlogHowAiBabyPortraitTechnologyWorksRouteImport.update({
     id: '/how-ai-baby-portrait-technology-works',
     path: '/how-ai-baby-portrait-technology-works',
     getParentRoute: () => BlogRouteRoute,
-  } as any)
+  } as any).lazy(() =>
+    import('./routes/blog/how-ai-baby-portrait-technology-works.lazy').then(
+      (d) => d.Route,
+    ),
+  )
 const BlogBestTimeFor4dUltrasoundRoute =
   BlogBestTimeFor4dUltrasoundRouteImport.update({
     id: '/best-time-for-4d-ultrasound',
     path: '/best-time-for-4d-ultrasound',
     getParentRoute: () => BlogRouteRoute,
-  } as any)
+  } as any).lazy(() =>
+    import('./routes/blog/best-time-for-4d-ultrasound.lazy').then(
+      (d) => d.Route,
+    ),
+  )
 const BlogAiChangingKeepsakeUltrasoundRoute =
   BlogAiChangingKeepsakeUltrasoundRouteImport.update({
     id: '/ai-changing-keepsake-ultrasound',
     path: '/ai-changing-keepsake-ultrasound',
     getParentRoute: () => BlogRouteRoute,
-  } as any)
+  } as any).lazy(() =>
+    import('./routes/blog/ai-changing-keepsake-ultrasound.lazy').then(
+      (d) => d.Route,
+    ),
+  )
 const BlogAiBabyFacePredictionCompleteGuideRoute =
   BlogAiBabyFacePredictionCompleteGuideRouteImport.update({
     id: '/ai-baby-face-prediction-complete-guide',
     path: '/ai-baby-face-prediction-complete-guide',
     getParentRoute: () => BlogRouteRoute,
-  } as any)
+  } as any).lazy(() =>
+    import('./routes/blog/ai-baby-face-prediction-complete-guide.lazy').then(
+      (d) => d.Route,
+    ),
+  )
 const BlogAddOnServicesUltrasoundClinicRoute =
   BlogAddOnServicesUltrasoundClinicRouteImport.update({
     id: '/add-on-services-ultrasound-clinic',
     path: '/add-on-services-ultrasound-clinic',
     getParentRoute: () => BlogRouteRoute,
-  } as any)
+  } as any).lazy(() =>
+    import('./routes/blog/add-on-services-ultrasound-clinic.lazy').then(
+      (d) => d.Route,
+    ),
+  )
 const Blog3dVs4dVsHdUltrasoundRoute =
   Blog3dVs4dVsHdUltrasoundRouteImport.update({
     id: '/3d-vs-4d-vs-hd-ultrasound',
     path: '/3d-vs-4d-vs-hd-ultrasound',
     getParentRoute: () => BlogRouteRoute,
-  } as any)
+  } as any).lazy(() =>
+    import('./routes/blog/3d-vs-4d-vs-hd-ultrasound.lazy').then((d) => d.Route),
+  )
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute

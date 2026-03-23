@@ -6,7 +6,9 @@ import { getRouter } from "@/router";
 import { PostHogProvider, posthog } from "@/lib/posthog";
 import { ErrorBoundary } from "@/components/error-boundary";
 import { initSentry } from "@/lib/sentry";
-import { trackFBPageView } from "@/lib/facebook-pixel";
+import { initFBPixel, trackFBPageView } from "@/lib/facebook-pixel";
+import { scheduleIdleTask } from "@/lib/browser-idle";
+import { initializePageLoadTracking } from "@/lib/upload-session";
 import { initPerformanceMonitoring } from "@/lib/performance-monitoring";
 import "@/index.css";
 
@@ -128,6 +130,8 @@ function bootApp() {
 
   installGlobalErrorHandlers(rootElement);
 
+  initializePageLoadTracking();
+
   let router: ReturnType<typeof getRouter>;
   try {
     router = getRouter();
@@ -148,8 +152,7 @@ function bootApp() {
       ? `${window.location.pathname}${window.location.search}`
       : "";
 
-  // Fire FB Pixel PageView on SPA navigations
-  // (Initial PageView already fires from inline script in index.html)
+  // FB Pixel: first PageView runs in initFBPixel (idle); subsequent navigations here
   router.subscribe("onResolved", ({ pathChanged }) => {
     if (!pathChanged || typeof window === "undefined") return;
 
@@ -176,6 +179,13 @@ function bootApp() {
           </HelmetProvider>
         </ErrorBoundary>
       </StrictMode>,
+    );
+
+    scheduleIdleTask(
+      () => {
+        void initFBPixel();
+      },
+      { afterPaint: true, timeoutMs: 2000 },
     );
   } catch (error) {
     renderStartupFallback(

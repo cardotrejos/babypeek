@@ -1,0 +1,567 @@
+import { createLazyFileRoute, useNavigate } from "@tanstack/react-router";
+import { Helmet } from "react-helmet-async";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { getJobData } from "@/lib/session";
+// Note: clearSession will be used in Epic 6 after payment completes (Story 5.7: AC7)
+import { posthog, isPostHogConfigured } from "@/lib/posthog";
+import { trackFBViewContent } from "@/lib/facebook-pixel";
+import { addBreadcrumb, isSentryConfigured, Sentry } from "@/lib/sentry";
+import { usePreloadImage } from "@/hooks/use-preload-image";
+import {
+  RevealUI,
+  BeforeAfterSlider,
+  ResultsGallery,
+  PreferenceFeedback,
+  UpsellModal,
+  type ResultVariant,
+} from "@/components/reveal";
+import { API_BASE_URL } from "@/lib/api-config";
+import { getPaymentErrorMessage } from "@/lib/payment-errors";
+import { isExpiredError } from "@/lib/error-detection";
+import { ExpiredResult } from "@/components/states";
+
+/**
+ * Result/Reveal Page
+ * Story 5.3: Blur-to-Sharp Reveal Animation
+ * Story 6.6: Payment Failure Handling
+ *
+ * This route displays the dramatic reveal of the processed portrait.
+ * Key features:
+ * - AC-1 to AC-7: Complete reveal animation
+ * - Image preloading during navigation
+ * - Post-reveal UI with purchase/share/download options
+ * - Payment error/cancellation handling
+ */
+export const Route = createLazyFileRoute("/result/$resultId")({
+  component: ResultPage,
+});
+
+interface StatusData {
+  success: boolean;
+  status: string;
+  stage: string;
+  progress: number;
+  resultId: string | null;
+  resultUrl: string | null;
+  previewUrl: string | null; // Watermarked preview URL
+  originalUrl: string | null;
+  promptVersion: string | null;
+  errorMessage: string | null;
+  updatedAt: string;
+  // All 4 result variants
+  results?: ResultVariant[];
+}
+
+function ResultPage() {
+  const { resultId } = Route.useParams();
+  const { cancelled, error: paymentError } = Route.useSearch();
+  const navigate = useNavigate();
+
+  const [showRevealUI, setShowRevealUI] = useState(false);
+  const [revealStartTime, setRevealStartTime] = useState<number | null>(null);
+  const [preloadStartTime, setPreloadStartTime] = useState<number | null>(null);
+  const [showComparison, setShowComparison] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
+  // Track which result variant is selected (0-3)
+  const [selectedVariantIndex, setSelectedVariantIndex] = useState(0);
+  // Track if user has actively selected a variant (for showing feedback prompt)
+  const [hasUserSelectedVariant, setHasUserSelectedVariant] = useState(false);
+  // Track if feedback has been submitted
+  const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
+  // Track if upsell modal has been shown and dismissed
+  const [upsellDismissed, setUpsellDismissed] = useState(false);
+
+  // Track if we came from session recovery
+  const sessionRecoveryTrackedRef = useRef(false);
+  // Track if we already showed payment error/cancel toast
+  const paymentErrorTrackedRef = useRef(false);
+
+  // Get upload ID from local storage (resultId mapping stored during processing)
+  // Safe localStorage access for SSR/private browsing
+  const uploadId = (() => {
+    try {
+      return typeof window !== "undefined"
+        ? localStorage.getItem(`babypeek-result-upload-${resultId}`)
+        : null;
+    } catch {
+      return null;
+    }
+  })();
+
+  // Story 5.7: Track if this was a session recovery navigation
+  useEffect(() => {
+    if (sessionRecoveryTrackedRef.current || !uploadId) return;
+
+    const jobData = getJobData(uploadId);
+    if (jobData?.status === "completed" && jobData.resultId === resultId) {
+      sessionRecoveryTrackedRef.current = true;
+
+      if (isPostHogConfigured()) {
+        posthog.capture("session_recovery_result_viewed", {
+          upload_id: uploadId,
+          result_id: resultId,
+        });
+      }
+    }
+  }, [uploadId, resultId]);
+
+  // Story 6.6: Handle payment cancellation/error from Stripe redirect
+  useEffect(() => {
+    if (paymentErrorTrackedRef.current) return;
+    if (!cancelled && !paymentError) return;
+
+    paymentErrorTrackedRef.current = true;
+
+    // Add checkout flow breadcrumb for Sentry
+    addBreadcrumb("Payment redirect from Stripe", "checkout", {
+      cancelled: cancelled === "true",
+      error_type: paymentError,
+    });
+
+    if (cancelled === "true") {
+      toast.info("No worries! Your photo is still here when you're ready.");
+
+      if (isPostHogConfigured()) {
+        posthog.capture("checkout_cancelled", {
+          upload_id: uploadId,
+          result_id: resultId,
+        });
+      }
+    } else if (paymentError) {
+      const message = getPaymentErrorMessage(paymentError);
+      toast.error(message);
+
+      if (isPostHogConfigured()) {
+        posthog.capture("payment_failed", {
+          upload_id: uploadId,
+          result_id: resultId,
+          error_type: paymentError,
+          retry_count: retryCount,
+        });
+      }
+
+      // Log to Sentry (no PII - only safe identifiers)
+      if (isSentryConfigured()) {
+        Sentry.captureMessage("Payment failed", {
+          level: "warning",
+          extra: {
+            upload_id: uploadId,
+            result_id: resultId,
+            error_type: paymentError,
+            timestamp: new Date().toISOString(),
+          },
+        });
+      }
+    }
+
+    // Clear query params from URL to prevent re-triggering
+    window.history.replaceState({}, "", `/result/${resultId}`);
+  }, [cancelled, paymentError, uploadId, resultId, retryCount]);
+
+  // Fetch result data via status endpoint (uses uploadId, not resultId)
+  const {
+    data: statusData,
+    isLoading,
+    error: queryError,
+  } = useQuery<StatusData>({
+    queryKey: ["status", uploadId],
+    queryFn: async () => {
+      if (!uploadId) {
+        throw new Error("Upload not found. Please start a new upload.");
+      }
+
+      const response = await fetch(`${API_BASE_URL}/api/status/${uploadId}`, {
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+      });
+
+      if (!response.ok) {
+        throw new Error(
+          response.status === 404
+            ? "Result not found"
+            : response.status === 401
+              ? "Session expired. Please start a new upload."
+              : "Failed to load result",
+        );
+      }
+
+      const data = await response.json();
+
+      // Accept results if either completed OR first preview is ready (fast first result)
+      const hasResults =
+        data.resultUrl || data.previewUrl || (data.results && data.results.length > 0);
+      const isReady = data.status === "completed" || data.firstPreviewReady;
+
+      if (!isReady || !hasResults) {
+        throw new Error("Portrait is not ready yet");
+      }
+
+      return data;
+    },
+    enabled: !!uploadId,
+    retry: 1,
+    // Keep polling while still processing (fast first result - remaining images generating)
+    refetchInterval: (query) => {
+      const data = query.state.data;
+      if (data?.status === "completed" || data?.status === "failed") return false;
+      return 3000; // Poll every 3s while remaining images generate
+    },
+    staleTime: 2000,
+  });
+
+  // Check if user has purchased (for showing HD vs watermarked images)
+  const { data: downloadStatus } = useQuery({
+    queryKey: ["download-status", uploadId],
+    queryFn: async () => {
+      const response = await fetch(`${API_BASE_URL}/api/download/${uploadId}/status`, {
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+      });
+
+      if (!response.ok) return null;
+      return response.json();
+    },
+    enabled: !!uploadId,
+    staleTime: 60 * 1000, // 1 minute
+    retry: false,
+  });
+
+  const hasPurchased = downloadStatus?.canDownload === true;
+
+  // Extract preview URL from status data
+  // SECURITY: Use watermarked previewUrl for unpaid users, not resultUrl
+  const allResults = statusData?.results ?? [];
+  const selectedResult = allResults[selectedVariantIndex] ?? null;
+
+  // SECURITY: Show watermarked preview unless user has purchased
+  // The API now only returns resultUrl for paid users, so we safely use previewUrl for unpaid
+  const previewUrl = hasPurchased
+    ? (selectedResult?.resultUrl ??
+      selectedResult?.previewUrl ??
+      statusData?.resultUrl ??
+      statusData?.previewUrl ??
+      null)
+    : (selectedResult?.previewUrl ?? statusData?.previewUrl ?? null);
+
+  // Preload the image (AC-6)
+  const { isLoaded: imageLoaded } = usePreloadImage(previewUrl);
+
+  // Track preload start time when we have a URL
+  useEffect(() => {
+    if (previewUrl && !preloadStartTime) {
+      setPreloadStartTime(Date.now());
+    }
+  }, [previewUrl, preloadStartTime]);
+
+  // Track reveal started when image is loaded (Task 7 analytics)
+  useEffect(() => {
+    if (imageLoaded && !revealStartTime) {
+      const preloadTime = preloadStartTime ? Date.now() - preloadStartTime : 0;
+      setRevealStartTime(Date.now());
+
+      if (isPostHogConfigured()) {
+        posthog.capture("reveal_started", {
+          result_id: resultId,
+          upload_id: uploadId,
+          reveal_preload_time_ms: preloadTime,
+        });
+      }
+
+      // Facebook Pixel: ViewContent event - user is viewing their portrait
+      trackFBViewContent({
+        resultId,
+        uploadId: uploadId ?? undefined,
+        contentName: "Baby Portrait Preview",
+      });
+    }
+  }, [imageLoaded, revealStartTime, resultId, uploadId, preloadStartTime]);
+
+  // Handle reveal completion (AC-4)
+  const handleRevealComplete = useCallback(() => {
+    setShowRevealUI(true);
+
+    // Track reveal completion with duration
+    if (isPostHogConfigured() && revealStartTime) {
+      const duration = Date.now() - revealStartTime;
+      posthog.capture("reveal_completed", {
+        result_id: resultId,
+        upload_id: uploadId,
+        reveal_duration_ms: duration,
+      });
+    }
+  }, [resultId, uploadId, revealStartTime]);
+
+  // Note: Purchase is now handled directly by CheckoutButton in RevealUI (Story 6.1)
+  // Story 5.7: After successful payment, clear the session (AC7)
+  // clearSession(uploadId) should be called after payment completes in Epic 6
+
+  const handleShare = useCallback(() => {
+    if (isPostHogConfigured()) {
+      posthog.capture("share_clicked", {
+        result_id: resultId,
+        source: "reveal_ui",
+      });
+    }
+    // TODO: Implement share functionality when Epic 8 is implemented
+  }, [resultId]);
+
+  const handleStartOver = useCallback(() => {
+    navigate({ to: "/" });
+  }, [navigate]);
+
+  // Toggle comparison slider (Story 5.5)
+  const handleToggleComparison = useCallback(() => {
+    const newState = !showComparison;
+    setShowComparison(newState);
+
+    if (isPostHogConfigured()) {
+      posthog.capture(newState ? "comparison_opened" : "comparison_closed", {
+        result_id: resultId,
+        source: "reveal_ui",
+      });
+    }
+  }, [showComparison, resultId]);
+
+  // Story 6.6: Track retry attempts
+  const handleCheckoutStart = useCallback(() => {
+    setRetryCount((prev) => {
+      const newCount = prev + 1;
+
+      // Track retry if this is not the first attempt
+      if (prev > 0 && isPostHogConfigured()) {
+        posthog.capture("payment_retry_attempted", {
+          upload_id: uploadId,
+          result_id: resultId,
+          retry_count: newCount,
+        });
+      }
+
+      // Add breadcrumb for Sentry
+      addBreadcrumb("Checkout started", "checkout", {
+        upload_id: uploadId,
+        retry_count: newCount,
+      });
+
+      return newCount;
+    });
+  }, [uploadId, resultId]);
+
+  // Handle upsell checkout start - dismiss modal and launch Stripe immediately
+  const handleUpsellCheckoutStart = useCallback(() => {
+    setUpsellDismissed(true);
+    handleCheckoutStart();
+  }, [handleCheckoutStart]);
+
+  const handleUpsellCheckoutError = useCallback((error: string) => {
+    toast.error("Unable to start checkout", {
+      description: error,
+    });
+  }, []);
+
+  // Handle upsell decline - dismiss and show gallery with what's available
+  const handleUpsellDecline = useCallback(() => {
+    setUpsellDismissed(true);
+    if (isPostHogConfigured()) {
+      posthog.capture("upsell_declined_waiting_for_rest", {
+        upload_id: uploadId,
+        results_available: allResults.length,
+      });
+    }
+  }, [uploadId, allResults.length]);
+
+  // Trigger reveal UI immediately (no animation delay needed)
+  // NOTE: This hook must be BEFORE any conditional returns to comply with Rules of Hooks
+  useEffect(() => {
+    if (imageLoaded && !showRevealUI) {
+      setShowRevealUI(true);
+      handleRevealComplete();
+    }
+  }, [imageLoaded, showRevealUI, handleRevealComplete]);
+
+  // Loading state - show gallery with skeletons
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-cream flex flex-col items-center justify-start p-4 pt-8">
+        <Helmet>
+          <meta name="robots" content="noindex, nofollow" />
+        </Helmet>
+        <div className="w-full max-w-md mx-auto space-y-6">
+          {/* Header */}
+          <div className="text-center">
+            <h1 className="font-display text-2xl text-charcoal mb-2">Your Baby Portraits</h1>
+            <p className="text-sm text-warm-gray">Loading your portraits...</p>
+          </div>
+
+          {/* Gallery with skeletons */}
+          <ResultsGallery results={[]} selectedIndex={0} onSelect={() => {}} hasPurchased={false} />
+        </div>
+      </div>
+    );
+  }
+
+  // Error state - Story 8.8: Handle expired results with warm messaging
+  if (queryError || !previewUrl) {
+    // AC-1, AC-3: Show warm expired message for 404/not found errors
+    if (isExpiredError(queryError)) {
+      return <ExpiredResult resultId={resultId} source="result" />;
+    }
+
+    // Generic error state for other errors
+    return (
+      <div className="min-h-screen bg-cream flex items-center justify-center p-4">
+        <Helmet>
+          <meta name="robots" content="noindex, nofollow" />
+        </Helmet>
+        <div className="max-w-md w-full text-center space-y-6">
+          <div className="flex justify-center">
+            <div className="size-16 rounded-full bg-red-100 flex items-center justify-center">
+              <svg
+                className="size-8 text-red-500"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                />
+              </svg>
+            </div>
+          </div>
+          <div className="space-y-2">
+            <h1 className="font-display text-2xl text-charcoal">
+              Couldn&apos;t load your portrait
+            </h1>
+            <p className="font-body text-warm-gray">
+              {queryError instanceof Error
+                ? queryError.message
+                : "Something went wrong. Please try again."}
+            </p>
+          </div>
+          <button
+            onClick={handleStartOver}
+            className="px-6 py-3 bg-coral text-white font-body rounded-lg hover:bg-coral/90 transition-colors"
+          >
+            Start Over
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Extract original URL for comparison slider
+  const originalUrl = statusData?.originalUrl ?? null;
+
+  // Get the current result ID for the selected variant
+  const currentResultId = selectedResult?.resultId ?? resultId;
+
+  // Determine if we should show the upsell modal
+  // Show when: we have results, not all 4 are ready yet (or just arrived), and not dismissed
+  const isStillProcessing = statusData?.status !== "completed";
+  const showUpsellModal =
+    !upsellDismissed &&
+    !hasPurchased &&
+    allResults.length >= 1 &&
+    allResults.length < 4 &&
+    isStillProcessing;
+
+  // Clean gallery-first layout
+  return (
+    <div className="min-h-screen bg-cream flex flex-col items-center justify-start p-4 pt-8">
+      <Helmet>
+        <meta name="robots" content="noindex, nofollow" />
+      </Helmet>
+      <div className="w-full max-w-md mx-auto space-y-6">
+        {/* Header */}
+        <div className="text-center">
+          <h1 className="font-display text-2xl text-charcoal mb-2">
+            {showUpsellModal ? "Meet Your Baby!" : "Your Baby Portraits"}
+          </h1>
+          <p className="text-sm text-warm-gray">
+            {showUpsellModal
+              ? "Your first portrait is ready"
+              : isStillProcessing
+                ? `${allResults.length} of 4 styles ready...`
+                : "Tap to select your favorite style"}
+          </p>
+        </div>
+
+        {/* Upsell modal overlay - shown when first image ready, before all 4 complete */}
+        {showUpsellModal ? (
+          <>
+            {/* Show first preview image */}
+            <ResultsGallery
+              results={allResults}
+              selectedIndex={0}
+              onSelect={() => {}}
+              uploadId={uploadId ?? undefined}
+              hasPurchased={false}
+            />
+
+            {/* Upsell modal */}
+            <UpsellModal
+              uploadId={uploadId ?? ""}
+              onCheckoutStart={handleUpsellCheckoutStart}
+              onCheckoutError={handleUpsellCheckoutError}
+              onDecline={handleUpsellDecline}
+            />
+          </>
+        ) : (
+          <>
+            {/* Comparison slider view (Story 5.5) */}
+            {showComparison && originalUrl ? (
+              <BeforeAfterSlider
+                beforeImage={originalUrl}
+                afterImage={previewUrl}
+                beforeLabel="Your Ultrasound"
+                afterLabel="AI Portrait"
+                allowImageSave={hasPurchased}
+              />
+            ) : (
+              /* Gallery - show available images */
+              <ResultsGallery
+                results={allResults}
+                selectedIndex={selectedVariantIndex}
+                onSelect={(index) => {
+                  setSelectedVariantIndex(index);
+                  setHasUserSelectedVariant(true);
+                  setFeedbackSubmitted(false);
+                }}
+                uploadId={uploadId ?? undefined}
+                hasPurchased={hasPurchased}
+              />
+            )}
+
+            {/* Preference feedback after user selects a variant */}
+            {hasUserSelectedVariant && !feedbackSubmitted && selectedResult && (
+              <PreferenceFeedback
+                uploadId={uploadId ?? ""}
+                selectedResultId={selectedResult.resultId}
+                promptVersion={selectedResult.promptVersion}
+                onSubmit={() => setFeedbackSubmitted(true)}
+              />
+            )}
+
+            {/* Action buttons - always visible */}
+            <RevealUI
+              resultId={currentResultId}
+              uploadId={uploadId ?? ""}
+              previewUrl={previewUrl}
+              onShare={handleShare}
+              hasOriginalImage={!!originalUrl}
+              showComparison={showComparison}
+              onToggleComparison={handleToggleComparison}
+              retryCount={retryCount}
+              onCheckoutStart={handleCheckoutStart}
+              onStartOver={handleStartOver}
+            />
+          </>
+        )}
+      </div>
+    </div>
+  );
+}

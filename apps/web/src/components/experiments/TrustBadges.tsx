@@ -1,45 +1,59 @@
-import { useEffect } from "react";
-import { ShieldCheckIcon, ZapIcon, HeartIcon } from "lucide-react";
+import { useEffect, useRef } from "react";
 import { posthog } from "@/lib/posthog";
 import { cn } from "@/lib/utils";
 import { useExperiment } from "@/hooks/use-experiment";
 
-/**
- * Trust Badges - A/B Experiment
- *
- * Shows trust signals near the upload section to reduce privacy concerns
- * and increase confidence in uploading personal ultrasound images.
- *
- * Experiment: trust_badges_test
- * Expected lift: 1-2x upload conversion
- */
 export interface TrustBadgesProps {
   className?: string;
 }
 
 export function TrustBadges({ className }: TrustBadgesProps) {
   const { variant, isLoading } = useExperiment("trust_badges_test");
+  const rootRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (isLoading) return;
-    posthog?.capture("trust_badges_shown", { variant });
+
+    const fireExposure = () => {
+      posthog?.capture("trust_badges_shown", { variant });
+    };
+
+    if (typeof IntersectionObserver === "undefined") {
+      fireExposure();
+      return;
+    }
+
+    const el = rootRef.current;
+    if (!el) {
+      fireExposure();
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) {
+          fireExposure();
+          observer.disconnect();
+        }
+      },
+      { rootMargin: "160px 0px", threshold: 0 },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
   }, [variant, isLoading]);
 
   const badges = [
     {
-      icon: ShieldCheckIcon,
       emoji: "🔒",
       text: "100% Private & Secure",
       subtext: "Images auto-deleted after 30 days",
     },
     {
-      icon: ZapIcon,
       emoji: "⚡",
       text: "Results in 60 Seconds",
       subtext: "AI-powered instant processing",
     },
     {
-      icon: HeartIcon,
       emoji: "💯",
       text: "10,000+ Happy Parents",
       subtext: "Trusted by families worldwide",
@@ -47,7 +61,7 @@ export function TrustBadges({ className }: TrustBadgesProps) {
   ];
 
   return (
-    <div className={cn("py-6", className)}>
+    <div ref={rootRef} className={cn("py-6", className)}>
       {/* Mobile: Horizontal scroll */}
       <div className="flex gap-4 overflow-x-auto pb-2 sm:overflow-visible sm:flex-wrap sm:justify-center">
         {badges.map((badge, index) => (

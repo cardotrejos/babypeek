@@ -54,6 +54,7 @@ temp
 /.codex/config.json.bak
 /.codex/config.toml
 /.codex/config.toml.bak
+/.worktrees/
 /.cursor/mcp.json
 /.cursor/mcp.json.bak
 /.cursor/hooks/

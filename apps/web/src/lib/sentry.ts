@@ -1,16 +1,69 @@
 import * as Sentry from "@sentry/react";
 
-// Sentry configuration
 const SENTRY_DSN = import.meta.env.VITE_SENTRY_DSN;
 const ENVIRONMENT = import.meta.env.MODE;
+const SENTRY_ENABLE_TRACING = import.meta.env.VITE_SENTRY_ENABLE_TRACING;
+const SENTRY_ENABLE_REPLAY = import.meta.env.VITE_SENTRY_ENABLE_REPLAY;
 
-// Initialize Sentry only once
+function isEnabled(raw: string | undefined): boolean {
+  return raw === "true" || raw === "1";
+}
+
 let isInitialized = false;
 
-/**
- * Initialize Sentry error tracking
- * Call this early in app startup
- */
+export function getSentryInitConfig(): Sentry.BrowserOptions {
+  const tracingOn = isEnabled(SENTRY_ENABLE_TRACING);
+  const replayOn = isEnabled(SENTRY_ENABLE_REPLAY);
+
+  const integrations: NonNullable<Sentry.BrowserOptions["integrations"]> = [];
+  if (tracingOn) {
+    integrations.push(Sentry.browserTracingIntegration());
+  }
+  if (replayOn) {
+    integrations.push(
+      Sentry.replayIntegration({
+        maskAllText: true,
+        blockAllMedia: true,
+      }),
+    );
+  }
+
+  return {
+    dsn: SENTRY_DSN,
+    environment: ENVIRONMENT,
+    integrations,
+    tracesSampleRate: tracingOn ? (ENVIRONMENT === "production" ? 0.1 : 1.0) : 0,
+    replaysSessionSampleRate: replayOn ? 0.1 : 0,
+    replaysOnErrorSampleRate: replayOn ? 1.0 : 0,
+
+    beforeSend(event) {
+      if (event.user?.email) {
+        delete event.user.email;
+      }
+      return event;
+    },
+
+    ignoreErrors: [
+      "ResizeObserver loop limit exceeded",
+      "Non-Error promise rejection captured",
+      "Invalid regular expression",
+      /Java bridge method invocation error/,
+      /evaluating 'window\.webkit\.messageHandlers\[.*\]\.postMessage'/,
+      /Error invoking postMessage/,
+      "fb_xd_fragment",
+      "instantSearchSDKJSBridgeClearHighlight",
+    ],
+
+    denyUrls: [
+      /connect\.facebook\.net/i,
+      /graph\.facebook\.com/i,
+      /extensions\//i,
+      /^chrome:\/\//i,
+      /^moz-extension:\/\//i,
+    ],
+  };
+}
+
 export function initSentry() {
   if (isInitialized || typeof window === "undefined" || !SENTRY_DSN) {
     if (import.meta.env.DEV && !SENTRY_DSN) {
@@ -19,60 +72,7 @@ export function initSentry() {
     return;
   }
 
-  Sentry.init({
-    dsn: SENTRY_DSN,
-    environment: ENVIRONMENT,
-
-    // Performance monitoring
-    integrations: [
-      Sentry.browserTracingIntegration(),
-      Sentry.replayIntegration({
-        maskAllText: true, // Privacy: mask all text
-        blockAllMedia: true, // Privacy: block media
-      }),
-    ],
-
-    // Sample rates
-    tracesSampleRate: ENVIRONMENT === "production" ? 0.1 : 1.0, // 10% in prod, 100% in dev
-    replaysSessionSampleRate: 0.1, // 10% of sessions
-    replaysOnErrorSampleRate: 1.0, // 100% on errors
-
-    // Filter out PII before sending
-    beforeSend(event) {
-      // Remove email from user context
-      if (event.user?.email) {
-        delete event.user.email;
-      }
-      return event;
-    },
-
-    // Ignore common browser errors and third-party noise
-    ignoreErrors: [
-      "ResizeObserver loop limit exceeded",
-      "Non-Error promise rejection captured",
-      // Facebook In-App Browser injects scripts that throw regex errors
-      "Invalid regular expression",
-      // Facebook In-App Browser native bridge errors (BABYPEEK-4, BABYPEEK-5)
-      // Android: Facebook's injected JS fails to invoke Java bridge postMessage
-      /Java bridge method invocation error/,
-      // iOS: Facebook's injected JS tries to access webkit.messageHandlers that don't exist
-      /evaluating 'window\.webkit\.messageHandlers\[.*\]\.postMessage'/,
-      // Generic postMessage bridge failures from in-app browsers
-      /Error invoking postMessage/,
-      // Common third-party script errors
-      "fb_xd_fragment",
-      "instantSearchSDKJSBridgeClearHighlight",
-    ],
-
-    // Ignore errors from third-party scripts (Facebook, analytics, etc.)
-    denyUrls: [
-      /connect\.facebook\.net/i,
-      /graph\.facebook\.com/i,
-      /extensions\//i,
-      /^chrome:\/\//i,
-      /^moz-extension:\/\//i,
-    ],
-  });
+  Sentry.init(getSentryInitConfig());
 
   isInitialized = true;
 
@@ -81,25 +81,14 @@ export function initSentry() {
   }
 }
 
-/**
- * Set session context for error correlation
- * Call this when a session is created
- */
 export function setSessionContext(userId: string) {
   Sentry.setUser({ id: userId });
 }
 
-/**
- * Clear user context
- * Call this when session ends or user resets
- */
 export function clearSessionContext() {
   Sentry.setUser(null);
 }
 
-/**
- * Add a breadcrumb for user action tracking
- */
 export function addBreadcrumb(
   message: string,
   category: string = "user-action",
@@ -113,24 +102,16 @@ export function addBreadcrumb(
   });
 }
 
-/**
- * Capture an exception with optional context
- */
 export function captureException(error: Error, context?: Record<string, unknown>) {
   Sentry.captureException(error, {
     extra: context,
   });
 }
 
-/**
- * Capture a message (for non-error events)
- */
 export function captureMessage(message: string, level: Sentry.SeverityLevel = "info") {
   Sentry.captureMessage(message, level);
 }
 
-// Check if Sentry is configured
 export const isSentryConfigured = () => !!SENTRY_DSN;
 
-// Re-export Sentry for direct access if needed
 export { Sentry };
