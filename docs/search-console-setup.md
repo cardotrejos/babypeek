@@ -3,6 +3,16 @@
 **Domain:** babypeek.io
 **Purpose:** Get BabyPeek indexed by Google and Bing (critical — Bing Webmaster Tools feeds ChatGPT's search data)
 **Research Date:** March 22, 2026
+**Current Code Review:** April 22, 2026
+
+---
+
+## Current Site Status - 2026-04-22
+
+- `apps/web/public/sitemap.xml` now exists and includes homepage, pricing, how-it-works, FAQ, clinic, comparison, privacy, and blog URLs.
+- `apps/web/public/robots.txt` has been updated to advertise `https://babypeek.io/sitemap.xml`.
+- Priority indexing URLs that exist now: `/`, `/pricing`, `/how-it-works`, `/faq`, `/blog`, `/for-clinics`, `/compare/babypeek-vs-seebaby`, and `/compare/ai-baby-generators-2026`.
+- Search Console and Bing verification still require live account access from Ricardo.
 
 ---
 

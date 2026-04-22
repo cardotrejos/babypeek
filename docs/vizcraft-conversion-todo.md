@@ -1,9 +1,15 @@
 # VizCraft Conversion Fixes TODO
 
 **Created:** 2026-02-08
-**Status:** VizCraft project not found on filesystem — this document serves as the implementation checklist for when the project is available.
+**Current Code Review:** 2026-04-22
+**Status:** Historical BabyPeek-to-VizCraft checklist. VizCraft is now represented locally by the `arch-visual` repo.
 
-**Note:** The `arch-visual` project in your local development directory may be VizCraft. Verify with Ricardo.
+## Current Status - 2026-04-22
+
+- Treat `arch-visual` as the VizCraft codebase unless Ricardo says otherwise.
+- BabyPeek component paths in this file are historical references; re-check current paths before copying patterns.
+- Current BabyPeek references worth checking first: `apps/web/src/components/experiments/MobileStickyCTA.tsx`, `apps/web/src/lib/experiments.ts`, `apps/web/src/lib/facebook-pixel.tsx`, `apps/web/src/hooks/use-upload.ts`, and `packages/api/src/routes/process.ts`.
+- VizCraft uses a different stack and payment model, so port concepts, not code verbatim.
 
 ---
 

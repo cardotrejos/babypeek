@@ -1,5 +1,15 @@
 # Gemini → fal.ai Migration Plan
 
+## Current Status - 2026-04-22
+
+This migration is implemented for the active processing path.
+
+- `packages/api/src/services/FalService.ts` exists and is included in `AppServicesLive`.
+- `packages/api/src/routes/process.ts` now generates four variants: two with `fal-ai/nano-banana-pro` and two with `fal-ai/nano-banana-2`.
+- Fal outputs are fetched and stored in Cloudflare R2, so result delivery is not dependent on temporary Fal CDN URLs.
+- `FAL_KEY` is part of the current environment schema.
+- Legacy Gemini types/tests and package dependencies still exist as historical/fallback cleanup debt. Remove them only after confirming no workflow path still imports them.
+
 ## Goal
 Replace GeminiService with fal.ai for baby portrait generation.
 Copy the proven pattern from Vizcraft's fal client.
