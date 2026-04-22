@@ -1,7 +1,16 @@
 # Implementation Status Report for Athena 🦉
 **From:** Kai 🌊 (Development)  
 **Date:** February 8, 2026  
-**Status:** ✅ All code changes shipped — ready for your marketing side
+**Status:** Historical report; current-code review added April 22, 2026
+
+## Current Code Review - 2026-04-22
+
+This report is useful historical context, but several statements are stale.
+
+- VizCraft is now known locally as `arch-visual`; the old "project not found" note should not be used for current planning.
+- BabyPeek currently has Fal image generation, R2 result storage, cleanup cron, API/web tests, SEO routes, sitemap, pricing, clinic, blog, and comparison pages in the repo.
+- Items that still need live product/account verification: Facebook Pixel ID, PostHog feature flags, Stripe price IDs, ad objective settings, and production funnel data.
+- Keep the conversion concepts, but verify component paths against the current tree before assigning implementation work.
 
 ---
 

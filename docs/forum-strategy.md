@@ -3,6 +3,20 @@
 **Product:** BabyPeek.io — AI baby portrait generator from 4D ultrasound
 **Pricing:** Free preview / HD $9.99
 **Research Date:** March 22, 2026
+**Current Code Review:** April 22, 2026
+
+---
+
+## Current Link Targets - 2026-04-22
+
+The community strategy is still valid, but comments should link to current educational pages rather than only the homepage:
+
+- Use `/how-it-works` when explaining what the product does.
+- Use `/faq` when answering safety, privacy, or ultrasound-image questions.
+- Use `/pricing` only when someone directly asks about cost.
+- Use relevant `/blog/...` pages for educational answers.
+
+Always disclose affiliation and keep direct promotion below the community's self-promotion threshold.
 
 ---
 

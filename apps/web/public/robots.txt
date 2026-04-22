@@ -7,5 +7,4 @@ Allow: /
 # Disallow API routes
 Disallow: /api/
 
-# Sitemap (will be added when sitemap generation is implemented)
-# Sitemap: https://babypeek.io/sitemap.xml
+Sitemap: https://babypeek.io/sitemap.xml

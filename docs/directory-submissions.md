@@ -3,6 +3,15 @@
 **Product:** BabyPeek.io — AI baby portrait generator from 4D ultrasound
 **Pricing:** Free preview / HD $9.99
 **Research Date:** March 22, 2026
+**Current Code Review:** April 22, 2026
+
+---
+
+## Current Site Status - 2026-04-22
+
+The codebase now has live marketing routes for `/pricing`, `/how-it-works`, `/faq`, `/blog`, `/for-clinics`, and comparison pages. Earlier blockers that said these pages did not exist are stale.
+
+Before spending on paid directory placements, manually re-check each external listing site in a browser. Submission URLs, pricing, and duplicate-listing status can drift quickly.
 
 ---
 
@@ -117,7 +126,7 @@
 | **Submit URL** | https://www.producthunt.com/submit |
 | **Category** | Productivity → AI / Design → AI Photo Editing / Photography |
 | **Cost** | **FREE** (maker account required) |
-| **Status** | 📋 **Documented only — do NOT submit yet.** Needs `/how-it-works` and `/pricing` pages live first. |
+| **Status** | 📋 **Ready for manual review.** `/how-it-works` and `/pricing` now exist; verify launch assets and maker account before submitting. |
 | **Required fields** | Product name, URL, tagline (max 60 chars), description, thumbnail image, demo video (optional) |
 | **Notes** | Best category: "Productivity > AI" or "Design > AI Photo Editing." Need to create maker account at `producthunt.com/makers/join`. Submit once key pages are built. |
 

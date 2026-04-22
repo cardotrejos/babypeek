@@ -2,6 +2,18 @@
 
 > Turn 4D ultrasound images into beautiful AI-generated baby portraits.
 
+## Current Code Review - 2026-04-22
+
+This architecture note still matches the main repo shape: Vite/TanStack Router frontend, Hono server entry point, Effect-based API services, Drizzle/Postgres, R2, Stripe, Better Auth, and Fal image generation.
+
+Recent status corrections:
+
+- Cleanup is now implemented through `packages/api/src/services/CleanupService.ts` and `/api/cron/cleanup`.
+- Tests exist across API and web packages and run through `bun run test`; coverage was not audited in this doc refresh.
+- SEO pages and sitemap routes now exist for pricing, how-it-works, FAQ, blog, comparison, and clinic pages.
+- Legacy Gemini code still exists in the tree, but the active processing route uses `FalService`.
+
+
 ## Overview
 
 BabyPeek is a Turborepo monorepo built with a TanStack Router SPA frontend (React + Vite), a Hono API server, Drizzle ORM, PostgreSQL, and Bun.
