@@ -188,17 +188,18 @@ test.describe("Session Recovery (Story 5.7)", () => {
 
       await page.goto("/");
 
-      // Wait for stale session cleanup to run
-      await page.waitForTimeout(500);
+      await expect
+        .poll(
+          () =>
+            page.evaluate(
+              (jobId) => localStorage.getItem(`babypeek-job-${jobId}`) !== null,
+              "test-job-8",
+            ),
+          { timeout: 5000 },
+        )
+        .toBe(false);
 
-      // Should not show recovery dialog
-      await expect(page.getByRole("dialog")).not.toBeVisible({ timeout: 2000 });
-
-      // Session should be cleared
-      const sessionExists = await page.evaluate((jobId) => {
-        return localStorage.getItem(`babypeek-job-${jobId}`) !== null;
-      }, "test-job-8");
-      expect(sessionExists).toBe(false);
+      await expect(page.getByRole("dialog")).not.toBeVisible();
     });
   });
 

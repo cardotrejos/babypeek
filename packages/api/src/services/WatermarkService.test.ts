@@ -24,12 +24,9 @@ async function createTestImage(width = 1200, height = 900): Promise<Buffer> {
   return Buffer.from(buffer);
 }
 
-describe("WatermarkService", () => {
+describe("WatermarkService", { timeout: 15000 }, () => {
   describe("apply", () => {
-    it(
-      "applies watermark and returns valid JPEG buffer (AC-1, AC-7)",
-      { timeout: 15000 },
-      async () => {
+    it("applies watermark and returns valid JPEG buffer (AC-1, AC-7)", async () => {
       const testImage = await createTestImage();
 
       const program = Effect.gen(function* () {
@@ -46,8 +43,7 @@ describe("WatermarkService", () => {
       // Verify output is valid JPEG (check magic bytes)
       expect(result[0]).toBe(0xff);
       expect(result[1]).toBe(0xd8);
-      },
-    );
+    });
 
     it("uses default watermark text 'babypeek.com' (AC-4)", async () => {
       const testImage = await createTestImage();
